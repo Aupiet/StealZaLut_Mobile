@@ -30,6 +30,7 @@ def run_transfer_pipeline(
     output_path: str,
     method: str = "hm-mkl-hm",
     intensity: float = 1.0,
+    max_preview_dim: int = 1024,
 ) -> Dict[str, Any]:
     """Execute the full colour-transfer preview pipeline.
 
@@ -58,7 +59,7 @@ def run_transfer_pipeline(
 
         # Proxy ----------------------------------------------------------
         src_proxy: NDArray[np.uint8] = create_proxy_image(
-            src_img, max_dim=MAX_ANALYSIS_DIMENSION
+            src_img, max_dim=max_preview_dim
         )
         ref_proxy: NDArray[np.uint8] = create_proxy_image(
             ref_img, max_dim=MAX_ANALYSIS_DIMENSION

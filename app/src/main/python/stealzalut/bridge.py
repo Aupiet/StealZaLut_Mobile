@@ -72,6 +72,7 @@ def process_preview(
     method: str = DEFAULT_METHOD,
     intensity: float = 1.0,
     output_preview_path: str = "",
+    max_preview_dim: int = 1024,
 ) -> Dict[str, Any]:
     """Generate a colour-transferred preview image.
 
@@ -81,6 +82,7 @@ def process_preview(
         method: Colour-transfer algorithm key.
         intensity: Blend strength in ``[0.0, 1.0]``.
         output_preview_path: Where to save the preview.
+        max_preview_dim: Maximum preview pixel dimension (default: 1024).
 
     Returns:
         Result dictionary with status, preview_path, and execution_time_ms.
@@ -107,6 +109,7 @@ def process_preview(
             output_path=output_preview_path,
             method=method,
             intensity=intensity,
+            max_preview_dim=max_preview_dim,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]

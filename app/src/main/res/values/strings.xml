@@ -74,12 +74,20 @@
     <string name="wizard_step_4_stage_3">Step 3/3: Generating 3D LUT lattice &amp; real-time blending...</string>
     <string name="wizard_step_4_tech_badge">Offline Python 3.9 • ARM64 NEON float32</string>
 
-    <string name="wizard_step_5_title">Step 5 : Result &amp; Autosave</string>
-    <string name="wizard_step_5_subtitle">Graded image automatically saved to your gallery</string>
-    <string name="wizard_step_5_autosave_badge">Saved to Pictures/StealZaLUT</string>
+    <string name="wizard_step_5_title">Step 5 : Result &amp; Opacity</string>
+    <string name="wizard_step_5_subtitle">Adjust opacity in real time and save in high definition</string>
+    <string name="wizard_step_5_autosave_badge">Adjust opacity below and save to gallery</string>
+    <string name="wizard_step_5_btn_save_gallery">Save Photo to Gallery (HD)</string>
+    <string name="wizard_step_5_saved_badge">Photo saved in High Definition to Gallery (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Save Style B to Profile</string>
     <string name="wizard_step_5_btn_profile">Go to Profile (Export LUT / Photo)</string>
     <string name="wizard_step_5_btn_reset">New Color Grading</string>
+
+    <!-- Photo Details Dialog (Instagram Modal) -->
+    <string name="profile_photo_detail_title">Photo Details</string>
+    <string name="profile_photo_dimension">Resolution: %1$d × %2$d px</string>
+    <string name="profile_photo_date">Date: %1$s</string>
+    <string name="profile_photo_style">Color Look: %1$s</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_title">Intensity (Opacity)</string>
@@ -143,8 +151,13 @@
     <string name="settings_default_lut_size">Default 3D LUT Size</string>
     <string name="settings_proxy_dim">Statistical Analysis Proxy Resolution</string>
     <string name="settings_export_dim">Direct Image Export Resolution</string>
+    <string name="export_dim_1080p">1080p</string>
+    <string name="export_dim_2k">2K (2048px)</string>
+    <string name="export_dim_4k">4K (3840px)</string>
+    <string name="export_dim_native">Native</string>
     <string name="settings_export_format">Export Image Format</string>
     <string name="settings_export_quality">JPEG Quality (%1$d%%)</string>
+    <string name="settings_quality_slider_desc">JPEG Quality</string>
     <string name="settings_cache_title">Temporary Preview Storage (LRU)</string>
     <string name="settings_cache_size">Current cache size: %1$.1f MB / 50 MB max</string>
     <string name="settings_btn_clear_cache">Clear Preview Cache</string>
@@ -179,4 +192,5 @@
     <string name="common_delete">Delete</string>
     <string name="common_retry">Retry</string>
     <string name="common_continue">Continue</string>
+    <string name="format_percentage">%1$d%%</string>
 </resources>

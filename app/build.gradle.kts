@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.stealzalut_mobile"
+    namespace = "com.stealzalut.mobile"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.stealzalut_mobile"
+        applicationId = "com.stealzalut.mobile"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -28,9 +28,18 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("arm64-v8a")
+            }
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "src/main/keepRules/rules.keep")
+        }
+        debug {
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("arm64-v8a", "x86_64")
             }
         }
     }
@@ -60,13 +69,22 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.collections.immutable)
+
     testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,3 +92,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+

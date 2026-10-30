@@ -12,7 +12,7 @@ from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def load_image(path: str) -> NDArray[np.uint8]:
@@ -34,6 +34,7 @@ def load_image(path: str) -> NDArray[np.uint8]:
 
     try:
         img: Image.Image = Image.open(path)
+        img = ImageOps.exif_transpose(img)
         img.load()  # force decode
     except Exception as exc:
         raise ValueError(f"Cannot decode image at {path}: {exc}") from exc
@@ -87,6 +88,18 @@ def create_proxy_image(
     return np.asarray(pil_img, dtype=np.uint8)
 
 
+def to_float32(image: NDArray[np.uint8]) -> NDArray[np.float32]:
+    """Convert a ``uint8`` image in [0, 255] to ``float32`` in [0.0, 1.0].
+
+    Args:
+        image: Array with dtype ``uint8``.
+
+    Returns:
+        Array with dtype ``float32`` and values in ``[0.0, 1.0]``.
+    """
+    return image.astype(np.float32) / np.float32(255.0)
+
+
 def to_float64(image: NDArray[np.uint8]) -> NDArray[np.float64]:
     """Convert a ``uint8`` image in [0, 255] to ``float64`` in [0.0, 1.0].
 
@@ -99,14 +112,14 @@ def to_float64(image: NDArray[np.uint8]) -> NDArray[np.float64]:
     return image.astype(np.float64) / 255.0
 
 
-def to_uint8(image: NDArray[np.float64]) -> NDArray[np.uint8]:
-    """Convert a ``float64`` image in [0.0, 1.0] to ``uint8`` in [0, 255].
+def to_uint8(image: NDArray[Union[np.float32, np.float64]]) -> NDArray[np.uint8]:
+    """Convert a floating-point image in [0.0, 1.0] to ``uint8`` in [0, 255].
 
     Values are clipped before conversion so out-of-range floats are
     safely clamped.
 
     Args:
-        image: Array with dtype ``float64``.
+        image: Array with dtype ``float32`` or ``float64``.
 
     Returns:
         Array with dtype ``uint8`` and values in ``[0, 255]``.
@@ -115,26 +128,26 @@ def to_uint8(image: NDArray[np.float64]) -> NDArray[np.uint8]:
 
 
 def save_image(
-    image: NDArray[Union[np.uint8, np.float64]],
+    image: NDArray[Union[np.uint8, np.float32, np.float64]],
     path: str,
     quality: int = 90,
 ) -> str:
     """Save an ndarray as a JPEG or PNG image file.
 
-    The format is inferred from the file extension in *path*.  If the
+    The format is inferred from the file extension in *path*. If the
     array has a floating-point dtype it is converted to ``uint8`` first.
 
     Args:
         image: RGB array of shape ``(H, W, 3)``.
         path: Destination file path (must end with ``.jpg``, ``.jpeg``,
             or ``.png``).
-        quality: JPEG quality (1–100).  Ignored for PNG.
+        quality: JPEG quality (1–100). Ignored for PNG.
 
     Returns:
         The absolute path of the saved file.
     """
     if image.dtype != np.uint8:
-        image = to_uint8(image.astype(np.float64))
+        image = to_uint8(image)
 
     pil_img: Image.Image = Image.fromarray(image)
 

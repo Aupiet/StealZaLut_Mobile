@@ -21,14 +21,14 @@ def _numpy_statistical_transfer(
 
     Used as an ultra-fast, fail-safe fallback when SciPy encounters singular matrices.
     """
-    src_f = src_img.astype(np.float64)
-    ref_f = ref_img.astype(np.float64)
+    src_f = src_img.astype(np.float32)
+    ref_f = ref_img.astype(np.float32)
     result = np.zeros_like(src_f)
 
     for c in range(3):
         src_mean, src_std = np.mean(src_f[:, :, c]), np.std(src_f[:, :, c])
         ref_mean, ref_std = np.mean(ref_f[:, :, c]), np.std(ref_f[:, :, c])
-        scale = ref_std / (src_std + 1e-6)
+        scale = ref_std / (src_std + np.float32(1e-6))
         result[:, :, c] = (src_f[:, :, c] - src_mean) * scale + ref_mean
 
     return np.clip(result, 0.0, 255.0).astype(np.uint8)

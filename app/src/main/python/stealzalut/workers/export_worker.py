@@ -70,7 +70,7 @@ def run_export_pipeline(
         del src_img, ref_img
 
         # Compute LUT ----------------------------------------------------
-        transformed: NDArray[np.float64] = compute_lut(
+        transformed: NDArray[np.float32] = compute_lut(
             src_proxy, ref_proxy, size=lut_size, method=method
         )
 
@@ -78,7 +78,7 @@ def run_export_pipeline(
 
         # Intensity ------------------------------------------------------
         if intensity < 1.0:
-            identity: NDArray[np.float64] = generate_identity_lattice(lut_size)
+            identity: NDArray[np.float32] = generate_identity_lattice(lut_size)
             transformed = apply_intensity(identity, transformed, intensity)
             del identity
 

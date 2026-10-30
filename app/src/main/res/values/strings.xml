@@ -1,3 +1,182 @@
 <resources>
-    <string name="app_name">StealZaLut_Mobile</string>
+    <!-- Application Identity -->
+    <string name="app_name">StealZaLUT Pro</string>
+    <string name="app_subtitle">Offline Color Grading &amp; 3D LUT</string>
+    <string name="app_top_bar_title">StealZaLUT Studio</string>
+
+    <!-- Navigation Destinations -->
+    <string name="nav_apply_theme">Studio</string>
+    <string name="nav_extract_theme">Extract</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Destination Subtitles -->
+    <string name="dest_subtitle_apply">Color Grading Funnel</string>
+    <string name="dest_subtitle_extract">Extract Color Palette &amp; Mire</string>
+    <string name="dest_subtitle_profile">Profile • Styles &amp; Gallery</string>
+    <string name="dest_subtitle_settings">System Preferences &amp; Storage</string>
+
+    <!-- Color Transfer Methods (Enums) -->
+    <string name="method_hm_mkl_hm_name">Precise Cinematic (Recommended)</string>
+    <string name="method_hm_mkl_hm_sub">HM + MKL Linear Chained</string>
+    <string name="method_hm_mkl_hm_desc">Histogram Matching + Monge-Kantorovitch Linear: optimal tonal fidelity and contrast preservation.</string>
+
+    <string name="method_mkl_name">MKL Covariance</string>
+    <string name="method_mkl_sub">Monge-Kantorovitch Linear</string>
+    <string name="method_mkl_desc">Monge-Kantorovitch Linear: optimal color covariance transport.</string>
+
+    <string name="method_hm_name">Fast Histogram</string>
+    <string name="method_hm_sub">Per-channel Cumulative Matching</string>
+    <string name="method_hm_desc">Per-channel color histogram matching: instantaneous and vibrant.</string>
+
+    <string name="method_reinhard_name">Perceptual CIE LAB</string>
+    <string name="method_reinhard_sub">Reinhard Statistical Moments</string>
+    <string name="method_reinhard_desc">Mean and standard deviation transfer in perceptual CIE LAB color space.</string>
+
+    <!-- Lut Sizes (Enums) -->
+    <string name="lut_size_17_label">17x17x17 Fast</string>
+    <string name="lut_size_17_nodes">4,913 nodes</string>
+    <string name="lut_size_33_label">33x33x33 Standard</string>
+    <string name="lut_size_33_nodes">35,937 nodes (Recommended)</string>
+    <string name="lut_size_65_label">65x65x65 High Precision</string>
+    <string name="lut_size_65_nodes">274,625 nodes</string>
+
+    <!-- Playful Wizard Stepper (Studio Flow) -->
+    <string name="wizard_step_1_title">Step 1 : Your Photo</string>
+    <string name="wizard_step_1_subtitle">Select source photo A to be color-graded</string>
+    <string name="wizard_step_1_empty">Tap to upload your photo</string>
+    <string name="wizard_step_1_badge">Source A</string>
+    <string name="wizard_step_1_change">Change photo</string>
+    <string name="wizard_step_1_btn_next">Next: Choose Style B</string>
+
+    <string name="wizard_step_2_title">Step 2 : Style Reference</string>
+    <string name="wizard_step_2_subtitle">Select reference photo B or pick a saved style from your profile</string>
+    <string name="wizard_step_2_tab_photo_b">Reference Photo B</string>
+    <string name="wizard_step_2_tab_saved">Saved Styles</string>
+    <string name="wizard_step_2_ref_empty">Tap to upload reference photo B</string>
+    <string name="wizard_step_2_ref_badge">Style B</string>
+    <string name="wizard_step_2_no_saved">No saved styles yet. Upload reference photo B directly or extract a theme in the Extract tab.</string>
+    <string name="wizard_step_2_btn_back">Back</string>
+    <string name="wizard_step_2_btn_next">Next: Engine Settings</string>
+
+    <string name="wizard_step_3_title">Step 3 : Engine Settings</string>
+    <string name="wizard_step_3_subtitle">Configure color transfer algorithm and blending opacity</string>
+    <string name="wizard_step_3_method_title">Color Transfer Algorithm</string>
+    <string name="wizard_step_3_intensity_title">Transfer Intensity (Opacity)</string>
+    <string name="wizard_step_3_lut_size_title">3D LUT Lattice Size (.cube)</string>
+    <string name="wizard_step_3_btn_back">Back</string>
+    <string name="wizard_step_3_btn_run">Start Color Grading</string>
+
+    <string name="wizard_step_4_title">Computing Colorimetry...</string>
+    <string name="wizard_step_4_subtitle">Processing offline via NumPy and ARM NEON vector engine</string>
+    <string name="wizard_step_4_stage_1">Step 1/3: Analyzing RGB color distributions...</string>
+    <string name="wizard_step_4_stage_2">Step 2/3: Computing covariance matrix &amp; spectral alignment...</string>
+    <string name="wizard_step_4_stage_3">Step 3/3: Generating 3D LUT lattice &amp; real-time blending...</string>
+    <string name="wizard_step_4_tech_badge">Offline Python 3.9 • ARM64 NEON float32</string>
+
+    <string name="wizard_step_5_title">Step 5 : Result &amp; Autosave</string>
+    <string name="wizard_step_5_subtitle">Graded image automatically saved to your gallery</string>
+    <string name="wizard_step_5_autosave_badge">Saved to Pictures/StealZaLUT</string>
+    <string name="wizard_step_5_btn_save_theme">Save Style B to Profile</string>
+    <string name="wizard_step_5_btn_profile">Go to Profile (Export LUT / Photo)</string>
+    <string name="wizard_step_5_btn_reset">New Color Grading</string>
+
+    <!-- Intensity Slider -->
+    <string name="intensity_title">Intensity (Opacity)</string>
+    <string name="intensity_slider_desc">Intensity slider</string>
+    <string name="intensity_decrease_desc">Decrease intensity by 5 percent</string>
+    <string name="intensity_increase_desc">Increase intensity by 5 percent</string>
+
+    <!-- Palette Swatches & TalkBack Accessibility -->
+    <string name="swatch_a11y_format">Color %1$d of %2$d, hex code %3$s, tap to copy</string>
+    <string name="swatch_copy_label">Copy hex color code</string>
+    <string name="swatch_copied_feedback">Hex color %1$s copied to clipboard</string>
+
+    <!-- Comparison View -->
+    <string name="comparison_title">Before / After View</string>
+    <string name="comparison_side_by_side">Side-by-Side</string>
+    <string name="comparison_split_wipe">Interactive Curtain</string>
+    <string name="comparison_original_label">ORIGINAL</string>
+    <string name="comparison_lut_label">GRADED</string>
+    <string name="comparison_handle_desc">Curtain slider divider handle</string>
+    <string name="comparison_zoom_reset">Reset Zoom (%1$d%%)</string>
+    <string name="comparison_time_format">%1$d ms (ARM64)</string>
+    <string name="comparison_no_images">Select a source photo and a style to preview comparison.</string>
+
+    <!-- Profile & Library -->
+    <string name="profile_header_title">Profile &amp; Library</string>
+    <string name="profile_header_stats">%1$d Saved Styles • %2$d Graded Photos</string>
+    <string name="profile_tab_themes">Styles (%1$d)</string>
+    <string name="profile_tab_images">Photos (%1$d)</string>
+    <string name="profile_tab_settings">Preferences</string>
+    <string name="profile_no_themes">No custom styles saved yet.\nGrade a photo or extract a theme to populate your library.</string>
+    <string name="profile_no_images">No graded photos saved yet.\nPerform an automated grading to see photos here.</string>
+    <string name="profile_btn_apply">Apply this Style</string>
+    <string name="profile_btn_export_cube">Export 3D LUT (.CUBE)</string>
+    <string name="profile_btn_share_cube">Share 3D LUT (.CUBE)</string>
+    <string name="profile_btn_inspect_mire">Inspect Calibration Mire</string>
+    <string name="profile_btn_delete">Delete</string>
+    <string name="profile_btn_share">Share Photo</string>
+    <string name="profile_mire_card_title">Look Calibration Mire</string>
+    <string name="profile_mire_card_desc">Tap to inspect and export calibration chart</string>
+    <string name="profile_mire_card_action">Inspect</string>
+
+    <!-- Extract Theme Screen -->
+    <string name="extract_header_title">Extract Colorimetry from Photo</string>
+    <string name="extract_header_desc">Upload any photo to extract dominant hues, compute the 3D calibration mire, and store the look into your profile.</string>
+    <string name="extract_picker_title">Reference Photo</string>
+    <string name="extract_picker_subtitle">Tap to choose an inspiring photo</string>
+    <string name="extract_palette_title">Dominant Color Palette (Tap to copy hex code):</string>
+    <string name="extract_mire_title">Calibration Mire &amp; Gamut Map</string>
+    <string name="extract_mire_desc">Pure white highlights, linear grayscale ramp, and calibrated skin tone patches.</string>
+    <string name="extract_btn_save_theme">Save Style to Profile</string>
+    <string name="extract_btn_extracting">Extracting colorimetry &amp; mire...</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_header_title">Application Preferences</string>
+    <string name="settings_header_desc">Configure offline Python engine parameters, language, and cache storage.</string>
+    <string name="settings_language_title">In-App Language</string>
+    <string name="settings_lang_en">English (Default)</string>
+    <string name="settings_lang_fr">Français</string>
+    <string name="settings_lang_es">Español</string>
+    <string name="settings_default_method">Default Transfer Algorithm</string>
+    <string name="settings_default_lut_size">Default 3D LUT Size</string>
+    <string name="settings_proxy_dim">Statistical Analysis Proxy Resolution</string>
+    <string name="settings_export_dim">Direct Image Export Resolution</string>
+    <string name="settings_export_format">Export Image Format</string>
+    <string name="settings_export_quality">JPEG Quality (%1$d%%)</string>
+    <string name="settings_cache_title">Temporary Preview Storage (LRU)</string>
+    <string name="settings_cache_size">Current cache size: %1$.1f MB / 50 MB max</string>
+    <string name="settings_btn_clear_cache">Clear Preview Cache</string>
+    <string name="settings_btn_save">Save Settings</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_save_theme_title">Save Style to Profile</string>
+    <string name="dialog_save_theme_desc">Save this color recipe to your profile to reuse anytime or export as a .cube LUT file.</string>
+    <string name="dialog_theme_name_label">Style Name</string>
+    <string name="dialog_notes_label">Colorist Notes (Optional)</string>
+    <string name="dialog_btn_save">Save to Profile</string>
+    <string name="dialog_btn_cancel">Cancel</string>
+    <string name="dialog_mire_title">Calibration Mire: %1$s</string>
+    <string name="dialog_mire_subtitle">Adobe Cube Standard • Gamut Mapping</string>
+    <string name="dialog_mire_loading">Loading calibration chart...</string>
+    <string name="dialog_btn_export_mire">Export Mire (.JPG)</string>
+    <string name="dialog_btn_close">Close</string>
+
+    <!-- Status & Feedback Messages -->
+    <string name="msg_cache_cleared">Temporary preview cache cleared successfully.</string>
+    <string name="msg_theme_saved">Color style saved to your Profile.</string>
+    <string name="msg_cube_exported">3D LUT (.cube) exported successfully.</string>
+    <string name="msg_image_saved">Graded image saved to gallery (Pictures/StealZaLUT).</string>
+    <string name="msg_theme_deleted">Style deleted.</string>
+    <string name="msg_image_deleted">Image deleted.</string>
+
+    <!-- Common UI Labels -->
+    <string name="common_close">Close</string>
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_share">Share</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_continue">Continue</string>
 </resources>

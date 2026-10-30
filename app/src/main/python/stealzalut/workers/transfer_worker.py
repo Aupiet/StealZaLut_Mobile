@@ -19,7 +19,7 @@ from stealzalut.utils.image_io import (
     create_proxy_image,
     load_image,
     save_image,
-    to_float64,
+    to_float32,
     to_uint8,
 )
 
@@ -76,10 +76,12 @@ def run_transfer_pipeline(
 
         # Intensity ------------------------------------------------------
         if intensity < 1.0:
-            src_f: NDArray[np.float64] = to_float64(src_proxy)
-            trn_f: NDArray[np.float64] = to_float64(transferred)
-            blended: NDArray[np.float64] = np.clip(
-                (1.0 - intensity) * src_f + intensity * trn_f, 0.0, 1.0
+            src_f: NDArray[np.float32] = to_float32(src_proxy)
+            trn_f: NDArray[np.float32] = to_float32(transferred)
+            inv_int = np.float32(1.0) - np.float32(intensity)
+            w = np.float32(intensity)
+            blended: NDArray[np.float32] = np.clip(
+                inv_int * src_f + w * trn_f, 0.0, 1.0
             )
             transferred = to_uint8(blended)
             del src_f, trn_f, blended

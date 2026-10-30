@@ -8,15 +8,13 @@ This module exposes the public API called by the Android (Chaquopy) layer:
 - :func:`extract_palette` : Quick dominant color extraction from any image
 
 Every function returns a plain ``dict`` so Chaquopy can convert it to a Kotlin ``Map``.
-All exceptions are caught and surfaced as ``{"status": "error", "message": ...}``.
+All exceptions are caught and surfaced as ``{"status": "error", "error_code": "...", "message": ...}``.
 """
 
 from __future__ import annotations
 
 import os
 from typing import Any, Dict, List
-
-import numpy as np
 
 from stealzalut.config import DEFAULT_LUT_SIZE, DEFAULT_METHOD
 from stealzalut.core.test_pattern import extract_dominant_palette
@@ -25,6 +23,47 @@ from stealzalut.workers.colorset_worker import run_colorset_pipeline
 from stealzalut.workers.export_worker import run_export_pipeline
 from stealzalut.workers.image_export_worker import run_image_export_pipeline
 from stealzalut.workers.transfer_worker import run_transfer_pipeline
+
+
+def _make_error_response(
+    exc: Exception | None = None,
+    message: str = "",
+    error_code: str = "",
+) -> Dict[str, Any]:
+    """Build a standardised error dictionary containing an explicit error_code."""
+    msg = message or (str(exc) if exc is not None else "Unknown error")
+    if not error_code:
+        if exc is not None:
+            if isinstance(exc, FileNotFoundError):
+                error_code = "SOURCE_NOT_FOUND"
+            elif isinstance(exc, MemoryError):
+                error_code = "OUT_OF_MEMORY"
+            elif "singul" in msg.lower() or "linalg" in msg.lower():
+                error_code = "MATRIX_SINGULARITY"
+            elif isinstance(exc, (IOError, OSError, PermissionError)):
+                error_code = "EXPORT_IO_ERROR"
+            else:
+                error_code = "GENERIC_ERROR"
+        else:
+            lower = msg.lower()
+            if "source" in lower and "not found" in lower:
+                error_code = "SOURCE_NOT_FOUND"
+            elif "reference" in lower and "not found" in lower:
+                error_code = "REFERENCE_NOT_FOUND"
+            elif "singul" in lower or "linalg" in lower:
+                error_code = "MATRIX_SINGULARITY"
+            elif "memory" in lower or "oom" in lower:
+                error_code = "OUT_OF_MEMORY"
+            elif "cannot decode" in lower or "io" in lower or "permission" in lower:
+                error_code = "EXPORT_IO_ERROR"
+            else:
+                error_code = "GENERIC_ERROR"
+
+    return {
+        "status": "error",
+        "error_code": error_code,
+        "message": msg,
+    }
 
 
 def process_preview(
@@ -47,20 +86,34 @@ def process_preview(
         Result dictionary with status, preview_path, and execution_time_ms.
     """
     try:
+        if not src_path or not os.path.isfile(src_path):
+            return _make_error_response(
+                message=f"Source image file not found: {src_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not ref_path or not os.path.isfile(ref_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {ref_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
         if not output_preview_path:
             src_dir: str = os.path.dirname(os.path.abspath(src_path))
             output_preview_path = os.path.join(src_dir, "stealzalut_preview.jpg")
 
-        return run_transfer_pipeline(
+        res = run_transfer_pipeline(
             src_path=src_path,
             ref_path=ref_path,
             output_path=output_preview_path,
             method=method,
             intensity=intensity,
         )
+        if res.get("status") == "error" and "error_code" not in res:
+            res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
+        return res
 
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "message": str(exc)}
+        return _make_error_response(exc=exc)
 
 
 def export_cube_file(
@@ -85,7 +138,18 @@ def export_cube_file(
         Result dictionary with status, cube_path, lut_size, and execution_time_ms.
     """
     try:
-        return run_export_pipeline(
+        if not src_path or not os.path.isfile(src_path):
+            return _make_error_response(
+                message=f"Source image file not found: {src_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not ref_path or not os.path.isfile(ref_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {ref_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        res = run_export_pipeline(
             src_path=src_path,
             ref_path=ref_path,
             output_cube_path=output_cube_path,
@@ -93,9 +157,12 @@ def export_cube_file(
             method=method,
             intensity=intensity,
         )
+        if res.get("status") == "error" and "error_code" not in res:
+            res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
+        return res
 
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "message": str(exc)}
+        return _make_error_response(exc=exc)
 
 
 def export_graded_image(
@@ -122,7 +189,18 @@ def export_graded_image(
         Result dictionary with status, image_path, width, height, and execution_time_ms.
     """
     try:
-        return run_image_export_pipeline(
+        if not src_path or not os.path.isfile(src_path):
+            return _make_error_response(
+                message=f"Source image file not found: {src_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not ref_path or not os.path.isfile(ref_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {ref_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        res = run_image_export_pipeline(
             src_path=src_path,
             ref_path=ref_path,
             output_path=output_image_path,
@@ -131,9 +209,12 @@ def export_graded_image(
             max_export_dim=max_export_dim,
             quality=quality,
         )
+        if res.get("status") == "error" and "error_code" not in res:
+            res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
+        return res
 
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "message": str(exc)}
+        return _make_error_response(exc=exc)
 
 
 def generate_color_set(
@@ -157,15 +238,24 @@ def generate_color_set(
         Result dictionary with status, colorset_path, ref_palette, graded_palette, execution_time_ms.
     """
     try:
-        return run_colorset_pipeline(
+        if not ref_path or not os.path.isfile(ref_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {ref_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        res = run_colorset_pipeline(
             ref_path=ref_path,
             output_card_path=output_card_path,
             method=method,
             intensity=intensity,
         )
+        if res.get("status") == "error" and "error_code" not in res:
+            res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
+        return res
 
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "message": str(exc)}
+        return _make_error_response(exc=exc)
 
 
 def extract_palette(image_path: str, num_colors: int = 6) -> Dict[str, Any]:
@@ -176,11 +266,21 @@ def extract_palette(image_path: str, num_colors: int = 6) -> Dict[str, Any]:
         num_colors: Number of color swatches to extract.
 
     Returns:
-        Result dictionary with status and list of hex colors.
+        Result dictionary with status, error_code (if error), and list of hex colors.
     """
     try:
+        if not image_path or not os.path.isfile(image_path):
+            return {
+                "status": "error",
+                "error_code": "SOURCE_NOT_FOUND",
+                "message": f"Image file not found: {image_path}",
+                "palette": [],
+            }
+
         img_arr = load_image(image_path)
         palette = extract_dominant_palette(img_arr, num_colors=num_colors)
         return {"status": "success", "palette": palette}
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "message": str(exc), "palette": []}
+        err = _make_error_response(exc=exc)
+        err["palette"] = []
+        return err

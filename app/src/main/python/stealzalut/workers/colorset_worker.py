@@ -22,7 +22,7 @@ from stealzalut.utils.image_io import (
     create_proxy_image,
     load_image,
     save_image,
-    to_float64,
+    to_float32,
     to_uint8,
 )
 
@@ -53,9 +53,10 @@ def run_colorset_pipeline(
             ref_img, max_dim=MAX_ANALYSIS_DIMENSION
         )
 
-        # Extract reference palette
-        ref_palette: List[str] = extract_dominant_palette(ref_proxy, num_colors=6)
-        del ref_img
+        # Extract reference palette (< 15ms target on 128x128 proxy)
+        palette_proxy: NDArray[np.uint8] = create_proxy_image(ref_proxy, max_dim=128)
+        ref_palette: List[str] = extract_dominant_palette(palette_proxy, num_colors=6)
+        del ref_img, palette_proxy
 
         # Generate neutral calibration card (720x480)
         neutral_card: NDArray[np.uint8] = generate_neutral_test_pattern(720, 480)
@@ -68,18 +69,22 @@ def run_colorset_pipeline(
         )
         del ref_proxy
 
-        # Apply intensity blend if < 1.0
+        # Apply intensity blend if < 1.0 using float32 for ARM NEON acceleration
         if intensity < 1.0:
-            neutral_f = to_float64(neutral_card)
-            trans_f = to_float64(transferred)
-            blended = np.clip((1.0 - intensity) * neutral_f + intensity * trans_f, 0.0, 1.0)
+            neutral_f = to_float32(neutral_card)
+            trans_f = to_float32(transferred)
+            inv_int = np.float32(1.0) - np.float32(intensity)
+            w = np.float32(intensity)
+            blended = np.clip(inv_int * neutral_f + w * trans_f, 0.0, 1.0)
             transferred = to_uint8(blended)
             del neutral_f, trans_f, blended
 
         del neutral_card
 
-        # Extract palette from the transformed card
-        graded_palette: List[str] = extract_dominant_palette(transferred, num_colors=6)
+        # Extract palette from the transformed card (< 15ms target on 128x128 proxy)
+        trans_palette_proxy: NDArray[np.uint8] = create_proxy_image(transferred, max_dim=128)
+        graded_palette: List[str] = extract_dominant_palette(trans_palette_proxy, num_colors=6)
+        del trans_palette_proxy
 
         # Save card
         saved_path: str = save_image(transferred, output_card_path, quality=95)

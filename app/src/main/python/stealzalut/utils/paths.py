@@ -1,0 +1,78 @@
+"""File-system path helpers.
+
+Provides validation, directory creation, and sanitised filename
+generation used by the worker pipelines.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+from datetime import datetime
+
+
+def validate_path(path: str) -> str:
+    """Validate that *path* points to an existing file.
+
+    Args:
+        path: Absolute or relative file path.
+
+    Returns:
+        The canonical (absolute, normalised) path.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+    """
+    canonical: str = os.path.realpath(path)
+    if not os.path.isfile(canonical):
+        raise FileNotFoundError(f"File not found: {canonical}")
+    return canonical
+
+
+def validate_directory(path: str) -> str:
+    """Ensure *path* exists as a directory, creating it if necessary.
+
+    Args:
+        path: Absolute or relative directory path.
+
+    Returns:
+        The canonical (absolute, normalised) directory path.
+    """
+    canonical: str = os.path.realpath(path)
+    os.makedirs(canonical, exist_ok=True)
+    return canonical
+
+
+def sanitize_filename(name: str) -> str:
+    """Strip characters that are unsafe in file names.
+
+    Only ASCII letters, digits, hyphens, underscores, and dots are
+    kept.  Consecutive unsafe characters are collapsed into a single
+    underscore.
+
+    Args:
+        name: Raw filename (without directory component).
+
+    Returns:
+        A sanitised filename safe for all major file systems.
+    """
+    sanitised: str = re.sub(r"[^A-Za-z0-9._-]", "_", name)
+    sanitised = re.sub(r"\.{2,}", "_", sanitised)
+    sanitised = re.sub(r"_+", "_", sanitised)
+    return sanitised.strip("_.")
+
+
+def generate_cube_filename(prefix: str = "StealZaLUT") -> str:
+    """Generate a timestamped ``.cube`` filename.
+
+    The format is ``{prefix}_{YYYYMMDD}_{HHMMSS}.cube``.
+
+    Args:
+        prefix: Human-readable prefix for the file.
+
+    Returns:
+        Sanitised filename string ending in ``.cube``.
+    """
+    timestamp: str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    raw: str = f"{prefix}_{timestamp}.cube"
+    return sanitize_filename(raw)

@@ -4,7 +4,6 @@ This module exposes the public API called by the Android (Chaquopy) layer:
 - :func:`process_preview` : Fast proxy preview generation
 - :func:`export_cube_file` : Adobe .cube 3D LUT generation
 - :func:`export_graded_image` : Direct high-resolution image export
-- :func:`generate_color_set` : Neutral calibration pattern & palette generation
 - :func:`extract_palette` : Quick dominant color extraction from any image
 
 Every function returns a plain ``dict`` so Chaquopy can convert it to a Kotlin ``Map``.
@@ -14,14 +13,11 @@ All exceptions are caught and surfaced as ``{"status": "error", "error_code": ".
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from stealzalut.config import DEFAULT_LUT_SIZE, DEFAULT_METHOD
-from stealzalut.core.test_pattern import extract_dominant_palette
-from stealzalut.utils.image_io import load_image
-from stealzalut.workers.colorset_worker import run_colorset_pipeline
+from stealzalut.utils.image_io import extract_dominant_palette, load_image
 from stealzalut.workers.export_worker import run_export_pipeline
-from stealzalut.workers.image_export_worker import run_image_export_pipeline
 from stealzalut.workers.transfer_worker import run_transfer_pipeline
 
 
@@ -109,7 +105,8 @@ def process_preview(
             output_path=output_preview_path,
             method=method,
             intensity=intensity,
-            max_preview_dim=max_preview_dim,
+            max_dimension=max_preview_dim,
+            quality=90,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
@@ -203,55 +200,15 @@ def export_graded_image(
                 error_code="REFERENCE_NOT_FOUND",
             )
 
-        res = run_image_export_pipeline(
+        max_dim = max_export_dim if max_export_dim > 0 else None
+        res = run_transfer_pipeline(
             src_path=src_path,
             ref_path=ref_path,
             output_path=output_image_path,
             method=method,
             intensity=intensity,
-            max_export_dim=max_export_dim,
+            max_dimension=max_dim,
             quality=quality,
-        )
-        if res.get("status") == "error" and "error_code" not in res:
-            res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]
-        return res
-
-    except Exception as exc:  # noqa: BLE001
-        return _make_error_response(exc=exc)
-
-
-def generate_color_set(
-    ref_path: str,
-    output_card_path: str,
-    method: str = DEFAULT_METHOD,
-    intensity: float = 1.0,
-) -> Dict[str, Any]:
-    """Generate a neutral test card and apply the color transformation to it.
-
-    Produces a visual calibration swatch showing pure white highlight tinting,
-    grayscale gradient roll-off, skin tone shifts, and extracts dominant palettes.
-
-    Args:
-        ref_path: Absolute path to the reference image.
-        output_card_path: Destination path where the card is saved.
-        method: Colour-transfer algorithm key.
-        intensity: Blend strength in ``[0.0, 1.0]``.
-
-    Returns:
-        Result dictionary with status, colorset_path, ref_palette, graded_palette, execution_time_ms.
-    """
-    try:
-        if not ref_path or not os.path.isfile(ref_path):
-            return _make_error_response(
-                message=f"Reference image file not found: {ref_path}",
-                error_code="REFERENCE_NOT_FOUND",
-            )
-
-        res = run_colorset_pipeline(
-            ref_path=ref_path,
-            output_card_path=output_card_path,
-            method=method,
-            intensity=intensity,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))["error_code"]

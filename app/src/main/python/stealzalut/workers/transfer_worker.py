@@ -1,14 +1,12 @@
-"""Preview-generation worker pipeline.
+"""Unified colour-transfer worker pipeline.
 
-Orchestrates image loading, proxy creation, colour transfer, intensity
-blending, and preview saving into a single callable that returns a
-result dictionary suitable for the Kotlin bridge.
+Handles both fast proxy preview generation and high-resolution final export.
 """
 
 from __future__ import annotations
 
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,54 +28,55 @@ def run_transfer_pipeline(
     output_path: str,
     method: str = "hm-mkl-hm",
     intensity: float = 1.0,
-    max_preview_dim: int = 1024,
+    max_dimension: Optional[int] = 1024,
+    quality: int = 95,
 ) -> Dict[str, Any]:
-    """Execute the full colour-transfer preview pipeline.
+    """Execute the unified colour-transfer pipeline (preview or high-res export).
 
     Args:
-        src_path: Path to the source image.
-        ref_path: Path to the reference image.
-        output_path: Destination path for the preview image.
+        src_path: Path to the source image to be graded.
+        ref_path: Path to the reference look image.
+        output_path: Destination file path (e.g. .jpg or .png).
         method: Colour-transfer algorithm key.
-        intensity: Blend strength in ``[0.0, 1.0]``.
+        intensity: Blend strength in [0.0, 1.0].
+        max_dimension: Maximum allowed dimension (width or height).
+            If None or <= 0, full source resolution is processed.
+        quality: Compression quality for JPEG output (1-100).
 
     Returns:
-        A dictionary with the following keys:
-
-        - ``"status"`` – ``"success"`` or ``"error"``.
-        - ``"preview_path"`` – absolute path of the saved preview
-          (only on success).
-        - ``"execution_time_ms"`` – wall-clock time in milliseconds.
-        - ``"message"`` – error description (only on failure).
+        Dictionary with status, image_path, preview_path, width, height, and execution_time_ms.
     """
     start: float = time.monotonic()
 
     try:
-        # Load -----------------------------------------------------------
+        # Load source image
         src_img: NDArray[np.uint8] = load_image(src_path)
-        ref_img: NDArray[np.uint8] = load_image(ref_path)
 
-        # Proxy ----------------------------------------------------------
-        src_proxy: NDArray[np.uint8] = create_proxy_image(
-            src_img, max_dim=max_preview_dim
-        )
+        # Scale source if max_dimension is specified
+        if max_dimension is not None and max_dimension > 0 and max(src_img.shape[:2]) > max_dimension:
+            src_work = create_proxy_image(src_img, max_dim=max_dimension)
+            del src_img
+        else:
+            src_work = src_img
+
+        # Load reference image & create compact proxy for fast statistical analysis
+        ref_img: NDArray[np.uint8] = load_image(ref_path)
         ref_proxy: NDArray[np.uint8] = create_proxy_image(
             ref_img, max_dim=MAX_ANALYSIS_DIMENSION
         )
+        del ref_img
 
-        # Free full-resolution images
-        del src_img, ref_img
-
-        # Transfer -------------------------------------------------------
+        # Perform color transfer
         transferred: NDArray[np.uint8] = compute_color_transfer(
-            src_proxy, ref_proxy, method=method
+            src_img=src_work,
+            ref_img=ref_proxy,
+            method=method,
         )
-
         del ref_proxy
 
-        # Intensity ------------------------------------------------------
+        # Blend intensity if < 1.0 (vectorized float32 for RAM & CPU efficiency)
         if intensity < 1.0:
-            src_f: NDArray[np.float32] = to_float32(src_proxy)
+            src_f: NDArray[np.float32] = to_float32(src_work)
             trn_f: NDArray[np.float32] = to_float32(transferred)
             inv_int = np.float32(1.0) - np.float32(intensity)
             w = np.float32(intensity)
@@ -87,17 +86,22 @@ def run_transfer_pipeline(
             transferred = to_uint8(blended)
             del src_f, trn_f, blended
 
-        del src_proxy
+        del src_work
 
-        # Save -----------------------------------------------------------
-        preview_path: str = save_image(transferred, output_path)
+        out_h, out_w = transferred.shape[:2]
+
+        # Save output image
+        saved_path: str = save_image(transferred, output_path, quality=quality)
         del transferred
 
         elapsed_ms: float = (time.monotonic() - start) * 1000.0
 
         return {
             "status": "success",
-            "preview_path": preview_path,
+            "image_path": saved_path,
+            "preview_path": saved_path,
+            "width": out_w,
+            "height": out_h,
             "execution_time_ms": round(elapsed_ms, 1),
         }
 

@@ -1,0 +1,165 @@
+<resources>
+    <!-- Application Identity -->
+    <string name="app_name">StealZaLUT Mobile</string>
+    <string name="app_subtitle">Talonaje sin conexión &amp; 3D LUT</string>
+    <string name="app_top_bar_title">StealZaLUT Mobile</string>
+
+    <!-- Navigation Destinations -->
+    <string name="nav_studio">Studio</string>
+    <string name="nav_palettes">Paletas</string>
+    <string name="nav_settings">Ajustes</string>
+
+    <!-- Destination Subtitles -->
+    <string name="dest_subtitle_studio">Transferencia de Color &amp; 3D LUT</string>
+    <string name="dest_subtitle_palettes">Extracción de Paleta &amp; Ajustes</string>
+    <string name="dest_subtitle_settings">Parámetros del Motor &amp; Almacenamiento Caché</string>
+
+    <!-- Color Transfer Methods (Enums) -->
+    <string name="method_hm_mkl_hm_name">Cinemático Preciso (Recomendado)</string>
+    <string name="method_hm_mkl_hm_sub">HM + MKL Lineal Encadenado</string>
+    <string name="method_hm_mkl_hm_desc">Histogram Matching + Monge-Kantorovitch Linear: equilibrio tonal óptimo y preservación del contraste.</string>
+
+    <string name="method_mkl_name">Covarianza MKL</string>
+    <string name="method_mkl_sub">Monge-Kantorovitch Linear</string>
+    <string name="method_mkl_desc">Monge-Kantorovitch Linear: transporte óptimo de covarianza de color.</string>
+
+    <string name="method_hm_name">Histograma Rápido</string>
+    <string name="method_hm_sub">Correspondencia Acumulativa por Canal</string>
+    <string name="method_hm_desc">Correspondencia de histograma canal por canal: instantáneo y vibrante.</string>
+
+    <string name="method_reinhard_name">Perceptual CIE LAB</string>
+    <string name="method_reinhard_sub">Momentos Estadísticos Reinhard</string>
+    <string name="method_reinhard_desc">Transferencia de media y desviación típica en espacio perceptual CIE LAB.</string>
+
+    <!-- Lut Sizes (Enums) -->
+    <string name="lut_size_17_label">17x17x17 Rápido</string>
+    <string name="lut_size_17_nodes">4 913 nodos</string>
+    <string name="lut_size_33_label">33x33x33 Estándar</string>
+    <string name="lut_size_33_nodes">35 937 nodos (Recomendado)</string>
+    <string name="lut_size_65_label">65x65x65 Alta Precisión</string>
+    <string name="lut_size_65_nodes">274 625 nodos</string>
+
+    <!-- Studio Funnel Stepper -->
+    <string name="wizard_step_1_title">Paso 1 : Tu Foto</string>
+    <string name="wizard_step_1_subtitle">Selecciona la foto origen A para talonar</string>
+    <string name="wizard_step_1_empty">Toca para importar tu foto</string>
+    <string name="wizard_step_1_badge">Origen A</string>
+    <string name="wizard_step_1_change">Cambiar foto</string>
+    <string name="wizard_step_1_btn_next">Siguiente: Elegir Estilo B</string>
+
+    <string name="wizard_step_2_title">Paso 2 : Estilo de Referencia</string>
+    <string name="wizard_step_2_subtitle">Elige una foto de referencia B o un preset guardado</string>
+    <string name="wizard_step_2_tab_photo_b">Foto de Referencia B</string>
+    <string name="wizard_step_2_tab_saved">Presets Guardados</string>
+    <string name="wizard_step_2_ref_empty">Toca para importar foto de referencia B</string>
+    <string name="wizard_step_2_ref_badge">Estilo B</string>
+    <string name="wizard_step_2_no_saved">Sin presets guardados aún. Sube directamente una foto de referencia B o extrae una paleta.</string>
+    <string name="wizard_step_2_btn_back">Atrás</string>
+    <string name="wizard_step_2_btn_next">Siguiente: Ajustes</string>
+
+    <string name="wizard_step_3_title">Paso 3 : Ajustes del Motor</string>
+    <string name="wizard_step_3_subtitle">Configura el algoritmo de transferencia y la opacidad</string>
+    <string name="wizard_step_3_method_title">Algoritmo de Transferencia</string>
+    <string name="wizard_step_3_intensity_title">Intensidad de Transferencia</string>
+    <string name="wizard_step_3_lut_size_title">Tamaño de Rejilla 3D LUT (.cube)</string>
+    <string name="wizard_step_3_btn_back">Atrás</string>
+    <string name="wizard_step_3_btn_run">Calcular Transferencia</string>
+
+    <string name="wizard_step_4_title">Calculando Colorimetría...</string>
+    <string name="wizard_step_4_subtitle">Procesamiento científico sin conexión con NumPy &amp; SciPy</string>
+    <string name="wizard_step_4_stage_1">Paso 1/3: Analizando distribuciones RGB...</string>
+    <string name="wizard_step_4_stage_2">Paso 2/3: Calculando matriz de covarianza &amp; alineación...</string>
+    <string name="wizard_step_4_stage_3">Paso 3/3: Finalizando matriz de transferencia...</string>
+    <string name="wizard_step_4_tech_badge">Motor Python 3.10 • Float32</string>
+
+    <string name="wizard_step_5_title">Paso 5 : Vista Previa &amp; Exportación</string>
+    <string name="wizard_step_5_subtitle">Ajusta la opacidad en tiempo real (120 FPS GPU) y exporta</string>
+    <string name="wizard_step_5_autosave_badge">Mezcla de opacidad GPU instantánea</string>
+    <string name="wizard_step_5_btn_save_gallery">Guardar Foto en la Galería</string>
+    <string name="wizard_step_5_saved_badge">Foto guardada en la Galería de Android (Pictures/StealZaLUT)</string>
+    <string name="wizard_step_5_btn_save_theme">Guardar Estilo como Preset</string>
+    <string name="wizard_step_5_btn_export_cube">Exportar 3D LUT (.CUBE)</string>
+    <string name="wizard_step_5_btn_reset">Nuevo Talonaje</string>
+
+    <!-- Intensity Slider -->
+    <string name="intensity_title">Intensidad (Mezcla GPU)</string>
+    <string name="intensity_slider_desc">Control deslizante de intensidad</string>
+    <string name="intensity_decrease_desc">Disminuir intensidad en 5 por ciento</string>
+    <string name="intensity_increase_desc">Aumentar intensidad en 5 por ciento</string>
+
+    <!-- Palette Swatches & Accessibility -->
+    <string name="swatch_a11y_format">Color %1$d de %2$d, código hexadecimal %3$s, toque para copiar</string>
+    <string name="swatch_copy_label">Copiar código hexadecimal</string>
+    <string name="swatch_copied_feedback">Color hexadecimal %1$s copiado al portapapeles</string>
+
+    <!-- Comparison View -->
+    <string name="comparison_title">Comparación Interactiva</string>
+    <string name="comparison_side_by_side">Lado a Lado</string>
+    <string name="comparison_split_wipe">Cortina Interactiva</string>
+    <string name="comparison_original_label">ORIGINAL</string>
+    <string name="comparison_lut_label">TALONADO</string>
+    <string name="comparison_handle_desc">Tirador divisor de cortina</string>
+    <string name="comparison_zoom_reset">Restablecer Zoom (%1$d%%)</string>
+    <string name="comparison_time_format">%1$d ms</string>
+    <string name="comparison_no_images">Selecciona foto de origen y estilo para ver la comparación.</string>
+
+    <!-- Palettes & Presets Screen -->
+    <string name="palettes_header_title">Paletas &amp; Presets</string>
+    <string name="palettes_header_desc">Extrae colores dominantes de cualquier foto y gestiona presets reutilizables.</string>
+    <string name="palettes_picker_title">Extraer desde Imagen</string>
+    <string name="palettes_picker_subtitle">Toca para analizar la paleta de una foto</string>
+    <string name="palettes_swatches_title">Muestras de color dominantes (Toca para copiar código hex):</string>
+    <string name="palettes_saved_section_title">Presets Guardados (%1$d)</string>
+    <string name="palettes_no_presets">Sin presets guardados aún.\nExtrae una paleta para enriquecer tu biblioteca.</string>
+    <string name="palettes_btn_apply">Usar en Studio</string>
+    <string name="palettes_btn_delete">Eliminar Preset</string>
+    <string name="palettes_btn_export_cube">Exportar .CUBE</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_header_title">Preferencias de la Aplicación</string>
+    <string name="settings_header_desc">Configura los parámetros del motor Python, idioma y almacenamiento en caché.</string>
+    <string name="settings_language_title">Idioma de la Aplicación</string>
+    <string name="settings_lang_en">English (Default)</string>
+    <string name="settings_lang_fr">Français</string>
+    <string name="settings_lang_es">Español</string>
+    <string name="settings_default_method">Algoritmo de Transferencia Predeterminado</string>
+    <string name="settings_default_lut_size">Tamaño de Rejilla 3D LUT Predeterminado</string>
+    <string name="settings_proxy_dim">Resolución Proxy de Análisis</string>
+    <string name="settings_export_dim">Resolución de Exportación Directa</string>
+    <string name="export_dim_1080p">1080p</string>
+    <string name="export_dim_2k">2K (2048px)</string>
+    <string name="export_dim_4k">4K (3840px)</string>
+    <string name="export_dim_native">Nativa</string>
+    <string name="settings_export_format">Formato de Exportación de Imagen</string>
+    <string name="settings_export_quality">Calidad JPEG (%1$d%%)</string>
+    <string name="settings_quality_slider_desc">Calidad JPEG</string>
+    <string name="settings_cache_title">Almacenamiento en Caché Temporal</string>
+    <string name="settings_cache_size">Espacio usado: %1$.1f MB</string>
+    <string name="settings_btn_clear_cache">Vaciar Caché Temporal</string>
+    <string name="settings_btn_save">Guardar Ajustes</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_save_theme_title">Guardar Preset</string>
+    <string name="dialog_save_theme_desc">Guarda esta receta de color para reutilizarla en el Studio o exportarla como .cube.</string>
+    <string name="dialog_theme_name_label">Nombre del Preset</string>
+    <string name="dialog_notes_label">Notas del colorista (Opcional)</string>
+    <string name="dialog_btn_save">Guardar Preset</string>
+    <string name="dialog_btn_cancel">Cancelar</string>
+
+    <!-- Status & Feedback Messages -->
+    <string name="msg_cache_cleared">Caché de vista previa vaciado con éxito.</string>
+    <string name="msg_theme_saved">Preset guardado en tu biblioteca.</string>
+    <string name="msg_cube_exported">3D LUT (.cube) exportado con éxito.</string>
+    <string name="msg_image_saved">Foto guardada en la Galería (Pictures/StealZaLUT).</string>
+    <string name="msg_theme_deleted">Preset eliminado.</string>
+
+    <!-- Common UI Labels -->
+    <string name="common_close">Cerrar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_share">Compartir</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_continue">Continuar</string>
+    <string name="format_percentage">%1$d%%</string>
+</resources>

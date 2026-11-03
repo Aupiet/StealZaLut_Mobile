@@ -18,7 +18,9 @@ import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
+import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.data.repository.PresetRepository
+import com.stealzalut.mobile.data.repository.SavedImageRepository
 import com.stealzalut.mobile.data.repository.SettingsRepository
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.toImmutableList
@@ -39,7 +41,12 @@ import java.io.File
 private data class PreviewDebounceRequest(
     val srcPath: String,
     val refPath: String,
-    val method: ColorTransferMethod
+    val method: ColorTransferMethod,
+    val intensity: Float,
+    val preserveLuminance: Float,
+    val skinProtection: Float,
+    val smoothSigma: Float,
+    val neutralLock: Float
 )
 
 @OptIn(FlowPreview::class)
@@ -47,6 +54,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
 
     private val bridgeRepository = PythonBridgeRepository(application.applicationContext)
     private val presetRepository = PresetRepository(application.applicationContext)
+    private val savedImageRepository = SavedImageRepository(application.applicationContext)
     private val settingsRepository = SettingsRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(StealZaLutUiState())
@@ -54,6 +62,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
 
     private val previewDebounceFlow = MutableSharedFlow<PreviewDebounceRequest>(replay = 1)
     private var activeGradingJob: Job? = null
+    private var pendingExportCubePath: String? = null
 
     init {
         val initialSettings = settingsRepository.getSettings()
@@ -69,6 +78,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
             )
         }
         loadSavedPresets()
+        loadSavedImages()
         refreshCacheSize()
 
         viewModelScope.launch {
@@ -78,23 +88,27 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
 
-        // Debounced preview flow (150ms) for method switching
+        // Debounced preview flow (200ms) for real-time parameter tweaking
         viewModelScope.launch {
             previewDebounceFlow
-                .debounce(150L)
+                .debounce(200L)
                 .distinctUntilChanged()
                 .collect { req ->
-                    computePythonPreview(req.srcPath, req.refPath, req.method)
+                    computePythonPreview(req)
                 }
         }
     }
 
     fun navigateTo(destination: AppDestination) {
         _uiState.update { it.copy(currentDestination = destination) }
-        if (destination == AppDestination.PALETTES) {
-            loadSavedPresets()
-        } else if (destination == AppDestination.SETTINGS) {
-            refreshCacheSize()
+        when (destination) {
+            AppDestination.PALETTES -> loadSavedPresets()
+            AppDestination.PROFILE -> {
+                loadSavedPresets()
+                loadSavedImages()
+            }
+            AppDestination.SETTINGS -> refreshCacheSize()
+            else -> {}
         }
     }
 
@@ -141,6 +155,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update {
             it.copy(
                 selectedTheme = preset,
+                styleBSourceMode = 1,
                 customReferencePath = null,
                 customReferenceBitmap = null,
                 customReferenceUri = null,
@@ -169,6 +184,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                     }
                     _uiState.update {
                         it.copy(
+                            styleBSourceMode = 0,
                             customReferenceUri = uri,
                             customReferencePath = file.absolutePath,
                             customReferenceBitmap = thumbnail,
@@ -199,18 +215,64 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         if (_uiState.value.canApply) triggerDebouncedPreview()
     }
 
-    /**
-     * 120 FPS Instantaneous GPU Intensity Blending.
-     * Modifies the UI state alpha without any CPU bitmap re-allocation or Python GIL interruption.
-     */
     fun setIntensity(intensity: Float) {
         val clamped = intensity.coerceIn(0f, 1f)
+        if (_uiState.value.intensity == clamped) return
         _uiState.update {
             it.copy(
                 intensity = clamped,
                 isGradedImageSaved = false
             )
         }
+        triggerDebouncedPreview()
+    }
+
+    fun setPreserveLuminance(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        if (_uiState.value.preserveLuminance == clamped) return
+        _uiState.update {
+            it.copy(
+                preserveLuminance = clamped,
+                isGradedImageSaved = false
+            )
+        }
+        triggerDebouncedPreview()
+    }
+
+    fun setSkinProtection(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        if (_uiState.value.skinProtection == clamped) return
+        _uiState.update {
+            it.copy(
+                skinProtection = clamped,
+                isGradedImageSaved = false
+            )
+        }
+        triggerDebouncedPreview()
+    }
+
+    fun setSmoothSigma(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        if (_uiState.value.smoothSigma == clamped) return
+        _uiState.update {
+            it.copy(
+                smoothSigma = clamped,
+                isGradedImageSaved = false
+            )
+        }
+        triggerDebouncedPreview()
+    }
+
+    fun setNeutralLock(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        if (_uiState.value.neutralLock == clamped) return
+        _uiState.update {
+            it.copy(
+                neutralLock = clamped,
+                isGradedImageSaved = false
+            )
+        }
+        triggerDebouncedPreview()
     }
 
     fun setLutSize(size: LutSize) {
@@ -230,12 +292,26 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         val src = current.sourcePath ?: return
         val ref = current.effectiveReferencePath ?: return
         viewModelScope.launch {
-            previewDebounceFlow.emit(PreviewDebounceRequest(src, ref, current.method))
+            previewDebounceFlow.emit(
+                PreviewDebounceRequest(
+                    srcPath = src,
+                    refPath = ref,
+                    method = current.method,
+                    intensity = current.intensity,
+                    preserveLuminance = current.preserveLuminance,
+                    skinProtection = current.skinProtection,
+                    smoothSigma = current.smoothSigma,
+                    neutralLock = current.neutralLock
+                )
+            )
         }
     }
 
     fun setWizardStep(step: Int) {
         _uiState.update { it.copy(wizardStep = step) }
+        if (step == AppConstants.STEP_3_PARAMS) {
+            triggerDebouncedPreview()
+        }
     }
 
     fun setStyleBSourceMode(mode: Int) {
@@ -284,12 +360,15 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
             kotlinx.coroutines.delay(AppConstants.COMPUTE_STAGE_DELAY_MS)
             _uiState.update { it.copy(computeStageIndex = 2) }
 
-            // Python calculates 100% transfer preview once
             val result = bridgeRepository.generatePreview(
                 srcPath = srcPath,
                 refPath = refPath,
                 method = current.method,
-                intensity = 1.0f
+                intensity = current.intensity,
+                preserveLuminance = current.preserveLuminance,
+                skinProtection = current.skinProtection,
+                smoothSigma = current.smoothSigma,
+                neutralLock = current.neutralLock
             )
 
             kotlinx.coroutines.delay(AppConstants.COMPUTE_STAGE_DELAY_MS)
@@ -343,7 +422,11 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 intensity = current.intensity,
                 maxExportDim = current.settings.maxExportDim,
                 format = current.settings.exportFormat,
-                quality = current.settings.exportQuality
+                quality = current.settings.exportQuality,
+                preserveLuminance = current.preserveLuminance,
+                skinProtection = current.skinProtection,
+                smoothSigma = current.smoothSigma,
+                neutralLock = current.neutralLock
             )
 
             when (result) {
@@ -357,12 +440,23 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
 
                     mediaStoreResult.fold(
                         onSuccess = {
+                            savedImageRepository.recordGradedImage(
+                                sourceFilePath = result.imagePath,
+                                width = result.width,
+                                height = result.height,
+                                themeName = current.selectedTheme?.name ?: "Look StealZaLUT",
+                                method = current.method.key,
+                                intensity = current.intensity,
+                                referenceImagePath = current.effectiveReferencePath,
+                                paletteHexes = current.selectedTheme?.paletteHexes ?: current.customReferencePalette
+                            )
+                            loadSavedImages()
                             _uiState.update {
                                 it.copy(
                                     isExportingImage = false,
                                     exportedImagePath = result.imagePath,
                                     isGradedImageSaved = true,
-                                    userMessage = "Photo enregistrée dans la Galerie (Pictures/StealZaLUT) !"
+                                    userMessage = "Photo enregistrée dans la Galerie et votre Bibliothèque !"
                                 )
                             }
                         },
@@ -399,6 +493,15 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 bridgeRepository.extractPalette(refPath, AppConstants.DEFAULT_PALETTE_COLOR_COUNT)
             }
 
+            val cardFile = File(getApplication<Application>().filesDir, "color_card_${System.currentTimeMillis()}.jpg")
+            val cardResult = bridgeRepository.generateColorCard(
+                refPath = refPath,
+                outputCardPath = cardFile.absolutePath,
+                method = current.method,
+                intensity = current.intensity
+            )
+            val thumbnailPath = cardResult.getOrNull() ?: cardFile.absolutePath
+
             val preset = ColorimetryPreset(
                 name = name.ifBlank { "Preset ${System.currentTimeMillis() % 1000}" },
                 method = current.method,
@@ -406,6 +509,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 lutSize = current.lutSize,
                 referenceImagePath = refPath,
                 paletteHexes = palette,
+                thumbnailPath = thumbnailPath,
                 notes = notes
             )
             val saveResult = presetRepository.savePreset(preset)
@@ -431,16 +535,20 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private suspend fun computePythonPreview(srcPath: String, refPath: String, method: ColorTransferMethod) {
+    private suspend fun computePythonPreview(req: PreviewDebounceRequest) {
         activeGradingJob?.cancel()
         activeGradingJob = viewModelScope.launch {
             _uiState.update { it.copy(isProcessingPreview = true, errorMessage = null) }
 
             val result = bridgeRepository.generatePreview(
-                srcPath = srcPath,
-                refPath = refPath,
-                method = method,
-                intensity = 1.0f
+                srcPath = req.srcPath,
+                refPath = req.refPath,
+                method = req.method,
+                intensity = req.intensity,
+                preserveLuminance = req.preserveLuminance,
+                skinProtection = req.skinProtection,
+                smoothSigma = req.smoothSigma,
+                neutralLock = req.neutralLock
             )
 
             when (result) {
@@ -472,8 +580,17 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
 
     fun exportCube(onReadyToSave: (String) -> Unit) {
         val current = _uiState.value
-        val srcPath = current.sourcePath ?: return
-        val refPath = current.effectiveReferencePath ?: return
+        val srcPath = current.sourcePath
+        val refPath = current.effectiveReferencePath
+
+        if (srcPath == null || refPath == null) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "Impossible d'exporter : veuillez sélectionner une photo source et un style de référence."
+                )
+            }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isExportingCube = true, errorMessage = null) }
@@ -483,16 +600,21 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 refPath = refPath,
                 lutSize = current.lutSize,
                 method = current.method,
-                intensity = current.intensity
+                intensity = current.intensity,
+                preserveLuminance = current.preserveLuminance,
+                skinProtection = current.skinProtection,
+                smoothSigma = current.smoothSigma,
+                neutralLock = current.neutralLock
             )
 
             when (result) {
                 is CubeExportResult.Success -> {
+                    pendingExportCubePath = result.cubePath
                     _uiState.update {
                         it.copy(
                             isExportingCube = false,
                             exportedCubePath = result.cubePath,
-                            userMessage = "LUT ${result.lutSize}³ générée en ${result.executionTimeMs.toInt()} ms !"
+                            userMessage = "LUT ${result.lutSize}³ générée avec succès !"
                         )
                     }
                     onReadyToSave(result.cubePath)
@@ -560,6 +682,15 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         val refPath = current.palettePhotoPath ?: return
 
         viewModelScope.launch {
+            val cardFile = File(getApplication<Application>().filesDir, "color_card_${System.currentTimeMillis()}.jpg")
+            val cardResult = bridgeRepository.generateColorCard(
+                refPath = refPath,
+                outputCardPath = cardFile.absolutePath,
+                method = current.method,
+                intensity = current.intensity
+            )
+            val thumbnailPath = cardResult.getOrNull() ?: cardFile.absolutePath
+
             val preset = ColorimetryPreset(
                 name = name.ifBlank { "Preset ${System.currentTimeMillis() % 1000}" },
                 method = current.method,
@@ -567,6 +698,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 lutSize = current.lutSize,
                 referenceImagePath = refPath,
                 paletteHexes = current.extractedPalette,
+                thumbnailPath = thumbnailPath,
                 notes = notes
             )
             val saveResult = presetRepository.savePreset(preset)
@@ -608,7 +740,110 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     // ========================================================================
-    // 3. PARAMÈTRES & CACHE
+    // 3. PROFIL & BIBLIOTHÈQUE (SAVED IMAGES & PRESETS)
+    // ========================================================================
+
+    fun setProfileTab(tabIndex: Int) {
+        _uiState.update { it.copy(profileSelectedTab = tabIndex) }
+    }
+
+    fun loadSavedImages() {
+        viewModelScope.launch {
+            val images = savedImageRepository.getSavedImages()
+            _uiState.update { it.copy(savedImages = images.toImmutableList()) }
+        }
+    }
+
+    fun deleteSavedImage(id: String) {
+        viewModelScope.launch {
+            savedImageRepository.deleteSavedImage(id)
+            loadSavedImages()
+            _uiState.update {
+                it.copy(
+                    userMessage = "Photo supprimée de la bibliothèque.",
+                    selectedDetailImage = if (it.selectedDetailImage?.id == id) null else it.selectedDetailImage
+                )
+            }
+        }
+    }
+
+    fun openImageDetail(image: SavedGradedImage) {
+        _uiState.update { it.copy(selectedDetailImage = image) }
+    }
+
+    fun dismissImageDetail() {
+        _uiState.update { it.copy(selectedDetailImage = null) }
+    }
+
+    fun applyLookFromSavedImage(image: SavedGradedImage) {
+        val method = ColorTransferMethod.fromKey(image.method ?: "hm-mkl-hm")
+        val customPreset = image.referenceImagePath?.let { path ->
+            ColorimetryPreset(
+                name = image.themeName ?: "Look StealZaLUT",
+                method = method,
+                intensity = image.intensity,
+                referenceImagePath = path,
+                paletteHexes = image.paletteHexes
+            )
+        }
+
+        _uiState.update {
+            it.copy(
+                method = method,
+                intensity = image.intensity,
+                customReferencePath = image.referenceImagePath,
+                selectedTheme = customPreset,
+                customReferencePalette = image.paletteHexes.toImmutableList(),
+                selectedDetailImage = null
+            )
+        }
+        navigateTo(AppDestination.STUDIO)
+        setWizardStep(AppConstants.STEP_2_STYLE)
+    }
+
+    fun createShareImageIntent(filePath: String): Intent {
+        return bridgeRepository.createShareIntent(filePath, "image/*")
+    }
+
+    fun exportCubeFromPreset(preset: ColorimetryPreset, onReadyToSave: (String) -> Unit) {
+        val refPath = preset.referenceImagePath
+        if (refPath == null || !File(refPath).exists()) {
+            _uiState.update { it.copy(errorMessage = "Ce preset ne contient pas d'image de référence valide pour régénérer la LUT.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExportingCube = true, errorMessage = null) }
+            val result = bridgeRepository.exportCube(
+                srcPath = refPath,
+                refPath = refPath,
+                lutSize = preset.lutSize,
+                method = preset.method,
+                intensity = preset.intensity
+            )
+            when (result) {
+                is CubeExportResult.Success -> {
+                    pendingExportCubePath = result.cubePath
+                    _uiState.update {
+                        it.copy(
+                            isExportingCube = false,
+                            exportedCubePath = result.cubePath,
+                            userMessage = "LUT ${result.lutSize}³ générée avec succès !"
+                        )
+                    }
+                    onReadyToSave(result.cubePath)
+                }
+                is CubeExportResult.Error -> {
+                    _uiState.update {
+                        it.copy(isExportingCube = false, errorMessage = result.error.userMessage)
+                    }
+                }
+            }
+        }
+    }
+
+    // ========================================================================
+    // 4. PARAMÈTRES & CACHE
     // ========================================================================
 
     fun updateSettings(newSettings: AppSettings) {
@@ -655,13 +890,26 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun saveExportedCubeToUri(destinationUri: Uri) {
-        val cubePath = _uiState.value.exportedCubePath ?: return
+        val cubePath = pendingExportCubePath ?: _uiState.value.exportedCubePath
+        if (cubePath == null) {
+            _uiState.update { it.copy(errorMessage = "Erreur : chemin du fichier LUT introuvable.") }
+            return
+        }
         viewModelScope.launch {
             val result = bridgeRepository.copyFileToDestinationUri(cubePath, destinationUri)
             result.fold(
                 onSuccess = { _uiState.update { it.copy(userMessage = "LUT .cube enregistrée avec succès !") } },
-                onFailure = { error -> _uiState.update { it.copy(errorMessage = "Erreur : ${error.localizedMessage}") } }
+                onFailure = { error -> _uiState.update { it.copy(errorMessage = "Erreur lors de l'enregistrement : ${error.localizedMessage}") } }
             )
+        }
+    }
+
+    fun createShareCubeIntent(cubeFilePath: String? = null): Intent? {
+        val path = cubeFilePath ?: pendingExportCubePath ?: _uiState.value.exportedCubePath ?: return null
+        return try {
+            bridgeRepository.createShareIntent(path, "*/*")
+        } catch (_: Exception) {
+            null
         }
     }
 

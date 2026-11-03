@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -25,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,19 +39,22 @@ import com.stealzalut.mobile.core.AppDimens
 import kotlin.math.roundToInt
 
 /**
- * Accessible real-time intensity slider with 60 FPS in-memory alpha blending.
- * Complies with WCAG 2.1 AA standards:
- * - stateDescription for TalkBack: percentage announcements
- * - Explicit [-] and [+] 5% increment buttons with 48dp touch targets for motor impaired users
- * - Zero hardcoded strings and zero hardcoded dimensions
+ * Accessible real-time parameter slider with 5% increments and WCAG 2.1 AA compliance.
  */
 @Composable
-fun IntensitySlider(
-    intensity: Float,
-    onIntensityChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
+fun ParameterSlider(
+    title: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    icon: ImageVector? = null,
+    min: Float = 0.0f,
+    max: Float = 1.0f,
+    step: Float = 0.05f,
+    presets: List<Float>? = AppConstants.INTENSITY_PRESETS
 ) {
-    val percentage = (intensity * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt()
+    val percentage = (value * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt()
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -56,24 +62,50 @@ fun IntensitySlider(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(R.string.intensity_title),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f, fill = false)
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconNormal),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
             Surface(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Text(
                     text = "$percentage %",
-                    modifier = Modifier.padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingMicro),
+                    modifier = Modifier.padding(
+                        horizontal = AppDimens.SpacingMedium,
+                        vertical = AppDimens.SpacingMicro
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
+        }
+
+        if (description != null) {
+            Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
@@ -86,13 +118,15 @@ fun IntensitySlider(
         ) {
             val decDesc = stringResource(R.string.intensity_decrease_desc)
             val incDesc = stringResource(R.string.intensity_increase_desc)
-            val sliderDesc = stringResource(R.string.intensity_slider_desc)
+            val sliderDesc = "$title: $percentage%"
 
-            // Minus 5% button
+            // Minus button
             FilledTonalIconButton(
                 onClick = {
-                    val next = (intensity - AppConstants.INTENSITY_STEP).coerceAtLeast(AppConstants.INTENSITY_MIN)
-                    onIntensityChange((next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER)
+                    val next = (value - step).coerceAtLeast(min)
+                    onValueChange(
+                        (next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER
+                    )
                 },
                 modifier = Modifier
                     .defaultMinSize(minWidth = AppDimens.MinTouchTarget, minHeight = AppDimens.MinTouchTarget)
@@ -110,11 +144,12 @@ fun IntensitySlider(
                 )
             }
 
+            val sliderSteps = ((max - min) / step - 1).roundToInt().coerceAtLeast(0)
             Slider(
-                value = intensity,
-                onValueChange = onIntensityChange,
-                valueRange = AppConstants.INTENSITY_MIN..AppConstants.INTENSITY_MAX,
-                steps = AppConstants.INTENSITY_SLIDER_STEPS,
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = min..max,
+                steps = sliderSteps,
                 modifier = Modifier
                     .weight(1f)
                     .semantics {
@@ -127,11 +162,13 @@ fun IntensitySlider(
                 )
             )
 
-            // Plus 5% button
+            // Plus button
             FilledTonalIconButton(
                 onClick = {
-                    val next = (intensity + AppConstants.INTENSITY_STEP).coerceAtMost(AppConstants.INTENSITY_MAX)
-                    onIntensityChange((next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER)
+                    val next = (value + step).coerceAtMost(max)
+                    onValueChange(
+                        (next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER
+                    )
                 },
                 modifier = Modifier
                     .defaultMinSize(minWidth = AppDimens.MinTouchTarget, minHeight = AppDimens.MinTouchTarget)
@@ -150,31 +187,52 @@ fun IntensitySlider(
             }
         }
 
-        // Quick Preset Chips (25%, 50%, 75%, 100%)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            AppConstants.INTENSITY_PRESETS.forEach { valFloat ->
-                val label = "${(valFloat * AppConstants.INTENSITY_PERCENT_MULTIPLIER).toInt()}%"
-                TextButton(
-                    onClick = { onIntensityChange(valFloat) },
-                    modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinInteractiveTarget),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = AppDimens.SpacingMedium,
-                        vertical = AppDimens.SpacingMicro
-                    )
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if ((intensity * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() == (valFloat * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt())
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        // Quick Preset Chips (if provided)
+        if (presets != null && presets.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                presets.forEach { valFloat ->
+                    val label = "${(valFloat * AppConstants.INTENSITY_PERCENT_MULTIPLIER).toInt()}%"
+                    TextButton(
+                        onClick = { onValueChange(valFloat) },
+                        modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinInteractiveTarget),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = AppDimens.SpacingMedium,
+                            vertical = AppDimens.SpacingMicro
+                        )
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if ((value * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() == (valFloat * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt())
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Accessible real-time intensity slider with 60 FPS in-memory alpha blending.
+ * Retained for backwards compatibility across existing UI components.
+ */
+@Composable
+fun IntensitySlider(
+    intensity: Float,
+    onIntensityChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ParameterSlider(
+        title = stringResource(R.string.intensity_title),
+        value = intensity,
+        onValueChange = onIntensityChange,
+        modifier = modifier,
+        icon = Icons.Default.Tune
+    )
 }

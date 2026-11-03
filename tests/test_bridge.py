@@ -22,6 +22,7 @@ from stealzalut.bridge import (
     export_cube_file,
     export_graded_image,
     extract_palette,
+    generate_color_card,
     process_preview,
 )
 
@@ -133,6 +134,13 @@ def test_nominal_bridge_calls():
         r_pal = extract_palette(image_path=src_path, num_colors=6)
         assert r_pal["status"] == "success"
         assert len(r_pal["palette"]) == 6
+
+        # 5. generate_color_card
+        out_card = os.path.join(tmp_dir, "color_card.jpg")
+        r_card = generate_color_card(ref_path=ref_path, output_card_path=out_card)
+        assert r_card["status"] == "success"
+        assert os.path.isfile(r_card["card_path"])
+        assert len(r_card["palette"]) == 6
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -42,6 +43,10 @@ data class StealZaLutUiState(
 
     val method: ColorTransferMethod = ColorTransferMethod.HM_MKL_HM,
     val intensity: Float = AppConstants.INTENSITY_DEFAULT,
+    val preserveLuminance: Float = AppConstants.PRESERVE_LUMINANCE_DEFAULT,
+    val skinProtection: Float = AppConstants.SKIN_PROTECTION_DEFAULT,
+    val smoothSigma: Float = AppConstants.SMOOTH_SIGMA_DEFAULT,
+    val neutralLock: Float = AppConstants.NEUTRAL_LOCK_DEFAULT,
     val lutSize: LutSize = LutSize.STANDARD,
 
     val isProcessingPreview: Boolean = false,
@@ -72,7 +77,14 @@ data class StealZaLutUiState(
     val savedPresets: ImmutableList<ColorimetryPreset> = persistentListOf(),
 
     // ========================================================================
-    // 3. SETTINGS & CACHE
+    // 3. PROFIL & BIBLIOTHÈQUE
+    // ========================================================================
+    val savedImages: ImmutableList<SavedGradedImage> = persistentListOf(),
+    val profileSelectedTab: Int = 0, // 0 = Photos, 1 = Thèmes / Presets
+    val selectedDetailImage: SavedGradedImage? = null,
+
+    // ========================================================================
+    // 4. SETTINGS & CACHE
     // ========================================================================
     val settings: AppSettings = AppSettings(),
     val cacheSizeMb: Double = 0.0,
@@ -83,7 +95,11 @@ data class StealZaLutUiState(
     val errorMessage: String? = null
 ) {
     val effectiveReferencePath: String?
-        get() = if (styleBSourceMode == 0) customReferencePath else (selectedTheme?.referenceImagePath ?: customReferencePath)
+        get() = if (styleBSourceMode == 0) {
+            customReferencePath ?: selectedTheme?.referenceImagePath
+        } else {
+            selectedTheme?.referenceImagePath ?: customReferencePath
+        }
 
     val canProceedToStep2: Boolean
         get() = sourcePath != null

@@ -1,5 +1,7 @@
 package com.stealzalut.mobile.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -33,14 +35,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.BlurOn
+import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Contrast
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -59,6 +67,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,6 +81,7 @@ import com.stealzalut.mobile.ui.components.IntensitySlider
 import com.stealzalut.mobile.ui.components.LutSizeSelector
 import com.stealzalut.mobile.ui.components.MethodSelector
 import com.stealzalut.mobile.ui.components.PaletteSwatchesView
+import com.stealzalut.mobile.ui.components.ParameterSlider
 import com.stealzalut.mobile.ui.components.SavePresetDialog
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import java.io.File
@@ -91,9 +101,10 @@ fun ApplyThemeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     val exportCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument(AppConstants.MIME_TYPE_OCTET_STREAM)
+        contract = ActivityResultContracts.CreateDocument("*/*")
     ) { destinationUri ->
         if (destinationUri != null) {
             viewModel.saveExportedCubeToUri(destinationUri)
@@ -176,12 +187,30 @@ fun ApplyThemeScreen(
 
                 AppConstants.STEP_3_PARAMS -> {
                     WizardStep3Parameters(
+                        sourceBitmap = uiState.sourceBitmap,
+                        previewBitmap = uiState.basePreviewBitmap,
+                        isProcessingPreview = uiState.isProcessingPreview,
+                        executionTimeMs = uiState.previewExecutionTimeMs,
                         selectedMethod = uiState.method,
                         onMethodSelected = { viewModel.setMethod(it) },
                         intensity = uiState.intensity,
                         onIntensityChange = { viewModel.setIntensity(it) },
+                        preserveLuminance = uiState.preserveLuminance,
+                        onPreserveLuminanceChange = { viewModel.setPreserveLuminance(it) },
+                        skinProtection = uiState.skinProtection,
+                        onSkinProtectionChange = { viewModel.setSkinProtection(it) },
+                        smoothSigma = uiState.smoothSigma,
+                        onSmoothSigmaChange = { viewModel.setSmoothSigma(it) },
+                        neutralLock = uiState.neutralLock,
+                        onNeutralLockChange = { viewModel.setNeutralLock(it) },
                         selectedLutSize = uiState.lutSize,
                         onLutSizeSelected = { viewModel.setLutSize(it) },
+                        isExportingCube = uiState.isExportingCube,
+                        onExportCube = {
+                            viewModel.exportCube { cubePath ->
+                                exportCubeLauncher.launch(File(cubePath).name)
+                            }
+                        },
                         onBack = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) },
                         onRun = { viewModel.runGradingFunnel() }
                     )
@@ -202,12 +231,18 @@ fun ApplyThemeScreen(
                         isGradedImageSaved = uiState.isGradedImageSaved,
                         isExportingImage = uiState.isExportingImage,
                         isExportingCube = uiState.isExportingCube,
+                        exportedCubePath = uiState.exportedCubePath,
                         onIntensityChange = { viewModel.setIntensity(it) },
                         onSaveGradedImage = { viewModel.saveGradedImageToGallery() },
                         onSaveStyleToProfile = { viewModel.openSaveThemeDialog() },
                         onExportCube = {
                             viewModel.exportCube { cubePath ->
                                 exportCubeLauncher.launch(File(cubePath).name)
+                            }
+                        },
+                        onShareCube = {
+                            viewModel.createShareCubeIntent()?.let { intent ->
+                                context.startActivity(Intent.createChooser(intent, "Partager la LUT (.cube)"))
                             }
                         },
                         onReset = { viewModel.resetWizard() }
@@ -564,12 +599,26 @@ private fun WizardStep2Style(
 
 @Composable
 private fun WizardStep3Parameters(
+    sourceBitmap: android.graphics.Bitmap?,
+    previewBitmap: android.graphics.Bitmap?,
+    isProcessingPreview: Boolean,
+    executionTimeMs: Double?,
     selectedMethod: com.stealzalut.mobile.data.model.ColorTransferMethod,
     onMethodSelected: (com.stealzalut.mobile.data.model.ColorTransferMethod) -> Unit,
     intensity: Float,
     onIntensityChange: (Float) -> Unit,
+    preserveLuminance: Float,
+    onPreserveLuminanceChange: (Float) -> Unit,
+    skinProtection: Float,
+    onSkinProtectionChange: (Float) -> Unit,
+    smoothSigma: Float,
+    onSmoothSigmaChange: (Float) -> Unit,
+    neutralLock: Float,
+    onNeutralLockChange: (Float) -> Unit,
     selectedLutSize: com.stealzalut.mobile.data.model.LutSize,
     onLutSizeSelected: (com.stealzalut.mobile.data.model.LutSize) -> Unit,
+    isExportingCube: Boolean = false,
+    onExportCube: () -> Unit = {},
     onBack: () -> Unit,
     onRun: () -> Unit
 ) {
@@ -579,22 +628,208 @@ private fun WizardStep3Parameters(
             subtitle = stringResource(R.string.wizard_step_3_subtitle)
         )
 
+        // Live WYSIWYG Preview Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = CardDefaults.outlinedCardBorder()
+        ) {
+            Column(
+                modifier = Modifier.padding(AppDimens.SpacingNormal),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Visibility,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                        Text(
+                            text = stringResource(R.string.wizard_step_3_preview_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    if (isProcessingPreview) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(AppDimens.IconSmall),
+                                strokeWidth = AppDimens.BorderThin,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.wizard_step_3_computing_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else if (executionTimeMs != null) {
+                        Surface(
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Text(
+                                text = "${executionTimeMs.toInt()} ms",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(
+                                    horizontal = AppDimens.SpacingSmall,
+                                    vertical = AppDimens.SpacingExtraSmall
+                                )
+                            )
+                        }
+                    }
+                }
+
+                DoubleViewComparison(
+                    sourceBitmap = sourceBitmap,
+                    previewBitmap = previewBitmap,
+                    intensity = intensity,
+                    executionTimeMs = executionTimeMs
+                )
+            }
+        }
+
+        // Independent Parameter Controls Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = CardDefaults.outlinedCardBorder()
+        ) {
+            Column(
+                modifier = Modifier.padding(AppDimens.SpacingNormal),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+            ) {
+                Text(
+                    text = stringResource(R.string.wizard_step_3_independent_params_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // 1. Overall Strength
+                ParameterSlider(
+                    title = stringResource(R.string.param_intensity_title),
+                    description = stringResource(R.string.param_intensity_desc),
+                    value = intensity,
+                    onValueChange = onIntensityChange,
+                    icon = Icons.Default.Tune,
+                    min = AppConstants.INTENSITY_MIN,
+                    max = AppConstants.INTENSITY_MAX
+                )
+
+                // 2. Luminance Preservation
+                ParameterSlider(
+                    title = stringResource(R.string.param_preserve_lum_title),
+                    description = stringResource(R.string.param_preserve_lum_desc),
+                    value = preserveLuminance,
+                    onValueChange = onPreserveLuminanceChange,
+                    icon = Icons.Default.Brightness6,
+                    min = AppConstants.PARAM_MIN,
+                    max = AppConstants.PARAM_MAX
+                )
+
+                // 3. Skin Tone Protection
+                ParameterSlider(
+                    title = stringResource(R.string.param_skin_prot_title),
+                    description = stringResource(R.string.param_skin_prot_desc),
+                    value = skinProtection,
+                    onValueChange = onSkinProtectionChange,
+                    icon = Icons.Default.Face,
+                    min = AppConstants.PARAM_MIN,
+                    max = AppConstants.PARAM_MAX
+                )
+
+                // 4. Neutral Axis Lock
+                ParameterSlider(
+                    title = stringResource(R.string.param_neutral_lock_title),
+                    description = stringResource(R.string.param_neutral_lock_desc),
+                    value = neutralLock,
+                    onValueChange = onNeutralLockChange,
+                    icon = Icons.Default.Contrast,
+                    min = AppConstants.PARAM_MIN,
+                    max = AppConstants.PARAM_MAX
+                )
+
+                // 5. 3D Spatial Smoothing
+                ParameterSlider(
+                    title = stringResource(R.string.param_smooth_title),
+                    description = stringResource(R.string.param_smooth_desc),
+                    value = smoothSigma,
+                    onValueChange = onSmoothSigmaChange,
+                    icon = Icons.Default.BlurOn,
+                    min = AppConstants.PARAM_MIN,
+                    max = AppConstants.PARAM_MAX
+                )
+            }
+        }
+
+        // Method Selector
         MethodSelector(
             selectedMethod = selectedMethod,
             onMethodSelected = onMethodSelected
         )
 
-        IntensitySlider(
-            intensity = intensity,
-            onIntensityChange = onIntensityChange
-        )
-
+        // LUT Size Selector
         LutSizeSelector(
             selectedSize = selectedLutSize,
             onSizeSelected = onLutSizeSelected
         )
 
-        Spacer(modifier = Modifier.height(AppDimens.SpacingMedium))
+        // Direct Action: Export 3D LUT (.CUBE) directly from Step 3
+        OutlinedButton(
+            onClick = onExportCube,
+            enabled = !isExportingCube,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+        ) {
+            if (isExportingCube) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                    strokeWidth = AppDimens.BorderThick,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = "Génération de la LUT .CUBE…",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.FileDownload,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.wizard_step_5_btn_export_cube),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -736,10 +971,12 @@ private fun WizardStep5Result(
     isGradedImageSaved: Boolean,
     isExportingImage: Boolean,
     isExportingCube: Boolean,
+    exportedCubePath: String? = null,
     onIntensityChange: (Float) -> Unit,
     onSaveGradedImage: () -> Unit,
     onSaveStyleToProfile: () -> Unit,
     onExportCube: () -> Unit,
+    onShareCube: (() -> Unit)? = null,
     onReset: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)) {
@@ -859,17 +1096,54 @@ private fun WizardStep5Result(
                 .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
             shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
         ) {
-            Icon(
-                imageVector = Icons.Default.FileDownload,
-                contentDescription = null,
-                modifier = Modifier.size(AppDimens.IconNormal)
-            )
-            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-            Text(
-                text = stringResource(R.string.wizard_step_5_btn_export_cube),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (isExportingCube) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                    strokeWidth = AppDimens.BorderThick,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = "Génération de la LUT .CUBE…",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.FileDownload,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.wizard_step_5_btn_export_cube),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // Action 2b: Share .cube 3D LUT (if already generated or available)
+        if (exportedCubePath != null && onShareCube != null) {
+            OutlinedButton(
+                onClick = onShareCube,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = "Partager la LUT .CUBE",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
         // Action 3: Save Preset Recipe

@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
@@ -49,6 +50,10 @@ data class ColorGradingUiState(
     val selectedTheme: ColorimetryPreset? = null,
     val method: ColorTransferMethod = ColorTransferMethod.HM_MKL_HM,
     val intensity: Float = 1.0f,
+    val preserveLuminance: Float = AppConstants.PRESERVE_LUMINANCE_DEFAULT,
+    val skinProtection: Float = AppConstants.SKIN_PROTECTION_DEFAULT,
+    val smoothSigma: Float = AppConstants.SMOOTH_SIGMA_DEFAULT,
+    val neutralLock: Float = AppConstants.NEUTRAL_LOCK_DEFAULT,
     val lutSize: LutSize = LutSize.STANDARD,
     val isProcessingPreview: Boolean = false,
     val isExportingCube: Boolean = false,

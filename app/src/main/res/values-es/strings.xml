@@ -7,11 +7,13 @@
     <!-- Navigation Destinations -->
     <string name="nav_studio">Studio</string>
     <string name="nav_palettes">Paletas</string>
+    <string name="nav_profile">Biblioteca</string>
     <string name="nav_settings">Ajustes</string>
 
     <!-- Destination Subtitles -->
     <string name="dest_subtitle_studio">Transferencia de Color &amp; 3D LUT</string>
     <string name="dest_subtitle_palettes">Extracción de Paleta &amp; Ajustes</string>
+    <string name="dest_subtitle_profile">Fotos y Temas Guardados</string>
     <string name="dest_subtitle_settings">Parámetros del Motor &amp; Almacenamiento Caché</string>
 
     <!-- Color Transfer Methods (Enums) -->
@@ -57,13 +59,26 @@
     <string name="wizard_step_2_btn_back">Atrás</string>
     <string name="wizard_step_2_btn_next">Siguiente: Ajustes</string>
 
-    <string name="wizard_step_3_title">Paso 3 : Ajustes del Motor</string>
-    <string name="wizard_step_3_subtitle">Configura el algoritmo de transferencia y la opacidad</string>
+    <string name="wizard_step_3_title">Paso 3 : Ajustes y Vista Previa</string>
+    <string name="wizard_step_3_subtitle">Ajusta cada parámetro independientemente con vista previa en tiempo real (WYSIWYG)</string>
     <string name="wizard_step_3_method_title">Algoritmo de Transferencia</string>
     <string name="wizard_step_3_intensity_title">Intensidad de Transferencia</string>
     <string name="wizard_step_3_lut_size_title">Tamaño de Rejilla 3D LUT (.cube)</string>
     <string name="wizard_step_3_btn_back">Atrás</string>
-    <string name="wizard_step_3_btn_run">Calcular Transferencia</string>
+    <string name="wizard_step_3_btn_run">Finalizar y Exportar</string>
+    <string name="wizard_step_3_preview_title">Vista Previa en Vivo (WYSIWYG)</string>
+    <string name="wizard_step_3_computing_badge">Procesando…</string>
+    <string name="wizard_step_3_independent_params_title">Controles de Parámetros Independientes</string>
+    <string name="param_intensity_title">Fuerza Global de Transferencia</string>
+    <string name="param_intensity_desc">Controla la intensidad general del estilo (LUT).</string>
+    <string name="param_preserve_lum_title">Preservación de Luminancia</string>
+    <string name="param_preserve_lum_desc">Conserva la exposición original de la foto fuente (CIE LAB).</string>
+    <string name="param_skin_prot_title">Protección de Tonos de Piel</string>
+    <string name="param_skin_prot_desc">Mantiene el aspecto natural de rostros y piel humana.</string>
+    <string name="param_neutral_lock_title">Bloqueo de Eje Neutro</string>
+    <string name="param_neutral_lock_desc">Elimina dominantes en negros profundos y blancos puros.</string>
+    <string name="param_smooth_title">Suavizado Espacial 3D</string>
+    <string name="param_smooth_desc">Filtro 3D que previene el bandeado y posterización.</string>
 
     <string name="wizard_step_4_title">Calculando Colorimetría...</string>
     <string name="wizard_step_4_subtitle">Procesamiento científico sin conexión con NumPy &amp; SciPy</string>
@@ -114,6 +129,20 @@
     <string name="palettes_btn_apply">Usar en Studio</string>
     <string name="palettes_btn_delete">Eliminar Preset</string>
     <string name="palettes_btn_export_cube">Exportar .CUBE</string>
+
+    <!-- Profile & Library Screen -->
+    <string name="profile_header_title">Mi Biblioteca &amp; Perfil</string>
+    <string name="profile_header_desc">Explora tus fotos tratadas, temas de color y exporta 3D LUTs para DaVinci Resolve o Premiere Pro.</string>
+    <string name="profile_tab_photos">Fotos (%1$d)</string>
+    <string name="profile_tab_themes">Temas &amp; Looks (%1$d)</string>
+    <string name="profile_no_photos_title">No hay fotos guardadas</string>
+    <string name="profile_no_photos_desc">Exporta tus fotos desde el Studio para crear tu galería personal.</string>
+    <string name="profile_no_themes_title">No hay temas guardados</string>
+    <string name="profile_no_themes_desc">Guarda estilos de color desde el Studio o extrae paletas para reutilizarlos en cualquier momento.</string>
+    <string name="profile_btn_share">Compartir</string>
+    <string name="profile_btn_delete">Eliminar</string>
+    <string name="profile_btn_apply_theme">Usar en Studio</string>
+    <string name="profile_btn_export_cube">Exportar .CUBE</string>
 
     <!-- Settings Screen -->
     <string name="settings_header_title">Preferencias de la Aplicación</string>

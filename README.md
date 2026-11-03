@@ -6,321 +6,255 @@
 [![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2016.1-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Coding Standards](https://img.shields.io/badge/Standards-CODING__STANDARDS.md-blue.svg)](CODING_STANDARDS.md)
 
-> **Application Android 100% hors-ligne de transfert colorimétrique haute fidélité et de génération de 3D LUT (`.cube`).**
+> **Application Android 100% hors-ligne d'étalonnage cinématographique haute fidélité, avec moteur colorimétrique professionnel unifié (WYSIWYG) et export Adobe 3D LUT (`.cube`).**
 
 ---
 
 ## 1. Présentation du Projet
 
-**StealZaLUT Mobile** est une application d'étalonnage photographique et cinématographique embarquée sur Android. Elle résout un problème récurrent pour les créateurs de contenu, photographes et coloristes mobiles : **capturer l'essence chromatique d'une œuvre de référence** (plan de film culte, tableau de maître, photographie professionnelle) pour l'appliquer instantanément à ses propres clichés ou l'exporter au format universel **Adobe 3D LUT (`.cube`)**.
+**StealZaLUT Mobile** est une solution professionnelle d'étalonnage photographique et cinématographique embarquée sur Android. Elle permet aux créateurs de contenu, photographes et coloristes de capturer l'atmosphère et l'harmonie chromatique d'une œuvre de référence (film culte, photographie d'art, rendu argentique) pour l'appliquer instantanément à leurs propres clichés ou l'exporter au standard de l'industrie : le fichier **Adobe 3D LUT (`.cube`)**.
 
-L'ensemble des fichiers `.cube` générés est strictement conforme aux spécifications standard de l'industrie audiovisuelle, garantissant une compatibilité immédiate avec :
-* **Logiciels de montage professionnels (Desktop)** : DaVinci Resolve, Adobe Premiere Pro, Final Cut Pro, Adobe Lightroom, Photoshop, Avid Media Composer.
-* **Applications vidéo mobiles** : CapCut, VN Video Editor, Lumafusion, Alight Motion.
-* **Moniteurs et caméras broadcast** : Atomos, SmallHD, Blackmagic Design, Sony FX series.
+### Le Principe WYSIWYG (*What You See Is What You Get*)
+Historiquement, de nombreuses applications mobiles appliquent un curseur d'opacité en superposant visuellement deux images dans l'interface, créant un décalage flagrant entre ce que l'utilisateur voit à l'écran et la table de correspondance `.cube` exportée.
 
-Le traitement s'exécute **intégralement en local sur l'appareil (100% Offline)**, sans aucun recours au cloud, sans création de compte, sans télémétrie et dans le respect absolu de la confidentialité des photos.
+**Dans StealZaLUT Mobile, l'aperçu et le fichier `.cube` sont strictement unifiés :**
+- Tous les paramètres de post-traitement (**Intensité / Force**, **Préservation de la Luminance**, **Protection des Tons Chairs**, **Lissage spatial 3D**, **Verrouillage de l'axe neutre**, **Soft-Clipping**) sont **directement fusionnés dans la grille 3D de la LUT (`refine_and_blend_lut`)**.
+- L'image d'aperçu affichée à l'écran est produite **en faisant passer l'image source réduite à travers cette exacte grille 3D via interpolation trilinéaire vectorisée (`apply_lut_trilinear`)**.
+- Chaque déplacement de curseur met à jour la LUT 3D et affiche immédiatement son rendu exact sur la photo : **ce qui est visible à l'écran est pixel pour pixel ce qui est écrit dans le fichier `.cube`**.
+
+Les fichiers `.cube` générés sont compatibles sans ajustement avec :
+* **Logiciels de montage et d'étalonnage (Desktop)** : DaVinci Resolve, Adobe Premiere Pro, Final Cut Pro, Adobe Lightroom, Photoshop, Avid Media Composer.
+* **Applications vidéo mobiles** : CapCut, VN Video Editor, LumaFusion, Alight Motion.
+* **Moniteurs de tournage & Caméras broadcast** : Atomos Ninja/Shogun, SmallHD, Blackmagic Video Assist, Sony FX3/FX6/FX9, RED, ARRI.
+
+Le traitement s'exécute **intégralement en local sur l'appareil (100% Offline)**, sans aucun recours au cloud, sans création de compte et dans le respect absolu de la vie privée.
 
 ---
 
-## 2. Fonctionnalités Clés
+## 2. Fonctionnalités Clés et Innovations Colorimétriques
 
-* **Traitement 100% Embarqué & Sécurisé :** Les algorithmes scientifiques tournent directement sur le SoC du téléphone via le runtime CPython embarqué Chaquopy.
-* **4 Algorithmes Scientifiques de Transfert Chromatique :**
-  1. `hm-mkl-hm` (*Histogram Matching + Monge-Kantorovitch Linear — Recommandé*) : Combine le transport optimal linéaire et l'alignement précis des distributions cumulées pour une dynamique et un contraste optimaux.
-  2. `mkl` (*Monge-Kantorovitch Linear*) : Transport optimal de la matrice de covariance chromatique globale, respectant l'harmonie des teintes d'origine.
-  3. `reinhard` (*Alignement statistique CIE LAB*) : Alignement des moments statistiques du premier et second ordre dans l'espace perceptuel uniforme CIELAB $L^*a^*b^*$.
-  4. `hm` (*Histogram Matching*) : Correspondance cumulative canal par canal (R, G, B), procurant un transfert instantané et contrasté.
-* **Aperçu Temps Réel à 120 FPS (Zéro Freeze) :**
-  * Grâce à une architecture de composition matérielle GPU, le déplacement du curseur d'intensité ($\alpha \in [0\%, 100\%]$) est calculé nativement par le `RenderThread` Android via les shaders GPU de Jetpack Compose (`graphicsLayer { alpha = intensity }`).
-  * **0 appel Python et 0 allocation Bitmap** lors des gestes de glissement.
-* **Comparateur Avant / Après Haute Précision :**
-  * Mode **Côte-à-côte** avec zoom tactile et déplacement panoramique synchronisés au pixel près.
-  * Mode **Rideau interactif (Split-Wipe)** permettant de balayer l'image d'un doigt pour révéler les différences de colorimétrie.
-* **Génération de 3D LUT Multi-Résolutions :**
-  * $17 \times 17 \times 17$ ($4\,913$ nœuds) : Idéal pour les prévisualisations mobiles rapides et les applications légères.
-  * $33 \times 33 \times 33$ ($35\,937$ nœuds) : **Standard Broadcast & Cinéma** (DaVinci Resolve / Premiere Pro).
-  * $65 \times 65 \times 65$ ($274\,625$ nœuds) : Très haute précision pour préserver les dégradés subtils et éliminer tout risque de postérisation.
-* **Extraction de Palettes & Gestionnaire de Presets :**
-  * Extraction automatique des 6 couleurs dominantes avec affichage des codes hexadécimaux et copie rapide au presse-papier.
-  * Bibliothèque locale de préréglages réutilisables en un clic dans le Studio.
-* **Export Direct Galerie :** Sauvegarde des photos traitées directement dans l'album `Pictures/StealZaLUT` via l'API Android native `MediaStore`.
+### 2.1 Pipeline Unifié Prévisualisation = `.cube` (WYSIWYG)
+- Fin définitive des divergences entre sliders UI et exports `.cube`.
+- L'image de prévisualisation, l'image haute résolution exportée et le fichier `.cube` partagent exactement le même graphe de transformation 3D.
+- Cache LRU intelligent en mémoire vive Python (`transfer_worker.py`) réutilisant la `raw_lut` précalculée : le recalcul de la LUT raffinée prend **moins de $3\text{ ms}$** sur une grille $33 \times 33 \times 33$.
+
+### 2.2 Algorithmes Scientifiques de Qualité Studio
+1. **Préservation de la Luminance CIE LAB (`preserve_luminance: float = 0.75`)** :
+   - Découplage de la luminance $L^*$ et de la chrominance $a^*b^*$ dans l'espace perceptuel uniforme CIE L\*a\*b\*.
+   - Transfert à 100% des composantes de couleur tout en conservant la structure d'exposition originale de la photo source :
+     $$L_{\text{final}} = \lambda \cdot L_{\text{src}} + (1.0 - \lambda) \cdot L_{\text{trans}}$$
+   - Évite les images bouchées ou brûlées lorsque la référence a une exposition très différente de la source.
+   - Limitation adaptative du ratio des écarts-types $\sigma_{\text{ref}} / \sigma_{\text{src}} \in [0.5, 2.0]$ pour prévenir toute casse de contraste.
+2. **Protection Intelligente des Tons Chairs (`skin_protection: float = 0.5`)** :
+   - Modélisation gaussienne 3D continue dans l'espace chromatique YCbCr (ITU-R BT.601) centrée sur le cluster universel des teintes de peau humaine ($C_b \approx 0.40, C_r \approx 0.60, R > G > B$).
+   - Mélange localement la LUT vers la grille identité à hauteur de $\text{skin\_protection} \cdot \text{skin\_mask}$, préservant le naturel des visages même sous un étalonnage agressif (ex: thème glacial, vert matrice ou coucher de soleil sur-saturé).
+3. **Verrouillage de l'Axe Neutre & Noirs/Blancs Purs (`neutral_lock: float = 0.8`)** :
+   - Calcule la distance de chaque cellule par rapport au noir pur $(0,0,0)$ et au blanc pur $(1,1,1)$.
+   - Force progressivement la chrominance à revenir vers l'axe neutre aux extrémités de la diagonale de luminance, évitant les dominantes verdâtres ou violacées dans les ombres profondes et les hautes lumières cramées.
+4. **Lissage Spatial 3D Séparable (`smooth_sigma: float = 0.6`)** :
+   - Filtre gaussien 3D séparable exécuté en pur NumPy avec réplication des bords (`np.pad(mode='edge')`).
+   - Élimine tout artefact de gradient (banding, postérisation) et garantit la stricte monotonie des courbes sans dépendre de bibliothèques externes.
+5. **Écrêtage Doux des Extrêmes / Soft-Knee Roll-Off (`soft_clip: bool = True`)** :
+   - Remplace les `clip(0, 1)` brutaux par une compression douce en tangente hyperbolique ($\tanh$) sur les $5\%$ les plus sombres ($[0.0, 0.05]$) et les $5\%$ les plus clairs ($[0.95, 1.0]$), préservant les détails subtils dans les nuages et les feuillages sombres.
+
+### 2.3 Comparateur Avant / Après Haute Précision
+- **Mode Côte-à-Côte** avec zoom tactile et déplacement panoramique synchronisés en temps réel.
+- **Mode Rideau Interactif (Split-Wipe)** permettant de balayer l'image d'un doigt pour révéler la colorimétrie différentielle.
+
+### 2.4 Résolutions de Grille LUT
+- $17 \times 17 \times 17$ ($4\,913$ nœuds) : Idéal pour les prévisualisations mobiles ultra-légères.
+- $33 \times 33 \times 33$ ($35\,937$ nœuds) : **Standard Broadcast & Cinéma** (recommandé).
+- $65 \times 65 \times 65$ ($274\,625$ nœuds) : Très haute précision pour les dégradés complexes.
 
 ---
 
 ## 3. Architecture Technique
 
-StealZaLUT Mobile s'appuie sur une architecture réactive moderne en couches (Clean Architecture + MVI/Unidirectional Data Flow), couplant la réactivité de Jetpack Compose à la puissance de calcul scientifique de l'écosystème Python.
+Le projet repose sur une Clean Architecture réactive liant l'UI déclarative Jetpack Compose au moteur scientifique vectorisé Python 3.10.
 
 ```mermaid
 graph TD
-    subgraph UI_Layer ["Interface Utilisateur Jetpack Compose (120 FPS)"]
+    subgraph UI_Layer ["Interface Jetpack Compose (120 FPS)"]
         Studio["Studio Color Grading\n(ApplyThemeScreen)"]
-        Palettes["Palettes & Presets\n(PalettesScreen)"]
-        Settings["Paramètres Moteur\n(SettingsScreen)"]
-        DoubleView["DoubleViewComparison\n(GPU graphicsLayer Alpha Blending)"]
+        DoubleView["DoubleViewComparison\n(Comparateur Split-Wipe)"]
+        Sliders["Paramètres Pro\n(Intensité, Luminance, Peau, Lissage)"]
     end
 
-    subgraph ViewModel_Layer ["Gestion d'État & Orchestration Asynchrone"]
-        VM["StealZaLutViewModel\n(StateFlow / CoroutineScope / Job Cancellation)"]
+    subgraph ViewModel_Layer ["Orchestration Asynchrone"]
+        VM["StealZaLutViewModel\n(StateFlow / Job Cancellation)"]
     end
 
-    subgraph Concurrency_Guard ["Protection Concurrence & GIL Python"]
-        Dispatcher["pythonDispatcher\n(Dispatchers.IO.limitedParallelism(1))"]
+    subgraph Concurrency_Guard ["Protection Concurrence GIL"]
+        Dispatcher["pythonDispatcher\n(limitedParallelism(1))"]
     end
 
-    subgraph Data_Layer ["Passerelle & Données Locales"]
+    subgraph Data_Layer ["Passerelle & Données"]
         BridgeRepo["PythonBridgeRepository\n(Chaquopy JNI Wrapper)"]
-        PresetRepo["PresetRepository\n(Stockage JSON local)"]
-        MediaStore["Android MediaStore API\n(Export Pictures/StealZaLUT)"]
-        LRU["LruCacheManager\n(Nettoyage automatique du cache)"]
+        LRU["LruCacheManager\n(Nettoyage disque)"]
     end
 
     subgraph Python_Backend ["Moteur Scientifique Python 3.10 (Chaquopy)"]
         BridgePy["stealzalut.bridge"]
-        TransferWorker["workers.transfer_worker\n(Pipeline unifié Preview / Export HD)"]
-        LutEngine["core.lut_engine\n(Génération Grille 3D vectorisée)"]
+        TransferWorker["workers.transfer_worker\n(Cache LRU _RAW_LUT_CACHE)"]
+        ExportWorker["workers.export_worker"]
+        ColorTransfer["core.color_transfer\n(CIE LAB, Soft-Clip tanh)"]
+        LutEngine["core.lut_engine\n(refine_and_blend_lut, apply_lut_trilinear)"]
         LutExport["core.lut_export\n(Sérialisation vectorisée .cube)"]
-        ImageIO["utils.image_io\n(Pillow EXIF Transpose + float32)"]
-        ColorMatcher["color-matcher / NumPy / SciPy\n(Transport Optimal MKL, HM, Reinhard)"]
     end
 
-    Studio --> VM
-    Palettes --> VM
-    Settings --> VM
+    Studio --> Sliders
+    Sliders --> VM
     Studio --> DoubleView
-
     VM --> Concurrency_Guard
     Concurrency_Guard --> BridgeRepo
-    VM --> PresetRepo
-    BridgeRepo --> MediaStore
     BridgeRepo --> LRU
-
     BridgeRepo -->|JNI Chaquopy| BridgePy
+
     BridgePy --> TransferWorker
-    BridgePy --> LutEngine
-    BridgePy --> LutExport
-    BridgePy --> ImageIO
-    TransferWorker --> ColorMatcher
-    LutEngine --> ColorMatcher
-```
-
-### Arborescence Détaillée du Projet
-
-```text
-StealZaLut_Mobile/
-├── app/
-│   ├── build.gradle.kts                # Configuration AGP, Chaquopy, NDK arm64/x86_64, Dépendances
-│   └── src/
-│       ├── main/
-│       │   ├── AndroidManifest.xml     # Déclarations activités, permissions MediaStore/Galerie
-│       │   ├── java/com/stealzalut/mobile/
-│       │   │   ├── MainActivity.kt                  # Point d'entrée, Compose Scaffold, Edge-to-Edge
-│       │   │   ├── StealZaLutApplication.kt         # Préchauffage Chaquopy en arrière-plan & purge LRU
-│       │   │   ├── core/
-│       │   │   │   ├── AppConstants.kt              # Constantes d'interface, tailles de grille, formats
-│       │   │   │   └── AppDimens.kt                 # Dimensions WCAG 2.1 AA, marges et rayons Compose
-│       │   │   ├── data/
-│       │   │   │   ├── bridge/
-│       │   │   │   │   └── PythonBridgeRepository.kt # Wrapper Chaquopy thread-safe, limitedParallelism(1)
-│       │   │   │   ├── cache/
-│       │   │   │   │   └── LruCacheManager.kt       # Gestionnaire de cache disque (taille max & expiration)
-│       │   │   │   ├── model/                       # Modèles immuables (@Immutable)
-│       │   │   │   │   ├── AppSettings.kt           # Préférences utilisateur (LUT size, méthode par défaut)
-│       │   │   │   │   ├── ColorimetryPreset.kt     # Préréglages sauvegardés (palettes, métadonnées)
-│       │   │   │   │   ├── ColorTransferMethod.kt   # Enum des 4 algorithmes de transfert
-│       │   │   │   │   ├── LutSize.kt               # Enum des dimensions 17³, 33³, 65³
-│       │   │   │   │   └── ProcessResult.kt         # Types scellés de retours d'opération (Success / Error)
-│       │   │   │   └── repository/
-│       │   │   │       ├── PresetRepository.kt      # Sauvegarde et suppression des presets JSON locaux
-│       │   │   │       └── SettingsRepository.kt    # Persistance des préférences utilisateur SharedPreferences
-│       │   │   └── ui/
-│       │   │       ├── components/                  # Composants UI modulaires
-│       │   │       │   ├── DoubleViewComparison.kt  # Comparateur Avant/Après & Split-Wipe (120 FPS GPU)
-│       │   │       │   ├── IntensitySlider.kt       # Curseur d'opacité fluide
-│       │   │       │   ├── MethodSelector.kt        # Sélecteur visuel d'algorithme de transfert
-│       │   │       │   ├── LutSizeSelector.kt       # Puces de sélection de dimension de LUT
-│       │   │       │   ├── PaletteSwatchesView.kt   # Nuancier de couleurs avec copie Hex
-│       │   │       │   ├── ImagePickerCard.kt       # Carte d'import photo avec ratios adaptés
-│       │   │       │   └── SavePresetDialog.kt      # Dialogue de sauvegarde de preset
-│       │   │       ├── navigation/
-│       │   │       │   └── AppDestination.kt        # 3 Piliers de navigation : STUDIO, PALETTES, SETTINGS
-│       │   │       ├── screens/
-│       │   │       │   ├── MainColorGradingScreen.kt # Écran principal avec TopAppBar et NavigationBar
-│       │   │       │   ├── ApplyThemeScreen.kt      # Tunnel étape par étape du Studio
-│       │   │       │   ├── PalettesScreen.kt        # Extraction de palette & bibliothèque de presets
-│       │   │       │   └── SettingsScreen.kt        # Réglages moteur, langues et purge du cache
-│       │   │       ├── theme/                       # Design System Material 3 (Color, Type, Theme)
-│       │   │       └── viewmodel/
-│       │   │           ├── StealZaLutUiState.kt     # État immuable centralisé de l'application
-│       │   │           └── StealZaLutViewModel.kt   # MVI ViewModel avec debounce et annulation de jobs
-│       │   ├── python/stealzalut/                   # Backend Python Scientifique
-│       │   │   ├── __init__.py
-│       │   │   ├── bridge.py                        # Façade d'appel JNI depuis Kotlin
-│       │   │   ├── config.py                        # Constantes scientifiques & résolutions de calcul
-│       │   │   ├── core/
-│       │   │   │   ├── __init__.py
-│       │   │   │   ├── color_transfer.py        # Moteur mathématique (MKL, HM, Reinhard)
-│       │   │   │   ├── lut_engine.py            # Interpolation de grille 3D vectorisée
-│       │   │   │   └── lut_export.py            # Sérialisation vectorisée .cube
-│       │   │   ├── utils/
-│       │   │   │   ├── __init__.py
-│       │   │   │   ├── image_io.py              # Lecture/Écriture Pillow, EXIF transpose, float32
-│       │   │   │   └── paths.py                 # Purge des aperçus temporaires
-│       │   │   └── workers/
-│       │   │       ├── __init__.py
-│       │   │       └── transfer_worker.py       # Pipeline unifié de transfert preview & export HD
-│       │   └── res/                                 # Ressources Android (Chaînes i18n EN/FR/ES, icônes)
-│       └── test/                                    # Tests unitaires JVM Kotlin (JUnit 5, MockK, Turbine)
-└── tests/                                           # Tests unitaires Python scientifiques (Pytest)
+    BridgePy --> ExportWorker
+    TransferWorker --> LutEngine
+    TransferWorker --> ColorTransfer
+    ExportWorker --> LutEngine
+    ExportWorker --> LutExport
 ```
 
 ---
 
-## 4. Fonctionnement Mathématique du Moteur LUT
-
-La génération d'une table de correspondance tridimensionnelle (**3D Lookup Table**) consiste à modéliser la déformation d'un espace colorimétrique continu tridimensionnel depuis un état neutre vers l'espace chromatique cible.
+## 4. Pipeline Mathématique et Spécification WYSIWYG
 
 ```
-       [Grille Identité 3D]               [Modélisation 2D Virtuelle]              [Moteur Color-Matcher]
-     N x N x N (ex: 33³ points)             (1 x N³, 3) tableau RGB                  MKL / HM-MKL-HM
-               │                                       │                                     │
-               ▼                                       ▼                                     ▼
-      ┌─────────────────┐                     ┌─────────────────┐                  ┌───────────────────┐
-      │  R ∈ [0, 1]     │   reshape(1, N³, 3) │  Nuage de       │   T_transfert    │  Points RGB       │
-      │  G ∈ [0, 1]     │  ─────────────────> │  couleurs       │  ──────────────> │  transformés dans │
-      │  B ∈ [0, 1]     │                     │  synthétiques   │                  │  l'espace cible   │
-      └─────────────────┘                     └─────────────────┘                  └───────────────────┘
-                                                                                             │
-                                                                                             ▼
-                                  ┌───────────────────────────────┐               ┌────────────────────┐
-                                  │   Fichier Standard .cube      │ <──────────── │  Mélange d'Opacité │
-                                  │   Écriture vectorisée         │   np.savetxt  │  (1 - α)·I + α·T(I)│
-                                  │   fmt="%.6f"                  │               └────────────────────┘
-                                  └───────────────────────────────┘
+       [Source Image]           [Reference Image]
+             │                          │
+             ▼                          ▼
+      ┌──────────────┐          ┌──────────────┐
+      │  src_proxy   │          │  ref_proxy   │
+      └──────────────┘          └──────────────┘
+             │                          │
+             └───────────┬──────────────┘
+                         ▼
+        ┌───────────────────────────────────┐
+        │       compute_lut()               │  Transfert sur lattice identité
+        │  (HM-MKL-HM / Reinhard + LAB)    │  avec preserve_luminance & soft-clip
+        └───────────────────────────────────┘
+                         │
+                         ▼
+                 [ Raw 3D LUT ]  <── Mis en cache mémoire vive (<5ms recalcul)
+                         │
+                         ▼
+        ┌───────────────────────────────────┐
+        │     refine_and_blend_lut()        │
+        │  1. Identity LUT                  │
+        │  2. Skin Tone Protection (YCbCr)  │
+        │  3. Neutral Axis Lock (0 & 1)     │
+        │  4. 3D Gaussian Smoothing         │
+        │  5. Direct Intensity Blending     │
+        └───────────────────────────────────┘
+                         │
+                         ▼
+                [ Final 3D LUT ]
+                         │
+        ┌────────────────┴──────────────────┐
+        ▼                                   ▼
+┌───────────────────────────────┐   ┌───────────────────────────────┐
+│     apply_lut_trilinear()     │   │         export_cube()         │
+│   Interpolation sur preview   │   │   Sérialisation Adobe .cube   │
+│   Rendu écran WYSIWYG exact   │   │   Baking des paramètres pro   │
+└───────────────────────────────┘   └───────────────────────────────┘
 ```
 
-Le processus s'articule en 5 étapes rigoureuses :
+### 1. Interpolation Barycentrique Trilinéaire Vectorisée
+Pour chaque pixel d'une image source normalisée $(r, g, b) \in [0, 1]^3$, ses coordonnées dans une grille de taille $N$ sont :
+$$x = r \cdot (N - 1), \quad y = g \cdot (N - 1), \quad z = b \cdot (N - 1)$$
+Les indices de cellule inférieure sont $x_0 = \lfloor x \rfloor, y_0 = \lfloor y \rfloor, z_0 = \lfloor z \rfloor$, et les résidus fractionnaires :
+$$\Delta x = x - x_0, \quad \Delta y = y - y_0, \quad \Delta z = z - z_0$$
+La valeur de couleur interpolée est la combinaison convexe des 8 sommets du cube environnant :
+$$\mathbf{C}_{\text{interp}} = \sum_{i=0}^1 \sum_{j=0}^1 \sum_{k=0}^1 (1 - \Delta z + 2 k \Delta z - k)(1 - \Delta y + 2 j \Delta y - j)(1 - \Delta x + 2 i \Delta x - i) \cdot \mathbf{LUT}[z_0+k, y_0+j, x_0+i]$$
+Implémenté en pure vectorisation NumPy, ce calcul traite une image $1024 \times 1024$ sans aucune boucle Python.
 
-### Étape 1 : Échantillonnage de la Grille Identité 3D
-Pour une dimension de grille $N \in \{17, 33, 65\}$, une grille cartésienne 3D uniforme de pas $h = \frac{1}{N - 1}$ est échantillonnée dans l'hypercube $[0, 1]^3$ :
-$$\mathbf{X}_{i,j,k} = \left( \frac{i}{N-1}, \frac{j}{N-1}, \frac{k}{N-1} \right), \quad \forall \, i,j,k \in \{0, \dots, N-1\}$$
-
-### Étape 2 : Modélisation Géométrique Virtuelle 2D
-Pour tirer parti des implémentations C hautement optimisées de NumPy et BLAS sans copie mémoire superflue, la grille $(N, N, N, 3)$ est aplatie en une image synthétique 2D virtuelle de dimensions $(1, N^3, 3)$ :
-$$N_{\text{total}} = N^3 \quad \Longrightarrow \quad \begin{cases} 17^3 = 4\,913 \text{ nœuds} \\ 33^3 = 35\,937 \text{ nœuds} \\ 65^3 = 274\,625 \text{ nœuds} \end{cases}$$
-
-### Étape 3 : Transport de Masse Colorimétrique (Monge-Kantorovitch Linear)
-Le transfert colorimétrique par Monge-Kantorovitch transporte la distribution gaussienne de l'image source $\mathcal{N}(\boldsymbol{\mu}_s, \mathbf{\Sigma}_s)$ vers la distribution de l'image de référence $\mathcal{N}(\boldsymbol{\mu}_r, \mathbf{\Sigma}_r)$. L'opérateur de transport linéaire affine s'exprime par :
-$$T(\mathbf{x}) = \mathbf{A} (\mathbf{x} - \boldsymbol{\mu}_s) + \boldsymbol{\mu}_r$$
-où la matrice de transformation $\mathbf{A}$ est la solution symétrique définie positive unique au problème de transport optimal :
-$$\mathbf{A} = \mathbf{\Sigma}_s^{-1/2} \left( \mathbf{\Sigma}_s^{1/2} \mathbf{\Sigma}_r \mathbf{\Sigma}_s^{1/2} \right)^{1/2} \mathbf{\Sigma}_s^{-1/2}$$
-Les matrices de covariance $3 \times 3$ sont décomposées spectralement via les routines LAPACK (`scipy.linalg.sqrtm`) en précision `float32`.
-
-### Étape 4 : Interpolation Barycentrique de l'Intensité ($\alpha$)
-L'intensité $\alpha \in [0.0, 1.0]$ choisie par l'utilisateur est injectée de manière entièrement vectorisée dans NumPy pour interpoler entre la grille neutre (identité $\mathbf{I}$) et la grille étalonnée :
-$$\mathbf{LUT}_{\text{finale}} = \text{clip}\Big( (1.0 - \alpha) \cdot \mathbf{X}_{\text{identité}} + \alpha \cdot T(\mathbf{X}_{\text{identité}}), \; 0.0, \; 1.0 \Big)$$
-
-### Étape 5 : Sérialisation Vectorisée du Fichier `.cube`
-L'en-tête standard conforme à la spécification Adobe est écrit, suivi de l'ensemble des triplets RGB formatés à 6 décimales :
-```text
-TITLE "StealZaLUT 33x33x33 - hm-mkl-hm"
-LUT_3D_SIZE 33
-DOMAIN_MIN 0.0 0.0 0.0
-DOMAIN_MAX 1.0 1.0 1.0
-
-0.000000 0.000000 0.000000
-0.031250 0.000000 0.000000
-...
-1.000000 1.000000 1.000000
-```
-L'écriture est réalisée via `np.savetxt(file, data, fmt="%.6f", delimiter=" ")`, s'exécutant en moins de $30\text{ ms}$ pour $35\,937$ lignes sur processeur ARM64.
+### 2. Formule de Protection des Peaux
+Le masque 3D de teinte de peau dans l'espace ITU-R BT.601 YCbCr est donné par la distance de Mahalanobis approchée :
+$$d^2 = \left(\frac{C_b - 0.40}{0.08}\right)^2 + \left(\frac{C_r - 0.60}{0.08}\right)^2$$
+$$\text{skin\_mask} = \exp\left(-\frac{d^2}{2}\right) \cdot \text{clamp}\left(\frac{R - G}{0.05}\right) \cdot \text{clamp}\left(\frac{G - B}{0.05}\right) \cdot \text{window}(Y)$$
+La LUT est ensuite mélangée localement :
+$$\mathbf{LUT}_{\text{peau}} = (1 - w_s) \cdot \mathbf{LUT} + w_s \cdot \mathbf{LUT}_{\text{identite}}, \quad w_s = \text{skin\_protection} \cdot \text{skin\_mask}$$
 
 ---
 
-## 5. Prérequis & Installation Développeur
+## 5. API du Pont Python (`stealzalut.bridge`)
 
-### Prérequis Système
-* **Android Studio :** Ladybug (2024.2+) ou version supérieure.
-* **JDK :** Java Development Kit 17, 21 ou 25 (OpenJDK configuré dans Android Studio).
-* **Android SDK :**
-  * `compileSdk = 35` (Android 15)
-  * `minSdk = 26` (Android 8.0 Oreo)
-  * `targetSdk = 35`
-* **Python Local (optionnel, pour tests unitaires hors émulateur) :** Python 3.10+ avec `pytest`, `numpy`, `scipy`, `pillow`, `color-matcher`.
+Toutes les fonctions sont appelables depuis Chaquopy ou directement en Python :
 
-### Instructions de Clonage et Compilation
+### `process_preview`
+```python
+from stealzalut.bridge import process_preview
 
-```bash
-# 1. Cloner le dépôt Git
-git clone https://github.com/votre-compte/StealZaLut_Mobile.git
-cd StealZaLut_Mobile
-
-# 2. Configurer le chemin JDK (si nécessaire, dans gradle.properties)
-# org.gradle.java.home=C:/Program Files/Android/Android Studio/jbr
-
-# 3. Compiler l'APK de Debug
-./gradlew assembleDebug
-
-# L'APK compilé se trouvera dans :
-# app/build/outputs/apk/debug/app-debug.apk
+result = process_preview(
+    src_path="/path/to/source.jpg",
+    ref_path="/path/to/reference.jpg",
+    method="hm-mkl-hm",
+    intensity=0.85,
+    output_preview_path="/path/to/preview.jpg",
+    max_preview_dim=1024,
+    preserve_luminance=0.75,
+    skin_protection=0.50,
+    smooth_sigma=0.60,
+    neutral_lock=0.80,
+    lut_size=33
+)
+# Retour: {"status": "success", "preview_path": "...", "execution_time_ms": 112.4}
 ```
 
-### Exécution de la Suite de Tests
+### `export_cube_file`
+```python
+from stealzalut.bridge import export_cube_file
 
-Le projet intègre une double validation automatisée (Backend Python + Application Android Kotlin) :
+result = export_cube_file(
+    src_path="/path/to/source.jpg",
+    ref_path="/path/to/reference.jpg",
+    output_cube_path="/path/to/output.cube",
+    lut_size=33,
+    method="hm-mkl-hm",
+    intensity=0.85,
+    preserve_luminance=0.75,
+    skin_protection=0.50,
+    smooth_sigma=0.60,
+    neutral_lock=0.80
+)
+# Retour: {"status": "success", "cube_path": "...", "lut_size": 33, "execution_time_ms": 8.2}
+```
+
+---
+
+## 6. Tests & Validation
+
+La suite de tests unitaires et d'intégration valide rigoureusement l'ensemble des exigences colorimétriques, le respect des types, la performance et la parité WYSIWYG :
 
 ```bash
-# Exécuter les tests unitaires Kotlin / Compose (JUnit 5, MockK, Coroutines Test)
-./gradlew testDebugUnitTest
-
-# Exécuter les tests unitaires du moteur scientifique Python
+# Exécution de la suite de tests unitaires Python (48 tests complets)
 python -m pytest tests/
 ```
 
----
-
-## 6. Performance, Benchmarks & Optimisations Spécifiques Android
-
-### Mesures de Performance sur Appareil Réel (SoC ARM64 Moyen / Haut de Gamme)
-
-| Opération | Méthode Algorithmique | Résolution / Taille | Temps d'Exécution | Consommation RAM |
-| :--- | :--- | :--- | :--- | :--- |
-| **Glissement Curseur Intensité** | Composition GPU Shader | Plein écran (1080p / 1440p) | **< 8 ms (120 FPS constants)** | 0 Mo additionnel |
-| **Génération Aperçu Rapide** | `hm` | Proxy $512 \times 512$ px | $\approx 45\text{ ms}$ | $\approx 18\text{ Mo}$ |
-| **Génération Aperçu Recommandé** | `hm-mkl-hm` | Proxy $512 \times 512$ px | $\approx 120\text{ ms}$ | $\approx 24\text{ Mo}$ |
-| **Génération 3D LUT $17^3$** | `mkl` | $4\,913$ nœuds | $\approx 250\text{ ms}$ | $\approx 15\text{ Mo}$ |
-| **Génération 3D LUT $33^3$** | `hm-mkl-hm` | $35\,937$ nœuds | **$\approx 850\text{ ms}$** | $\approx 32\text{ Mo}$ |
-| **Génération 3D LUT $65^3$** | `hm-mkl-hm` | $274\,625$ nœuds | $\approx 4.2\text{ s}$ | $\approx 85\text{ Mo}$ |
-| **Écriture Fichier `.cube` (33³)** | NumPy Vectorisé | $35\,937$ lignes ASCII | **$< 28\text{ ms}$** | Débit direct disque |
-| **Export Photo Haute Résolution**| `hm-mkl-hm` | $12\text{ MP}$ ($4000 \times 3000$) | $\approx 1.8\text{ s}$ | $\approx 120\text{ Mo}$ |
-
-### Détail des Optimisations Clés
-
-1. **Composition GPU Matérielle (Zéro Saccade UI) :**
-   * L'interpolateur d'intensité n'émet aucun appel IPC vers Chaquopy lors du glissement du slider.
-   * L'image source ($I_{\text{src}}$) et l'image étalonnée à 100% ($I_{\text{trans}}$) sont superposées dans un conteneur Compose avec `Modifier.graphicsLayer { alpha = intensity }`. Le GPU Android effectue l'interpolation pixel par pixel à la fréquence native de l'écran (60 Hz, 90 Hz ou 120 Hz).
-2. **File d'Attente Séquentielle Dédiée (Protection du GIL Chaquopy) :**
-   * Chaquopy partageant l'interpréteur CPython avec un Global Interpreter Lock (GIL) unique, tous les appels `bridge.py` sont confinés dans un thread unique dédié via `Dispatchers.IO.limitedParallelism(1)`.
-   * Tout nouveau calcul annule automatiquement le job précédent via `activeGradingJob?.cancel()`, éliminant tout empilement de calculs obsolètes.
-3. **Préchauffage Invisible au Démarrage (`StealZaLutApplication`) :**
-   * Dès le lancement de l'application, les bibliothèques lourdes (`numpy`, `scipy`, `color_matcher`) sont pré-importées de manière asynchrone dans le runtime Python en arrière-plan, faisant chuter le temps de premier transfert sous la barre des $150\text{ ms}$.
-4. **Décodage Bitmap à Mémoire Contrôlée :**
-   * Les images sources sélectionnées depuis la galerie du téléphone sont décodées pour l'interface avec un facteur d'échantillonnage `inSampleSize` plafonnant la plus grande dimension à `1080px`, protégeant l'application contre les erreurs `OutOfMemoryError` (OOM) sur les capteurs photo modernes de $48\text{ MP}$ à $200\text{ MP}$.
-5. **Précision `float32` et Rééchantillonnage Bilinéaire :**
-   * Dans le moteur Python, tous les tenseurs de covariance et de coordonnées sont alloués en `np.float32` au lieu de `np.float64`, divisant par 2 l'empreinte mémoire RAM native.
-   * La mise à l'échelle des images d'analyse statistique utilise `Image.Resampling.BILINEAR`, deux fois plus rapide que Lanczos avec une équivalence statistique démontrée pour les matrices de covariance.
-6. **Nettoyage Automatique du Cache Disque :**
-   * Le module `LruCacheManager` nettoie automatiquement les aperçus temporaires datant de plus de 24 heures ou dès que le dossier de cache dépasse $50\text{ Mo}$, garantissant une empreinte de stockage saine et constante.
+### Couverture des Tests :
+- `tests/test_lut_engine.py` : Invariant `intensity = 0.0` $\implies$ LUT identité ($\Delta_{\max} < 10^{-6}$), point médian `intensity = 0.5`, protection des peaux, verrouillage neutre, lissage 3D, interpolation trilinéaire.
+- `tests/test_lut_export.py` : Exportation `.cube`, format d'en-tête standard, intégration de l'intensité dans le fichier `.cube`, correspondance pixel pour pixel preview $\leftrightarrow$ `.cube`.
+- `tests/test_color_transfer.py` : Préservation de luminance CIE LAB (`preserve_luminance = 1.0` conserve $L$ tout en altérant $A, B$), écrêtage doux tanh sur les ombres et hautes lumières.
+- `tests/test_bridge.py` & `tests/test_colorset_worker.py` : Robustesse, gestion d'erreurs et codes d'erreur explicites.
 
 ---
 
-## 7. Licences & Remerciements
+## 7. Normes de Développement
 
-* **Chaquopy** — Runtime Python pour applications Android.
-* **Color-Matcher** — Bibliothèque de transfert colorimétrique par Monge-Kantorovitch et alignement d'histogrammes.
-* **Jetpack Compose** — Boîte à outils moderne déclarative d'interface utilisateur sous Android.
-* **NumPy & SciPy** — Calcul numérique et scientifique de référence.
+Consultez le fichier **[CODING_STANDARDS.md](CODING_STANDARDS.md)** pour le détail des conventions PEP 8, Kotlin, conventions NumPy (`float32`, intervalles $[0.0, 1.0]$ vs $[0, 255]$) et politiques de cache.
+
+---
+
+## 8. Licences & Remerciements
+
+* **Chaquopy** — Runtime Python pour Android.
+* **Color-Matcher** — Bibliothèque de transport optimal et alignement de distributions.
+* **Jetpack Compose** — Boîte à outils UI déclarative moderne Android.
+* **NumPy & SciPy** — Calcul numérique et scientifique de haute précision.
 
 Projet distribué sous licence libre **MIT**. Consultez le fichier `LICENSE` pour plus d'informations.

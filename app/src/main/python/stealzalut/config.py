@@ -1,4 +1,8 @@
-"""Centralised constants for StealZaLUT Mobile (Chaquopy)."""
+"""Centralised constants for StealZaLUT Mobile (Chaquopy).
+
+Eliminates magic numbers across the colorimetric processing, LUT generation,
+soft clipping, and caching pipelines.
+"""
 
 from typing import Dict, Tuple
 
@@ -23,3 +27,31 @@ MAX_ANALYSIS_DIMENSION: int = 512
 
 # File extensions supported
 SUPPORTED_EXTENSIONS: Tuple[str, ...] = (".jpg", ".jpeg", ".png", ".webp")
+
+# Default colorimetric quality parameters
+DEFAULT_INTENSITY: float = 1.0
+DEFAULT_PRESERVE_LUMINANCE: float = 0.75
+DEFAULT_SKIN_PROTECTION: float = 0.5
+DEFAULT_SMOOTH_SIGMA: float = 0.6
+DEFAULT_NEUTRAL_LOCK: float = 0.8
+
+# Soft clipping thresholds (5% darkest shadows and 5% brightest highlights)
+SOFT_CLIP_SHADOW_THRESHOLD: float = 0.05
+SOFT_CLIP_HIGHLIGHT_THRESHOLD: float = 0.95
+
+# Statistical bounds to prevent contrast explosion
+MIN_STD_RATIO: float = 0.5
+MAX_STD_RATIO: float = 2.0
+EPSILON: float = 1e-6
+
+# Skin tone detection in YCbCr space (ITU-R BT.601)
+SKIN_CB_CENTER: float = 0.40
+SKIN_CR_CENTER: float = 0.60
+SKIN_CB_SIGMA: float = 0.08
+SKIN_CR_SIGMA: float = 0.08
+
+# Neutral axis lock parameters
+NEUTRAL_LOCK_SIGMA: float = 0.08
+
+# Cache settings
+MAX_LUT_CACHE_SIZE: int = 4

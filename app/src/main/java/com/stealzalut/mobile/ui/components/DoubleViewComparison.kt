@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -343,6 +344,22 @@ fun DoubleViewComparison(
                             MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_MEDIUM),
                             RoundedCornerShape(AppDimens.CornerRadiusCard)
                         )
+                        .pointerInput(Unit) {
+                            detectTapGestures { offset ->
+                                if (size.width > 0) {
+                                    splitFraction = (offset.x / size.width.toFloat()).coerceIn(0.01f, 0.99f)
+                                }
+                            }
+                        }
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures { change, dragAmount ->
+                                change.consume()
+                                if (size.width > 0) {
+                                    val delta = dragAmount / size.width.toFloat()
+                                    splitFraction = (splitFraction + delta).coerceIn(0.01f, 0.99f)
+                                }
+                            }
+                        }
                 ) {
                     val containerWidthPx = constraints.maxWidth.toFloat()
                     val splitX = containerWidthPx * splitFraction
@@ -401,13 +418,6 @@ fun DoubleViewComparison(
                                 .semantics {
                                     contentDescription = handleDesc
                                     stateDescription = "${(splitFraction * AppConstants.INTENSITY_PERCENT_MULTIPLIER).toInt()}%"
-                                }
-                                .pointerInput(Unit) {
-                                    detectDragGestures { change, dragAmount ->
-                                        change.consume()
-                                        val newX = (splitX + dragAmount.x).coerceIn(0f, containerWidthPx)
-                                        splitFraction = (newX / containerWidthPx).coerceIn(0.02f, 0.98f)
-                                    }
                                 },
                             contentAlignment = Alignment.Center
                         ) {

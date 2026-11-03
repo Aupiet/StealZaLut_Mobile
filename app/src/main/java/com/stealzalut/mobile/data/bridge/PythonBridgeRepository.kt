@@ -69,7 +69,11 @@ class PythonBridgeRepository(private val context: Context) {
         srcPath: String,
         refPath: String,
         method: ColorTransferMethod,
-        intensity: Float = 1.0f
+        intensity: Float = 1.0f,
+        preserveLuminance: Float = com.stealzalut.mobile.core.AppConstants.PRESERVE_LUMINANCE_DEFAULT,
+        skinProtection: Float = com.stealzalut.mobile.core.AppConstants.SKIN_PROTECTION_DEFAULT,
+        smoothSigma: Float = com.stealzalut.mobile.core.AppConstants.SMOOTH_SIGMA_DEFAULT,
+        neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT
     ): PreviewResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -83,7 +87,11 @@ class PythonBridgeRepository(private val context: Context) {
                 method.key,
                 intensity.toDouble(),
                 previewOutputFile.absolutePath,
-                1024
+                1024,
+                preserveLuminance.toDouble(),
+                skinProtection.toDouble(),
+                smoothSigma.toDouble(),
+                neutralLock.toDouble()
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -112,7 +120,11 @@ class PythonBridgeRepository(private val context: Context) {
         refPath: String,
         lutSize: LutSize,
         method: ColorTransferMethod,
-        intensity: Float
+        intensity: Float,
+        preserveLuminance: Float = com.stealzalut.mobile.core.AppConstants.PRESERVE_LUMINANCE_DEFAULT,
+        skinProtection: Float = com.stealzalut.mobile.core.AppConstants.SKIN_PROTECTION_DEFAULT,
+        smoothSigma: Float = com.stealzalut.mobile.core.AppConstants.SMOOTH_SIGMA_DEFAULT,
+        neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT
     ): CubeExportResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -129,7 +141,11 @@ class PythonBridgeRepository(private val context: Context) {
                 cubeFile.absolutePath,
                 lutSize.size,
                 method.key,
-                intensity.toDouble()
+                intensity.toDouble(),
+                preserveLuminance.toDouble(),
+                skinProtection.toDouble(),
+                smoothSigma.toDouble(),
+                neutralLock.toDouble()
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -161,7 +177,11 @@ class PythonBridgeRepository(private val context: Context) {
         intensity: Float,
         maxExportDim: Int = 2048,
         format: String = "JPEG",
-        quality: Int = 95
+        quality: Int = 95,
+        preserveLuminance: Float = com.stealzalut.mobile.core.AppConstants.PRESERVE_LUMINANCE_DEFAULT,
+        skinProtection: Float = com.stealzalut.mobile.core.AppConstants.SKIN_PROTECTION_DEFAULT,
+        smoothSigma: Float = com.stealzalut.mobile.core.AppConstants.SMOOTH_SIGMA_DEFAULT,
+        neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT
     ): ImageExportResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -180,7 +200,11 @@ class PythonBridgeRepository(private val context: Context) {
                 method.key,
                 intensity.toDouble(),
                 maxExportDim,
-                quality
+                quality,
+                preserveLuminance.toDouble(),
+                skinProtection.toDouble(),
+                smoothSigma.toDouble(),
+                neutralLock.toDouble()
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -228,6 +252,36 @@ class PythonBridgeRepository(private val context: Context) {
                 }
             }.getOrDefault(emptyList())
         }
+
+    /**
+     * Generates a visual calibration color card showcasing how the reference style
+     * transforms highlights, grayscale ramp, midtones, skin tones, and gamut primaries.
+     */
+    suspend fun generateColorCard(
+        refPath: String,
+        outputCardPath: String,
+        method: ColorTransferMethod = ColorTransferMethod.HM_MKL_HM,
+        intensity: Float = 1.0f
+    ): Result<String> = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr(
+                "generate_color_card",
+                refPath,
+                outputCardPath,
+                method.key,
+                intensity.toDouble()
+            )
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status == "success") {
+                pyResult.callAttr("get", "card_path")?.toString() ?: outputCardPath
+            } else {
+                val msg = pyResult.callAttr("get", "message")?.toString() ?: "Erreur génération mire"
+                throw IllegalStateException(msg)
+            }
+        }
+    }
 
     /**
      * Saves an image directly into the Android native MediaStore gallery (Pictures/StealZaLUT).
@@ -340,6 +394,7 @@ class PythonBridgeRepository(private val context: Context) {
                     sourceFile.inputStream().use { input ->
                         input.copyTo(output)
                     }
+                    output.flush()
                 } ?: throw IllegalStateException("Impossible d'écrire dans la destination choisie.")
                 Unit
             }

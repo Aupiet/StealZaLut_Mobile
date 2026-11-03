@@ -27,6 +27,9 @@ class PresetRepository(private val context: Context) {
     private val thumbnailsDir: File
         get() = File(context.filesDir, "preset_thumbnails").apply { mkdirs() }
 
+    private val persistentRefDir: File
+        get() = File(context.filesDir, "preset_references").apply { mkdirs() }
+
     val builtInPresets: List<ColorimetryPreset> = emptyList()
 
     suspend fun getAllPresets(): List<ColorimetryPreset> = withContext(Dispatchers.IO) {
@@ -36,12 +39,24 @@ class PresetRepository(private val context: Context) {
     suspend fun savePreset(preset: ColorimetryPreset): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             var updatedPreset = preset
-            if (preset.thumbnailPath == null) {
-                val imageToThumb = preset.referenceImagePath
+
+            // Ensure reference image is persisted safely away from cache directory
+            preset.referenceImagePath?.let { origRefPath ->
+                val origFile = File(origRefPath)
+                if (origFile.exists() && origFile.absolutePath.contains(context.cacheDir.absolutePath)) {
+                    val ext = origFile.extension.ifBlank { "jpg" }
+                    val permRefFile = File(persistentRefDir, "ref_${preset.id}.$ext")
+                    origFile.copyTo(permRefFile, overwrite = true)
+                    updatedPreset = updatedPreset.copy(referenceImagePath = permRefFile.absolutePath)
+                }
+            }
+
+            if (updatedPreset.thumbnailPath == null) {
+                val imageToThumb = updatedPreset.referenceImagePath
                 if (imageToThumb != null && File(imageToThumb).exists()) {
                     val webpThumb = generateWebpThumbnail(imageToThumb, preset.id)
                     if (webpThumb != null) {
-                        updatedPreset = preset.copy(thumbnailPath = webpThumb)
+                        updatedPreset = updatedPreset.copy(thumbnailPath = webpThumb)
                     }
                 }
             }
@@ -62,6 +77,12 @@ class PresetRepository(private val context: Context) {
             val current = loadUserPresets().toMutableList()
             val removed = current.firstOrNull { it.id == presetId }
             removed?.thumbnailPath?.let { File(it).delete() }
+            removed?.referenceImagePath?.let {
+                val refFile = File(it)
+                if (refFile.parentFile?.absolutePath == persistentRefDir.absolutePath) {
+                    refFile.delete()
+                }
+            }
             current.removeAll { it.id == presetId }
             writeUserPresets(current)
         }

@@ -128,6 +128,12 @@ fun MainColorGradingScreen(
                     modifier = Modifier.padding(innerPadding)
                 )
             }
+            AppDestination.PROFILE -> {
+                ProfileScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
             AppDestination.SETTINGS -> {
                 SettingsScreen(
                     viewModel = viewModel,

@@ -259,6 +259,86 @@ fun StandaloneEditorScreen(
                     .height(260.dp)
             )
 
+            // Integrated Auto-Edit Quick Action Banner
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusMedium)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AutoFixHigh,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                        Text(
+                            text = stringResource(R.string.auto_edit_badge),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
+                        Button(
+                            onClick = { viewModel.applyAutoInEdit(isStandalone = true) },
+                            enabled = !uiState.isComputingEdit && !uiState.isEditorProcessing,
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            if (uiState.isComputingEdit) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(AppDimens.IconSmall),
+                                    strokeWidth = AppDimens.BorderThick,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.AutoFixHigh,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AppDimens.IconSmall)
+                                )
+                                Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                                Text(
+                                    text = stringResource(R.string.btn_auto_edit),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.resetAllEditorParams() },
+                            enabled = !uiState.isComputingEdit && !uiState.isEditorProcessing,
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(AppDimens.IconSmall)
+                            )
+                            Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                            Text(
+                                text = stringResource(R.string.btn_reset_edits),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
+
             // Tabs Header
             ScrollableTabRow(
                 selectedTabIndex = uiState.editorSelectedTab,

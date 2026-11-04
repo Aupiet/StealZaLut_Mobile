@@ -12,6 +12,7 @@ from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
+from PIL import Image
 
 from stealzalut.config import (
     DEFAULT_INTENSITY,
@@ -338,21 +339,70 @@ def apply_lut(
     return out_f
 
 
+def generate_lut_from_pair(
+    source: Union[NDArray[np.uint8], Image.Image],
+    reference: Union[NDArray[np.uint8], Image.Image],
+    lut_size: int = DEFAULT_LUT_SIZE,
+    method: str = DEFAULT_METHOD,
+    sample_size: int = 512,
+    preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
+    soft_clip: bool = False,
+) -> NDArray[np.float32]:
+    """Generate a 3-D colour LUT from a source and reference image pair.
+
+    Sample size defaults to 512x512 with LANCZOS downsampling to preserve
+    small bright lights (neon signs, red beacons, windows) without dynamic compression.
+    """
+    if isinstance(source, np.ndarray):
+        pil_src = Image.fromarray(source)
+    else:
+        pil_src = source.copy()
+
+    if isinstance(reference, np.ndarray):
+        pil_ref = Image.fromarray(reference)
+    else:
+        pil_ref = reference.copy()
+
+    resample_mode = getattr(Image, "Resampling", Image).LANCZOS
+
+    if sample_size is not None and sample_size > 0:
+        pil_src.thumbnail((sample_size, sample_size), resample_mode)
+        pil_ref.thumbnail((sample_size, sample_size), resample_mode)
+
+    src_sample = np.asarray(pil_src, dtype=np.uint8)
+    ref_sample = np.asarray(pil_ref, dtype=np.uint8)
+
+    identity: NDArray[np.float32] = generate_identity_lattice(lut_size)
+
+    from stealzalut.core.color_transfer import fit_and_apply_transfer
+
+    transferred = fit_and_apply_transfer(
+        src_img=src_sample,
+        ref_img=ref_sample,
+        target_img=identity,
+        method=method,
+        preserve_luminance=preserve_luminance,
+        soft_clip=soft_clip,
+    )
+
+    # Reshape and apply light pre-smoothing to prevent any discrete stepping
+    grid = transferred.reshape((lut_size, lut_size, lut_size, 3))
+    grid = _gaussian_smooth_3d(grid, sigma=0.25)
+    return np.clip(grid.reshape(-1, 3), 0.0, 1.0).astype(np.float32)
+
+
 def compute_lut(
     src_img: NDArray[np.uint8],
     ref_img: NDArray[np.uint8],
     size: int = DEFAULT_LUT_SIZE,
     method: str = DEFAULT_METHOD,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
-    soft_clip: bool = True,
+    soft_clip: bool = False,
 ) -> NDArray[np.float32]:
     """Compute a raw 3-D colour LUT by transferring colour onto an identity lattice.
 
-    The identity lattice is reshaped into a tall pseudo-image of shape
-    ``(size ** 3, 1, 3)`` so that the color transfer pipeline can be applied.
-
     Args:
-        src_img: Source image (RGB uint8, (H, W, 3)). Kept for API contract.
+        src_img: Source image (RGB uint8, (H, W, 3)).
         ref_img: Reference image (RGB uint8, (H, W, 3)).
         size: LUT grid size per channel (e.g. 17, 33, 65).
         method: Colour-transfer algorithm key.
@@ -363,22 +413,15 @@ def compute_lut(
         Transformed raw LUT as a float32 array of shape
         ``(size ** 3, 3)`` with values in [0.0, 1.0].
     """
-    identity: NDArray[np.float32] = generate_identity_lattice(size)
-
-    from stealzalut.core.color_transfer import compute_color_transfer
-
-    pseudo_img: NDArray[np.uint8] = to_uint8(identity).reshape(-1, 1, 3)
-
-    transferred: NDArray[np.uint8] = compute_color_transfer(
-        src_img=pseudo_img,
-        ref_img=ref_img,
+    return generate_lut_from_pair(
+        source=src_img,
+        reference=ref_img,
+        lut_size=size,
         method=method,
+        sample_size=512,
         preserve_luminance=preserve_luminance,
         soft_clip=soft_clip,
     )
-
-    lut: NDArray[np.float32] = to_float32(transferred.reshape(-1, 3))
-    return lut
 
 
 def apply_intensity(

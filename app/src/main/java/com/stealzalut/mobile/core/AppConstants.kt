@@ -20,10 +20,10 @@ object AppConstants {
     // --- Colorimetric Quality & Refinement Defaults ---
     const val PARAM_MIN: Float = 0.0f
     const val PARAM_MAX: Float = 1.0f
-    const val PRESERVE_LUMINANCE_DEFAULT: Float = 0.75f
-    const val SKIN_PROTECTION_DEFAULT: Float = 0.50f
-    const val SMOOTH_SIGMA_DEFAULT: Float = 0.60f
-    const val NEUTRAL_LOCK_DEFAULT: Float = 0.80f
+    const val PRESERVE_LUMINANCE_DEFAULT: Float = 0.0f
+    const val SKIN_PROTECTION_DEFAULT: Float = 0.0f
+    const val SMOOTH_SIGMA_DEFAULT: Float = 0.0f
+    const val NEUTRAL_LOCK_DEFAULT: Float = 0.0f
 
     // --- Zoom & Pan (Double View Comparison) ---
     const val ZOOM_SCALE_MIN: Float = 1.0f

@@ -1,11 +1,14 @@
-"""Colour-transfer engine backed by *color-matcher* with resilient fallback.
+"""Colour-transfer engine backed by *color-matcher* and high-fidelity NumPy/SciPy algorithms.
 
 This module provides professional color transfer between a source and reference
-image with CIE LAB luminance preservation, contrast ratio clamping, and smooth
-tanh-based soft clipping.
+image with CIE LAB luminance preservation, contrast ratio clamping, Monge-Kantorovich
+Linearization (MKL), Multi-Variate Gaussian Distribution (MVGD), channel-wise
+Histogram Matching, and Reinhard statistics.
 """
 
 from __future__ import annotations
+
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -138,14 +141,6 @@ def apply_soft_clip(
 
     Protects shadow details (deepest 5%) and highlight roll-off (brightest 5%)
     to avoid harsh clipping and posterisation.
-
-    Args:
-        x: Float32 array with normalized values nominally in [0.0, 1.0].
-        shadow_th: Lower threshold below which soft compression begins.
-        highlight_th: Upper threshold above which soft compression begins.
-
-    Returns:
-        Smoothly compressed array with strictly bounded values in [0.0, 1.0].
     """
     out = x.copy()
 
@@ -176,29 +171,7 @@ def luminance_binned_chroma_transfer(
     luminance_align_weight: float = LUMINANCE_ALIGN_WEIGHT,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
 ) -> NDArray[np.float32]:
-    """Transfer chroma across luminance-partitioned bins with vividness selection.
-
-    Overcomes high-contrast scene bottlenecks (e.g. dark archways with vivid blue skies)
-    by:
-    1. Splitting luminance L into continuous Gaussian-weighted bins.
-    2. Filtering out the dullest 30% desaturated reference pixels (vivid_mask) to capture true dominant hues.
-    3. Applying a controlled standard deviation expansion factor (chroma boost).
-    4. Gradually fading chrominance adjustments in deep shadows (L < 20) to prevent color noise.
-    5. Softly mapping contrast percentiles while honoring preserve_luminance.
-
-    Args:
-        src_lab: Source CIE LAB array of shape (..., 3).
-        ref_lab: Reference CIE LAB array of shape (..., 3).
-        num_bins: Number of Gaussian luminance bins.
-        vivid_percentile: Exclusion threshold for dullest reference pixels.
-        chroma_boost: Chromatic dynamic expansion factor.
-        shadow_th: Lightness threshold below which chromatic adjustments roll off.
-        luminance_align_weight: Strength of soft quantile luminance alignment.
-        preserve_luminance: Luminance preservation blend factor in [0.0, 1.0].
-
-    Returns:
-        Transferred CIE LAB float32 array with shape matching *src_lab*.
-    """
+    """Transfer chroma across luminance-partitioned bins with vividness selection."""
     src_shape = src_lab.shape
     src_flat = src_lab.reshape(-1, 3)
     ref_flat = ref_lab.reshape(-1, 3)
@@ -213,7 +186,6 @@ def luminance_binned_chroma_transfer(
 
     chroma_ref = np.sqrt(a_ref**2 + b_ref**2)
 
-    # 1. Luminance band centers
     bin_centers = np.linspace(15.0, 85.0, num_bins, dtype=np.float32)
     step = float(bin_centers[1] - bin_centers[0]) if num_bins > 1 else 30.0
     sigma_l = step * 0.75
@@ -224,19 +196,16 @@ def luminance_binned_chroma_transfer(
 
     boost = float(np.clip(chroma_boost, MIN_CHROMA_BOOST, MAX_CHROMA_BOOST))
 
-    # Global fallback statistics
     global_mu_a_ref = float(np.mean(a_ref))
     global_mu_b_ref = float(np.mean(b_ref))
     global_std_a_ref = float(np.std(a_ref))
     global_std_b_ref = float(np.std(b_ref))
 
     for center in bin_centers:
-        # Gaussian weights for source and reference
         w_s = np.exp(-0.5 * ((l_src - center) / sigma_l) ** 2)
         w_r = np.exp(-0.5 * ((l_ref - center) / sigma_l) ** 2)
         w_src_list.append(w_s)
 
-        # 2. Vivid reference pixel selection
         active_ref = w_r > 0.10
         if np.count_nonzero(active_ref) >= 16:
             ref_bin_chroma = chroma_ref[active_ref]
@@ -258,7 +227,6 @@ def luminance_binned_chroma_transfer(
             std_a_r = global_std_a_ref
             std_b_r = global_std_b_ref
 
-        # Source moments for this band
         sum_w_s = float(np.sum(w_s))
         if sum_w_s > float(EPSILON):
             mu_a_s = float(np.sum(w_s * a_src) / sum_w_s)
@@ -271,14 +239,12 @@ def luminance_binned_chroma_transfer(
             std_a_s = float(np.std(a_src))
             std_b_s = float(np.std(b_src))
 
-        # 3. Controlled chroma boost
         scale_a = float(np.clip((std_a_r / (std_a_s + float(EPSILON))) * boost, MIN_STD_RATIO, MAX_STD_RATIO))
         scale_b = float(np.clip((std_b_r / (std_b_s + float(EPSILON))) * boost, MIN_STD_RATIO, MAX_STD_RATIO))
 
         a_trans_bins.append((a_src - mu_a_s) * scale_a + mu_a_r)
         b_trans_bins.append((b_src - mu_b_s) * scale_b + mu_b_r)
 
-    # Soft partition of unity across bins
     w_src_stack = np.stack(w_src_list, axis=0)
     w_src_norm = w_src_stack / (np.sum(w_src_stack, axis=0, keepdims=True) + float(EPSILON))
 
@@ -288,13 +254,11 @@ def luminance_binned_chroma_transfer(
     a_trans = np.sum(w_src_norm * a_trans_stack, axis=0)
     b_trans = np.sum(w_src_norm * b_trans_stack, axis=0)
 
-    # 4. Shadow roll-off (L < shadow_th fades to neutral to prevent color noise in blacks)
     t_shadow = np.clip(l_src / (shadow_th + float(EPSILON)), 0.0, 1.0)
     shadow_roll = (t_shadow ** 2.5).astype(np.float32)
     a_chroma = a_src + shadow_roll * (a_trans - a_src)
     b_chroma = b_src + shadow_roll * (b_trans - b_src)
 
-    # 5. Soft contrast adaptation on L
     clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
     if clamped_preserve < 1.0 and luminance_align_weight > 0.0:
         percentiles = np.linspace(0.0, 100.0, 21, dtype=np.float32)
@@ -317,109 +281,233 @@ def luminance_binned_chroma_transfer(
     return result_flat.reshape(src_shape).astype(np.float32)
 
 
-def _standard_reinhard_transfer(
-    src_lab: NDArray[np.float32],
-    ref_lab: NDArray[np.float32],
-    preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
-) -> NDArray[np.float32]:
-    """Robust global statistical Reinhard transfer in CIE LAB space.
-
-    Acts as an unbreakable baseline fallback if binned chroma transfer fails.
-
-    Args:
-        src_lab: Source CIE LAB array of shape (..., 3).
-        ref_lab: Reference CIE LAB array of shape (..., 3).
-        preserve_luminance: Lightness preservation blend factor in [0.0, 1.0].
-
-    Returns:
-        Transferred CIE LAB float32 array matching *src_lab* shape.
-    """
-    src_shape = src_lab.shape
-    src_flat = src_lab.reshape(-1, 3)
-    ref_flat = ref_lab.reshape(-1, 3)
-
-    out_flat = np.empty_like(src_flat)
-    clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
-
-    for c in range(3):
-        mu_s = float(np.mean(src_flat[:, c]))
-        std_s = float(np.std(src_flat[:, c]))
-        mu_r = float(np.mean(ref_flat[:, c]))
-        std_r = float(np.std(ref_flat[:, c]))
-
-        scale = float(np.clip(std_r / (std_s + float(EPSILON)), MIN_STD_RATIO, MAX_STD_RATIO))
-        trans_c = (src_flat[:, c] - mu_s) * scale + mu_r
-
-        if c == 0:
-            trans_c = np.clip(trans_c, 0.0, 100.0)
-            out_flat[:, 0] = clamped_preserve * src_flat[:, 0] + (1.0 - clamped_preserve) * trans_c
-        else:
-            out_flat[:, c] = trans_c
-
-    out_flat[:, 0] = np.nan_to_num(np.clip(out_flat[:, 0], 0.0, 100.0), nan=50.0)
-    out_flat[:, 1] = np.nan_to_num(out_flat[:, 1], nan=0.0)
-    out_flat[:, 2] = np.nan_to_num(out_flat[:, 2], nan=0.0)
-
-    return out_flat.reshape(src_shape).astype(np.float32)
-
-
 def _numpy_statistical_transfer(
     src_img: NDArray[np.uint8],
     ref_img: NDArray[np.uint8],
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = True,
 ) -> NDArray[np.uint8]:
-    """Pure NumPy statistical Reinhard color transfer in CIE LAB space.
+    """Pure NumPy statistical Reinhard color transfer in CIE LAB space."""
+    res_f = fit_and_apply_transfer(
+        src_img=src_img,
+        ref_img=ref_img,
+        target_img=src_img,
+        method="reinhard",
+        preserve_luminance=preserve_luminance,
+        soft_clip=soft_clip,
+    )
+    return (np.clip(res_f, 0.0, 1.0) * 255.0).astype(np.uint8)
 
-    Enhanced with luminance-binned chromatic transfer, vividness filtering,
-    shadow roll-off, and soft-knee contrast roll-off. Fully safeguarded with
-    fallbacks.
 
-    Args:
-        src_img: Source image (RGB uint8, shape (H, W, 3) or (N, 1, 3)).
-        ref_img: Reference image (RGB uint8, shape (H_ref, W_ref, 3)).
-        preserve_luminance: Lightness preservation weight in [0.0, 1.0].
-        soft_clip: Whether to apply smooth tanh-based roll-off.
+# ---------------------------------------------------------------------------
+# Core Color Transfer Algorithms (Desktop Parity)
+# ---------------------------------------------------------------------------
 
-    Returns:
-        Transferred image as RGB uint8 array matching src_img shape.
+def _histogram_match_1d(
+    src: NDArray[np.float32],
+    ref: NDArray[np.float32],
+    target: Optional[NDArray[np.float32]] = None,
+) -> NDArray[np.float32]:
+    """Channel-wise 1D Histogram matching for normalized sRGB images [0.0, 1.0].
+
+    Computes empirical cumulative distribution functions (CDFs) of *src* and *ref*,
+    then maps *target* (or *src* if target is None) through the quantile mapping.
     """
-    try:
-        src_f = src_img.astype(np.float32) / 255.0
-        ref_f = ref_img.astype(np.float32) / 255.0
+    s_f = np.clip(src.astype(np.float32), 0.0, 1.0)
+    r_f = np.clip(ref.astype(np.float32), 0.0, 1.0)
+    t_f = s_f if target is None else np.clip(target.astype(np.float32), 0.0, 1.0)
 
-        src_lab = rgb_to_lab(src_f)
-        ref_lab = rgb_to_lab(ref_f)
+    out = np.empty_like(t_f)
+    qs = np.linspace(0.0, 1.0, 256)
 
-        try:
-            final_lab = luminance_binned_chroma_transfer(
-                src_lab=src_lab,
-                ref_lab=ref_lab,
-                num_bins=DEFAULT_LUMINANCE_BINS,
-                vivid_percentile=VIVID_CHROMA_PERCENTILE,
-                chroma_boost=CHROMA_BOOST_DEFAULT,
-                shadow_th=SHADOW_ROLLOFF_L_THRESHOLD,
-                luminance_align_weight=LUMINANCE_ALIGN_WEIGHT,
-                preserve_luminance=preserve_luminance,
-            )
-        except Exception:
-            final_lab = _standard_reinhard_transfer(
-                src_lab=src_lab,
-                ref_lab=ref_lab,
-                preserve_luminance=preserve_luminance,
-            )
+    for ch in range(3):
+        s_c = s_f[..., ch].ravel()
+        r_c = r_f[..., ch].ravel()
+        t_c = t_f[..., ch].ravel()
 
-        rgb_out = lab_to_rgb(final_lab)
+        s_vals = np.quantile(s_c, qs)
+        r_vals = np.quantile(r_c, qs)
 
-        if soft_clip:
-            rgb_out = apply_soft_clip(rgb_out)
-        else:
-            rgb_out = np.clip(rgb_out, 0.0, 1.0)
+        # Map target through the learned CDF correspondence
+        t_mapped = np.interp(t_c, s_vals, r_vals)
+        out[..., ch] = t_mapped.reshape(t_f[..., ch].shape)
 
-        rgb_out = np.nan_to_num(rgb_out, nan=0.0, posinf=1.0, neginf=0.0)
-        return (np.clip(rgb_out, 0.0, 1.0) * 255.0).astype(np.uint8)
-    except Exception:
-        return src_img.copy()
+    return np.clip(out, 0.0, 1.0).astype(np.float32)
+
+
+def _compute_mkl_matrix(
+    cov_src: NDArray[np.float64],
+    cov_ref: NDArray[np.float64],
+) -> NDArray[np.float32]:
+    """Compute the 3x3 Monge-Kantorovich Linear (MKL) transfer matrix."""
+    eps = 1e-6
+    cov_s = cov_src + eps * np.eye(3, dtype=np.float64)
+    cov_r = cov_ref + eps * np.eye(3, dtype=np.float64)
+
+    eig_val_r, eig_vec_r = np.linalg.eigh(cov_s)
+    eig_val_r = np.maximum(eig_val_r, 0.0)
+    val_r = np.diag(np.sqrt(eig_val_r))
+    inv_r = np.diag(1.0 / (np.diag(val_r) + 1e-7))
+
+    mat_c = val_r @ eig_vec_r.T @ cov_r @ eig_vec_r @ val_r
+    eig_val_c, eig_vec_c = np.linalg.eigh(mat_c)
+    eig_val_c = np.maximum(eig_val_c, 0.0)
+    val_c = np.diag(np.sqrt(eig_val_c))
+
+    t_mat = eig_vec_r @ inv_r @ eig_vec_c @ val_c @ eig_vec_c.T @ inv_r @ eig_vec_r.T
+    return t_mat.astype(np.float32)
+
+
+def _compute_mvgd_matrix(
+    cov_src: NDArray[np.float64],
+    cov_ref: NDArray[np.float64],
+) -> NDArray[np.float32]:
+    """Compute the 3x3 Multi-Variate Gaussian Distribution (MVGD) transfer matrix."""
+    eps = 1e-6
+    cov_s = cov_src + eps * np.eye(3, dtype=np.float64)
+    cov_r = cov_ref + eps * np.eye(3, dtype=np.float64)
+
+    # Diagonalize cov_s
+    val_s, vec_s = np.linalg.eigh(cov_s)
+    val_s = np.maximum(val_s, 0.0)
+    inv_sqrt_s = vec_s @ np.diag(1.0 / np.sqrt(val_s + 1e-7)) @ vec_s.T
+
+    # Diagonalize cov_r
+    val_r, vec_r = np.linalg.eigh(cov_r)
+    val_r = np.maximum(val_r, 0.0)
+    sqrt_r = vec_r @ np.diag(np.sqrt(val_r)) @ vec_r.T
+
+    t_mat = sqrt_r @ inv_sqrt_s
+    return t_mat.astype(np.float32)
+
+
+def _reinhard_lab_transfer(
+    src_f: NDArray[np.float32],
+    ref_f: NDArray[np.float32],
+    target_f: Optional[NDArray[np.float32]] = None,
+    preserve_luminance: float = 0.0,
+) -> NDArray[np.float32]:
+    """Reinhard color transfer in true CIE L*a*b* space (D65)."""
+    src_lab = rgb_to_lab(src_f).reshape(-1, 3)
+    ref_lab = rgb_to_lab(ref_f).reshape(-1, 3)
+
+    t_f = src_f if target_f is None else target_f
+    t_lab = rgb_to_lab(t_f)
+    t_shape = t_lab.shape
+    t_flat = t_lab.reshape(-1, 3)
+
+    mu_s = np.mean(src_lab, axis=0)
+    std_s = np.std(src_lab, axis=0)
+    mu_r = np.mean(ref_lab, axis=0)
+    std_r = np.std(ref_lab, axis=0)
+
+    std_ratio = np.clip(std_r / (std_s + 1e-6), MIN_STD_RATIO, MAX_STD_RATIO)
+    out_lab = (t_flat - mu_s) * std_ratio + mu_r
+
+    clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
+    if clamped_preserve > 0.0:
+        out_lab[:, 0] = clamped_preserve * t_flat[:, 0] + (1.0 - clamped_preserve) * out_lab[:, 0]
+
+    out_lab[:, 0] = np.clip(out_lab[:, 0], 0.0, 100.0)
+    out_rgb = lab_to_rgb(out_lab.reshape(t_shape))
+    return np.clip(out_rgb, 0.0, 1.0).astype(np.float32)
+
+
+def fit_and_apply_transfer(
+    src_img: NDArray[Union[np.uint8, np.float32]],
+    ref_img: NDArray[Union[np.uint8, np.float32]],
+    target_img: Optional[NDArray[Union[np.uint8, np.float32]]] = None,
+    method: str = DEFAULT_METHOD,
+    preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
+    soft_clip: bool = False,
+) -> NDArray[np.float32]:
+    """Unified solver fitting color transfer between *src* and *ref* and applying to *target*.
+
+    If *target_img* is None, applies directly to *src_img*.
+    If *target_img* is a 3D identity lattice (N^3, 3), evaluates the transfer across
+    the entire RGB cube to produce an Adobe-compliant 3D LUT.
+    """
+    src_f = (src_img.astype(np.float32) / 255.0) if src_img.dtype == np.uint8 else src_img.astype(np.float32)
+    ref_f = (ref_img.astype(np.float32) / 255.0) if ref_img.dtype == np.uint8 else ref_img.astype(np.float32)
+
+    if target_img is None:
+        t_f = src_f.copy()
+    else:
+        t_f = (target_img.astype(np.float32) / 255.0) if target_img.dtype == np.uint8 else target_img.astype(np.float32)
+
+    meth = method.lower()
+
+    if meth == "reinhard":
+        result = _reinhard_lab_transfer(
+            src_f=src_f,
+            ref_f=ref_f,
+            target_f=t_f,
+            preserve_luminance=preserve_luminance,
+        )
+
+    elif meth == "hm":
+        result = _histogram_match_1d(src=src_f, ref=ref_f, target=t_f)
+
+    elif meth in ("mkl", "mvgd"):
+        s_flat = src_f.reshape(-1, 3).astype(np.float64)
+        r_flat = ref_f.reshape(-1, 3).astype(np.float64)
+        t_flat = t_f.reshape(-1, 3).astype(np.float32)
+
+        mu_s = s_flat.mean(axis=0)
+        mu_r = r_flat.mean(axis=0)
+        cov_s = np.cov(s_flat, rowvar=False)
+        cov_r = np.cov(r_flat, rowvar=False)
+
+        t_mat = _compute_mkl_matrix(cov_s, cov_r) if meth == "mkl" else _compute_mvgd_matrix(cov_s, cov_r)
+        res_flat = (t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)
+        result = res_flat.reshape(t_f.shape)
+
+    elif meth in ("hm-mkl-hm", "hm-mvgd-hm"):
+        # 1. Pre-HM: Match histogram of source to reference
+        s_hm1 = _histogram_match_1d(src=src_f, ref=ref_f, target=src_f)
+        t_hm1 = _histogram_match_1d(src=src_f, ref=ref_f, target=t_f)
+
+        # 2. Covariance transfer (MKL or MVGD)
+        s_flat = s_hm1.reshape(-1, 3).astype(np.float64)
+        r_flat = ref_f.reshape(-1, 3).astype(np.float64)
+        t_flat = t_hm1.reshape(-1, 3).astype(np.float32)
+
+        mu_s = s_flat.mean(axis=0)
+        mu_r = r_flat.mean(axis=0)
+        cov_s = np.cov(s_flat, rowvar=False)
+        cov_r = np.cov(r_flat, rowvar=False)
+
+        t_mat = _compute_mkl_matrix(cov_s, cov_r) if meth == "hm-mkl-hm" else _compute_mvgd_matrix(cov_s, cov_r)
+        s_mkl = ((s_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)).reshape(s_hm1.shape)
+        t_mkl = ((t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)).reshape(t_hm1.shape)
+
+        # 3. Post-HM: Re-match histogram to reference
+        result = _histogram_match_1d(src=s_mkl, ref=ref_f, target=t_mkl)
+
+    else:
+        # Default fallback to Reinhard
+        result = _reinhard_lab_transfer(
+            src_f=src_f,
+            ref_f=ref_f,
+            target_f=t_f,
+            preserve_luminance=preserve_luminance,
+        )
+
+    # Optional CIE LAB Luminance Preservation
+    clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
+    if clamped_preserve > 0.0 and meth != "reinhard":
+        t_lab = rgb_to_lab(t_f)
+        res_lab = rgb_to_lab(np.clip(result, 0.0, 1.0))
+        final_l = clamped_preserve * t_lab[..., 0] + (1.0 - clamped_preserve) * res_lab[..., 0]
+        blended_lab = np.stack([final_l, res_lab[..., 1], res_lab[..., 2]], axis=-1)
+        result = lab_to_rgb(blended_lab)
+
+    if soft_clip:
+        result = apply_soft_clip(result)
+    else:
+        result = np.clip(result, 0.0, 1.0)
+
+    return result.astype(np.float32)
 
 
 def compute_color_transfer(
@@ -431,24 +519,7 @@ def compute_color_transfer(
 ) -> NDArray[np.uint8]:
     """Transfer the colour distribution of *ref_img* onto *src_img*.
 
-    Applies the chosen color-transfer method, followed by CIE LAB luminance
-    blending (to preserve source lightness and avoid overexposure/underexposure)
-    and optional soft-knee roll-off.
-
-    Args:
-        src_img: Source image as an RGB uint8 array of shape (H, W, 3) or (N, 1, 3).
-        ref_img: Reference image as an RGB uint8 array of shape (H, W, 3).
-        method: Colour-transfer algorithm key (see config.SUPPORTED_METHODS).
-        preserve_luminance: Luminance preservation blend factor in [0.0, 1.0].
-            1.0 keeps 100% of source lightness, 0.0 applies full reference lightness.
-        soft_clip: Whether to apply smooth tanh compression on extreme highlights/shadows.
-
-    Returns:
-        Colour-matched image as an RGB uint8 array with the same spatial
-        dimensions as *src_img*.
-
-    Raises:
-        ValueError: If *method* is not a supported algorithm key.
+    Returns an RGB uint8 array with the exact spatial dimensions of *src_img*.
     """
     if method not in SUPPORTED_METHODS:
         raise ValueError(
@@ -456,76 +527,12 @@ def compute_color_transfer(
             f"Choose from: {list(SUPPORTED_METHODS.keys())}"
         )
 
-    if method == "reinhard":
-        return _numpy_statistical_transfer(
-            src_img=src_img,
-            ref_img=ref_img,
-            preserve_luminance=preserve_luminance,
-            soft_clip=soft_clip,
-        )
-
-    try:
-        from color_matcher import ColorMatcher
-        from color_matcher.normalizer import Normalizer
-
-        cm = ColorMatcher()
-
-        if method == "hm-mkl-hm":
-            # Chain: HM -> MKL -> HM
-            res: NDArray = cm.transfer(src=src_img, ref=ref_img, method="hm")
-            res = Normalizer(res).uint8_norm()
-            res = cm.transfer(src=res, ref=ref_img, method="mkl")
-            res = Normalizer(res).uint8_norm()
-            res = cm.transfer(src=res, ref=ref_img, method="hm")
-        else:
-            res = cm.transfer(src=src_img, ref=ref_img, method=method)
-
-        res = Normalizer(res).uint8_norm().astype(np.uint8)
-
-        # CIE LAB Luminance Preservation
-        clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
-        if clamped_preserve > 0.0:
-            src_f = src_img.astype(np.float32) / 255.0
-            trans_f = res.astype(np.float32) / 255.0
-
-            src_lab = rgb_to_lab(src_f)
-            trans_lab = rgb_to_lab(trans_f)
-
-            final_l = (
-                clamped_preserve * src_lab[..., 0]
-                + (1.0 - clamped_preserve) * trans_lab[..., 0]
-            )
-
-            final_lab = np.stack(
-                [final_l, trans_lab[..., 1], trans_lab[..., 2]],
-                axis=-1,
-            )
-            rgb_f = lab_to_rgb(final_lab)
-        else:
-            rgb_f = res.astype(np.float32) / 255.0
-
-        # Soft clipping roll-off
-        if soft_clip:
-            rgb_f = apply_soft_clip(rgb_f)
-        else:
-            rgb_f = np.clip(rgb_f, 0.0, 1.0)
-
-        return (rgb_f * 255.0).astype(np.uint8)
-
-    except ImportError:
-        # Fallback to pure numpy statistical transfer
-        return _numpy_statistical_transfer(
-            src_img=src_img,
-            ref_img=ref_img,
-            preserve_luminance=preserve_luminance,
-            soft_clip=soft_clip,
-        )
-
-    except Exception:
-        # Graceful fallback in case of SciPy linear algebra singularity (LinAlgError)
-        return _numpy_statistical_transfer(
-            src_img=src_img,
-            ref_img=ref_img,
-            preserve_luminance=preserve_luminance,
-            soft_clip=soft_clip,
-        )
+    res_f = fit_and_apply_transfer(
+        src_img=src_img,
+        ref_img=ref_img,
+        target_img=src_img,
+        method=method,
+        preserve_luminance=preserve_luminance,
+        soft_clip=soft_clip,
+    )
+    return (np.clip(res_f, 0.0, 1.0) * 255.0).astype(np.uint8)

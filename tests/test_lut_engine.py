@@ -16,6 +16,7 @@ try:
         compute_lut,
         generate_identity_grid,
         generate_identity_lattice,
+        generate_lut_from_pair,
         refine_and_blend_lut,
     )
 
@@ -346,3 +347,47 @@ class TestComputeLutShape:
         assert lut.shape == expected, (
             f"For size={size}, expected shape {expected}, got {lut.shape}"
         )
+
+
+class TestGenerateLutFromPair:
+    """Validate generate_lut_from_pair with sample_size=512 and rich night-scene preservation."""
+
+    def test_night_scene_color_transfer_richness(self) -> None:
+        # Dark night scene with saturated red neon lights
+        src = np.zeros((100, 100, 3), dtype=np.uint8) + 15
+        src[20:30, 20:30] = [255, 20, 20]  # vibrant red beacon
+
+        # Reference teal/emerald aesthetic
+        ref = np.zeros((100, 100, 3), dtype=np.uint8)
+        ref[..., 0] = 10
+        ref[..., 1] = 70
+        ref[..., 2] = 100
+        ref[40:50, 40:50] = [255, 40, 40]
+
+        lut = generate_lut_from_pair(
+            source=src,
+            reference=ref,
+            lut_size=17,
+            sample_size=512,
+            method="hm-mkl-hm",
+            preserve_luminance=0.0,
+        )
+
+        assert lut.shape == (17**3, 3)
+        assert lut.min() >= 0.0 and lut.max() <= 1.0
+
+        # Apply LUT to the dark night image
+        graded = apply_lut(src, lut)
+
+        # The dark sky should have absorbed teal/blue from the reference (B > R)
+        sky_patch = graded[:10, :10]
+        assert np.mean(sky_patch[..., 2]) > np.mean(sky_patch[..., 0]), (
+            "Night sky should absorb cyan/blue tones from reference"
+        )
+
+        # The vibrant red beacon should remain distinctly red (R > G, R > B)
+        red_patch = graded[25, 25]
+        assert red_patch[0] > red_patch[1] and red_patch[0] > red_patch[2], (
+            "Red neon beacon should remain vibrant red"
+        )
+

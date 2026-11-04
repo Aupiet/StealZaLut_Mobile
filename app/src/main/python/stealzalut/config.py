@@ -6,10 +6,12 @@ soft clipping, and caching pipelines.
 
 from typing import Dict, Tuple
 
-# Supported color-transfer methods
+# Supported color-transfer methods aligned with desktop
 SUPPORTED_METHODS: Dict[str, str] = {
     "hm-mkl-hm": "Histogram Matching + MKL",
     "mkl": "Monge-Kantorovitch Linear",
+    "hm-mvgd-hm": "Histogram Matching + MVGD",
+    "mvgd": "Multi-Variate Gaussian Distribution",
     "hm": "Histogram Matching",
     "reinhard": "Reinhard (LAB stats)",
 }
@@ -22,7 +24,7 @@ LUT_SIZE_STANDARD: int = 33
 LUT_SIZE_HIGH: int = 65
 DEFAULT_LUT_SIZE: int = 33
 
-# Image processing proxy maximum dimension
+# Image processing proxy maximum dimension (high fidelity for neon lights & fine details)
 MAX_ANALYSIS_DIMENSION: int = 512
 
 # Direct image export maximum dimension (4K UHD)
@@ -32,11 +34,17 @@ MAX_EXPORT_DIMENSION: int = 3840
 SUPPORTED_EXTENSIONS: Tuple[str, ...] = (".jpg", ".jpeg", ".png", ".webp")
 
 # Default colorimetric quality parameters
+# All Stage 2 protections are 0.0 / False by default to achieve 100% visual parity with desktop
 DEFAULT_INTENSITY: float = 1.0
-DEFAULT_PRESERVE_LUMINANCE: float = 0.75
-DEFAULT_SKIN_PROTECTION: float = 0.5
-DEFAULT_SMOOTH_SIGMA: float = 0.6
-DEFAULT_NEUTRAL_LOCK: float = 0.8
+DEFAULT_PRESERVE_LUMINANCE: float = 0.0
+DEFAULT_PRESERVE_LUMA: bool = False
+DEFAULT_LUMA_LOCK: float = 0.0
+DEFAULT_SKIN_PROTECTION: float = 0.0
+DEFAULT_SMOOTH_SIGMA: float = 0.0
+DEFAULT_NEUTRAL_LOCK: float = 0.0
+DEFAULT_NEUTRAL_PROTECTION: float = 0.0
+DEFAULT_EXTREMES_ROLLOFF: float = 0.0
+DEFAULT_SPATIAL_SMOOTHING: float = 0.0
 
 # Soft clipping thresholds (5% darkest shadows and 5% brightest highlights)
 SOFT_CLIP_SHADOW_THRESHOLD: float = 0.05

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Check
@@ -820,79 +821,7 @@ private fun WizardStep3Parameters(
             }
         }
 
-        // Quick Action: Auto Edit (LightCraft Calibrated)
-        Surface(
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-            border = BorderStroke(
-                width = AppDimens.BorderThin,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(AppDimens.SpacingNormal),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Brightness6,
-                            contentDescription = null,
-                            modifier = Modifier.size(AppDimens.IconSmall),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(
-                            text = stringResource(R.string.auto_edit_badge),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
-                    Text(
-                        text = stringResource(R.string.auto_edit_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = AppConstants.OPACITY_CONTAINER_HEAVY)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(AppDimens.SpacingMedium))
-
-                Button(
-                    onClick = onAutoEdit,
-                    enabled = !isComputingAutoEdit,
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    if (isComputingAutoEdit) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(AppDimens.IconSmall),
-                            strokeWidth = AppDimens.BorderThick,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Speed,
-                            contentDescription = null,
-                            modifier = Modifier.size(AppDimens.IconSmall)
-                        )
-                        Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
-                        Text(
-                            text = stringResource(R.string.btn_auto_edit),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
-
-        // Independent Parameter Controls Card
+        // Independent Parameter Controls Card with Integrated Auto-Edit Action
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
@@ -903,12 +832,45 @@ private fun WizardStep3Parameters(
                 modifier = Modifier.padding(AppDimens.SpacingNormal),
                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
-                Text(
-                    text = stringResource(R.string.wizard_step_3_independent_params_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.wizard_step_3_independent_params_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Button(
+                        onClick = onAutoEdit,
+                        enabled = !isComputingAutoEdit,
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        if (isComputingAutoEdit) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(AppDimens.IconSmall),
+                                strokeWidth = AppDimens.BorderThick,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AutoFixHigh,
+                                contentDescription = null,
+                                modifier = Modifier.size(AppDimens.IconSmall)
+                            )
+                            Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                            Text(
+                                text = stringResource(R.string.btn_auto_edit),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
 
                 // 1. Overall Strength
                 ParameterSlider(
@@ -1317,89 +1279,6 @@ private fun WizardStep5Result(
             }
         }
 
-        // Auto Edit (LightCraft) Details Card (Legacy / Step 3 indication if active)
-        if (isAutoEditActive && !isEditPanelVisible && !isEditActive) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
-                ),
-                border = BorderStroke(
-                    width = AppDimens.BorderMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(AppDimens.SpacingNormal),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Brightness6,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(AppDimens.IconMedium)
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                            Text(
-                                text = stringResource(R.string.auto_edit_badge),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                text = stringResource(R.string.auto_edit_exposure_label, autoExposure),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.padding(
-                                    horizontal = AppDimens.SpacingSmall,
-                                    vertical = AppDimens.SpacingExtraSmall
-                                )
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = stringResource(R.string.auto_edit_contrast_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = stringResource(R.string.auto_edit_highlights_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = stringResource(R.string.auto_edit_shadows_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = stringResource(R.string.auto_edit_vibrance_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
-        }
 
         // 120 FPS GPU Accelerated Dual View (Side-by-Side & Split-Wipe)
         DoubleViewComparison(

@@ -498,23 +498,38 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
-     * Triggered by the [Auto] button inside the Step 5 Edit Panel.
-     * Evaluates auto exposure on the image, applies LightCraft calibrated defaults,
-     * and refreshes the preview.
+     * Triggered by the [✨ Auto] action inside the editing menu.
+     * Evaluates auto tone mapping on the active photo, updates Stage 3 sliders
+     * (exposure, contrast, highlights, shadows, vibrance) in real time so the user
+     * can visually inspect and fine-tune them, and refreshes the preview.
      */
-    fun applyAutoInEdit() {
+    fun applyAutoInEdit(isStandalone: Boolean = false) {
         val current = _uiState.value
-        val imagePath = current.previewPath ?: current.sourcePath ?: return
+        val imagePath = if (isStandalone) {
+            current.editorPreviewPath ?: current.editorSourcePath ?: return
+        } else {
+            current.previewPath ?: current.sourcePath ?: return
+        }
 
-        activeEditJob?.cancel()
-        activeEditJob = viewModelScope.launch {
+        val targetJob = if (isStandalone) activeStandaloneJob else activeEditJob
+        targetJob?.cancel()
+
+        val job = viewModelScope.launch {
             _uiState.update { it.copy(isComputingEdit = true, errorMessage = null) }
             val autoSettings = bridgeRepository.computeAutoSettings(imagePath)
             when (autoSettings) {
                 is AutoSettingsResult.Success -> {
+                    val expNorm = autoSettings.exposure.coerceIn(-2.0f, 2.0f)
+                    val contrastNorm = (autoSettings.contrast / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val highlightsNorm = (autoSettings.highlights / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
+
                     _uiState.update {
                         it.copy(
+                            isComputingEdit = false,
                             isAutoEditActive = true,
+                            // Legacy edit state
                             editExposure = autoSettings.exposure,
                             editContrast = autoSettings.contrast,
                             editHighlights = autoSettings.highlights,
@@ -523,26 +538,37 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                             editBlacks = autoSettings.blacks,
                             editVibrance = autoSettings.vibrance,
                             editSaturation = autoSettings.saturation,
-                            userMessage = "Auto Edit appliqué : Exposition %+.2f EV | Contraste %+.0f | Ombres %+.0f".format(
-                                autoSettings.exposure,
-                                autoSettings.contrast,
-                                autoSettings.shadows
+                            // 3-Stage pipeline state (sliders in UI)
+                            step3Exposure = expNorm,
+                            step3Contrast = contrastNorm,
+                            step3Highlights = highlightsNorm,
+                            step3Shadows = shadowsNorm,
+                            step3Vibrance = vibranceNorm,
+                            userMessage = "Auto-Edit appliqué : Exposition %+.2f EV | Contraste %+.0f%% | Ombres %+.0f%%".format(
+                                expNorm,
+                                contrastNorm * 100f,
+                                shadowsNorm * 100f
                             )
                         )
                     }
-                    computeEditedPreview(
-                        EditDebounceRequest(
-                            imagePath = imagePath,
-                            exposure = autoSettings.exposure,
-                            contrast = autoSettings.contrast,
-                            highlights = autoSettings.highlights,
-                            shadows = autoSettings.shadows,
-                            whites = autoSettings.whites,
-                            blacks = autoSettings.blacks,
-                            vibrance = autoSettings.vibrance,
-                            saturation = autoSettings.saturation
+
+                    if (isStandalone) {
+                        scheduleEditorPreviewUpdate()
+                    } else {
+                        computeEditedPreview(
+                            EditDebounceRequest(
+                                imagePath = imagePath,
+                                exposure = autoSettings.exposure,
+                                contrast = autoSettings.contrast,
+                                highlights = autoSettings.highlights,
+                                shadows = autoSettings.shadows,
+                                whites = autoSettings.whites,
+                                blacks = autoSettings.blacks,
+                                vibrance = autoSettings.vibrance,
+                                saturation = autoSettings.saturation
+                            )
                         )
-                    )
+                    }
                 }
                 is AutoSettingsResult.Error -> {
                     _uiState.update {
@@ -553,6 +579,12 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 }
             }
+        }
+
+        if (isStandalone) {
+            activeStandaloneJob = job
+        } else {
+            activeEditJob = job
         }
     }
 
@@ -1623,6 +1655,40 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 step3Clarity = 0.0f,
                 step3Sharpen = 0.0f,
                 step3Grain = 0.0f
+            )
+        }
+        scheduleEditorPreviewUpdate()
+    }
+
+    fun resetEditingParameters() {
+        _uiState.update {
+            it.copy(
+                isAutoEditActive = false,
+                step2Intensity = 1.0f,
+                step2LumaLock = 0.0f,
+                step2NeutralAxisLock = 0.0f,
+                step2SkinToneLock = 0.0f,
+                step2ExtremesRolloff = 0.0f,
+                step2Spatial3d = 0.0f,
+                step3Exposure = 0.0f,
+                step3Contrast = 0.0f,
+                step3Highlights = 0.0f,
+                step3Shadows = 0.0f,
+                step3Temperature = 0.0f,
+                step3Tint = 0.0f,
+                step3Vibrance = 0.0f,
+                step3Saturation = 0.0f,
+                step3Clarity = 0.0f,
+                step3Sharpen = 0.0f,
+                step3Grain = 0.0f,
+                editExposure = 0f,
+                editContrast = 0f,
+                editHighlights = 0f,
+                editShadows = 0f,
+                editWhites = 0f,
+                editBlacks = 0f,
+                editVibrance = 0f,
+                editSaturation = 0f
             )
         }
         scheduleEditorPreviewUpdate()

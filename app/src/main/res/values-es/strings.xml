@@ -250,7 +250,7 @@
     <string name="format_percentage">%1$d%%</string>
 
     <!-- LightCraft Auto Edit -->
-    <string name="btn_auto_edit">Auto Edit</string>
+    <string name="btn_auto_edit">✨ Ajuste Auto</string>
     <string name="auto_edit_desc">Auto Edit (Calibrado LightCraft: exposición, contraste, altas luces, sombras, intensidad)</string>
     <string name="auto_edit_badge">Auto Edit (LightCraft)</string>
     <string name="auto_edit_exposure_label">Exposición: %1$+.2f EV</string>

@@ -97,6 +97,11 @@ $$\begin{pmatrix} l \\ m \\ s \end{pmatrix} = \mathbf{M}_1 \begin{pmatrix} R_{li
 où $L \in [0.0, 1.0]$ est la clarté perçue, et $(a, b)$ sont les coordonnées chromatiques orthogonales.
 
 ### 3.2 Formules du Module de Retravail (Étape 2)
+
+> [!IMPORTANT]
+> **Valeurs par défaut des protections (Parité Desktop à 100%) :**
+> Toutes les protections de l'Étape 2 (`luma_lock`, `neutral_axis_lock`, `skin_tone_lock`, `extremes_rolloff`, `spatial_3d`) sont fixées à **`0.0` par défaut** (avec `global_intensity = 1.0`). Cela garantit que le transfert initial lors de l'application d'un thème transmet immédiatement l'intégralité du contraste et de l'ambiance chromatique de la référence (ex: ciel de nuit cyan/émeraude, néons vifs) sans être étouffé par des masques préventifs. L'utilisateur peut ensuite activer et doser ces protections à sa convenance ou via l'option Auto du menu d'édition.
+
 1. **Spatial 3D (`spatial_3d` $\in [0.0, 1.0]$)** :
    $$LUT_{smooth} = (1 - \alpha_{spatial}) \cdot LUT_{pure} + \alpha_{spatial} \cdot \text{GaussianBlur3D}(LUT_{pure}, \sigma)$$
    Appliqué directement sur le volume tridimensionnel pour éliminer toute cassure de dégradé.

@@ -65,6 +65,45 @@ fun SettingsScreen(
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSpacious)
     ) {
+        // Quick Guide & Metrics Card
+        Card(
+            onClick = { viewModel.openMetricsInfo() },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+            ),
+            border = CardDefaults.outlinedCardBorder()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingStandard),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Column(modifier = Modifier.weight(1.0f)) {
+                    Text(
+                        text = stringResource(R.string.settings_guide_card_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_guide_card_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         // Section 0: In-App Language Selector (Placed at top for instant visibility)
         Card(
             modifier = Modifier.fillMaxWidth(),

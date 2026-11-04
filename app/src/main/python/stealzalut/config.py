@@ -25,6 +25,9 @@ DEFAULT_LUT_SIZE: int = 33
 # Image processing proxy maximum dimension
 MAX_ANALYSIS_DIMENSION: int = 512
 
+# Direct image export maximum dimension (4K UHD)
+MAX_EXPORT_DIMENSION: int = 3840
+
 # File extensions supported
 SUPPORTED_EXTENSIONS: Tuple[str, ...] = (".jpg", ".jpeg", ".png", ".webp")
 
@@ -52,6 +55,15 @@ SKIN_CR_SIGMA: float = 0.08
 
 # Neutral axis lock parameters
 NEUTRAL_LOCK_SIGMA: float = 0.08
+
+# Luminance-Binned Chroma Transfer & Vividness parameters
+DEFAULT_LUMINANCE_BINS: int = 5
+VIVID_CHROMA_PERCENTILE: float = 30.0
+MIN_CHROMA_BOOST: float = 0.8
+MAX_CHROMA_BOOST: float = 1.6
+CHROMA_BOOST_DEFAULT: float = 1.25
+SHADOW_ROLLOFF_L_THRESHOLD: float = 20.0
+LUMINANCE_ALIGN_WEIGHT: float = 0.35
 
 # Cache settings
 MAX_LUT_CACHE_SIZE: int = 4

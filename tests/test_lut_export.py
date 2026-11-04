@@ -17,7 +17,10 @@ try:
         generate_identity_lattice,
         refine_and_blend_lut,
     )
-    from stealzalut.workers.export_worker import run_export_pipeline  # type: ignore[import-untyped]
+    from stealzalut.workers.export_worker import (  # type: ignore[import-untyped]
+        run_export_pipeline,
+        run_image_export_pipeline,
+    )
     from stealzalut.workers.transfer_worker import (  # type: ignore[import-untyped]
         clear_lut_cache,
         get_or_load_source_proxy,
@@ -306,3 +309,112 @@ class TestWysiwygPreviewCubeConsistency:
         assert max_diff <= 1, (
             f"Preview does not match .cube: max pixel error = {max_diff}"
         )
+
+
+# ------------------------------------------------------------------
+# Cube Export Creation Contract (Tâche 1 & Tâche 3)
+# ------------------------------------------------------------------
+
+
+class TestCubeExportCreationContract:
+    """Validate that cube export generates lut_path in JSON and valid disk file."""
+
+    def test_export_worker_generates_valid_lut_path(
+        self, sample_src_path: Path, sample_ref_path: Path, tmp_path: Path
+    ) -> None:
+        target_cube = str(tmp_path / "final_look.cube")
+        res = run_export_pipeline(
+            src_path=str(sample_src_path),
+            ref_path=str(sample_ref_path),
+            output_cube_path=target_cube,
+            lut_size=17,
+        )
+
+        assert res["status"] == "success"
+        assert "lut_path" in res, "Expected 'lut_path' key in result dictionary"
+        assert "cube_path" in res, "Expected 'cube_path' key in result dictionary"
+        assert res["lut_path"] == str(Path(target_cube).resolve())
+
+        # Physical file must exist and be non-empty
+        assert Path(target_cube).is_file()
+        assert Path(target_cube).stat().st_size > 0
+
+    def test_run_image_export_pipeline_native_mode(
+        self, sample_src_path: Path, sample_ref_path: Path, tmp_path: Path
+    ) -> None:
+        """Native mode (max_export_dim = 0 or None) must preserve source dimensions."""
+        src_img = load_image(str(sample_src_path))
+        orig_h, orig_w = src_img.shape[:2]
+
+        target_img = str(tmp_path / "native_export.jpg")
+        res = run_image_export_pipeline(
+            src_path=str(sample_src_path),
+            ref_path=str(sample_ref_path),
+            output_image_path=target_img,
+            max_export_dim=0,  # Native
+        )
+
+        assert res["status"] == "success"
+        assert res["width"] == orig_w
+        assert res["height"] == orig_h
+
+        exported = load_image(target_img)
+        assert exported.shape[:2] == (orig_h, orig_w)
+
+
+# ------------------------------------------------------------------
+# Full 3-Stage Pipeline Baking & Cube Parser
+# ------------------------------------------------------------------
+
+
+class TestCubeBakingAndParser:
+    """Validate 3-Stage pipeline baking into .cube and load_cube_file parsing."""
+
+    def test_cube_parser_roundtrip(self, tmp_path: Path) -> None:
+        from stealzalut.core.lut_export import load_cube_file
+
+        cube_path = _export_identity_cube(tmp_path, size=17, title="RoundtripTest")
+        parsed_size, parsed_lut = load_cube_file(str(cube_path))
+
+        assert parsed_size == 17
+        assert parsed_lut.shape == (17**3, 3)
+        assert parsed_lut.min() >= 0.0
+        assert parsed_lut.max() <= 1.0
+
+    def test_full_pipeline_baking_in_export_worker(
+        self, sample_src_path: Path, sample_ref_path: Path, tmp_path: Path
+    ) -> None:
+        from stealzalut.core.lut_export import load_cube_file
+
+        target_cube = str(tmp_path / "baked_look.cube")
+        res = run_export_pipeline(
+            src_path=str(sample_src_path),
+            ref_path=str(sample_ref_path),
+            output_cube_path=target_cube,
+            lut_size=17,
+            intensity=0.85,
+            luma_lock=0.20,
+            neutral_axis_lock=0.40,
+            skin_tone_lock=0.50,
+            extremes_rolloff=0.15,
+            spatial_3d=0.10,
+            exposure=0.30,
+            contrast=0.15,
+            highlights=-0.20,
+            shadows=0.10,
+            temperature=0.05,
+            tint=-0.02,
+            vibrance=0.25,
+            saturation=0.05,
+        )
+
+        assert res["status"] == "success"
+        assert Path(target_cube).is_file()
+
+        parsed_size, parsed_lut = load_cube_file(target_cube)
+        assert parsed_size == 17
+        assert parsed_lut.shape == (17**3, 3)
+        assert not np.isnan(parsed_lut).any()
+        assert not np.isinf(parsed_lut).any()
+        assert np.min(parsed_lut) >= 0.0
+        assert np.max(parsed_lut) <= 1.0

@@ -68,6 +68,18 @@ Le traitement s'exécute **intégralement en local sur l'appareil (100% Offline)
 - $33 \times 33 \times 33$ ($35\,937$ nœuds) : **Standard Broadcast & Cinéma** (recommandé).
 - $65 \times 65 \times 65$ ($274\,625$ nœuds) : Très haute précision pour les dégradés complexes.
 
+### 2.5 Auto Edit Calibré (Reverse-Engineering LightCraft)
+En complément du transfert de style depuis une image de référence B, StealZaLUT intègre le moteur **Auto Edit** rétro-ingénieré depuis **LightCraft** (`develop.auto`) :
+- **Évaluation de Luminance Optique Linéaire** : L'image source est réduite à un proxy long-bord $\le 512\text{ px}$, convertie en luminance linéaire Rec. 2020 ($Y = 0.2627\,R_{\text{lin}} + 0.6780\,G_{\text{lin}} + 0.0593\,B_{\text{lin}}$), et comparée au gris moyen photographique standard 18% ($0.18$) en échelle logarithmique base 2 ($\Delta EV = \log_2(\max(Y, 10^{-6}) / 0.18)$).
+- **Calcul d'Exposition Linéarisé et Borné** :
+  $$\text{exposition} = \text{clamp}\left(-0.41 \cdot \overline{\Delta EV} - 0.58,\; -2.0,\; 3.0\right) \quad \text{(arrondi à 2 décimales)}$$
+- **Profil Tonal & Chromatique Expert** :
+  - **Contraste :** `+68.0` (courbe symétrique en S centrée sur les demi-tons)
+  - **Hautes lumières :** `-66.0` (atténuation progressive de l'épaulement pour préserver les ciels et reflets)
+  - **Ombres :** `+52.0` (débouchage ciblé des tons sombres sous 50% de luminance)
+  - **Vibrance :** `+30.0` (saturation sélective favorisant les nuances atténuées sans saturer la peau)
+- **Déclenchement en 1 clic** directement depuis l'étape 1 (Source) ou l'étape 3 (Paramètres), rendu WYSIWYG temps réel et export instantané sous forme de 3D LUT `.cube` ($17^3, 33^3, 65^3$).
+
 ---
 
 ## 3. Architecture Technique
@@ -99,6 +111,7 @@ graph TD
         BridgePy["stealzalut.bridge"]
         TransferWorker["workers.transfer_worker\n(Cache LRU _RAW_LUT_CACHE)"]
         ExportWorker["workers.export_worker"]
+        AutoEdit["core.auto_edit\n(LightCraft Auto Edit & Rec.2020)"]
         ColorTransfer["core.color_transfer\n(CIE LAB, Soft-Clip tanh)"]
         LutEngine["core.lut_engine\n(refine_and_blend_lut, apply_lut_trilinear)"]
         LutExport["core.lut_export\n(Sérialisation vectorisée .cube)"]
@@ -114,10 +127,12 @@ graph TD
 
     BridgePy --> TransferWorker
     BridgePy --> ExportWorker
+    BridgePy --> AutoEdit
     TransferWorker --> LutEngine
     TransferWorker --> ColorTransfer
     ExportWorker --> LutEngine
     ExportWorker --> LutExport
+    AutoEdit --> LutExport
 ```
 
 ---
@@ -225,6 +240,41 @@ result = export_cube_file(
 # Retour: {"status": "success", "cube_path": "...", "lut_size": 33, "execution_time_ms": 8.2}
 ```
 
+### `compute_auto_edit` (LightCraft Auto Edit)
+```python
+from stealzalut.bridge import compute_auto_edit
+
+result = compute_auto_edit(
+    src_path="/path/to/source.jpg",
+    output_preview_path="/path/to/preview.jpg",
+    max_preview_dim=1024
+)
+# Retour: {
+#     "status": "success",
+#     "preview_path": "...",
+#     "exposure": 0.54,
+#     "contrast": 68.0,
+#     "highlights": -66.0,
+#     "shadows": 52.0,
+#     "whites": 0.0,
+#     "blacks": 0.0,
+#     "vibrance": 30.0,
+#     "execution_time_ms": 115.8
+# }
+```
+
+### `export_auto_edit_cube` (LightCraft Auto Edit 3D LUT)
+```python
+from stealzalut.bridge import export_auto_edit_cube
+
+result = export_auto_edit_cube(
+    src_path="/path/to/source.jpg",
+    output_cube_path="/path/to/auto_graded.cube",
+    lut_size=33
+)
+# Retour: {"status": "success", "cube_path": "...", "lut_size": 33, "settings": {...}, "execution_time_ms": 14.5}
+```
+
 ---
 
 ## 6. Tests & Validation
@@ -237,6 +287,7 @@ python -m pytest tests/
 ```
 
 ### Couverture des Tests :
+- `tests/test_auto_edit.py` : Rétro-ingénierie LightCraft : inversibilité sRGB $\leftrightarrow$ Linéaire, validation exacte des 9 paliers de gris calibrés ($16 \to 255$), bornage de sécurité $[-2.0, +3.0]$, génération de grille 3D LUT et export `.cube`.
 - `tests/test_lut_engine.py` : Invariant `intensity = 0.0` $\implies$ LUT identité ($\Delta_{\max} < 10^{-6}$), point médian `intensity = 0.5`, protection des peaux, verrouillage neutre, lissage 3D, interpolation trilinéaire.
 - `tests/test_lut_export.py` : Exportation `.cube`, format d'en-tête standard, intégration de l'intensité dans le fichier `.cube`, correspondance pixel pour pixel preview $\leftrightarrow$ `.cube`.
 - `tests/test_color_transfer.py` : Préservation de luminance CIE LAB (`preserve_luminance = 1.0` conserve $L$ tout en altérant $A, B$), écrêtage doux tanh sur les ombres et hautes lumières.

@@ -9,6 +9,8 @@ import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.LutSize
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -30,61 +32,78 @@ class PresetRepository(private val context: Context) {
     private val persistentRefDir: File
         get() = File(context.filesDir, "preset_references").apply { mkdirs() }
 
+    private val mutex = Mutex()
+
     val builtInPresets: List<ColorimetryPreset> = emptyList()
 
     suspend fun getAllPresets(): List<ColorimetryPreset> = withContext(Dispatchers.IO) {
-        loadUserPresets()
+        mutex.withLock {
+            loadUserPresets()
+        }
     }
 
     suspend fun savePreset(preset: ColorimetryPreset): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            var updatedPreset = preset
+        mutex.withLock {
+            runCatching {
+                var updatedPreset = preset
 
-            // Ensure reference image is persisted safely away from cache directory
-            preset.referenceImagePath?.let { origRefPath ->
-                val origFile = File(origRefPath)
-                if (origFile.exists() && origFile.absolutePath.contains(context.cacheDir.absolutePath)) {
-                    val ext = origFile.extension.ifBlank { "jpg" }
-                    val permRefFile = File(persistentRefDir, "ref_${preset.id}.$ext")
-                    origFile.copyTo(permRefFile, overwrite = true)
-                    updatedPreset = updatedPreset.copy(referenceImagePath = permRefFile.absolutePath)
-                }
-            }
-
-            if (updatedPreset.thumbnailPath == null) {
-                val imageToThumb = updatedPreset.referenceImagePath
-                if (imageToThumb != null && File(imageToThumb).exists()) {
-                    val webpThumb = generateWebpThumbnail(imageToThumb, preset.id)
-                    if (webpThumb != null) {
-                        updatedPreset = updatedPreset.copy(thumbnailPath = webpThumb)
+                // Ensure reference image is persisted safely away from cache directory
+                preset.referenceImagePath?.let { origRefPath ->
+                    val origFile = File(origRefPath)
+                    if (origFile.exists() && origFile.absolutePath.contains(context.cacheDir.absolutePath)) {
+                        val ext = origFile.extension.ifBlank { "jpg" }
+                        val permRefFile = File(persistentRefDir, "ref_${preset.id}.$ext")
+                        origFile.copyTo(permRefFile, overwrite = true)
+                        updatedPreset = updatedPreset.copy(referenceImagePath = permRefFile.absolutePath)
                     }
                 }
-            }
 
-            val current = loadUserPresets().toMutableList()
-            val index = current.indexOfFirst { it.id == updatedPreset.id }
-            if (index >= 0) {
-                current[index] = updatedPreset
-            } else {
-                current.add(0, updatedPreset)
+                if (updatedPreset.thumbnailPath == null) {
+                    val imageToThumb = updatedPreset.referenceImagePath
+                    if (imageToThumb != null && File(imageToThumb).exists()) {
+                        val webpThumb = generateWebpThumbnail(imageToThumb, preset.id)
+                        if (webpThumb != null) {
+                            updatedPreset = updatedPreset.copy(thumbnailPath = webpThumb)
+                        }
+                    }
+                }
+
+                val current = loadUserPresets().toMutableList()
+                val now = System.currentTimeMillis()
+                // Idempotency: match by ID or recent duplicate (same name + method + palette in last 3s)
+                val index = current.indexOfFirst {
+                    it.id == updatedPreset.id || (
+                        it.name == updatedPreset.name &&
+                        it.method == updatedPreset.method &&
+                        it.paletteHexes == updatedPreset.paletteHexes &&
+                        (now - it.createdAt) < 3000L
+                    )
+                }
+                if (index >= 0) {
+                    current[index] = updatedPreset.copy(id = current[index].id)
+                } else {
+                    current.add(0, updatedPreset)
+                }
+                writeUserPresets(current)
             }
-            writeUserPresets(current)
         }
     }
 
     suspend fun deletePreset(presetId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val current = loadUserPresets().toMutableList()
-            val removed = current.firstOrNull { it.id == presetId }
-            removed?.thumbnailPath?.let { File(it).delete() }
-            removed?.referenceImagePath?.let {
-                val refFile = File(it)
-                if (refFile.parentFile?.absolutePath == persistentRefDir.absolutePath) {
-                    refFile.delete()
+        mutex.withLock {
+            runCatching {
+                val current = loadUserPresets().toMutableList()
+                val removed = current.firstOrNull { it.id == presetId }
+                removed?.thumbnailPath?.let { File(it).delete() }
+                removed?.referenceImagePath?.let {
+                    val refFile = File(it)
+                    if (refFile.parentFile?.absolutePath == persistentRefDir.absolutePath) {
+                        refFile.delete()
+                    }
                 }
+                current.removeAll { it.id == presetId }
+                writeUserPresets(current)
             }
-            current.removeAll { it.id == presetId }
-            writeUserPresets(current)
         }
     }
 

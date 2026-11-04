@@ -206,23 +206,31 @@ fun PalettesScreen(
                             onClick = {
                                 viewModel.saveExtractedPreset(presetName, presetNotes.ifBlank { null })
                             },
-                            enabled = presetName.isNotBlank(),
+                            enabled = presetName.isNotBlank() && !uiState.isSavingPreset && !uiState.isExtractingPalette,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                             shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Save,
-                                contentDescription = null,
-                                modifier = Modifier.size(AppDimens.IconNormal)
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                            Text(
-                                text = stringResource(R.string.dialog_btn_save),
-                                fontWeight = FontWeight.Bold
-                            )
+                            if (uiState.isSavingPreset) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                                    strokeWidth = AppDimens.BorderThick,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Save,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AppDimens.IconNormal)
+                                )
+                                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                                Text(
+                                    text = stringResource(R.string.dialog_btn_save),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

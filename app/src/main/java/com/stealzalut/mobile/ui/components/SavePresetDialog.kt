@@ -44,6 +44,7 @@ fun SavePresetDialog(
     val defaultName = stringResource(R.string.wizard_step_2_ref_badge) + " " + (System.currentTimeMillis() % 1000)
     var name by remember { mutableStateOf(defaultName) }
     var notes by remember { mutableStateOf("") }
+    var isSubmitted by remember { mutableStateOf(false) }
 
     val methodName = stringResource(method.displayNameRes)
     val lutLabel = stringResource(lutSize.labelRes)
@@ -124,7 +125,13 @@ fun SavePresetDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onSave(name, notes.takeIf { it.isNotBlank() }) },
+                onClick = {
+                    if (!isSubmitted) {
+                        isSubmitted = true
+                        onSave(name, notes.takeIf { it.isNotBlank() })
+                    }
+                },
+                enabled = !isSubmitted && name.isNotBlank(),
                 modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                 shape = RoundedCornerShape(AppDimens.CornerRadiusMedium)
             ) {

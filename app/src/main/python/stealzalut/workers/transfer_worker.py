@@ -27,13 +27,24 @@ from stealzalut.config import (
 )
 from stealzalut.core.lut_engine import (
     apply_lut,
+    apply_lut_trilinear,
     compute_lut,
+    generate_identity_lattice,
     refine_and_blend_lut,
+)
+from stealzalut.core.lut_export import load_cube_file
+from stealzalut.core.pipeline import (
+    Step2Params,
+    Step3Params,
+    apply_step3_color_grading,
+    bake_full_pipeline_lut,
 )
 from stealzalut.utils.image_io import (
     create_proxy_image,
     load_image,
     save_image,
+    to_float32,
+    to_uint8,
 )
 
 # In-memory LRU caches for ultra-responsive slider adjustments (<5ms)
@@ -59,19 +70,7 @@ def get_or_compute_raw_lut(
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = True,
 ) -> NDArray[np.float32]:
-    """Retrieve raw 3D LUT from cache or compute and cache it.
-
-    Args:
-        src_path: Path to source image.
-        ref_path: Path to reference look image.
-        method: Color transfer method key.
-        lut_size: Grid size per axis (17, 33, 65).
-        preserve_luminance: Luminance preservation blend factor in [0.0, 1.0].
-        soft_clip: Whether to apply soft-knee roll-off.
-
-    Returns:
-        Raw 3D LUT array of shape ``(lut_size ** 3, 3)``.
-    """
+    """Retrieve raw 3D LUT from cache or compute and cache it."""
     abs_src = os.path.abspath(src_path) if src_path else ""
     abs_ref = os.path.abspath(ref_path) if ref_path else ""
     cache_key = (
@@ -145,8 +144,8 @@ def get_or_load_source_proxy(
 
 def run_transfer_pipeline(
     src_path: str,
-    ref_path: str,
-    output_path: str,
+    ref_path: Optional[str] = None,
+    output_path: str = "",
     method: str = DEFAULT_METHOD,
     intensity: float = DEFAULT_INTENSITY,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
@@ -156,62 +155,102 @@ def run_transfer_pipeline(
     lut_size: int = DEFAULT_LUT_SIZE,
     max_dimension: Optional[int] = 1024,
     quality: int = 95,
+    exposure: float = 0.0,
+    contrast: float = 0.0,
+    highlights: float = 0.0,
+    shadows: float = 0.0,
+    temperature: float = 0.0,
+    tint: float = 0.0,
+    vibrance: float = 0.0,
+    saturation: float = 0.0,
+    clarity: float = 0.0,
+    sharpen: float = 0.0,
+    grain: float = 0.0,
+    # Extended Stage 2 aliases
+    luma_lock: Optional[float] = None,
+    neutral_axis_lock: Optional[float] = None,
+    skin_tone_lock: Optional[float] = None,
+    extremes_rolloff: float = 0.0,
+    spatial_3d: Optional[float] = None,
+    custom_lut_path: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Execute the unified WYSIWYG colour-transfer pipeline.
-
-    Computes or retrieves the cached raw 3D LUT, integrates slider parameters
-    (intensity, skin protection, neutral lock, 3D smoothing) directly into the
-    3D lattice, and applies that exact LUT to the source preview.
-
-    Args:
-        src_path: Path to source image.
-        ref_path: Path to reference style image.
-        output_path: Destination path for rendered image.
-        method: Color transfer method key.
-        intensity: Global strength in [0.0, 1.0].
-        preserve_luminance: Luminance preservation in [0.0, 1.0].
-        skin_protection: Skin tone preservation factor in [0.0, 1.0].
-        smooth_sigma: 3D Gaussian smoothing sigma.
-        neutral_lock: Neutral axis and black/white locking strength.
-        lut_size: Grid size per axis (17, 33, 65).
-        max_dimension: Maximum proxy dimension (None for full resolution).
-        quality: JPEG compression quality (1-100).
-
-    Returns:
-        Dictionary with status, image_path, preview_path, width, height, and execution_time_ms.
-    """
+    """Execute the unified WYSIWYG colour-transfer and editing pipeline."""
     start: float = time.monotonic()
 
     try:
-        # 1. Base calculation / cache retrieval
-        raw_lut = get_or_compute_raw_lut(
-            src_path=src_path,
-            ref_path=ref_path,
-            method=method,
-            lut_size=lut_size,
-            preserve_luminance=preserve_luminance,
-            soft_clip=True,
+        eff_luma = preserve_luminance if luma_lock is None else luma_lock
+        eff_neutral = neutral_lock if neutral_axis_lock is None else neutral_axis_lock
+        eff_skin = skin_protection if skin_tone_lock is None else skin_tone_lock
+        eff_spatial = smooth_sigma if spatial_3d is None else spatial_3d
+
+        step2 = Step2Params(
+            global_intensity=intensity,
+            luma_lock=eff_luma,
+            neutral_axis_lock=eff_neutral,
+            skin_tone_lock=eff_skin,
+            extremes_rolloff=extremes_rolloff,
+            spatial_3d=eff_spatial,
         )
 
-        # 2. Refine 3D LUT with current user parameters (<5ms)
-        final_lut = refine_and_blend_lut(
-            raw_lut=raw_lut,
-            intensity=intensity,
-            skin_protection=skin_protection,
-            smooth_sigma=smooth_sigma,
-            neutral_lock=neutral_lock,
+        step3 = Step3Params(
+            exposure=exposure,
+            contrast=contrast,
+            highlights=highlights,
+            shadows=shadows,
+            temperature=temperature,
+            tint=tint,
+            vibrance=vibrance,
+            saturation=saturation,
+            clarity=clarity,
+            sharpen=sharpen,
+            grain=grain,
         )
+
+        # 1. Base calculation / cache retrieval
+        if custom_lut_path and os.path.isfile(custom_lut_path):
+            _, raw_lut = load_cube_file(custom_lut_path)
+        elif ref_path and os.path.isfile(ref_path):
+            raw_lut = get_or_compute_raw_lut(
+                src_path=src_path,
+                ref_path=ref_path,
+                method=method,
+                lut_size=lut_size,
+                preserve_luminance=eff_luma,
+                soft_clip=True,
+            )
+        else:
+            raw_lut = generate_identity_lattice(lut_size)
+
+        # 2. Refine & Bake 3D LUT with current parameters (<5ms)
+        baked_lut = bake_full_pipeline_lut(
+            raw_lut=raw_lut,
+            step2_params=step2,
+            step3_params=step3,
+            size=lut_size,
+        )
+        del raw_lut
 
         # 3. Retrieve or load source proxy
         src_work = get_or_load_source_proxy(src_path, max_dimension=max_dimension)
 
         # 4. Strict WYSIWYG: Apply the exact 3D LUT via trilinear interpolation
-        transferred = apply_lut(src_work, final_lut)
-        del src_work, final_lut, raw_lut
+        transferred = apply_lut(src_work, baked_lut)
+        del src_work, baked_lut
+
+        # 5. Apply 2D spatial effects if active
+        if clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
+            trans_f = to_float32(transferred)
+            trans_f = apply_step3_color_grading(
+                trans_f,
+                params=step3,
+                is_lut_baking=False,
+            )
+            transferred = to_uint8(trans_f)
+            del trans_f
 
         out_h, out_w = transferred.shape[:2]
 
-        # 5. Save output image
+        # 6. Save output image
         saved_path: str = save_image(transferred, output_path, quality=quality)
         del transferred
 

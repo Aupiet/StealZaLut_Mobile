@@ -84,4 +84,46 @@ class PresetRepositoryTest {
         assertFalse(remaining.any { it.id == "to_delete_id" })
         assertTrue(remaining.isEmpty())
     }
+
+    @Test
+    fun `savePreset with same id updates existing preset rather than duplicating`() = runTest {
+        val preset = ColorimetryPreset(
+            id = "preset_id_1",
+            name = "Original Name",
+            method = ColorTransferMethod.REINHARD
+        )
+        repository.savePreset(preset)
+        assertEquals(1, repository.getAllPresets().size)
+
+        // Save again with same ID but modified intensity
+        val updated = preset.copy(name = "Updated Name", intensity = 0.5f)
+        repository.savePreset(updated)
+
+        val all = repository.getAllPresets()
+        assertEquals(1, all.size, "Should not duplicate preset with same id")
+        assertEquals("Updated Name", all.first().name)
+        assertEquals(0.5f, all.first().intensity)
+    }
+
+    @Test
+    fun `savePreset with identical content within deduplication window prevents duplicate entry`() = runTest {
+        val preset1 = ColorimetryPreset(
+            id = "uuid_1",
+            name = "Same Look",
+            method = ColorTransferMethod.HM_MKL_HM,
+            paletteHexes = listOf("#112233", "#445566")
+        )
+        val preset2 = ColorimetryPreset(
+            id = "uuid_2", // Different ID (e.g. rapid double tap)
+            name = "Same Look",
+            method = ColorTransferMethod.HM_MKL_HM,
+            paletteHexes = listOf("#112233", "#445566")
+        )
+
+        repository.savePreset(preset1)
+        repository.savePreset(preset2)
+
+        val all = repository.getAllPresets()
+        assertEquals(1, all.size, "Rapid identical preset saves should be deduplicated")
+    }
 }

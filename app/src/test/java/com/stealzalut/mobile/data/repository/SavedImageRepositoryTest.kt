@@ -95,4 +95,36 @@ class SavedImageRepositoryTest {
         assertFalse(remaining.any { it.id == imageId })
         assertTrue(remaining.isEmpty())
     }
+
+    @Test
+    fun `recordGradedImage called rapidly with identical parameters returns existing record without duplicating`() = runTest {
+        val fakeSource = File(tempDir, "temp_src_dedup.jpg").apply {
+            writeText("fake image bytes dedup")
+        }
+
+        val result1 = repository.recordGradedImage(
+            sourceFilePath = fakeSource.absolutePath,
+            width = 1920,
+            height = 1080,
+            themeName = "Cyberpunk Neo",
+            method = "reinhard",
+            intensity = 0.85f
+        )
+        assertTrue(result1.isSuccess)
+
+        // Simulate rapid second call (e.g. double click or multi-event)
+        val result2 = repository.recordGradedImage(
+            sourceFilePath = fakeSource.absolutePath,
+            width = 1920,
+            height = 1080,
+            themeName = "Cyberpunk Neo",
+            method = "reinhard",
+            intensity = 0.85f
+        )
+        assertTrue(result2.isSuccess)
+        assertEquals(result1.getOrThrow().id, result2.getOrThrow().id, "Should return identical record ID")
+
+        val allImages = repository.getSavedImages()
+        assertEquals(1, allImages.size, "Should only have 1 image in manifest")
+    }
 }

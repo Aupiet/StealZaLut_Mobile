@@ -3,6 +3,8 @@ package com.stealzalut.mobile.data.repository
 import android.content.Context
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -23,40 +25,45 @@ class SavedImageRepository(private val context: Context) {
     private val exportsDir: File
         get() = File(context.filesDir, "exports").apply { mkdirs() }
 
+    private val mutex = Mutex()
+
     /**
      * Retrieves all saved graded images, sorted newest first.
      */
     suspend fun getSavedImages(): List<SavedGradedImage> = withContext(Dispatchers.IO) {
-        val list = loadManifest().toMutableList()
-        // Synchronize with actual files on disk
-        val existingFiles = exportsDir.listFiles()?.filter {
-            it.isFile && (it.extension.equals("jpg", true) || it.extension.equals("jpeg", true) || it.extension.equals("png", true))
-        } ?: emptyList()
+        mutex.withLock {
+            val list = loadManifest().toMutableList()
+            // Synchronize with actual files on disk
+            val existingFiles = exportsDir.listFiles()?.filter {
+                it.isFile && (it.extension.equals("jpg", true) || it.extension.equals("jpeg", true) || it.extension.equals("png", true))
+            } ?: emptyList()
 
-        // Remove manifest entries whose files were deleted
-        val synced = list.filter { item -> existingFiles.any { it.absolutePath == item.filePath } }.toMutableList()
+            // Remove manifest entries whose files were deleted
+            val synced = list.filter { item -> existingFiles.any { it.absolutePath == item.filePath } }.toMutableList()
 
-        // Add any files in exportsDir that were not yet in manifest
-        existingFiles.forEach { file ->
-            if (synced.none { it.filePath == file.absolutePath }) {
-                synced.add(
-                    SavedGradedImage(
-                        filePath = file.absolutePath,
-                        timestamp = file.lastModified(),
-                        themeName = "Look StealZaLUT"
+            // Add any files in exportsDir that were not yet in manifest
+            existingFiles.forEach { file ->
+                if (synced.none { it.filePath == file.absolutePath }) {
+                    synced.add(
+                        SavedGradedImage(
+                            filePath = file.absolutePath,
+                            timestamp = file.lastModified(),
+                            themeName = "Look StealZaLUT"
+                        )
                     )
-                )
+                }
             }
-        }
 
-        synced.sortByDescending { it.timestamp }
-        writeManifest(synced)
-        synced
+            synced.sortByDescending { it.timestamp }
+            writeManifest(synced)
+            synced
+        }
     }
 
     /**
      * Registers a newly exported graded image. Copies the image from the temporary
      * preview/cache directory to the permanent library storage.
+     * Guarantees idempotency via mutex locking and duplicate prevention.
      */
     suspend fun recordGradedImage(
         sourceFilePath: String,
@@ -68,34 +75,59 @@ class SavedImageRepository(private val context: Context) {
         referenceImagePath: String? = null,
         paletteHexes: List<String> = emptyList()
     ): Result<SavedGradedImage> = withContext(Dispatchers.IO) {
-        runCatching {
-            val src = File(sourceFilePath)
-            require(src.exists()) { "Source file does not exist: $sourceFilePath" }
+        mutex.withLock {
+            runCatching {
+                val src = File(sourceFilePath)
+                require(src.exists()) { "Source file does not exist: $sourceFilePath" }
 
-            val ext = src.extension.ifBlank { "jpg" }
-            val permanentFile = File(exportsDir, "graded_${System.currentTimeMillis()}.$ext")
-            FileInputStream(src).use { input ->
-                FileOutputStream(permanentFile).use { output ->
-                    input.copyTo(output)
+                val current = loadManifest().toMutableList()
+                val now = System.currentTimeMillis()
+                val effectiveTheme = themeName?.ifBlank { "Look StealZaLUT" } ?: "Look StealZaLUT"
+                val effectiveMethod = method ?: "hm-mkl-hm"
+
+                // Idempotency: prevent rapid duplicate insertion within 3 seconds
+                val existingRecent = current.firstOrNull {
+                    it.width == width &&
+                    it.height == height &&
+                    it.themeName == effectiveTheme &&
+                    it.method == effectiveMethod &&
+                    kotlin.math.abs(it.intensity - intensity) < 0.01f &&
+                    (now - it.timestamp) < 3000L &&
+                    File(it.filePath).exists()
                 }
+                if (existingRecent != null) {
+                    return@runCatching existingRecent
+                }
+
+                val finalPath = if (src.parentFile?.absolutePath == exportsDir.absolutePath) {
+                    src.absolutePath
+                } else {
+                    val ext = src.extension.ifBlank { "jpg" }
+                    val permanentFile = File(exportsDir, "graded_${System.currentTimeMillis()}.$ext")
+                    FileInputStream(src).use { input ->
+                        FileOutputStream(permanentFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    permanentFile.absolutePath
+                }
+
+                val newItem = SavedGradedImage(
+                    filePath = finalPath,
+                    timestamp = System.currentTimeMillis(),
+                    width = width,
+                    height = height,
+                    themeName = effectiveTheme,
+                    method = effectiveMethod,
+                    intensity = intensity,
+                    referenceImagePath = referenceImagePath,
+                    paletteHexes = paletteHexes
+                )
+
+                current.add(0, newItem)
+                writeManifest(current)
+                newItem
             }
-
-            val newItem = SavedGradedImage(
-                filePath = permanentFile.absolutePath,
-                timestamp = System.currentTimeMillis(),
-                width = width,
-                height = height,
-                themeName = themeName?.ifBlank { "Look StealZaLUT" } ?: "Look StealZaLUT",
-                method = method ?: "hm-mkl-hm",
-                intensity = intensity,
-                referenceImagePath = referenceImagePath,
-                paletteHexes = paletteHexes
-            )
-
-            val current = loadManifest().toMutableList()
-            current.add(0, newItem)
-            writeManifest(current)
-            newItem
         }
     }
 
@@ -103,13 +135,15 @@ class SavedImageRepository(private val context: Context) {
      * Deletes a saved image from permanent storage and manifest.
      */
     suspend fun deleteSavedImage(id: String): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val current = loadManifest().toMutableList()
-            val item = current.firstOrNull { it.id == id }
-            if (item != null) {
-                File(item.filePath).delete()
-                current.remove(item)
-                writeManifest(current)
+        mutex.withLock {
+            runCatching {
+                val current = loadManifest().toMutableList()
+                val item = current.firstOrNull { it.id == id }
+                if (item != null) {
+                    File(item.filePath).delete()
+                    current.remove(item)
+                    writeManifest(current)
+                }
             }
         }
     }

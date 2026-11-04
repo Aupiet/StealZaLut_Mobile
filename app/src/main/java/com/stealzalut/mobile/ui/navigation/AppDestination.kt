@@ -2,6 +2,7 @@ package com.stealzalut.mobile.ui.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
@@ -12,9 +13,10 @@ import com.stealzalut.mobile.R
 /**
  * Top-level functional navigation destinations in StealZaLUT Mobile:
  * 1. STUDIO   : Fast color grading (Source + Reference -> 120 FPS GPU Preview -> Export .cube / Image)
- * 2. PALETTES : Color palette extractor and saved presets library
- * 3. PROFILE  : Personal library of saved graded photos and reusable color looks
- * 4. SETTINGS : Engine defaults (LUT size, algorithm, language, cache cleanup)
+ * 2. EDITOR   : Standalone Photo Editor (Single Photo -> Step 2 Calibrate & Step 3 Grading -> Presets)
+ * 3. PALETTES : Color palette extractor and saved presets library
+ * 4. PROFILE  : Personal library of saved graded photos and reusable color looks
+ * 5. SETTINGS : Engine defaults (LUT size, algorithm, language, cache cleanup)
  */
 enum class AppDestination(
     val route: String,
@@ -29,6 +31,13 @@ enum class AppDestination(
         titleRes = R.string.app_top_bar_title,
         subtitleRes = R.string.dest_subtitle_studio,
         icon = Icons.Default.Tune
+    ),
+    EDITOR(
+        route = "editor",
+        labelRes = R.string.nav_editor,
+        titleRes = R.string.editor_title,
+        subtitleRes = R.string.dest_subtitle_editor,
+        icon = Icons.Default.AutoFixHigh
     ),
     PALETTES(
         route = "palettes",

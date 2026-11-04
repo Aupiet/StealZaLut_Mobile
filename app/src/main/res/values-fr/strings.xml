@@ -179,8 +179,65 @@
     <string name="msg_cache_cleared">Cache d\'aperçu temporaire vidé avec succès.</string>
     <string name="msg_theme_saved">Preset enregistré dans votre bibliothèque.</string>
     <string name="msg_cube_exported">Fichier 3D LUT (.cube) exporté avec succès.</string>
+    <string name="msg_cube_saved_downloads">LUT enregistrée dans vos Téléchargements (StealZaLUT).</string>
     <string name="msg_image_saved">Photo étalonnée enregistrée dans la Galerie (Pictures/StealZaLUT).</string>
     <string name="msg_theme_deleted">Preset supprimé.</string>
+
+    <!-- Missing step strings -->
+    <string name="wizard_step_3_exporting_cube">Génération de la LUT .CUBE…</string>
+
+    <!-- Info & Metrics Screen -->
+    <string name="info_screen_title">Guide &amp; Métriques Couleur</string>
+    <string name="info_screen_subtitle">Comprenez l\'étalonnage en un clin d\'œil</string>
+    <string name="info_screen_btn_close">Compris !</string>
+    <string name="info_ideal_for_prefix">Idéal pour : </string>
+    <string name="info_section_methods_title">Méthodes de transfert</string>
+    <string name="info_section_lut_size_title">Tailles de grille 3D LUT</string>
+    <string name="info_section_controls_title">Contrôles de couleur &amp; exposition</string>
+    <string name="info_section_palette_title">ADN Colorimétrique &amp; Dominance</string>
+
+    <string name="info_method_reinhard_title">Reinhard CIE LAB</string>
+    <string name="info_method_reinhard_catch">L\'équilibré rapide : adapte les moyennes et contrastes de façon fluide.</string>
+    <string name="info_method_reinhard_ideal">Tons naturels &amp; scènes homogènes</string>
+
+    <string name="info_method_hm_title">Histogram Matching (HM)</string>
+    <string name="info_method_hm_catch">Le caméléon fidèle : reproduit la répartition exacte des couleurs.</string>
+    <string name="info_method_hm_ideal">Styles contrastés &amp; ciels vifs</string>
+
+    <string name="info_method_mkl_title">Monge-Kantorovitch (MKL)</string>
+    <string name="info_method_mkl_catch">Le cinéaste des nuances : transporte subtilement les corrélations de teintes.</string>
+    <string name="info_method_mkl_ideal">Dégradés doux &amp; portraits délicats</string>
+
+    <string name="info_method_hybrid_title">HM-MKL-HM Enchaîné (Pro)</string>
+    <string name="info_method_hybrid_catch">Le chef-d\'œuvre hybride : alliance de la fidélité globale et de la finesse locale.</string>
+    <string name="info_method_hybrid_ideal">Rendu cinéma professionnel (Recommandé)</string>
+
+    <string name="info_lut_17_title">17³ (4 913 nœuds)</string>
+    <string name="info_lut_17_catch">Aperçu éclair : grille ultra-légère pour un retour instantané.</string>
+    <string name="info_lut_17_ideal">Aperçu ultra-rapide sur mobile</string>
+
+    <string name="info_lut_33_title">33³ (35 937 nœuds)</string>
+    <string name="info_lut_33_catch">Standard Pro vidéo : équilibre parfait entre fidélité et compacité.</string>
+    <string name="info_lut_33_ideal">Standard Pro vidéo &amp; DaVinci Resolve</string>
+
+    <string name="info_lut_65_title">65³ (274 625 nœuds)</string>
+    <string name="info_lut_65_catch">Précision chirurgicale : maille ultra-dense pour un étalonnage photo sans compromis.</string>
+    <string name="info_lut_65_ideal">Mastering photo haute fidélité</string>
+
+    <string name="info_control_intensity_title" formatted="false">Intensité (0% à 100%)</string>
+    <string name="info_control_intensity_catch">Le dosage créatif : modulez l\'effet de subtil à transformation radicale.</string>
+    <string name="info_control_intensity_ideal">Dosage esthétique sur mesure</string>
+
+    <string name="info_control_lum_title">Préservation de Luminance</string>
+    <string name="info_control_lum_catch">Le gardien de l\'exposition : préserve la luminosité d\'origine sans dénaturer la photo.</string>
+    <string name="info_control_lum_ideal">Éviter toute surexposition ou sous-exposition</string>
+
+    <string name="info_palette_title">Palette &amp; ADN Colorimétrique</string>
+    <string name="info_palette_catch">L\'empreinte du coloriste : isole les teintes clés et leur dominance visuelle.</string>
+    <string name="info_palette_ideal">Inspiration de styles &amp; réutilisation</string>
+
+    <string name="settings_guide_card_title">Guide des Métriques &amp; Algorithmes</string>
+    <string name="settings_guide_card_desc">Comprenez simplement les méthodes de transfert et tailles de LUT</string>
 
     <!-- Common UI Labels -->
     <string name="common_close">Fermer</string>
@@ -191,4 +248,88 @@
     <string name="common_retry">Réessayer</string>
     <string name="common_continue">Continuer</string>
     <string name="format_percentage">%1$d%%</string>
+
+    <!-- LightCraft Auto Edit -->
+    <string name="btn_auto_edit">Auto Edit</string>
+    <string name="auto_edit_desc">Auto Edit (Calibré LightCraft : exposition, contraste, hautes lumières, ombres, vibrance)</string>
+    <string name="auto_edit_badge">Auto Edit (LightCraft)</string>
+    <string name="auto_edit_exposure_label">Exposition : %1$+.2f EV</string>
+    <string name="auto_edit_contrast_label">Contraste : +68</string>
+    <string name="auto_edit_highlights_label">Hautes lumières : -66</string>
+    <string name="auto_edit_shadows_label">Ombres : +52</string>
+    <string name="auto_edit_vibrance_label">Vibrance : +30</string>
+    <string name="auto_edit_details">Exp : %1$+.2f EV | Contraste : +68 | Hautes lum. : -66 | Ombres : +52 | Vibrance : +30</string>
+
+    <!-- LightCraft Edit Feature (Step 5) -->
+    <string name="btn_edit_image">Éditer l\'image</string>
+    <string name="btn_close_edit">Fermer l\'édition</string>
+    <string name="edit_panel_title">Édition (LightCraft)</string>
+    <string name="btn_reset_edits">Reset</string>
+    <string name="edit_section_light">Lumière</string>
+    <string name="edit_section_color">Couleur</string>
+    <string name="edit_param_exposure">Exposition</string>
+    <string name="edit_param_contrast">Contraste</string>
+    <string name="edit_param_highlights">Hautes lumières</string>
+    <string name="edit_param_shadows">Ombres</string>
+    <string name="edit_param_whites">Blancs</string>
+    <string name="edit_param_blacks">Noirs</string>
+    <string name="edit_param_vibrance">Vibrance</string>
+    <string name="edit_param_saturation">Saturation</string>
+    <string name="edit_active_badge">Retouché</string>
+
+    <!-- Mode Éditeur Pur & 3-Stage Pipeline Strings -->
+    <string name="nav_editor">Éditeur</string>
+    <string name="dest_subtitle_editor">Studio Photo Dédié &amp; Presets</string>
+    <string name="editor_title">Studio Photo</string>
+    <string name="editor_subtitle">Étalonnage non-destructif et création de presets</string>
+    <string name="editor_select_image">Choisir une photo</string>
+    <string name="editor_change_image">Changer de photo</string>
+    <string name="editor_tab_presets">Presets &amp; LUTs</string>
+    <string name="editor_tab_calibrate">Calibrage LUT</string>
+    <string name="editor_tab_light">Lumière</string>
+    <string name="editor_tab_color">Couleur</string>
+    <string name="editor_tab_effects">Effets</string>
+    <string name="editor_import_cube">Importer .CUBE</string>
+    <string name="editor_save_preset">Sauvegarder Preset</string>
+    <string name="editor_export_hd">Exporter Photo HD</string>
+    <string name="editor_export_cube">Exporter .CUBE</string>
+    <string name="editor_hold_compare">Maintenir pour comparer</string>
+    <string name="editor_double_tap_reset">Double-tap pour réinitialiser le curseur</string>
+    <string name="editor_no_presets">Aucun preset d\'édition. Enregistrez vos réglages ou importez un fichier .CUBE.</string>
+    <string name="editor_active_lut_badge">LUT Active</string>
+    <string name="editor_no_lut_badge">Sans LUT de base</string>
+
+    <!-- Stage 2 Sliders -->
+    <string name="param_spatial_3d_title">Lissage Spatial 3D</string>
+    <string name="param_spatial_3d_desc">Lisse les nœuds du treillis 3D pour éviter tout banding.</string>
+    <string name="param_luma_lock_title">Préservation Lumière</string>
+    <string name="param_luma_lock_desc">Verrouille la luminance sur la structure originale de la photo.</string>
+    <string name="param_neutral_axis_lock_title">Protection Axe Neutre</string>
+    <string name="param_neutral_axis_lock_desc">Protège les gris, blancs et noirs purs contre toute dérive chromatique.</string>
+    <string name="param_skin_tone_lock_title">Protection Tons Chair</string>
+    <string name="param_skin_tone_lock_desc">Préserve le naturel des teintes de peau via le masque perceptuel OKLab.</string>
+    <string name="param_extremes_rolloff_title">Protection des Extrêmes</string>
+    <string name="param_extremes_rolloff_desc">Protège les ombres profondes et les hautes lumières spéculaires.</string>
+    <string name="param_global_intensity_title">Intensité du Filtre</string>
+    <string name="param_global_intensity_desc">Dose la puissance globale du filtre appliqué.</string>
+
+    <!-- Stage 3 Sliders -->
+    <string name="param_temperature_title">Température</string>
+    <string name="param_temperature_desc">Balance des blancs : plus chaud (ambre) ou plus froid (bleu).</string>
+    <string name="param_tint_title">Teinte</string>
+    <string name="param_tint_desc">Équilibre vert / magenta.</string>
+    <string name="param_clarity_title">Clarté</string>
+    <string name="param_clarity_desc">Rehausse le micro-contraste local des demi-tons.</string>
+    <string name="param_sharpen_title">Netteté</string>
+    <string name="param_sharpen_desc">Accentue les détails fins et les contours.</string>
+    <string name="param_grain_title">Grain Argentique</string>
+    <string name="param_grain_desc">Ajoute une texture de film photographique analogique.</string>
+
+    <!-- Preset Dialog -->
+    <string name="dialog_save_preset_title">Sauvegarder Preset d\'Édition</string>
+    <string name="dialog_preset_name_label">Nom du Preset</string>
+    <string name="dialog_preset_name_placeholder">ex: Or Vintage 35mm</string>
+    <string name="dialog_preset_saved">Preset d\'édition sauvegardé avec succès !</string>
+    <string name="dialog_preset_applied">Preset appliqué : %1$s</string>
+    <string name="dialog_preset_deleted">Preset supprimé.</string>
 </resources>

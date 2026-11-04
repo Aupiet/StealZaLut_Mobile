@@ -8,7 +8,7 @@ Chaquopy on Android without OpenCV.
 from __future__ import annotations
 
 import os
-from typing import List, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -69,31 +69,72 @@ def load_image(path: str) -> NDArray[np.uint8]:
 
 def create_proxy_image(
     image: NDArray[np.uint8],
-    max_dim: int = 512,
+    max_dim: Optional[int] = 512,
 ) -> NDArray[np.uint8]:
     """Down-sample *image* so that ``max(H, W) <= max_dim``.
+
+    Never upscales smaller images. If *max_dim* is None, <= 0, or greater than
+    max(H, W), the original array is returned untouched.
 
     Uses bilinear filtering for fast statistical proxy creation (2x faster than Lanczos
     and statistically equivalent for histograms and covariance matrices).
 
     Args:
         image: RGB uint8 array of shape ``(H, W, 3)``.
-        max_dim: Maximum allowed pixel dimension.
+        max_dim: Maximum allowed pixel dimension. None or <= 0 preserves original size.
 
     Returns:
         Down-sampled (or original) array with dtype ``uint8``.
     """
+    if max_dim is None or max_dim <= 0:
+        return image
+
     h, w = image.shape[:2]
     if max(h, w) <= max_dim:
         return image
 
-    scale: float = max_dim / max(h, w)
+    scale: float = float(max_dim) / float(max(h, w))
     new_w: int = max(1, int(round(w * scale)))
     new_h: int = max(1, int(round(h * scale)))
 
     pil_img: Image.Image = Image.fromarray(image)
     pil_img = pil_img.resize((new_w, new_h), _RESAMPLING_BILINEAR)
     return np.asarray(pil_img, dtype=np.uint8)
+
+
+def resolve_export_dimensions(
+    orig_w: int,
+    orig_h: int,
+    target_max_dim: Optional[int] = None,
+) -> Tuple[int, int]:
+    """Calculate target export dimensions preserving aspect ratio and preventing unwanted upscaling.
+
+    In NATIVE mode (target_max_dim is None or <= 0), the exact original dimensions
+    are preserved without any resizing. When a maximum dimension (e.g. 4K / 2K / 1080p)
+    is specified, a min(original_dim, target_max_dim) clamp is applied so smaller images
+    are never artificially upscaled.
+
+    Args:
+        orig_w: Original image width in pixels.
+        orig_h: Original image height in pixels.
+        target_max_dim: Requested maximum pixel dimension (width or height).
+            If None or <= 0, full native resolution is preserved.
+
+    Returns:
+        (target_w, target_h) tuple of integer dimensions.
+    """
+    if target_max_dim is None or target_max_dim <= 0:
+        return orig_w, orig_h
+
+    max_orig = max(orig_w, orig_h)
+    effective_max = min(max_orig, target_max_dim)
+    if effective_max >= max_orig:
+        return orig_w, orig_h
+
+    scale = float(effective_max) / float(max_orig)
+    new_w = max(1, int(round(orig_w * scale)))
+    new_h = max(1, int(round(orig_h * scale)))
+    return new_w, new_h
 
 
 def to_float32(image: NDArray[np.uint8]) -> NDArray[np.float32]:

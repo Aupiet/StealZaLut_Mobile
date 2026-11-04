@@ -4,9 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -55,6 +58,10 @@ fun MainColorGradingScreen(
         }
     }
 
+    if (uiState.isInfoScreenVisible) {
+        MetricsInfoBottomSheet(onDismiss = { viewModel.dismissMetricsInfo() })
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -71,6 +78,15 @@ fun MainColorGradingScreen(
                             text = stringResource(uiState.currentDestination.subtitleRes),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.openMetricsInfo() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.info_screen_title),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -118,6 +134,12 @@ fun MainColorGradingScreen(
         when (uiState.currentDestination) {
             AppDestination.STUDIO -> {
                 ApplyThemeScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+            AppDestination.EDITOR -> {
+                StandaloneEditorScreen(
                     viewModel = viewModel,
                     modifier = Modifier.padding(innerPadding)
                 )

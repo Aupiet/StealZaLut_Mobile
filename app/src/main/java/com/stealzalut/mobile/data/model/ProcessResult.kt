@@ -114,3 +114,80 @@ sealed interface ImageExportResult {
         constructor(message: String) : this(LutDomainError.GenericError(message), message)
     }
 }
+
+/**
+ * Result model returned when executing the LightCraft Auto Edit feature.
+ */
+@Immutable
+sealed interface AutoEditResult {
+    @Immutable
+    data class Success(
+        val previewPath: String,
+        val exposure: Float,
+        val contrast: Float,
+        val highlights: Float,
+        val shadows: Float,
+        val whites: Float,
+        val blacks: Float,
+        val vibrance: Float,
+        val executionTimeMs: Double
+    ) : AutoEditResult
+
+    @Immutable
+    data class Error(
+        val error: LutDomainError,
+        val customMessage: String? = null
+    ) : AutoEditResult {
+        val message: String get() = customMessage ?: error.userMessage
+        constructor(message: String) : this(LutDomainError.GenericError(message), message)
+    }
+}
+
+/**
+ * Result model returned when applying interactive LightCraft image edits.
+ */
+@Immutable
+sealed interface EditResult {
+    @Immutable
+    data class Success(
+        val editedPath: String,
+        val executionTimeMs: Double
+    ) : EditResult
+
+    @Immutable
+    data class Error(
+        val error: LutDomainError,
+        val customMessage: String? = null
+    ) : EditResult {
+        val message: String get() = customMessage ?: error.userMessage
+        constructor(message: String) : this(LutDomainError.GenericError(message), message)
+    }
+}
+
+/**
+ * Result model returned when computing LightCraft auto settings.
+ */
+@Immutable
+sealed interface AutoSettingsResult {
+    @Immutable
+    data class Success(
+        val exposure: Float,
+        val contrast: Float,
+        val highlights: Float,
+        val shadows: Float,
+        val whites: Float,
+        val blacks: Float,
+        val vibrance: Float,
+        val saturation: Float,
+        val executionTimeMs: Double
+    ) : AutoSettingsResult
+
+    @Immutable
+    data class Error(
+        val error: LutDomainError,
+        val customMessage: String? = null
+    ) : AutoSettingsResult {
+        val message: String get() = customMessage ?: error.userMessage
+        constructor(message: String) : this(LutDomainError.GenericError(message), message)
+    }
+}

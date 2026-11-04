@@ -55,6 +55,9 @@ fun ExportActionBar(
     val previewDesc = stringResource(R.string.wizard_step_3_btn_run)
     val exportDesc = stringResource(R.string.wizard_step_5_btn_save_gallery)
 
+    val isBusy = isProcessingPreview || isExportingCube || isExportingImage
+    val canInteract = canProcess && !isBusy
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
@@ -68,7 +71,7 @@ fun ExportActionBar(
             // Preview Button
             OutlinedButton(
                 onClick = onGeneratePreview,
-                enabled = canProcess,
+                enabled = canInteract,
                 modifier = Modifier
                     .weight(AppConstants.WEIGHT_SECONDARY_ACTION)
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
@@ -101,7 +104,7 @@ fun ExportActionBar(
             // Direct Graded Image Export Button
             Button(
                 onClick = onExportGradedImage,
-                enabled = canProcess,
+                enabled = canInteract,
                 modifier = Modifier
                     .weight(AppConstants.WEIGHT_PRIMARY_ACTION)
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
@@ -144,7 +147,7 @@ fun ExportActionBar(
             // Export .cube
             OutlinedButton(
                 onClick = onExportCube,
-                enabled = canProcess,
+                enabled = canInteract,
                 modifier = Modifier
                     .weight(AppConstants.WEIGHT_EQUAL)
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
@@ -174,7 +177,7 @@ fun ExportActionBar(
             // Save recipe
             OutlinedButton(
                 onClick = onSaveColorimetry,
-                enabled = canProcess,
+                enabled = canInteract,
                 modifier = Modifier
                     .weight(AppConstants.WEIGHT_EQUAL)
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget),

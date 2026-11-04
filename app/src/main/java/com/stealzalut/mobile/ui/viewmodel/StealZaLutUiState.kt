@@ -7,8 +7,11 @@ import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
+import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
+import com.stealzalut.mobile.data.model.Step2Model
+import com.stealzalut.mobile.data.model.Step3Model
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -52,6 +55,33 @@ data class StealZaLutUiState(
     val isProcessingPreview: Boolean = false,
     val isExportingCube: Boolean = false,
     val isExportingImage: Boolean = false,
+    val isSavingPreset: Boolean = false,
+    val isInfoScreenVisible: Boolean = false,
+
+    // LightCraft Auto Edit state
+    val isAutoEditActive: Boolean = false,
+    val isComputingAutoEdit: Boolean = false,
+    val autoExposure: Float = 0.0f,
+    val autoContrast: Float = 68.0f,
+    val autoHighlights: Float = -66.0f,
+    val autoShadows: Float = 52.0f,
+    val autoWhites: Float = 0.0f,
+    val autoBlacks: Float = 0.0f,
+    val autoVibrance: Float = 30.0f,
+
+    // LightCraft Interactive Image Edit state (Step 5 Edit Button & Sliders)
+    val isEditPanelVisible: Boolean = false,
+    val isComputingEdit: Boolean = false,
+    val editExposure: Float = 0.0f,
+    val editContrast: Float = 0.0f,
+    val editHighlights: Float = 0.0f,
+    val editShadows: Float = 0.0f,
+    val editWhites: Float = 0.0f,
+    val editBlacks: Float = 0.0f,
+    val editVibrance: Float = 0.0f,
+    val editSaturation: Float = 0.0f,
+    val editedPreviewBitmap: Bitmap? = null,
+    val editedPreviewPath: String? = null,
 
     // Raw transferred preview computed at alpha = 1.0 by Python
     val basePreviewBitmap: Bitmap? = null,
@@ -65,6 +95,47 @@ data class StealZaLutUiState(
     // Split Wipe slider position in [0.0, 1.0]
     val splitPosition: Float = AppConstants.SPLIT_WIPE_DEFAULT_FRACTION,
     val isSplitWipeMode: Boolean = false,
+
+    // ========================================================================
+    // NOUVEAU PIPELINE 3 ÉTAPES & RETRAVAIL AVANCÉ
+    // ========================================================================
+    val step2Intensity: Float = 1.0f,
+    val step2LumaLock: Float = 0.0f,
+    val step2NeutralAxisLock: Float = 0.0f,
+    val step2SkinToneLock: Float = 0.0f,
+    val step2ExtremesRolloff: Float = 0.0f,
+    val step2Spatial3d: Float = 0.0f,
+
+    val step3Exposure: Float = 0.0f,
+    val step3Contrast: Float = 0.0f,
+    val step3Highlights: Float = 0.0f,
+    val step3Shadows: Float = 0.0f,
+    val step3Temperature: Float = 0.0f,
+    val step3Tint: Float = 0.0f,
+    val step3Vibrance: Float = 0.0f,
+    val step3Saturation: Float = 0.0f,
+    val step3Clarity: Float = 0.0f,
+    val step3Sharpen: Float = 0.0f,
+    val step3Grain: Float = 0.0f,
+
+    // ========================================================================
+    // MODE ÉDITEUR PUR (STANDALONE PHOTO STUDIO)
+    // ========================================================================
+    val editorSourceUri: Uri? = null,
+    val editorSourceBitmap: Bitmap? = null,
+    val editorSourcePath: String? = null,
+    val editorPreviewBitmap: Bitmap? = null,
+    val editorPreviewPath: String? = null,
+    val editorCustomLutPath: String? = null,
+    val editorCustomLutName: String? = null,
+    val isEditorProcessing: Boolean = false,
+    val isEditorExportingCube: Boolean = false,
+    val isEditorExportingImage: Boolean = false,
+    val editorExecutionTimeMs: Double? = null,
+    val editorSelectedTab: Int = 0, // 0 = Presets & LUTs, 1 = Calibrage, 2 = Lumière, 3 = Couleur, 4 = Effets
+    val savedEditingPresets: ImmutableList<EditPreset> = persistentListOf(),
+    val selectedEditingPreset: EditPreset? = null,
+    val isSaveEditingPresetDialogVisible: Boolean = false,
 
     // ========================================================================
     // 2. PALETTES & PRESETS
@@ -108,5 +179,16 @@ data class StealZaLutUiState(
         get() = effectiveReferencePath != null
 
     val canApply: Boolean
-        get() = sourcePath != null && effectiveReferencePath != null && !isProcessingPreview && !isExportingCube && !isExportingImage
+        get() = sourcePath != null && effectiveReferencePath != null &&
+                !isProcessingPreview && !isExportingCube && !isExportingImage && !isSavingPreset
+
+    val isEditActive: Boolean
+        get() = isAutoEditActive || editExposure != 0f || editContrast != 0f || editHighlights != 0f ||
+                editShadows != 0f || editWhites != 0f || editBlacks != 0f || editVibrance != 0f || editSaturation != 0f
+
+    val effectivePreviewBitmap: Bitmap?
+        get() = if (isEditActive && editedPreviewBitmap != null) editedPreviewBitmap else basePreviewBitmap
+
+    val effectivePreviewPath: String?
+        get() = if (isEditActive && editedPreviewPath != null) editedPreviewPath else previewPath
 }

@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
@@ -58,11 +61,20 @@ fun SzlBottomActionBar(
     var showExportMenu by remember { mutableStateOf(false) }
     val resetDesc = stringResource(R.string.editor_btn_reset_all)
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = AppDimens.ElevationLow
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingSmall),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         // 1. Reset All (Secondary Icon Action >= 48dp)
         FilledTonalIconButton(
             onClick = onResetAll,
@@ -168,4 +180,5 @@ fun SzlBottomActionBar(
             }
         }
     }
+}
 }

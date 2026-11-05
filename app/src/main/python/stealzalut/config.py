@@ -26,6 +26,7 @@ DEFAULT_LUT_SIZE: int = 33
 
 # Image processing proxy maximum dimension (high fidelity for neon lights & fine details)
 MAX_ANALYSIS_DIMENSION: int = 512
+PROXY_DECODE_MAX_DIM: int = 1024
 
 # Direct image export maximum dimension (4K UHD)
 MAX_EXPORT_DIMENSION: int = 3840

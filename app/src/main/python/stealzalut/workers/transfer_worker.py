@@ -42,6 +42,7 @@ from stealzalut.core.pipeline import (
 from stealzalut.utils.image_io import (
     create_proxy_image,
     load_image,
+    load_proxy_image,
     save_image,
     to_float32,
     to_uint8,
@@ -86,13 +87,17 @@ def get_or_compute_raw_lut(
         _RAW_LUT_CACHE.move_to_end(cache_key)
         return _RAW_LUT_CACHE[cache_key].copy()
 
-    # Compute raw LUT using compact analysis proxies for optimal speed
-    src_img = load_image(src_path)
-    ref_img = load_image(ref_path)
+    # Compute raw LUT using compact analysis proxies for optimal speed and memory efficiency
+    if src_path and os.path.isfile(src_path):
+        src_proxy = load_proxy_image(src_path, max_dim=MAX_ANALYSIS_DIMENSION)
+    else:
+        # Reference-only mode: use the standard neutral calibration chart as source
+        from stealzalut.core.color_card import generate_neutral_calibration_card
 
-    src_proxy = create_proxy_image(src_img, max_dim=MAX_ANALYSIS_DIMENSION)
-    ref_proxy = create_proxy_image(ref_img, max_dim=MAX_ANALYSIS_DIMENSION)
-    del src_img, ref_img
+        src_proxy = generate_neutral_calibration_card(
+            MAX_ANALYSIS_DIMENSION, MAX_ANALYSIS_DIMENSION
+        )
+    ref_proxy = load_proxy_image(ref_path, max_dim=MAX_ANALYSIS_DIMENSION)
 
     raw_lut = compute_lut(
         src_img=src_proxy,
@@ -124,16 +129,13 @@ def get_or_load_source_proxy(
         _SRC_PROXY_CACHE.move_to_end(cache_key)
         return _SRC_PROXY_CACHE[cache_key].copy()
 
-    src_img = load_image(src_path)
     if (
         max_dimension is not None
         and max_dimension > 0
-        and max(src_img.shape[:2]) > max_dimension
     ):
-        src_work = create_proxy_image(src_img, max_dim=max_dimension)
-        del src_img
+        src_work = load_proxy_image(src_path, max_dim=max_dimension)
     else:
-        src_work = src_img
+        src_work = load_image(src_path)
 
     if len(_SRC_PROXY_CACHE) >= MAX_LUT_CACHE_SIZE:
         _SRC_PROXY_CACHE.popitem(last=False)

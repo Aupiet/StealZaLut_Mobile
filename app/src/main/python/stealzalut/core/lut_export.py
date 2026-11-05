@@ -87,7 +87,19 @@ def export_cube(
         fh.write(header)
         np.savetxt(fh, clamped_data, fmt="%.6f", delimiter=" ")
 
-    return os.path.abspath(output_path)
+    # Verification: file exists, is non-empty, and conforms strictly to specification
+    abs_path = os.path.abspath(output_path)
+    if not os.path.isfile(abs_path) or os.path.getsize(abs_path) == 0:
+        raise OSError(f"Exported .cube file is missing or empty: {output_path}")
+
+    verify_size, verify_data = load_cube_file(abs_path)
+    if verify_size != size or len(verify_data) != expected_rows:
+        raise ValueError(
+            f"Integrity check failed for {output_path}: expected {expected_rows} lines "
+            f"for size {size}, but parsed {len(verify_data)} lines."
+        )
+
+    return abs_path
 
 
 def load_cube_file(cube_path: str) -> Tuple[int, NDArray[np.float32]]:
@@ -131,16 +143,18 @@ def load_cube_file(cube_path: str) -> Tuple[int, NDArray[np.float32]]:
     if lut_size <= 0:
         # Infer size from row count
         total = len(data_lines)
+        if total == 0:
+            raise ValueError(f"Empty or header-only .cube file with no data: {cube_path}")
         inferred = int(round(total ** (1.0 / 3.0)))
-        if inferred**3 == total:
+        if inferred > 1 and inferred**3 == total:
             lut_size = inferred
         else:
             raise ValueError(f"Could not determine valid LUT_3D_SIZE from file: {cube_path}")
 
     expected = lut_size**3
-    if len(data_lines) != expected:
+    if expected == 0 or len(data_lines) != expected:
         raise ValueError(
-            f"Expected {expected} entries for size {lut_size}, but parsed {len(data_lines)}."
+            f"Expected {expected} entries for size {lut_size}, but parsed {len(data_lines)} in {cube_path}."
         )
 
     lut_arr = np.array(data_lines, dtype=np.float32)

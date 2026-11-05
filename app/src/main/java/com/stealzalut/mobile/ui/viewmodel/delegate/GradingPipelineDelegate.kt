@@ -4,21 +4,23 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
+import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
-import com.stealzalut.mobile.data.model.AutoEditResult
-import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CubeExportResult
-import com.stealzalut.mobile.data.model.EditResult
 import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.repository.SavedImageRepository
+import com.stealzalut.mobile.ui.navigation.AppDestination
+import com.stealzalut.mobile.ui.viewmodel.ExportType
+import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 private data class PreviewDebounceRequest(
     val srcPath: String,
@@ -46,18 +49,6 @@ private data class PreviewDebounceRequest(
     val neutralLock: Float
 )
 
-private data class EditDebounceRequest(
-    val imagePath: String,
-    val exposure: Float,
-    val contrast: Float,
-    val highlights: Float,
-    val shadows: Float,
-    val whites: Float,
-    val blacks: Float,
-    val vibrance: Float,
-    val saturation: Float
-)
-
 @OptIn(FlowPreview::class)
 class GradingPipelineDelegate(
     private val context: Context,
@@ -68,10 +59,14 @@ class GradingPipelineDelegate(
     private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?
 ) {
     private val previewDebounceFlow = MutableSharedFlow<PreviewDebounceRequest>(replay = 1)
-    private val editDebounceFlow = MutableSharedFlow<EditDebounceRequest>(replay = 1)
     private var activeGradingJob: Job? = null
-    private var activeEditJob: Job? = null
-    private var pendingExportCubePath: String? = null
+
+    fun clearCaches() {
+        activeGradingJob?.cancel()
+        scope.launch {
+            bridgeRepository.clearCaches()
+        }
+    }
 
     init {
         scope.launch {
@@ -80,15 +75,6 @@ class GradingPipelineDelegate(
                 .distinctUntilChanged()
                 .collect { req ->
                     computePythonPreview(req)
-                }
-        }
-
-        scope.launch {
-            editDebounceFlow
-                .debounce(150L)
-                .distinctUntilChanged()
-                .collect { req ->
-                    computeEditedPreview(req)
                 }
         }
     }
@@ -366,356 +352,10 @@ class GradingPipelineDelegate(
         }
     }
 
-    fun applyAutoEdit() {
-        val current = stateFlow.value
-        val srcPath = current.sourcePath
-        if (srcPath.isNullOrBlank()) {
-            stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_select_source_first)) }
-            return
-        }
-
-        activeGradingJob?.cancel()
-        activeGradingJob = scope.launch {
-            stateFlow.update {
-                it.copy(
-                    isComputingAutoEdit = true,
-                    isProcessingPreview = true,
-                    errorMessage = null
-                )
-            }
-
-            val result = bridgeRepository.generateAutoEditPreview(srcPath)
-
-            when (result) {
-                is AutoEditResult.Success -> {
-                    val rawBmp = withContext(Dispatchers.IO) {
-                        decodeSampledBitmap(result.previewPath, 1080)
-                    }
-
-                    stateFlow.update {
-                        it.copy(
-                            isComputingAutoEdit = false,
-                            isProcessingPreview = false,
-                            isAutoEditActive = true,
-                            previewPath = result.previewPath,
-                            basePreviewBitmap = rawBmp,
-                            autoExposure = result.exposure,
-                            autoContrast = result.contrast,
-                            autoHighlights = result.highlights,
-                            autoShadows = result.shadows,
-                            autoWhites = result.whites,
-                            autoBlacks = result.blacks,
-                            autoVibrance = result.vibrance,
-                            previewExecutionTimeMs = result.executionTimeMs,
-                            wizardStep = AppConstants.STEP_5_RESULT,
-                            userMessage = UiText.Resource(
-                                R.string.msg_auto_edit_applied,
-                                listOf(result.exposure, 68.0f, 52.0f)
-                            )
-                        )
-                    }
-                }
-                is AutoEditResult.Error -> {
-                    stateFlow.update {
-                        it.copy(
-                            isComputingAutoEdit = false,
-                            isProcessingPreview = false,
-                            errorMessage = result.error.uiText
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun toggleEditPanel() {
-        stateFlow.update { it.copy(isEditPanelVisible = !it.isEditPanelVisible) }
-    }
-
-    fun setEditExposure(value: Float) {
-        val clamped = value.coerceIn(-2.0f, 3.0f)
-        if (stateFlow.value.editExposure == clamped) return
-        stateFlow.update { it.copy(editExposure = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditContrast(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editContrast == clamped) return
-        stateFlow.update { it.copy(editContrast = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditHighlights(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editHighlights == clamped) return
-        stateFlow.update { it.copy(editHighlights = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditShadows(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editShadows == clamped) return
-        stateFlow.update { it.copy(editShadows = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditWhites(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editWhites == clamped) return
-        stateFlow.update { it.copy(editWhites = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditBlacks(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editBlacks == clamped) return
-        stateFlow.update { it.copy(editBlacks = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditVibrance(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editVibrance == clamped) return
-        stateFlow.update { it.copy(editVibrance = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    fun setEditSaturation(value: Float) {
-        val clamped = value.coerceIn(-100f, 100f)
-        if (stateFlow.value.editSaturation == clamped) return
-        stateFlow.update { it.copy(editSaturation = clamped, isGradedImageSaved = false) }
-        triggerDebouncedEdit()
-    }
-
-    private fun triggerDebouncedEdit() {
-        val current = stateFlow.value
-        val imagePath = current.previewPath ?: current.sourcePath ?: return
-        scope.launch {
-            editDebounceFlow.emit(
-                EditDebounceRequest(
-                    imagePath = imagePath,
-                    exposure = current.editExposure,
-                    contrast = current.editContrast,
-                    highlights = current.editHighlights,
-                    shadows = current.editShadows,
-                    whites = current.editWhites,
-                    blacks = current.editBlacks,
-                    vibrance = current.editVibrance,
-                    saturation = current.editSaturation
-                )
-            )
-        }
-    }
-
-    fun resetEdits() {
-        activeEditJob?.cancel()
-        stateFlow.update {
-            it.copy(
-                isAutoEditActive = false,
-                isComputingEdit = false,
-                editExposure = 0f,
-                editContrast = 0f,
-                editHighlights = 0f,
-                editShadows = 0f,
-                editWhites = 0f,
-                editBlacks = 0f,
-                editVibrance = 0f,
-                editSaturation = 0f,
-                editedPreviewBitmap = null,
-                editedPreviewPath = null,
-                isGradedImageSaved = false
-            )
-        }
-    }
-
-    private suspend fun computeEditedPreview(req: EditDebounceRequest) {
-        val isAnyEditActive = req.exposure != 0f || req.contrast != 0f || req.highlights != 0f ||
-                req.shadows != 0f || req.whites != 0f || req.blacks != 0f || req.vibrance != 0f || req.saturation != 0f
-
-        if (!isAnyEditActive) {
-            stateFlow.update {
-                it.copy(
-                    isComputingEdit = false,
-                    editedPreviewBitmap = null,
-                    editedPreviewPath = null
-                )
-            }
-            return
-        }
-
-        activeEditJob?.cancel()
-        activeEditJob = scope.launch {
-            stateFlow.update { it.copy(isComputingEdit = true, errorMessage = null) }
-
-            val result = bridgeRepository.applyImageEdits(
-                imagePath = req.imagePath,
-                exposure = req.exposure,
-                contrast = req.contrast,
-                highlights = req.highlights,
-                shadows = req.shadows,
-                whites = req.whites,
-                blacks = req.blacks,
-                vibrance = req.vibrance,
-                saturation = req.saturation
-            )
-
-            when (result) {
-                is EditResult.Success -> {
-                    val editedBmp = withContext(Dispatchers.IO) {
-                        decodeSampledBitmap(result.editedPath, 1080)
-                    }
-                    stateFlow.update {
-                        it.copy(
-                            isComputingEdit = false,
-                            editedPreviewBitmap = editedBmp,
-                            editedPreviewPath = result.editedPath,
-                            previewExecutionTimeMs = result.executionTimeMs,
-                            isGradedImageSaved = false
-                        )
-                    }
-                }
-                is EditResult.Error -> {
-                    stateFlow.update {
-                        it.copy(
-                            isComputingEdit = false,
-                            errorMessage = result.error.uiText
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun applyAutoInEdit(isStandalone: Boolean = false, onTriggerStandalonePreview: (() -> Unit)? = null) {
-        val current = stateFlow.value
-        val imagePath = if (isStandalone) {
-            current.editorPreviewPath ?: current.editorSourcePath ?: return
-        } else {
-            current.previewPath ?: current.sourcePath ?: return
-        }
-
-        activeEditJob?.cancel()
-        activeEditJob = scope.launch {
-            stateFlow.update { it.copy(isComputingEdit = true, errorMessage = null) }
-            val autoSettings = bridgeRepository.computeAutoSettings(imagePath)
-            when (autoSettings) {
-                is AutoSettingsResult.Success -> {
-                    val expNorm = autoSettings.exposure.coerceIn(-2.0f, 2.0f)
-                    val contrastNorm = (autoSettings.contrast / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val highlightsNorm = (autoSettings.highlights / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
-
-                    stateFlow.update {
-                        it.copy(
-                            isComputingEdit = false,
-                            isAutoEditActive = true,
-                            editExposure = autoSettings.exposure,
-                            editContrast = autoSettings.contrast,
-                            editHighlights = autoSettings.highlights,
-                            editShadows = autoSettings.shadows,
-                            editWhites = autoSettings.whites,
-                            editBlacks = autoSettings.blacks,
-                            editVibrance = autoSettings.vibrance,
-                            editSaturation = autoSettings.saturation,
-                            step3Exposure = expNorm,
-                            step3Contrast = contrastNorm,
-                            step3Highlights = highlightsNorm,
-                            step3Shadows = shadowsNorm,
-                            step3Vibrance = vibranceNorm,
-                            userMessage = UiText.Resource(
-                                R.string.msg_auto_edit_applied,
-                                listOf(expNorm, contrastNorm * 100f, shadowsNorm * 100f)
-                            )
-                        )
-                    }
-
-                    if (isStandalone) {
-                        onTriggerStandalonePreview?.invoke()
-                    } else {
-                        computeEditedPreview(
-                            EditDebounceRequest(
-                                imagePath = imagePath,
-                                exposure = autoSettings.exposure,
-                                contrast = autoSettings.contrast,
-                                highlights = autoSettings.highlights,
-                                shadows = autoSettings.shadows,
-                                whites = autoSettings.whites,
-                                blacks = autoSettings.blacks,
-                                vibrance = autoSettings.vibrance,
-                                saturation = autoSettings.saturation
-                            )
-                        )
-                    }
-                }
-                is AutoSettingsResult.Error -> {
-                    stateFlow.update {
-                        it.copy(
-                            isComputingEdit = false,
-                            errorMessage = autoSettings.error.uiText
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     fun saveGradedImageToGallery(onSavedImageRecorded: () -> Unit) {
         val current = stateFlow.value
         if (current.isExportingImage) return
         val srcPath = current.sourcePath ?: return
-
-        if (current.isEditActive) {
-            val previewPath = current.effectivePreviewPath ?: current.previewPath
-            if (previewPath == null || !File(previewPath).exists()) {
-                stateFlow.update { it.copy(isExportingImage = false, errorMessage = UiText.Resource(R.string.err_image_load_failed, listOf("Preview not found"))) }
-                return
-            }
-            scope.launch {
-                stateFlow.update { it.copy(isExportingImage = true, errorMessage = null) }
-                val displayName = "StealZaLUT_Edited_${System.currentTimeMillis()}.${if (current.settings.exportFormat.equals("PNG", true)) "png" else "jpg"}"
-                val mediaStoreResult = bridgeRepository.saveImageToMediaStore(
-                    imagePath = previewPath,
-                    displayName = displayName,
-                    mimeType = if (current.settings.exportFormat.equals("PNG", true)) "image/png" else "image/jpeg"
-                )
-
-                mediaStoreResult.fold(
-                    onSuccess = {
-                        savedImageRepository.recordGradedImage(
-                            sourceFilePath = previewPath,
-                            width = 1080,
-                            height = 1080,
-                            themeName = if (current.isAutoEditActive) "Auto Edit (LightCraft)" else "Édition LightCraft",
-                            method = if (current.isAutoEditActive) "auto-edit" else "lightcraft-edit",
-                            intensity = current.intensity,
-                            referenceImagePath = current.effectiveReferencePath,
-                            paletteHexes = emptyList()
-                        )
-                        onSavedImageRecorded()
-                        stateFlow.update {
-                            it.copy(
-                                isExportingImage = false,
-                                exportedImagePath = previewPath,
-                                isGradedImageSaved = true,
-                                userMessage = UiText.Resource(R.string.msg_photo_saved)
-                            )
-                        }
-                    },
-                    onFailure = { error ->
-                        stateFlow.update {
-                            it.copy(
-                                isExportingImage = false,
-                                errorMessage = UiText.Resource(R.string.err_mediastore, listOf(error.localizedMessage ?: ""))
-                            )
-                        }
-                    }
-                )
-            }
-            return
-        }
-
         val refPath = current.effectiveReferencePath ?: return
 
         scope.launch {
@@ -733,14 +373,14 @@ class GradingPipelineDelegate(
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
                 neutralLock = current.neutralLock,
-                exposure = current.editExposure,
-                contrast = current.editContrast,
-                highlights = current.editHighlights,
-                shadows = current.editShadows,
-                whites = current.editWhites,
-                blacks = current.editBlacks,
-                vibrance = current.editVibrance,
-                saturation = current.editSaturation
+                exposure = 0f,
+                contrast = 0f,
+                highlights = 0f,
+                shadows = 0f,
+                whites = 0f,
+                blacks = 0f,
+                vibrance = 0f,
+                saturation = 0f
             )
 
             when (result) {
@@ -818,23 +458,28 @@ class GradingPipelineDelegate(
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
                 neutralLock = current.neutralLock,
-                exposure = current.editExposure,
-                contrast = current.editContrast,
-                highlights = current.editHighlights,
-                shadows = current.editShadows,
-                whites = current.editWhites,
-                blacks = current.editBlacks,
-                vibrance = current.editVibrance,
-                saturation = current.editSaturation
+                exposure = 0f,
+                contrast = 0f,
+                highlights = 0f,
+                shadows = 0f,
+                whites = 0f,
+                blacks = 0f,
+                vibrance = 0f,
+                saturation = 0f
             )
 
             when (result) {
                 is CubeExportResult.Success -> {
-                    pendingExportCubePath = result.cubePath
+                    val fileName = File(result.cubePath).name
                     stateFlow.update {
                         it.copy(
                             isExportingCube = false,
-                            exportedCubePath = result.cubePath
+                            exportedCubePath = result.cubePath,
+                            pendingExport = PendingExport(
+                                sourcePath = result.cubePath,
+                                suggestedFileName = fileName,
+                                exportType = ExportType.CUBE_LUT
+                            )
                         )
                     }
                     onReadyToSave(result.cubePath)
@@ -851,38 +496,169 @@ class GradingPipelineDelegate(
         }
     }
 
-    fun saveExportedCubeToUri(destinationUri: Uri) {
-        val sourcePath = pendingExportCubePath ?: stateFlow.value.exportedCubePath ?: return
-        val sourceFile = File(sourcePath)
-        if (!sourceFile.exists()) {
-            stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_lut_path_not_found)) }
+    fun openInEditorFromStudio() {
+        val current = stateFlow.value
+        val src = current.sourcePath
+        val ref = current.effectiveReferencePath
+        if (src == null || ref == null) {
+            stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_select_source_and_ref)) }
             return
         }
 
         scope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    context.contentResolver.openOutputStream(destinationUri)?.use { outStream ->
-                        sourceFile.inputStream().use { inStream ->
-                            inStream.copyTo(outStream)
-                        }
+            stateFlow.update { it.copy(isExportingCube = true, errorMessage = null) }
+            val result = bridgeRepository.exportCube(
+                srcPath = src,
+                refPath = ref,
+                method = current.method,
+                lutSize = current.lutSize,
+                intensity = current.intensity,
+                preserveLuminance = current.preserveLuminance,
+                skinProtection = current.skinProtection,
+                smoothSigma = current.smoothSigma,
+                neutralLock = current.neutralLock
+            )
+
+            when (result) {
+                is CubeExportResult.Success -> {
+                    stateFlow.update {
+                        it.copy(
+                            isExportingCube = false,
+                            editorSourceUri = current.sourceUri,
+                            editorSourcePath = src,
+                            editorSourceBitmap = current.sourceBitmap,
+                            editorCustomLutPath = result.cubePath,
+                            editorCustomLutName = "Studio Grade",
+                            editorPreviewBitmap = current.effectivePreviewBitmap,
+                            step2Intensity = 1.0f,
+                            step2LumaLock = 0.0f,
+                            step2NeutralAxisLock = 0.0f,
+                            step2SkinToneLock = 0.0f,
+                            step2ExtremesRolloff = 0.0f,
+                            step2Spatial3d = 0.0f,
+                            step3Exposure = 0f,
+                            step3Contrast = 0f,
+                            step3Highlights = 0f,
+                            step3Shadows = 0f,
+                            step3Temperature = 0f,
+                            step3Tint = 0f,
+                            step3Vibrance = 0f,
+                            step3Saturation = 0f,
+                            step3Clarity = 0f,
+                            step3Sharpen = 0f,
+                            step3Grain = 0f,
+                            editorSelectedTab = 0,
+                            currentDestination = AppDestination.EDITOR
+                        )
                     }
                 }
-                stateFlow.update {
-                    it.copy(userMessage = UiText.Resource(R.string.msg_lut_cube_saved))
-                }
-            } catch (e: Exception) {
-                stateFlow.update {
-                    it.copy(errorMessage = UiText.Resource(R.string.err_save_failed, listOf(e.localizedMessage ?: "")))
+                is CubeExportResult.Error -> {
+                    stateFlow.update {
+                        it.copy(
+                            isExportingCube = false,
+                            errorMessage = result.error.uiText
+                        )
+                    }
                 }
             }
         }
     }
 
+    fun savePendingExportToUri(destinationUri: Uri) {
+        val pending = stateFlow.value.pendingExport
+        if (pending == null) {
+            cleanupEmptyUri(destinationUri)
+            stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_no_pending_export)) }
+            return
+        }
+
+        val sourceFile = File(pending.sourcePath)
+        if (!sourceFile.exists() || sourceFile.length() <= 0L) {
+            cleanupEmptyUri(destinationUri)
+            stateFlow.update {
+                it.copy(
+                    pendingExport = null,
+                    errorMessage = UiText.Resource(R.string.err_lut_path_not_found)
+                )
+            }
+            return
+        }
+
+        val expectedBytes = sourceFile.length()
+
+        scope.launch {
+            try {
+                val bytesCopied = withContext(Dispatchers.IO) {
+                    val outStream = (try {
+                        context.contentResolver.openOutputStream(destinationUri, "wt")
+                    } catch (_: Exception) {
+                        null
+                    }) ?: context.contentResolver.openOutputStream(destinationUri)
+                    ?: throw IOException("Failed to open output stream for URI: $destinationUri")
+                    outStream.use { out ->
+                        sourceFile.inputStream().use { inStream ->
+                            inStream.copyTo(out)
+                        }
+                    }
+                }
+
+                if (bytesCopied != expectedBytes || bytesCopied <= 0L) {
+                    cleanupEmptyUri(destinationUri)
+                    stateFlow.update {
+                        it.copy(
+                            pendingExport = null,
+                            errorMessage = UiText.Resource(R.string.err_export_io, listOf("Corrupted copy ($bytesCopied / $expectedBytes bytes)"))
+                        )
+                    }
+                    return@launch
+                }
+
+                stateFlow.update {
+                    it.copy(
+                        pendingExport = null,
+                        userMessage = when (pending.exportType) {
+                            ExportType.CUBE_LUT -> UiText.Resource(R.string.msg_lut_cube_saved)
+                            ExportType.HD_IMAGE -> UiText.Resource(R.string.msg_image_saved)
+                            ExportType.PRESET_JSON -> UiText.Resource(R.string.msg_preset_saved, listOf(pending.suggestedFileName))
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                cleanupEmptyUri(destinationUri)
+                stateFlow.update {
+                    it.copy(
+                        pendingExport = null,
+                        errorMessage = UiText.Resource(R.string.err_save_failed, listOf(e.localizedMessage ?: ""))
+                    )
+                }
+            }
+        }
+    }
+
+    fun saveExportedCubeToUri(destinationUri: Uri) {
+        savePendingExportToUri(destinationUri)
+    }
+
+    fun cancelPendingExport() {
+        stateFlow.update { it.copy(pendingExport = null) }
+    }
+
+    private fun cleanupEmptyUri(uri: Uri) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                DocumentsContract.deleteDocument(context.contentResolver, uri)
+            } else {
+                context.contentResolver.delete(uri, null, null)
+            }
+        } catch (_: Exception) {
+            // Ignored if document already removed or unsupported
+        }
+    }
+
     fun createShareCubeIntent(cubeFilePath: String? = null): Intent? {
-        val path = cubeFilePath ?: stateFlow.value.exportedCubePath ?: pendingExportCubePath ?: return null
+        val path = cubeFilePath ?: stateFlow.value.exportedCubePath ?: stateFlow.value.pendingExport?.sourcePath ?: return null
         val file = File(path)
-        if (!file.exists()) return null
+        if (!file.exists() || file.length() <= 0L) return null
 
         return try {
             val fileUri = FileProvider.getUriForFile(

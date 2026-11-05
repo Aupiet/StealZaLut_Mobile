@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -87,6 +88,44 @@ fun EditorViewport(
                         }
                     }
                 }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        var isHoldActive = false
+                        try {
+                            withTimeout(400L) {
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id }
+                                    if (change == null || !change.pressed) {
+                                        return@withTimeout
+                                    }
+                                    val distance = (change.position - down.position).getDistance()
+                                    if (event.changes.size > 1 || distance > 18f) {
+                                        return@withTimeout
+                                    }
+                                }
+                            }
+                        } catch (e: PointerEventTimeoutCancellationException) {
+                            isHoldActive = true
+                        }
+
+                        if (isHoldActive) {
+                            try {
+                                isHoldingCompare = true
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id }
+                                    if (change == null || !change.pressed) {
+                                        break
+                                    }
+                                }
+                            } finally {
+                                isHoldingCompare = false
+                            }
+                        }
+                    }
+                }
         ) {
             displayBitmap?.let { bmp ->
                 Image(
@@ -104,7 +143,7 @@ fun EditorViewport(
                 )
             }
 
-            // Compare badge overlay (Bug B4 fix: semantic compareBadge role, zero errorContainer hijack)
+            // Compare badge overlay (semantic compareBadge role, zero errorContainer hijack)
             if (isHoldingCompare) {
                 SzlImageBadge(
                     text = stringResource(R.string.editor_compare_original_badge),
@@ -118,14 +157,6 @@ fun EditorViewport(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(top = AppDimens.SpacingSmall)
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown()
-                                isHoldingCompare = true
-                                waitForUpOrCancellation()
-                                isHoldingCompare = false
-                            }
-                        }
                 ) {
                     Text(
                         text = stringResource(R.string.editor_hold_compare),

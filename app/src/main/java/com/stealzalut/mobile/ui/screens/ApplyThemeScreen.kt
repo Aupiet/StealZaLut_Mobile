@@ -12,6 +12,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -47,10 +48,12 @@ fun ApplyThemeScreen(
     val context = LocalContext.current
 
     val exportCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("*/*")
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { destinationUri ->
         if (destinationUri != null) {
-            viewModel.saveExportedCubeToUri(destinationUri)
+            viewModel.savePendingExportToUri(destinationUri)
+        } else {
+            viewModel.cancelPendingExport()
         }
     }
 
@@ -73,10 +76,13 @@ fun ApplyThemeScreen(
         )
     }
 
+    val isStep3 = uiState.wizardStep == AppConstants.STEP_3_PARAMS
+    val scrollModifier: Modifier = if (!isStep3) Modifier.verticalScroll(scrollState) else Modifier
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
+            .then(scrollModifier)
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSpacious)
     ) {
@@ -90,9 +96,12 @@ fun ApplyThemeScreen(
             }
         )
 
+        val contentModifier: Modifier = if (isStep3) Modifier.weight(1f).fillMaxWidth() else Modifier.fillMaxWidth()
+
         // --- 2. Dynamic Step Content ---
         AnimatedContent(
             targetState = uiState.wizardStep,
+            modifier = contentModifier,
             transitionSpec = {
                 if (targetState > initialState) {
                     (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
@@ -108,8 +117,6 @@ fun ApplyThemeScreen(
                         sourceBitmap = uiState.sourceBitmap,
                         onImageSelected = { uri -> viewModel.setSourceImage(uri) },
                         canProceed = uiState.canProceedToStep2,
-                        isComputingAutoEdit = uiState.isComputingAutoEdit,
-                        onAutoEdit = { viewModel.applyAutoEdit() },
                         onNext = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) }
                     )
                 }
@@ -156,8 +163,6 @@ fun ApplyThemeScreen(
                                 exportCubeLauncher.launch(File(cubePath).name)
                             }
                         },
-                        isComputingAutoEdit = uiState.isComputingAutoEdit,
-                        onAutoEdit = { viewModel.applyAutoEdit() },
                         onBack = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) },
                         onRun = { viewModel.runGradingFunnel() }
                     )
@@ -179,34 +184,8 @@ fun ApplyThemeScreen(
                         isExportingImage = uiState.isExportingImage,
                         isExportingCube = uiState.isExportingCube,
                         exportedCubePath = uiState.exportedCubePath,
-                        isAutoEditActive = uiState.isAutoEditActive,
-                        autoExposure = uiState.autoExposure,
-                        autoContrast = uiState.autoContrast,
-                        autoHighlights = uiState.autoHighlights,
-                        autoShadows = uiState.autoShadows,
-                        autoVibrance = uiState.autoVibrance,
-                        isEditPanelVisible = uiState.isEditPanelVisible,
-                        isComputingEdit = uiState.isComputingEdit,
-                        editExposure = uiState.editExposure,
-                        editContrast = uiState.editContrast,
-                        editHighlights = uiState.editHighlights,
-                        editShadows = uiState.editShadows,
-                        editWhites = uiState.editWhites,
-                        editBlacks = uiState.editBlacks,
-                        editVibrance = uiState.editVibrance,
-                        editSaturation = uiState.editSaturation,
-                        onToggleEditPanel = { viewModel.toggleEditPanel() },
-                        onAutoEdit = { viewModel.applyAutoInEdit() },
-                        onResetEdits = { viewModel.resetEdits() },
-                        onExposureChange = { viewModel.setEditExposure(it) },
-                        onContrastChange = { viewModel.setEditContrast(it) },
-                        onHighlightsChange = { viewModel.setEditHighlights(it) },
-                        onShadowsChange = { viewModel.setEditShadows(it) },
-                        onWhitesChange = { viewModel.setEditWhites(it) },
-                        onBlacksChange = { viewModel.setEditBlacks(it) },
-                        onVibranceChange = { viewModel.setEditVibrance(it) },
-                        onSaturationChange = { viewModel.setEditSaturation(it) },
                         onIntensityChange = { viewModel.setIntensity(it) },
+                        onOpenInEditor = { viewModel.openInEditorFromStudio() },
                         onSaveGradedImage = { viewModel.saveGradedImageToGallery() },
                         onSaveStyleToProfile = { viewModel.openSaveThemeDialog() },
                         onExportCube = {

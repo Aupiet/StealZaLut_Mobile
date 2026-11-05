@@ -2,6 +2,8 @@ package com.stealzalut.mobile.ui.screens
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Tune
@@ -36,6 +39,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -80,6 +84,16 @@ fun PalettesScreen(
 
     var presetName by remember { mutableStateOf("") }
     var presetNotes by remember { mutableStateOf("") }
+
+    val exportCubeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { destinationUri ->
+        if (destinationUri != null) {
+            viewModel.savePendingExportToUri(destinationUri)
+        } else {
+            viewModel.cancelPendingExport()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadSavedPresets()
@@ -234,6 +248,38 @@ fun PalettesScreen(
                                 )
                             }
                         }
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.exportCubeFromPaletteImage { cubePath ->
+                                    exportCubeLauncher.launch(File(cubePath).name)
+                                }
+                            },
+                            enabled = !uiState.isExportingCube && !uiState.isSavingPreset && !uiState.isExtractingPalette,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
+                        ) {
+                            if (uiState.isExportingCube) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                                    strokeWidth = AppDimens.BorderThick,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.FileDownload,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AppDimens.IconNormal)
+                                )
+                                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                                Text(
+                                    text = stringResource(R.string.palettes_btn_export_cube),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -268,7 +314,11 @@ fun PalettesScreen(
                         uiState.savedPresets.forEach { preset ->
                             PresetItemCard(
                                 preset = preset,
-                                onApply = { viewModel.applyPresetToStudio(preset) },
+                                onExportCube = {
+                                    viewModel.exportCubeFromPreset(preset) { cubePath ->
+                                        exportCubeLauncher.launch(File(cubePath).name)
+                                    }
+                                },
                                 onDelete = { viewModel.deletePreset(preset.id) }
                             )
                         }
@@ -284,7 +334,7 @@ fun PalettesScreen(
 @Composable
 private fun PresetItemCard(
     preset: ColorimetryPreset,
-    onApply: () -> Unit,
+    onExportCube: () -> Unit,
     onDelete: () -> Unit
 ) {
     val cardBitmap by produceState<Bitmap?>(initialValue = null, preset.thumbnailPath, preset.referenceImagePath) {
@@ -432,22 +482,21 @@ private fun PresetItemCard(
                 }
             }
 
-            Button(
-                onClick = onApply,
+            OutlinedButton(
+                onClick = onExportCube,
                 modifier = Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Tune,
+                    imageVector = Icons.Default.FileDownload,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )
                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                 Text(
-                    text = stringResource(R.string.palettes_btn_apply),
+                    text = stringResource(R.string.palettes_btn_export_cube),
                     fontWeight = FontWeight.Bold
                 )
             }

@@ -91,10 +91,12 @@
     <string name="wizard_step_5_subtitle">Ajusta la opacidad en tiempo real (120 FPS GPU) y exporta</string>
     <string name="wizard_step_5_autosave_badge">Mezcla de opacidad GPU instantánea</string>
     <string name="wizard_step_5_btn_save_gallery">Guardar Foto en la Galería</string>
+    <string name="wizard_step_5_exporting_image">Guardando...</string>
+    <string name="wizard_step_5_exporting_cube">Exportando LUT...</string>
     <string name="wizard_step_5_saved_badge">Foto guardada en la Galería de Android (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Guardar Estilo como Preset</string>
     <string name="wizard_step_5_btn_export_cube">Exportar 3D LUT (.CUBE)</string>
-    <string name="wizard_step_5_btn_reset">Nuevo Talonaje</string>
+    <string name="wizard_step_5_btn_reset">Finalizar</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_title">Intensidad (Mezcla GPU)</string>
@@ -355,6 +357,7 @@
     <string name="editor_btn_delete">Eliminar</string>
     <string name="editor_btn_remove_lut">Quitar LUT</string>
     <string name="editor_btn_reset_all">Restablecer todo</string>
+    <string name="msg_edits_reset">Se restablecieron todos los ajustes</string>
     <string name="editor_compare_original_badge">ORIGINAL (Antes)</string>
     <string name="editor_actions_export">Exportar</string>
     <string name="editor_export_photo">Foto HD</string>
@@ -429,4 +432,14 @@
     <string name="dialog_rename_title">Renombrar preset</string>
     <string name="dialog_rename_confirm">Renombrar</string>
     <string name="dialog_duplicate_title">Duplicar preset</string>
+    <string name="err_no_pending_export">No se encontró ninguna exportación pendiente o la sesión ha caducado.</string>
+    <string name="err_palette_extraction_failed">Error al extraer la paleta de la imagen.</string>
+    <string name="editor_btn_import_preset">Importar</string>
+    <string name="editor_btn_export_preset">Exportar preset (.szlpreset)</string>
+    <string name="msg_preset_imported">¡Preset « %1$s » importado con éxito!</string>
+    <string name="err_preset_import_failed">Error al importar el preset: archivo no válido o dañado.</string>
+    <string name="btn_edit_in_editor">Retocar en el editor</string>
+    <string name="dialog_finish_studio_title">Finalizar sesión</string>
+    <string name="dialog_finish_studio_msg">¿Seguro que desea finalizar? Se perderán los cambios no guardados.</string>
+    <string name="dialog_finish_confirm">Finalizar</string>
 </resources>

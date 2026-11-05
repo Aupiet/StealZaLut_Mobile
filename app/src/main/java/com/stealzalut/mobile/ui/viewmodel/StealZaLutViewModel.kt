@@ -82,35 +82,6 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         stateFlow = _uiState,
         scope = viewModelScope,
         decodeSampledBitmap = ::decodeSampledBitmap,
-        onApplyPresetToStudioCallback = { preset ->
-            gradingPipelineDelegate.selectThemeToApply(preset)
-            studioFlowDelegate.navigateTo(AppDestination.STUDIO)
-            studioFlowDelegate.setWizardStep(AppConstants.STEP_2_STYLE)
-        },
-        onApplyLookCallback = { image ->
-            val method = ColorTransferMethod.fromKey(image.method ?: "hm-mkl-hm")
-            val customPreset = image.referenceImagePath?.let { path ->
-                ColorimetryPreset(
-                    name = image.themeName ?: "Look StealZaLUT",
-                    method = method,
-                    intensity = image.intensity,
-                    referenceImagePath = path,
-                    paletteHexes = image.paletteHexes
-                )
-            }
-            _uiState.update {
-                it.copy(
-                    method = method,
-                    intensity = image.intensity,
-                    customReferencePath = image.referenceImagePath,
-                    selectedTheme = customPreset,
-                    customReferencePalette = image.paletteHexes.toImmutableList(),
-                    selectedDetailImage = null
-                )
-            }
-            studioFlowDelegate.navigateTo(AppDestination.STUDIO)
-            studioFlowDelegate.setWizardStep(AppConstants.STEP_2_STYLE)
-        },
         onTriggerEditorPreviewCallback = {
             editorSessionDelegate.scheduleEditorPreviewUpdate()
         }
@@ -170,7 +141,10 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun setStyleBSourceMode(mode: Int) = studioFlowDelegate.setStyleBSourceMode(mode)
     fun openSaveThemeDialog() = studioFlowDelegate.openSaveThemeDialog()
     fun dismissSaveThemeDialog() = studioFlowDelegate.dismissSaveThemeDialog()
-    fun resetWizard() = studioFlowDelegate.resetWizard()
+    fun resetWizard() {
+        studioFlowDelegate.resetWizard()
+        gradingPipelineDelegate.clearCaches()
+    }
     fun setSplitPosition(position: Float) = studioFlowDelegate.setSplitPosition(position)
     fun toggleSplitWipeMode() = studioFlowDelegate.toggleSplitWipeMode()
 
@@ -189,30 +163,16 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun setNeutralLock(value: Float) = gradingPipelineDelegate.setNeutralLock(value)
     fun setLutSize(size: LutSize) = gradingPipelineDelegate.setLutSize(size)
     fun runGradingFunnel() = gradingPipelineDelegate.runGradingFunnel()
-    fun applyAutoEdit() = gradingPipelineDelegate.applyAutoEdit()
-
-    fun toggleEditPanel() = gradingPipelineDelegate.toggleEditPanel()
-    fun setEditExposure(value: Float) = gradingPipelineDelegate.setEditExposure(value)
-    fun setEditContrast(value: Float) = gradingPipelineDelegate.setEditContrast(value)
-    fun setEditHighlights(value: Float) = gradingPipelineDelegate.setEditHighlights(value)
-    fun setEditShadows(value: Float) = gradingPipelineDelegate.setEditShadows(value)
-    fun setEditWhites(value: Float) = gradingPipelineDelegate.setEditWhites(value)
-    fun setEditBlacks(value: Float) = gradingPipelineDelegate.setEditBlacks(value)
-    fun setEditVibrance(value: Float) = gradingPipelineDelegate.setEditVibrance(value)
-    fun setEditSaturation(value: Float) = gradingPipelineDelegate.setEditSaturation(value)
-    fun resetEdits() = gradingPipelineDelegate.resetEdits()
-
-    fun applyAutoInEdit(isStandalone: Boolean = false) {
-        gradingPipelineDelegate.applyAutoInEdit(isStandalone) {
-            editorSessionDelegate.scheduleEditorPreviewUpdate()
-        }
-    }
+    fun applyEditorAutoEdit() = editorSessionDelegate.applyAutoEdit()
 
     fun saveGradedImageToGallery() = gradingPipelineDelegate.saveGradedImageToGallery { loadSavedImages() }
     fun exportCube(onReadyToSave: (String) -> Unit) = gradingPipelineDelegate.exportCube(onReadyToSave)
+    fun cancelPendingExport() = gradingPipelineDelegate.cancelPendingExport()
+    fun savePendingExportToUri(destinationUri: Uri) = gradingPipelineDelegate.savePendingExportToUri(destinationUri)
     fun saveExportedCubeToUri(destinationUri: Uri) = gradingPipelineDelegate.saveExportedCubeToUri(destinationUri)
     fun createShareCubeIntent(cubeFilePath: String? = null): Intent? = gradingPipelineDelegate.createShareCubeIntent(cubeFilePath)
     fun getShareIntent(filePath: String): Intent? = gradingPipelineDelegate.getShareIntent(filePath)
+    fun openInEditorFromStudio() = gradingPipelineDelegate.openInEditorFromStudio()
 
     // ========================================================================
     // STANDALONE PHOTO EDITOR (EditorSessionDelegate)
@@ -262,8 +222,6 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun saveCurrentStyleAsPreset(name: String, notes: String?) = presetLibraryDelegate.saveCurrentStyleAsPreset(name, notes)
     fun deletePreset(id: String) = presetLibraryDelegate.deletePreset(id)
     fun loadSavedPresets() = presetLibraryDelegate.loadSavedPresets()
-    fun applyPresetToStudio(preset: ColorimetryPreset) = presetLibraryDelegate.applyPresetToStudio(preset)
-
     fun setPalettePhoto(uri: Uri) = presetLibraryDelegate.setPalettePhoto(uri)
     fun saveExtractedPreset(name: String, notes: String?) = presetLibraryDelegate.saveExtractedPreset(name, notes)
 
@@ -272,10 +230,11 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun deleteSavedImage(id: String) = presetLibraryDelegate.deleteSavedImage(id)
     fun openImageDetail(image: SavedGradedImage) = presetLibraryDelegate.openImageDetail(image)
     fun dismissImageDetail() = presetLibraryDelegate.dismissImageDetail()
-    fun applyLookFromSavedImage(image: SavedGradedImage) = presetLibraryDelegate.applyLookFromSavedImage(image)
     fun createShareImageIntent(filePath: String): Intent = presetLibraryDelegate.createShareImageIntent(filePath)
     fun exportCubeFromPreset(preset: ColorimetryPreset, onReadyToSave: (String) -> Unit) =
         presetLibraryDelegate.exportCubeFromPreset(preset, onReadyToSave)
+    fun exportCubeFromPaletteImage(onReadyToSave: (String) -> Unit) =
+        presetLibraryDelegate.exportCubeFromPaletteImage(onReadyToSave)
 
     fun loadEditingPresets() = presetLibraryDelegate.loadEditingPresets()
     fun openSaveEditingPresetDialog() = presetLibraryDelegate.openSaveEditingPresetDialog()
@@ -288,7 +247,9 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun duplicateEditingPreset(id: String, newName: String? = null) = presetLibraryDelegate.duplicateEditingPreset(id, newName)
     fun renameEditingPreset(id: String, newName: String) = presetLibraryDelegate.renameEditingPreset(id, newName)
     fun exportEditingPreset(id: String, exportPath: String, onSuccess: (String) -> Unit) = presetLibraryDelegate.exportEditingPreset(id, exportPath, onSuccess)
+    fun exportEditingPreset(preset: EditPreset, onReadyToSave: (String) -> Unit) = presetLibraryDelegate.exportEditingPreset(preset, onReadyToSave)
     fun importEditingPreset(importPath: String) = presetLibraryDelegate.importEditingPreset(importPath)
+    fun importEditingPresetFromUri(uri: Uri) = presetLibraryDelegate.importEditingPresetFromUri(uri)
 
     // ========================================================================
     // SETTINGS & CACHE

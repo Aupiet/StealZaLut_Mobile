@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
@@ -17,8 +18,11 @@ import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
 import com.stealzalut.mobile.data.repository.PresetRepository
 import com.stealzalut.mobile.data.repository.SavedImageRepository
+import com.stealzalut.mobile.ui.viewmodel.ExportType
+import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,8 +42,6 @@ class PresetLibraryDelegate(
     private val stateFlow: MutableStateFlow<StealZaLutUiState>,
     private val scope: CoroutineScope,
     private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?,
-    private val onApplyPresetToStudioCallback: (ColorimetryPreset) -> Unit,
-    private val onApplyLookCallback: (SavedGradedImage) -> Unit,
     private val onTriggerEditorPreviewCallback: () -> Unit
 ) {
     fun loadSavedPresets() {
@@ -117,18 +119,26 @@ class PresetLibraryDelegate(
         }
     }
 
-    fun applyPresetToStudio(preset: ColorimetryPreset) {
-        onApplyPresetToStudioCallback(preset)
+    private val paletteExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e("PresetLibraryDelegate", "Palette extraction failed", throwable)
+        stateFlow.update {
+            it.copy(
+                isExtractingPalette = false,
+                errorMessage = UiText.Resource(R.string.err_palette_extraction_failed)
+            )
+        }
     }
 
     fun setPalettePhoto(uri: Uri) {
-        scope.launch {
+        scope.launch(paletteExceptionHandler) {
             stateFlow.update { it.copy(isExtractingPalette = true, errorMessage = null) }
             val cacheResult = bridgeRepository.cacheImageFromUri(uri, "palette_input.jpg")
             cacheResult.fold(
                 onSuccess = { file ->
                     val thumbnail = withContext(Dispatchers.IO) {
-                        decodeSampledBitmap(file.absolutePath, 1080)
+                        runCatching {
+                            decodeSampledBitmap(file.absolutePath, 512)
+                        }.getOrNull()
                     }
                     stateFlow.update {
                         it.copy(
@@ -153,15 +163,27 @@ class PresetLibraryDelegate(
     }
 
     fun extractPaletteFromImage(imagePath: String) {
-        scope.launch {
-            stateFlow.update { it.copy(isExtractingPalette = true) }
-            val palette = bridgeRepository.extractPalette(imagePath, AppConstants.DEFAULT_PALETTE_COLOR_COUNT)
+        scope.launch(paletteExceptionHandler) {
+            stateFlow.update { it.copy(isExtractingPalette = true, errorMessage = null) }
+            val palette = try {
+                bridgeRepository.extractPalette(imagePath, AppConstants.DEFAULT_PALETTE_COLOR_COUNT)
+            } catch (t: Throwable) {
+                Log.e("PresetLibraryDelegate", "Palette extraction bridge error", t)
+                emptyList()
+            }
             stateFlow.update {
-                it.copy(
-                    isExtractingPalette = false,
-                    extractedPalette = palette.toImmutableList(),
-                    userMessage = UiText.Resource(R.string.msg_palette_extracted)
-                )
+                if (palette.isNotEmpty()) {
+                    it.copy(
+                        isExtractingPalette = false,
+                        extractedPalette = palette.toImmutableList(),
+                        userMessage = UiText.Resource(R.string.msg_palette_extracted)
+                    )
+                } else {
+                    it.copy(
+                        isExtractingPalette = false,
+                        errorMessage = UiText.Resource(R.string.err_palette_extraction_failed)
+                    )
+                }
             }
         }
     }
@@ -246,10 +268,6 @@ class PresetLibraryDelegate(
         stateFlow.update { it.copy(selectedDetailImage = null) }
     }
 
-    fun applyLookFromSavedImage(image: SavedGradedImage) {
-        onApplyLookCallback(image)
-    }
-
     fun createShareImageIntent(filePath: String): Intent {
         return bridgeRepository.createShareIntent(filePath, "image/*")
     }
@@ -262,10 +280,14 @@ class PresetLibraryDelegate(
             return
         }
 
+        // Use source photo if available, or extract directly from reference image using neutral calibration lattice
+        val candidateSource = stateFlow.value.sourcePath ?: stateFlow.value.editorSourcePath
+        val sourcePhoto = if (candidateSource != null && File(candidateSource).exists()) candidateSource else ""
+
         scope.launch {
             stateFlow.update { it.copy(isExportingCube = true, errorMessage = null) }
             val result = bridgeRepository.exportCube(
-                srcPath = refPath,
+                srcPath = sourcePhoto,
                 refPath = refPath,
                 lutSize = preset.lutSize,
                 method = preset.method,
@@ -273,12 +295,61 @@ class PresetLibraryDelegate(
             )
             when (result) {
                 is CubeExportResult.Success -> {
-                    bridgeRepository.saveCubeToDownloads(result.cubePath, File(result.cubePath).name)
+                    val fileName = File(result.cubePath).name
                     stateFlow.update {
                         it.copy(
                             isExportingCube = false,
                             exportedCubePath = result.cubePath,
-                            userMessage = UiText.Resource(R.string.msg_lut_cube_saved)
+                            pendingExport = PendingExport(
+                                sourcePath = result.cubePath,
+                                suggestedFileName = fileName,
+                                exportType = ExportType.CUBE_LUT
+                            )
+                        )
+                    }
+                    onReadyToSave(result.cubePath)
+                }
+                is CubeExportResult.Error -> {
+                    stateFlow.update {
+                        it.copy(isExportingCube = false, errorMessage = result.error.uiText)
+                    }
+                }
+            }
+        }
+    }
+
+    fun exportCubeFromPaletteImage(onReadyToSave: (String) -> Unit) {
+        if (stateFlow.value.isExportingCube) return
+        val refPath = stateFlow.value.palettePhotoPath
+        if (refPath == null || !File(refPath).exists()) {
+            stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_preset_no_ref)) }
+            return
+        }
+
+        val candidateSource = stateFlow.value.sourcePath ?: stateFlow.value.editorSourcePath
+        val sourcePhoto = if (candidateSource != null && File(candidateSource).exists()) candidateSource else ""
+
+        scope.launch {
+            stateFlow.update { it.copy(isExportingCube = true, errorMessage = null) }
+            val result = bridgeRepository.exportCube(
+                srcPath = sourcePhoto,
+                refPath = refPath,
+                lutSize = stateFlow.value.lutSize,
+                method = stateFlow.value.method,
+                intensity = stateFlow.value.intensity
+            )
+            when (result) {
+                is CubeExportResult.Success -> {
+                    val fileName = File(result.cubePath).name
+                    stateFlow.update {
+                        it.copy(
+                            isExportingCube = false,
+                            exportedCubePath = result.cubePath,
+                            pendingExport = PendingExport(
+                                sourcePath = result.cubePath,
+                                suggestedFileName = fileName,
+                                exportType = ExportType.CUBE_LUT
+                            )
                         )
                     }
                     onReadyToSave(result.cubePath)
@@ -445,6 +516,80 @@ class PresetLibraryDelegate(
                 onSuccess(path)
             } else {
                 stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_export_io, listOf("Export .szlpreset error"))) }
+            }
+        }
+    }
+
+    fun exportEditingPreset(preset: EditPreset, onReadyToSave: (String) -> Unit) {
+        scope.launch {
+            val safeName = preset.name.replace(Regex("[^a-zA-Z0-9_\\-\\s]"), "_").trim()
+            val filename = "${if (safeName.isNotEmpty()) safeName else "preset"}.szlpreset"
+            val tempFile = File(application.cacheDir, filename)
+            val exportedPath = bridgeRepository.exportEditingPresetBridge(preset.id, tempFile.absolutePath)
+            if (exportedPath != null && File(exportedPath).length() > 0) {
+                stateFlow.update {
+                    it.copy(
+                        pendingExport = PendingExport(
+                            sourcePath = exportedPath,
+                            suggestedFileName = filename,
+                            exportType = ExportType.PRESET_JSON
+                        )
+                    )
+                }
+                onReadyToSave(filename)
+            } else {
+                stateFlow.update {
+                    it.copy(
+                        errorMessage = UiText.Resource(
+                            R.string.err_export_io,
+                            listOf("Export .szlpreset error")
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun importEditingPresetFromUri(uri: Uri) {
+        scope.launch {
+            val tempFile = File(application.cacheDir, "import_preset_${System.currentTimeMillis()}.szlpreset")
+            try {
+                application.contentResolver.openInputStream(uri)?.use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                if (!tempFile.exists() || tempFile.length() == 0L) {
+                    stateFlow.update {
+                        it.copy(errorMessage = UiText.Resource(R.string.err_preset_import_failed))
+                    }
+                    return@launch
+                }
+                val ok = bridgeRepository.importEditingPresetBridge(tempFile.absolutePath)
+                if (ok) {
+                    loadEditingPresets()
+                    stateFlow.update {
+                        it.copy(
+                            userMessage = UiText.Resource(
+                                R.string.msg_preset_imported,
+                                listOf(tempFile.nameWithoutExtension)
+                            )
+                        )
+                    }
+                } else {
+                    stateFlow.update {
+                        it.copy(errorMessage = UiText.Resource(R.string.err_preset_import_failed))
+                    }
+                }
+            } catch (t: Throwable) {
+                Log.e("PresetLibraryDelegate", "Failed to import preset from uri", t)
+                stateFlow.update {
+                    it.copy(errorMessage = UiText.Resource(R.string.err_preset_import_failed))
+                }
+            } finally {
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
             }
         }
     }

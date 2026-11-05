@@ -1121,6 +1121,15 @@ class PythonBridgeRepository(private val context: Context) {
         }.getOrDefault(false)
     }
 
+    suspend fun clearCaches(): Boolean = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult: PyObject = bridge.callAttr("clear_caches")
+            pyResult.callAttr("get", "status")?.toString() == "success"
+        }.getOrDefault(false)
+    }
+
     /**
      * Builds a Share Intent for any generated file using FileProvider.
      */

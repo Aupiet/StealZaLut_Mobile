@@ -142,6 +142,13 @@ def test_nominal_bridge_calls():
         assert os.path.isfile(r_card["card_path"])
         assert len(r_card["palette"]) == 6
 
+        # 6. export_cube_file from reference image alone (no source photo)
+        out_ref_cube = os.path.join(tmp_dir, "ref_alone.cube")
+        r_ref_cube = export_cube_file(src_path="", ref_path=ref_path, output_cube_path=out_ref_cube, lut_size=17)
+        assert r_ref_cube["status"] == "success"
+        assert os.path.isfile(r_ref_cube["cube_path"])
+        assert os.path.getsize(r_ref_cube["cube_path"]) > 0
+
 
 if __name__ == "__main__":
     test_missing_files_error_codes()

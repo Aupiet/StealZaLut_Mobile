@@ -263,15 +263,23 @@ def export_cube_file(
 ) -> Dict[str, Any]:
     """Compute and export a 3-D LUT as an Adobe ``.cube`` file."""
     try:
-        if not src_path or not os.path.isfile(src_path):
+        # Check source image path: if specified and invalid, return error
+        if src_path and not os.path.isfile(src_path):
             return _make_error_response(
                 message=f"Source image file not found: {src_path}",
                 error_code="SOURCE_NOT_FOUND",
             )
+        # Check reference image path: if specified and invalid, return error
         if ref_path and not os.path.isfile(ref_path):
             return _make_error_response(
                 message=f"Reference image file not found: {ref_path}",
                 error_code="REFERENCE_NOT_FOUND",
+            )
+        # If neither reference, nor custom LUT, nor source is provided, fail
+        if not ref_path and not custom_lut_path and not src_path:
+            return _make_error_response(
+                message=f"Source image file not found: {src_path}",
+                error_code="SOURCE_NOT_FOUND",
             )
 
         res = run_export_pipeline(
@@ -586,11 +594,12 @@ def export_auto_edit_cube(
                 error_code="SOURCE_NOT_FOUND",
             )
 
+        from stealzalut.config import PROXY_DECODE_MAX_DIM
         from stealzalut.core.auto_edit import generate_auto_edit_lut, get_auto_edit_settings
         from stealzalut.core.lut_export import export_cube
-        from stealzalut.utils.image_io import load_image
+        from stealzalut.utils.image_io import load_proxy_image
 
-        src_arr = load_image(src_path)
+        src_arr = load_proxy_image(src_path, max_dim=PROXY_DECODE_MAX_DIM)
         settings = get_auto_edit_settings(src_arr)
         lut_3d = generate_auto_edit_lut(src_arr, lut_size=lut_size, settings=settings)
 
@@ -684,10 +693,11 @@ def compute_auto_settings(image_path: str) -> Dict[str, Any]:
                 error_code="IMAGE_NOT_FOUND",
             )
 
+        from stealzalut.config import MAX_ANALYSIS_DIMENSION
         from stealzalut.core.auto_edit import get_auto_edit_settings
-        from stealzalut.utils.image_io import load_image
+        from stealzalut.utils.image_io import load_proxy_image
 
-        arr = load_image(image_path)
+        arr = load_proxy_image(image_path, max_dim=MAX_ANALYSIS_DIMENSION)
         settings = get_auto_edit_settings(arr)
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         return {
@@ -717,8 +727,17 @@ def extract_palette(image_path: str, num_colors: int = 6) -> Dict[str, Any]:
             )
             resp["palette"] = []
             return resp
-        img = load_image(image_path)
+        from stealzalut.config import PALETTE_RESIZE_DIM
+        from stealzalut.utils.image_io import load_proxy_image
+        img = load_proxy_image(image_path, max_dim=PALETTE_RESIZE_DIM)
         hex_colors = extract_dominant_palette(img, num_colors=num_colors)
+        if not hex_colors:
+            resp = _make_error_response(
+                message="No dominant colours found in image",
+                error_code="PALETTE_EXTRACTION_FAILED",
+            )
+            resp["palette"] = []
+            return resp
         return {
             "status": "success",
             "palette": hex_colors,
@@ -751,5 +770,16 @@ def generate_color_card(
             method=method,
             intensity=intensity,
         )
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def clear_caches() -> Dict[str, Any]:
+    """Clear all in-memory raw LUT and proxy caches."""
+    try:
+        from stealzalut.workers.transfer_worker import clear_lut_cache
+
+        clear_lut_cache()
+        return {"status": "success"}
     except Exception as exc:  # noqa: BLE001
         return _make_error_response(exc=exc)

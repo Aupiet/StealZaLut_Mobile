@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +48,8 @@ fun EditorPresetsTab(
     onApplyPreset: (EditPreset) -> Unit,
     onDeletePreset: (String) -> Unit,
     onDuplicatePreset: ((String) -> Unit)? = null,
+    onImportPreset: (() -> Unit)? = null,
+    onExportPreset: ((EditPreset) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -99,11 +102,28 @@ fun EditorPresetsTab(
 
         // Saved Presets List
         item {
-            Text(
-                text = stringResource(R.string.editor_my_presets_title),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.editor_my_presets_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                if (onImportPreset != null) {
+                    OutlinedButton(onClick = onImportPreset) {
+                        Icon(
+                            Icons.Default.FileUpload,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                        Text(stringResource(R.string.editor_btn_import_preset))
+                    }
+                }
+            }
         }
 
         if (savedPresets.isEmpty()) {
@@ -148,6 +168,15 @@ fun EditorPresetsTab(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Button(onClick = { onApplyPreset(preset) }) {
                                 Text(stringResource(R.string.editor_btn_apply))
+                            }
+                            if (onExportPreset != null) {
+                                IconButton(onClick = { onExportPreset(preset) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = stringResource(R.string.editor_btn_export_preset),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
                             if (onDuplicatePreset != null) {
                                 IconButton(onClick = { onDuplicatePreset(preset.id) }) {

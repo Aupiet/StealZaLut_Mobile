@@ -17,6 +17,20 @@ import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@Immutable
+enum class ExportType {
+    CUBE_LUT,
+    HD_IMAGE,
+    PRESET_JSON
+}
+
+@Immutable
+data class PendingExport(
+    val sourcePath: String,
+    val suggestedFileName: String,
+    val exportType: ExportType
+)
+
 /**
  * Global UI state for StealZaLUT Mobile, structured around 3 functional pillars:
  * 1. STUDIO   : Color grading funnel (Source + Reference -> 120 FPS GPU Preview -> Export .cube / Gallery Image)
@@ -59,19 +73,8 @@ data class StealZaLutUiState(
     val isSavingPreset: Boolean = false,
     val isInfoScreenVisible: Boolean = false,
 
-    // LightCraft Auto Edit state
+    // Editor Auto Edit state
     val isAutoEditActive: Boolean = false,
-    val isComputingAutoEdit: Boolean = false,
-    val autoExposure: Float = 0.0f,
-    val autoContrast: Float = 68.0f,
-    val autoHighlights: Float = -66.0f,
-    val autoShadows: Float = 52.0f,
-    val autoWhites: Float = 0.0f,
-    val autoBlacks: Float = 0.0f,
-    val autoVibrance: Float = 30.0f,
-
-    // LightCraft Interactive Image Edit state (Step 5 Edit Button & Sliders)
-    val isEditPanelVisible: Boolean = false,
     val isComputingEdit: Boolean = false,
     val editExposure: Float = 0.0f,
     val editContrast: Float = 0.0f,
@@ -92,6 +95,7 @@ data class StealZaLutUiState(
     val exportedCubePath: String? = null,
     val exportedImagePath: String? = null,
     val isGradedImageSaved: Boolean = false,
+    val pendingExport: PendingExport? = null,
 
     // Split Wipe slider position in [0.0, 1.0]
     val splitPosition: Float = AppConstants.SPLIT_WIPE_DEFAULT_FRACTION,

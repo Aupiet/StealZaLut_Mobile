@@ -99,6 +99,15 @@ Le moteur Python embarqué (`stealzalut`) est partitionné en trois couches éta
 - Tailles, paddings, élévations et rayons de courbure centralisés dans `AppDimens`.
 - Rétrocompatibilité systématique des fonctions Kotlin du repository avec des valeurs par défaut alignées sur `AppConstants`.
 
+### 4.3 Contrat d'Export Unique & Sécurisation SAF
+- Tout export de fichier (`.cube`, `.szlpreset`, photos) doit obligatoirement transiter par le contrat unique `PendingExport(sourcePath, suggestedFileName, exportType)`.
+- Lors de l'écriture vers un URI SAF (`CreateDocument`), la routine `savePendingExportToUri` doit vérifier rigoureusement que `bytesCopied == expectedBytes > 0`.
+- En cas d'échec ou d'interruption du flux, le document placeholder vide créé par le framework Android doit être immédiatement supprimé via `DocumentsContract.deleteDocument(contentResolver, destinationUri)`.
+
+### 4.4 Décodage d'Analyse Sécurisé (Proxy Decoding)
+- Il est formellement interdit de charger des images en pleine résolution dans la mémoire vive pour des tâches d'analyse (extraction de palettes, Auto-Edit, mires de couleur).
+- Tout chargement d'image pour analyse doit obligatoirement utiliser `load_proxy_image(path, max_dim)` avec sous-échantillonnage direct via `Image.draft("RGB", (max_dim, max_dim))`.
+
 ---
 
 ## 5. Normes de Tests Unitaires et Validation

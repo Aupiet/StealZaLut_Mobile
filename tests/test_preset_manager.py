@@ -195,11 +195,13 @@ class TestPresetBridge:
         assert res_exp["status"] == "success"
         assert Path(export_target).is_file()
 
-        # 6. Import
+        # 6. Import into SAME directory (tests duplicate ID handling)
         res_imp = import_preset_bridge(import_path=export_target, directory=target_dir)
         assert res_imp["status"] == "success"
-        # Duplicate name detection
+        # Duplicate ID should trigger new UUID generation to prevent overwriting
+        assert res_imp["preset"]["id"] != preset_id
         assert "Vintage 70s" in res_imp["preset"]["name"]
+        assert "(Importé)" in res_imp["preset"]["name"]
 
         # 7. Delete
         res_del = delete_preset_bridge(path_or_id=preset_id, directory=target_dir)

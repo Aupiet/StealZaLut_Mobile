@@ -12,9 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Contrast
@@ -69,22 +70,20 @@ fun StudioStep3Parameters(
     onLutSizeSelected: (LutSize) -> Unit,
     isExportingCube: Boolean = false,
     onExportCube: () -> Unit = {},
-    isComputingAutoEdit: Boolean = false,
-    onAutoEdit: () -> Unit = {},
     onBack: () -> Unit,
     onRun: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingLarge)
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
         SectionTitleBanner(
             title = stringResource(R.string.wizard_step_3_title),
             subtitle = stringResource(R.string.wizard_step_3_subtitle)
         )
 
-        // Live WYSIWYG Preview Card
+        // 1. PINNED LIVE WYSIWYG PREVIEW CARD (Stays fixed at top while scrolling parameters)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
@@ -92,11 +91,13 @@ fun StudioStep3Parameters(
             border = CardDefaults.outlinedCardBorder()
         ) {
             Column(
-                modifier = Modifier.padding(AppDimens.SpacingNormal),
+                modifier = Modifier.padding(AppDimens.SpacingSmall),
                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingExtraSmall),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -157,61 +158,37 @@ fun StudioStep3Parameters(
                     sourceBitmap = sourceBitmap,
                     previewBitmap = previewBitmap,
                     intensity = intensity,
-                    executionTimeMs = executionTimeMs
+                    executionTimeMs = executionTimeMs,
+                    height = AppDimens.StudioPinnedPreviewHeight
                 )
             }
         }
 
-        // Independent Parameter Controls Card with Integrated Auto-Edit Action
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder()
+        // 2. SCROLLABLE PARAMETERS & ACTIONS
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingLarge)
         ) {
+            // Independent Parameter Controls Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder()
+            ) {
             Column(
                 modifier = Modifier.padding(AppDimens.SpacingNormal),
                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.wizard_step_3_independent_params_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Button(
-                        onClick = onAutoEdit,
-                        enabled = !isComputingAutoEdit,
-                        shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        if (isComputingAutoEdit) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(AppDimens.IconSmall),
-                                strokeWidth = AppDimens.BorderThick,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.AutoFixHigh,
-                                contentDescription = null,
-                                modifier = Modifier.size(AppDimens.IconSmall)
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
-                            Text(
-                                text = stringResource(R.string.btn_auto_edit),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
+                Text(
+                    text = stringResource(R.string.wizard_step_3_independent_params_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
                 // 1. Overall Strength
                 ParameterSlider(
@@ -363,6 +340,7 @@ fun StudioStep3Parameters(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
         }
     }
 }

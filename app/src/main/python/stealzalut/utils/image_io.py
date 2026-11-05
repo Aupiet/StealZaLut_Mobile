@@ -15,11 +15,13 @@ from numpy.typing import NDArray
 from PIL import Image, ImageOps
 
 from stealzalut.config import (
+    MAX_ANALYSIS_DIMENSION,
     PALETTE_DEFAULT_COLORS,
     PALETTE_DELTA_E_THRESHOLD,
     PALETTE_MIN_CHROMA,
     PALETTE_MIN_LUMA,
     PALETTE_RESIZE_DIM,
+    PROXY_DECODE_MAX_DIM,
 )
 
 # Use Pillow's Resampling enum with fallback for older versions
@@ -73,6 +75,50 @@ def load_image(path: str) -> NDArray[np.uint8]:
             f"Expected HxWx3 image, got shape {arr.shape} for {path}"
         )
     return arr
+
+
+def load_proxy_image(path: str, max_dim: int = MAX_ANALYSIS_DIMENSION) -> NDArray[np.uint8]:
+    """Load an image file directly as a downscaled proxy, bounding memory consumption.
+
+    Uses Pillow's native JPEG draft downsampling and thumbnail reduction before
+    allocating full NumPy arrays, preventing memory spikes on high-resolution photos
+    (e.g. 50 MP) while respecting EXIF orientation.
+
+    Args:
+        path: Path to the image file.
+        max_dim: Target maximum dimension for height or width (default MAX_ANALYSIS_DIMENSION).
+
+    Returns:
+        RGB uint8 array of shape (H, W, 3) where max(H, W) <= max_dim.
+    """
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Image file not found: {path}")
+
+    try:
+        img: Image.Image = Image.open(path)
+        # For JPEG images, draft() downsamples inside the C decoder without full allocation
+        if getattr(img, "format", "") in ("JPEG", "JPG"):
+            try:
+                img.draft("RGB", (max_dim, max_dim))
+            except Exception:
+                pass
+
+        img = ImageOps.exif_transpose(img)
+
+        # Scale down if still larger than max_dim
+        w, h = img.size
+        if max(w, h) > max_dim:
+            img.thumbnail((max_dim, max_dim), _RESAMPLING_BILINEAR)
+
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        arr: NDArray[np.uint8] = np.asarray(img, dtype=np.uint8)
+        if arr.ndim != 3 or arr.shape[2] != 3:
+            raise ValueError(f"Expected HxWx3 proxy, got {arr.shape} for {path}")
+        return arr
+    except Exception as exc:
+        raise ValueError(f"Cannot decode proxy image at {path}: {exc}") from exc
 
 
 def create_proxy_image(

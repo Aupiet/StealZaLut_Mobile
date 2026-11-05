@@ -20,6 +20,7 @@ from stealzalut.utils.image_io import (
     create_proxy_image,
     extract_dominant_palette,
     load_image,
+    load_proxy_image,
     save_image,
     to_float32,
     to_uint8,
@@ -127,10 +128,8 @@ def run_color_card_pipeline(
     """
     start: float = time.monotonic()
     try:
-        ref_img: NDArray[np.uint8] = load_image(ref_path)
-        ref_proxy: NDArray[np.uint8] = create_proxy_image(ref_img, max_dim=MAX_ANALYSIS_DIMENSION)
+        ref_proxy: NDArray[np.uint8] = load_proxy_image(ref_path, max_dim=MAX_ANALYSIS_DIMENSION)
         ref_palette: List[str] = extract_dominant_palette(ref_proxy, num_colors=6)
-        del ref_img
 
         neutral_card: NDArray[np.uint8] = generate_neutral_calibration_card(width, height)
 

@@ -71,7 +71,6 @@ import java.util.Locale
 fun ImageDetailDialog(
     image: SavedGradedImage,
     onDismiss: () -> Unit,
-    onApplyLook: (SavedGradedImage) -> Unit,
     onShare: (SavedGradedImage) -> Unit,
     onDelete: (SavedGradedImage) -> Unit
 ) {
@@ -267,29 +266,6 @@ fun ImageDetailDialog(
                                 PaletteSwatchesView(
                                     title = stringResource(R.string.detail_swatches_title),
                                     colors = image.paletteHexes
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
-
-                            // Action button: Use this look in the Studio
-                            Button(
-                                onClick = { onApplyLook(image) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Tune,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(AppDimens.IconNormal)
-                                )
-                                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                                Text(
-                                    text = stringResource(R.string.detail_btn_apply),
-                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }

@@ -91,10 +91,12 @@
     <string name="wizard_step_5_subtitle">Ajustez l\'opacité en direct (GPU 120 FPS) et exportez</string>
     <string name="wizard_step_5_autosave_badge">Mélange d\'opacité GPU temps réel</string>
     <string name="wizard_step_5_btn_save_gallery">Enregistrer la photo dans la Galerie</string>
+    <string name="wizard_step_5_exporting_image">Enregistrement...</string>
+    <string name="wizard_step_5_exporting_cube">Exportation du LUT...</string>
     <string name="wizard_step_5_saved_badge">Photo enregistrée dans la Galerie (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Sauvegarder le Style en Preset</string>
     <string name="wizard_step_5_btn_export_cube">Exporter 3D LUT (.CUBE)</string>
-    <string name="wizard_step_5_btn_reset">Nouvel Étalonnage</string>
+    <string name="wizard_step_5_btn_reset">Terminer</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_title">Intensité (Mélange GPU)</string>
@@ -355,6 +357,7 @@
     <string name="editor_btn_delete">Supprimer</string>
     <string name="editor_btn_remove_lut">Retirer LUT</string>
     <string name="editor_btn_reset_all">Réinitialiser tout</string>
+    <string name="msg_edits_reset">Tous les réglages ont été réinitialisés</string>
     <string name="editor_compare_original_badge">ORIGINAL (Avant)</string>
     <string name="editor_actions_export">Exporter</string>
     <string name="editor_export_photo">Photo HD</string>
@@ -429,4 +432,14 @@
     <string name="dialog_rename_title">Renommer le preset</string>
     <string name="dialog_rename_confirm">Renommer</string>
     <string name="dialog_duplicate_title">Dupliquer le preset</string>
+    <string name="err_no_pending_export">Aucun export en attente ou la session d\'export a expiré.</string>
+    <string name="err_palette_extraction_failed">Échec de l\'extraction de la palette depuis l\'image.</string>
+    <string name="editor_btn_import_preset">Importer</string>
+    <string name="editor_btn_export_preset">Exporter le preset (.szlpreset)</string>
+    <string name="msg_preset_imported">Preset « %1$s » importé avec succès !</string>
+    <string name="err_preset_import_failed">Échec de l\'importation du preset : fichier invalide ou corrompu.</string>
+    <string name="btn_edit_in_editor">Retoucher dans l\'éditeur</string>
+    <string name="dialog_finish_studio_title">Terminer la session</string>
+    <string name="dialog_finish_studio_msg">Voulez-vous vraiment terminer ? Tout travail non sauvegardé sera perdu.</string>
+    <string name="dialog_finish_confirm">Terminer</string>
 </resources>

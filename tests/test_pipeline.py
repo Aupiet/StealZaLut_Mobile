@@ -176,3 +176,38 @@ class TestLutBaking:
         identity = generate_identity_lattice(17)
         baked = bake_full_pipeline_lut(None, step2, step3, size=17)
         np.testing.assert_allclose(baked, identity, atol=1e-5)
+
+
+class TestStudioToEditorRelayParity:
+    """Validate WYSIWYG parity (<= 1 8-bit level) when relaying Studio 3D LUT to Editor."""
+
+    def test_relay_parity_within_one_8bit_level(self, tmp_path) -> None:
+        from stealzalut.core.lut_engine import apply_lut, generate_identity_lattice
+        from stealzalut.core.lut_export import export_cube, load_cube_file
+
+        np.random.seed(42)
+        # Create a test synthetic image (e.g. 64x64x3)
+        img = np.random.randint(0, 256, (64, 64, 3), dtype=np.uint8)
+
+        # Generate a smooth non-trivial grading LUT (e.g. warm tint + contrast)
+        size = 33
+        lattice = generate_identity_lattice(size)
+        grading_lut = np.clip(lattice * np.array([1.1, 1.0, 0.9], dtype=np.float32), 0.0, 1.0)
+
+        # 1. Studio preview rendering: directly applies final 3D LUT
+        studio_rendered = apply_lut(img, grading_lut)
+
+        # 2. Studio exports LUT to .cube file in cache
+        cube_path = str(tmp_path / "studio_grade.cube")
+        export_cube(grading_lut, cube_path, size=size, title="Studio Grade")
+
+        # 3. Editor loads custom LUT from .cube and evaluates with neutral sliders
+        loaded_size, loaded_lut = load_cube_file(cube_path)
+        assert loaded_size == size
+        editor_rendered = apply_lut(img, loaded_lut)
+
+        # 4. Strict WYSIWYG rule: delta <= 1 8-bit level
+        diff = np.abs(studio_rendered.astype(np.int16) - editor_rendered.astype(np.int16))
+        max_diff = np.max(diff)
+        assert max_diff <= 1, f"Studio to Editor relay exceeded WYSIWYG tolerance: max diff = {max_diff}"
+

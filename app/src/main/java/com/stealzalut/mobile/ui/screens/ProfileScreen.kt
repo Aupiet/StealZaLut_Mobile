@@ -96,10 +96,12 @@ fun ProfileScreen(
 
     // SAF Document Creator launcher for exporting .cube LUT files
     val createCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("*/*")
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { destinationUri ->
         if (destinationUri != null) {
-            viewModel.saveExportedCubeToUri(destinationUri)
+            viewModel.savePendingExportToUri(destinationUri)
+        } else {
+            viewModel.cancelPendingExport()
         }
     }
 
@@ -113,7 +115,6 @@ fun ProfileScreen(
         ImageDetailDialog(
             image = detailImage,
             onDismiss = { viewModel.dismissImageDetail() },
-            onApplyLook = { viewModel.applyLookFromSavedImage(it) },
             onShare = {
                 val intent = viewModel.createShareImageIntent(it.filePath)
                 context.startActivity(Intent.createChooser(intent, context.getString(R.string.detail_btn_share)))
@@ -242,7 +243,6 @@ fun ProfileScreen(
                     items(uiState.savedPresets, key = { it.id }) { preset ->
                         PresetCardWithColorSpectrum(
                             preset = preset,
-                            onApply = { viewModel.applyPresetToStudio(preset) },
                             onExportCube = {
                                 viewModel.exportCubeFromPreset(preset) { cubePath ->
                                     createCubeLauncher.launch(File(cubePath).name)
@@ -325,7 +325,6 @@ private fun InstagramGridThumbnail(
 @Composable
 private fun PresetCardWithColorSpectrum(
     preset: ColorimetryPreset,
-    onApply: () -> Unit,
     onExportCube: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -453,49 +452,24 @@ private fun PresetCardWithColorSpectrum(
                 }
             }
 
-            // Buttons: Apply to Studio & Export .CUBE
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+            // Button: Export .CUBE
+            OutlinedButton(
+                onClick = onExportCube,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
             ) {
-                Button(
-                    onClick = onApply,
-                    modifier = Modifier
-                        .weight(1.3f)
-                        .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal)
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = stringResource(R.string.profile_btn_apply_theme),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onExportCube,
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FileDownload,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal)
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = stringResource(R.string.profile_btn_export_cube),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.FileDownload,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.profile_btn_export_cube),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

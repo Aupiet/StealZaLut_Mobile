@@ -68,6 +68,7 @@ object AppDimens {
     val ImagePickerHeight: Dp = 160.dp
     val ImagePickerCollapsedHeight: Dp = 120.dp
     val DoubleViewHeight: Dp = 260.dp
+    val StudioPinnedPreviewHeight: Dp = 220.dp
     val HeightViewportStandard: Dp = 260.dp
     val MireBoxHeight: Dp = 220.dp
     val MireThumbnailWidth: Dp = 72.dp

@@ -11,7 +11,7 @@ from PIL import Image
 import pytest
 
 try:
-    from stealzalut.core.lut_export import export_cube  # type: ignore[import-untyped]
+    from stealzalut.core.lut_export import export_cube, load_cube_file  # type: ignore[import-untyped]
     from stealzalut.core.lut_engine import (  # type: ignore[import-untyped]
         apply_lut,
         generate_identity_lattice,
@@ -110,6 +110,40 @@ class TestCubeFileLineCount:
         assert len(data_rows) == expected, (
             f"Expected {expected} data lines, found {len(data_rows)}"
         )
+
+
+class TestCubeExportIntegrity:
+    """Validate that export_cube enforces non-empty output, LUT_3D_SIZE header, and exact N³ data lines."""
+
+    def test_export_cube_creates_valid_file_and_verifies(self, tmp_path: Path) -> None:
+        lut = generate_identity_lattice(17)
+        out = tmp_path / "valid.cube"
+        result_path = export_cube(lut, str(out), size=17)
+        assert Path(result_path).is_file()
+        assert Path(result_path).stat().st_size > 0
+
+        text = Path(result_path).read_text(encoding="utf-8")
+        assert "LUT_3D_SIZE 17" in text
+
+        parsed_size, parsed_lut = load_cube_file(result_path)
+        assert parsed_size == 17
+        assert len(parsed_lut) == 17**3
+
+    def test_export_cube_rejects_shape_mismatch(self, tmp_path: Path) -> None:
+        lut = generate_identity_lattice(17)
+        out = tmp_path / "invalid_size.cube"
+        with pytest.raises(ValueError, match="does not match expected"):
+            export_cube(lut, str(out), size=33)
+
+    def test_load_cube_file_rejects_empty_and_corrupt(self, tmp_path: Path) -> None:
+        empty_file = tmp_path / "empty.cube"
+        empty_file.write_text("", encoding="utf-8")
+        with pytest.raises(ValueError):
+            load_cube_file(str(empty_file))
+
+        missing_file = tmp_path / "non_existent.cube"
+        with pytest.raises(FileNotFoundError):
+            load_cube_file(str(missing_file))
 
 
 # ------------------------------------------------------------------

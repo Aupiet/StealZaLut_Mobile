@@ -92,6 +92,33 @@ def test_palette_extraction_night_scene_captures_vibrant_neons():
     assert vivid_count >= 1, f"Expected vibrant colors in night scene palette, got: {palette}"
 
 
+def test_bridge_extract_palette_large_image(tmp_path):
+    """Verify bridge.extract_palette executes safely on large image file via proxy loading."""
+    from PIL import Image
+    from stealzalut.bridge import extract_palette
+
+    large_path = tmp_path / "large_palette_input.jpg"
+    # Create a 3000x2000 JPEG
+    img = Image.new("RGB", (3000, 2000), (120, 150, 180))
+    img.save(str(large_path), format="JPEG")
+
+    res = extract_palette(str(large_path), num_colors=6)
+    assert res["status"] == "success"
+    assert len(res["palette"]) == 6
+    for c in res["palette"]:
+        assert HEX_REGEX.match(c) is not None
+
+
+def test_bridge_extract_palette_missing_file():
+    """Verify bridge.extract_palette returns error structure on missing file."""
+    from stealzalut.bridge import extract_palette
+
+    res = extract_palette("/nonexistent/image.jpg", num_colors=6)
+    assert res["status"] == "error"
+    assert res["palette"] == []
+    assert res["error_code"] == "SOURCE_NOT_FOUND"
+
+
 if __name__ == "__main__":
     test_palette_extraction_counts_and_format()
     test_palette_extraction_degenerate_uniform_black()

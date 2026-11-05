@@ -68,7 +68,6 @@ class StudioFlowDelegate(
                 exportedImagePath = null,
                 isGradedImageSaved = false,
                 isAutoEditActive = false,
-                isEditPanelVisible = false,
                 editedPreviewBitmap = null,
                 editedPreviewPath = null,
                 editExposure = 0.0f,

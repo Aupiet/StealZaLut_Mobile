@@ -294,8 +294,10 @@ StealZaLut_Mobile/
 │       └── test/java/com/stealzalut/mobile/
 │           ├── DesignSystemGuardTest.kt     Test JVM de garde (zéro Color/dp/sp/text en dur)
 │           ├── ThemeContrastTest.kt         Test de conformité contraste WCAG AA sur les 4 thèmes
-│           └── StealZaLutViewModelTest.kt   Tests unitaires UDF du ViewModel
-└── tests/                                   91 tests Pytest (100% verts)
+│           ├── GradingRelayTest.kt          Test JVM de relais Studio vers Éditeur et gestion d'erreurs
+│           ├── PresetRepositoryTest.kt      Test persistance JSON des presets
+│           └── SavedImageRepositoryTest.kt  Test persistance des images étalonnées
+└── tests/                                   97 tests Pytest (100% verts)
     ├── test_auto_edit.py
     ├── test_bridge.py
     ├── test_color_transfer.py

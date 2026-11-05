@@ -5,7 +5,7 @@
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20(Material%203)-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2016.1-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
-[![Tests: 91 Pytest](https://img.shields.io/badge/Tests-91%20Pytest%20%2B%20JVM%20Guard-brightgreen.svg)](tests/)
+[![Tests: 97 Pytest](https://img.shields.io/badge/Tests-97%20Pytest%20%2B%20JVM%20Guard-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Architecture: ARCHITECTURE.md](https://img.shields.io/badge/Doc-ARCHITECTURE.md-blue.svg)](ARCHITECTURE.md)
 
@@ -65,20 +65,23 @@ graph LR
 
 ---
 
-### 2.2 Option "Auto" (Auto-Edit) Directement Intégrée au Menu d'Édition
+### 2.2 Relais Studio ↔ Éditeur & Spécialisation des Rôles (Règle WYSIWYG)
 
-Finie la carte isolée hors du champ d'action : le bouton **« ✨ Ajustement Auto »** est désormais intégré **au cœur du panneau d'édition**, tant dans le studio de gradation que dans l'éditeur photo autonome.
-- **Analyse optique Rec. 2020** : Évalue l'écart logarithmique par rapport au gris moyen photographique standard $18\%$ ($\Delta EV$).
-- **Mise à jour visuelle des curseurs en temps réel** : Dès que l'utilisateur clique sur « ✨ Ajustement Auto », les curseurs d'exposition, contraste, hautes lumières, ombres et vibrance se déplacent instantanément sur l'interface pour afficher les valeurs calculées, permettant à l'utilisateur de les ajuster et peaufiner librement.
-- **Bouton de Réinitialisation rapide** : Rétablit instantanément tous les paramètres aux valeurs neutres en un clic.
+Pour garantir une expérience professionnelle sans ambiguïté et un respect absolu de la règle d'or WYSIWYG :
+- **Studio (Étalonnage Pur)** : Se concentre à 100% sur le transfert colorimétrique par 3D LUT (`HM_MKL_HM`, `MKL`, `MVGD`, `Reinhard`, `HM`). Les étapes 1 et 3 sont épurées de tout doublon d'édition, et l'étape 3 propose un **viewport d'aperçu compact épinglé en haut de l'écran** avec comparateur rideau interactif (`SPLIT_WIPE`), restant visible pendant le défilement de tous les curseurs de réglage sans clignotement. L'étape 2 affiche des **miniatures d'aperçu des presets** (`StudioPresetCard`).
+- **Bouton « Retoucher dans l'éditeur » (Étape 5)** : Permet de basculer instantanément le résultat de l'étalonnage Studio vers l'éditeur autonome en exportant la 3D LUT en cache (`editorCustomLutPath`). L'éditeur s'ouvre avec la photo source, la LUT préchargée, tous les curseurs à zéro et un affichage instantané sans délai de recalcul (parité WYSIWYG prouvée avec $\Delta \le 1$ niveau 8 bits).
+- **Auto-Edit « LightCraft » dans l'Éditeur** : L'analyse optique logarithmique Rec. 2020 calibrée sur carte 18% est directement intégrée dans l'éditeur autonome, ajustant dynamiquement l'exposition, le contraste, les ombres, les hautes lumières et la vibrance.
 
 ---
 
-### 2.3 Mode "Éditeur Photo Seul" (Standalone Photo Studio)
+### 2.3 Mode "Éditeur Photo Seul" (Standalone Photo Studio) & Ergonomie Mobile
 
 Un espace de création dédié accessible directement depuis la barre de navigation principale :
 - **Retouche autonome** : Modifiez n'importe quelle photo de votre galerie sans nécessiter d'image de référence B.
 - **Importation de LUTs externes** : Chargez n'importe quel fichier `.cube` tiers et appliquez-lui le pipeline complet (Retravail Étape 2 + Grading Étape 3).
+- **Zone d'aperçu proportionnelle adaptative** : Calculée dynamiquement à ~40% de la hauteur utile de l'écran (200 à 360 dp) pour libérer 60% d'espace aux onglets et curseurs de réglage.
+- **Bouton unique « Réinitialiser tout » avec confirmation & Annulation (Undo)** : Un clic réinitialise l'ensemble des réglages et affiche un Snackbar d'annulation (`undoEditor()`) permettant de restaurer instantanément l'état précédent.
+- **Barre d'outils accessible** : Conçue pour respecter les zones d'insets de navigation gestuelle Android (`navigationBarsPadding()`).
 - **Navigation par onglets thématiques** :
   - *Presets & LUTs* : Gestion de votre bibliothèque de looks et importation de fichiers `.cube`.
   - *Calibrage* : Contrôle des 6 paramètres avancés de l'Étape 2.
@@ -86,10 +89,7 @@ Un espace de création dédié accessible directement depuis la barre de navigat
   - *Couleur* : Température, Teinte, Vibrance, Saturation.
   - *Effets* : Clarté, Netteté, Grain argentique.
 - **Expérience tactile haut de gamme** :
-  - **Comparaison 3 Modes** :
-    - *Côte à côte (Side-by-side)* : Affichage simultané de l'original et de la version étalonnée.
-    - *Rideau interactif (Split-wipe)* : Poignée glissante tactile pour comparer le cliché à n'importe quelle position.
-    - *Appui maintenu (Hold-to-compare)* : Maintenez le doigt n'importe où pour visualiser instantanément l'original.
+  - **Comparaison tactile robuste** : Appui maintenu (`HOLD_TO_COMPARE`) avec détection stationnaire de 400 ms sur toute la surface et relâchement garanti sans blocage.
   - **Pinch-to-zoom & Panoramique synchronisés** : Inspectez les détails jusqu'à $4\times$, réinitialisable par double-tap ($1\times$).
   - **Double-tap Reset** : Double-cliquez sur n'importe quel curseur pour le ramener à sa valeur neutre.
   - **Undo / Redo illimité** : Annulez et rétablissez librement vos manipulations d'édition depuis la barre supérieure.

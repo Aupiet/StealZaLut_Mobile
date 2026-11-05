@@ -1,13 +1,19 @@
 package com.stealzalut.mobile.ui.screens.studio
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,17 +39,26 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.ui.components.ImagePickerCard
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 import com.stealzalut.mobile.ui.components.PaletteSwatchesView
 import com.stealzalut.mobile.ui.components.SzlEmptyState
 
@@ -149,44 +165,11 @@ fun StudioStep2Style(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(savedPresets, key = { it.id }) { preset ->
-                        val isSelected = selectedTheme?.id == preset.id
-                        Card(
-                            onClick = { onThemeSelected(preset) },
-                            modifier = Modifier.width(AppDimens.DoubleViewHeight),
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected)
-                                    MaterialTheme.colorScheme.primaryContainer
-                                else
-                                    MaterialTheme.colorScheme.surface
-                            ),
-                            border = BorderStroke(
-                                width = if (isSelected) AppDimens.BorderMedium else AppDimens.BorderThin,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {
-                                Text(
-                                    text = preset.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
-                                Text(
-                                    text = stringResource(preset.method.displayNameRes),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (preset.paletteHexes.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
-                                    PaletteSwatchesView(
-                                        title = "",
-                                        colors = preset.paletteHexes.take(AppConstants.DEFAULT_PALETTE_COLOR_COUNT)
-                                    )
-                                }
-                            }
-                        }
+                        StudioPresetCard(
+                            preset = preset,
+                            isSelected = selectedTheme?.id == preset.id,
+                            onSelect = { onThemeSelected(preset) }
+                        )
                     }
                 }
             }
@@ -237,6 +220,124 @@ fun StudioStep2Style(
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun StudioPresetCard(
+    preset: ColorimetryPreset,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val thumbnailBitmap by produceState<Bitmap?>(initialValue = null, key1 = preset.id) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                val targetPath = preset.thumbnailPath ?: preset.referenceImagePath
+                if (targetPath != null) {
+                    val file = File(targetPath)
+                    if (file.exists()) {
+                        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        BitmapFactory.decodeFile(file.absolutePath, opts)
+                        var sample = 1
+                        val maxDim = maxOf(opts.outWidth, opts.outHeight)
+                        while (maxDim / (sample * 2) >= 300) {
+                            sample *= 2
+                        }
+                        val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
+                        BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
+                    } else null
+                } else null
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    Card(
+        onClick = onSelect,
+        modifier = modifier.width(AppDimens.ImagePickerHeight),
+        shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            width = if (isSelected) AppDimens.BorderMedium else AppDimens.BorderThin,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+        )
+    ) {
+        Column(modifier = Modifier.padding(AppDimens.SpacingSmall)) {
+            // Thumbnail or Fallback Swatches
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AppDimens.ThumbnailCardSize)
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (thumbnailBitmap != null) {
+                    Image(
+                        bitmap = thumbnailBitmap!!.asImageBitmap(),
+                        contentDescription = preset.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (preset.paletteHexes.isNotEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall),
+                        modifier = Modifier.padding(AppDimens.SpacingExtraSmall)
+                    ) {
+                        items(preset.paletteHexes.take(AppConstants.DEFAULT_PALETTE_COLOR_COUNT)) { hex ->
+                            val color = try {
+                                val cleanHex = if (hex.startsWith("#")) hex else "#$hex"
+                                Color(android.graphics.Color.parseColor(cleanHex))
+                            } catch (_: Exception) {
+                                Color.Gray
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(AppDimens.SwatchSize)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                            )
+                        }
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(AppDimens.IconNormal)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+
+            Text(
+                text = preset.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
+
+            Text(
+                text = "${stringResource(preset.method.displayNameRes)} • ${(preset.intensity * 100).toInt()}%",
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

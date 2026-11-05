@@ -91,10 +91,12 @@
     <string name="wizard_step_5_subtitle">Adjust intensity in real time (120 FPS GPU) and export</string>
     <string name="wizard_step_5_autosave_badge">Real-time GPU opacity blend</string>
     <string name="wizard_step_5_btn_save_gallery">Save Photo to Gallery</string>
+    <string name="wizard_step_5_exporting_image">Saving...</string>
+    <string name="wizard_step_5_exporting_cube">Exporting LUT...</string>
     <string name="wizard_step_5_saved_badge">Photo saved to Android Gallery (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Save Style as Preset</string>
     <string name="wizard_step_5_btn_export_cube">Export 3D LUT (.CUBE)</string>
-    <string name="wizard_step_5_btn_reset">New Grading</string>
+    <string name="wizard_step_5_btn_reset">Finish</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_title">Intensity (GPU Blend)</string>
@@ -355,6 +357,7 @@
     <string name="editor_btn_delete">Delete</string>
     <string name="editor_btn_remove_lut">Remove LUT</string>
     <string name="editor_btn_reset_all">Reset All</string>
+    <string name="msg_edits_reset">All editing adjustments reset</string>
     <string name="editor_compare_original_badge">ORIGINAL (Before)</string>
     <string name="editor_actions_export">Export</string>
     <string name="editor_export_photo">HD Photo</string>
@@ -429,4 +432,14 @@
     <string name="dialog_rename_title">Rename preset</string>
     <string name="dialog_rename_confirm">Rename</string>
     <string name="dialog_duplicate_title">Duplicate preset</string>
+    <string name="err_no_pending_export">No pending export found or the export session has expired.</string>
+    <string name="err_palette_extraction_failed">Failed to extract palette from image.</string>
+    <string name="editor_btn_import_preset">Import</string>
+    <string name="editor_btn_export_preset">Export Preset (.szlpreset)</string>
+    <string name="msg_preset_imported">Preset \'%1$s\' imported successfully!</string>
+    <string name="err_preset_import_failed">Failed to import preset: invalid or corrupted file.</string>
+    <string name="btn_edit_in_editor">Edit in Editor</string>
+    <string name="dialog_finish_studio_title">Finish Session</string>
+    <string name="dialog_finish_studio_msg">Are you sure you want to finish? Any unsaved edits will be lost.</string>
+    <string name="dialog_finish_confirm">Finish</string>
 </resources>

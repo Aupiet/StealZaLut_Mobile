@@ -27,7 +27,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from stealzalut.core.lut_engine import apply_lut_trilinear, generate_identity_grid
-from stealzalut.utils.image_io import load_image, save_image, to_float32, to_uint8
+from stealzalut.utils.image_io import (
+    load_image,
+    load_proxy_image,
+    save_image,
+    to_float32,
+    to_uint8,
+)
 
 
 # Rec.2020 luminance coefficients (ITU-R BT.2020)
@@ -343,26 +349,14 @@ def run_auto_edit_pipeline(
             "message": f"Source image file not found: {src_path}",
         }
 
-    src_arr = load_image(src_path)
-
-    # Downsample for preview if needed
-    h, w = src_arr.shape[:2]
-    preview_arr = src_arr
-    if max_preview_dim > 0 and max(h, w) > max_preview_dim:
-        scale = max_preview_dim / float(max(h, w))
-        new_w, new_h = int(round(w * scale)), int(round(h * scale))
-        from PIL import Image
-
-        pil_img = Image.fromarray(src_arr)
-        preview_arr = np.array(
-            pil_img.resize((new_w, new_h), Image.Resampling.BILINEAR)
-        )
+    target_dim = max_preview_dim if max_preview_dim > 0 else 1024
+    preview_arr = load_proxy_image(src_path, max_dim=target_dim)
 
     # Compute settings
-    settings = get_auto_edit_settings(src_arr)
+    settings = get_auto_edit_settings(preview_arr)
 
     # Build 3D LUT and apply trilinearly for 100% WYSIWYG consistency
-    lut_3d = generate_auto_edit_lut(src_arr, lut_size=lut_size, settings=settings)
+    lut_3d = generate_auto_edit_lut(preview_arr, lut_size=lut_size, settings=settings)
     graded_preview = apply_lut_trilinear(to_float32(preview_arr), lut_3d)
 
     # Save output preview

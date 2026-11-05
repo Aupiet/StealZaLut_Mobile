@@ -6,10 +6,13 @@ import android.net.Uri
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
+import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.repository.SavedImageRepository
+import com.stealzalut.mobile.ui.viewmodel.ExportType
+import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.ArrayDeque
 
 data class StandaloneEditorDebounceRequest(
@@ -368,6 +372,51 @@ class EditorSessionDelegate(
         scheduleEditorPreviewUpdate()
     }
 
+    fun applyAutoEdit() {
+        val current = stateFlow.value
+        val imagePath = current.editorPreviewPath ?: current.editorSourcePath ?: return
+
+        scope.launch {
+            stateFlow.update { it.copy(isComputingEdit = true, errorMessage = null) }
+            val autoSettings = bridgeRepository.computeAutoSettings(imagePath)
+            when (autoSettings) {
+                is AutoSettingsResult.Success -> {
+                    val expNorm = autoSettings.exposure.coerceIn(-2.0f, 2.0f)
+                    val contrastNorm = (autoSettings.contrast / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val highlightsNorm = (autoSettings.highlights / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
+                    val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
+
+                    pushUndoSnapshot()
+                    stateFlow.update {
+                        it.copy(
+                            isComputingEdit = false,
+                            isAutoEditActive = true,
+                            step3Exposure = expNorm,
+                            step3Contrast = contrastNorm,
+                            step3Highlights = highlightsNorm,
+                            step3Shadows = shadowsNorm,
+                            step3Vibrance = vibranceNorm,
+                            userMessage = UiText.Resource(
+                                R.string.msg_auto_edit_applied,
+                                listOf(expNorm, contrastNorm * 100f, shadowsNorm * 100f)
+                            )
+                        )
+                    }
+                    scheduleEditorPreviewUpdate()
+                }
+                is AutoSettingsResult.Error -> {
+                    stateFlow.update {
+                        it.copy(
+                            isComputingEdit = false,
+                            errorMessage = autoSettings.error.uiText
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun resetEditingParameters() {
         pushUndoSnapshot()
         stateFlow.update {
@@ -389,15 +438,7 @@ class EditorSessionDelegate(
                 step3Saturation = 0.0f,
                 step3Clarity = 0.0f,
                 step3Sharpen = 0.0f,
-                step3Grain = 0.0f,
-                editExposure = 0f,
-                editContrast = 0f,
-                editHighlights = 0f,
-                editShadows = 0f,
-                editWhites = 0f,
-                editBlacks = 0f,
-                editVibrance = 0f,
-                editSaturation = 0f
+                step3Grain = 0.0f
             )
         }
         scheduleEditorPreviewUpdate()
@@ -537,13 +578,20 @@ class EditorSessionDelegate(
 
             when (res) {
                 is CubeExportResult.Success -> {
+                    val fileName = File(res.cubePath).name
                     stateFlow.update {
                         it.copy(
                             isEditorExportingCube = false,
+                            exportedCubePath = res.cubePath,
+                            pendingExport = PendingExport(
+                                sourcePath = res.cubePath,
+                                suggestedFileName = fileName,
+                                exportType = ExportType.CUBE_LUT
+                            ),
                             userMessage = UiText.Resource(R.string.msg_lut_cube_exported)
                         )
                     }
-                    onSuccess(res.cubePath)
+                    onSuccess(fileName)
                 }
                 is CubeExportResult.Error -> {
                     stateFlow.update {

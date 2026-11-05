@@ -214,6 +214,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun redoEditor() = editorSessionDelegate.redo()
     fun canUndoEditor(): Boolean = editorSessionDelegate.canUndo()
     fun canRedoEditor(): Boolean = editorSessionDelegate.canRedo()
+    val lightroomDelegate get() = editorSessionDelegate.lightroomDelegate
 
     // ========================================================================
     // PRESETS & LIBRARY (PresetLibraryDelegate)

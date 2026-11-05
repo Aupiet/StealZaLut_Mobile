@@ -211,3 +211,164 @@ class TestStudioToEditorRelayParity:
         max_diff = np.max(diff)
         assert max_diff <= 1, f"Studio to Editor relay exceeded WYSIWYG tolerance: max diff = {max_diff}"
 
+
+class TestLightroomPanelsPipeline:
+    """Validate reproduction of Adobe Lightroom Classic develop panels."""
+
+    def test_basic_adjustments_and_bypass(self) -> None:
+        from stealzalut.core.lightroom_models import LightroomDevelopSettings, BasicSettings
+        from stealzalut.core.pipeline import apply_step3_color_grading
+
+        img = np.full((32, 32, 3), 0.5, dtype=np.float32)
+        settings = LightroomDevelopSettings(
+            basic=BasicSettings(exposure=1.0, contrast=20.0, temp=15.0),
+            is_basic_enabled=True,
+        )
+
+        # Active
+        res_active = apply_step3_color_grading(img, Step3Params(), lr_settings=settings)
+        assert not np.allclose(res_active, img)
+        assert np.mean(res_active) > np.mean(img)
+
+        # Bypass (Eye icon toggle = False)
+        settings.is_basic_enabled = False
+        res_bypass = apply_step3_color_grading(img, Step3Params(), lr_settings=settings)
+        np.testing.assert_allclose(res_bypass, img, atol=1e-5)
+
+    def test_tone_curve_parametric_and_point(self) -> None:
+        from stealzalut.core.lightroom_models import ToneCurveSettings
+        from stealzalut.core.lightroom_color import apply_tone_curve
+
+        img = np.linspace(0.0, 1.0, 100, dtype=np.float32)[:, np.newaxis]
+        rgb = np.repeat(img, 3, axis=-1)
+
+        # Parametric S-curve: highlights up, shadows down
+        param_settings = ToneCurveSettings(mode="parametric", highlights=50.0, shadows=-50.0)
+        res_param = apply_tone_curve(rgb, param_settings)
+        assert res_param[80, 0] > rgb[80, 0]  # highlights boosted
+        assert res_param[20, 0] < rgb[20, 0]  # shadows depressed
+
+        # Point curve (custom points)
+        pt_settings = ToneCurveSettings(
+            mode="point",
+            rgb_points=[(0.0, 0.0), (0.5, 0.7), (1.0, 1.0)],
+        )
+        res_pt = apply_tone_curve(rgb, pt_settings)
+        assert res_pt[50, 0] > rgb[50, 0]
+
+    def test_color_mixer_hsl_and_point_color(self) -> None:
+        from stealzalut.core.lightroom_models import ColorMixerSettings
+        from stealzalut.core.lightroom_color import apply_color_mixer
+
+        # Pure green patch (H = 120)
+        green_img = np.full((16, 16, 3), [0.0, 1.0, 0.0], dtype=np.float32)
+        # Shift green hue and saturation
+        hsl_settings = ColorMixerSettings(mode="hsl", hue_green=-50.0, sat_green=-30.0)
+        res_green = apply_color_mixer(green_img, hsl_settings)
+        assert res_green[0, 0, 0] > 0.0 or res_green[0, 0, 2] > 0.0  # Hue shifted away from pure green
+
+        # Point Color
+        pt_settings = ColorMixerSettings(
+            mode="point_color",
+            point_active=True,
+            point_target_r=0.0,
+            point_target_g=1.0,
+            point_target_b=0.0,
+            point_hue_shift=50.0,
+            point_range=50.0,
+        )
+        res_pt = apply_color_mixer(green_img, pt_settings)
+        assert not np.allclose(res_pt, green_img)
+
+    def test_color_grading_wheels_and_balance(self) -> None:
+        from stealzalut.core.lightroom_models import ColorGradingSettings
+        from stealzalut.core.lightroom_color import apply_color_grading
+
+        # Dark shadow patch and bright highlight patch
+        dark_img = np.full((16, 16, 3), 0.15, dtype=np.float32)
+        bright_img = np.full((16, 16, 3), 0.85, dtype=np.float32)
+
+        # Teal shadows (H = 180), Orange highlights (H = 30)
+        grading = ColorGradingSettings(
+            shadow_hue=180.0,
+            shadow_sat=60.0,
+            highlight_hue=30.0,
+            highlight_sat=60.0,
+            blending=50.0,
+            balance=0.0,
+        )
+        res_dark = apply_color_grading(dark_img, grading)
+        res_bright = apply_color_grading(bright_img, grading)
+
+        # Dark patch should gain cyan/teal (higher B & G than R)
+        assert res_dark[0, 0, 2] > res_dark[0, 0, 0]
+        # Bright patch should gain warm orange (higher R than B)
+        assert res_bright[0, 0, 0] > res_bright[0, 0, 2]
+
+    def test_calibration_primaries(self) -> None:
+        from stealzalut.core.lightroom_models import CalibrationSettings
+        from stealzalut.core.lightroom_color import apply_calibration
+
+        img = np.full((16, 16, 3), [0.8, 0.4, 0.2], dtype=np.float32)
+        calib = CalibrationSettings(red_hue=25.0, red_sat=30.0, shadow_tint=-15.0)
+        res = apply_calibration(img, calib)
+        assert not np.allclose(res, img)
+        assert np.min(res) >= 0.0 and np.max(res) <= 1.0
+
+    def test_spatial_operations_detail_lens_blur_effects(self) -> None:
+        from stealzalut.core.lightroom_models import (
+            DetailSettings,
+            EffectsSettings,
+            LensBlurSettings,
+            LensCorrectionsSettings,
+            TransformSettings,
+        )
+        from stealzalut.core.lightroom_spatial import (
+            apply_detail_spatial,
+            apply_effects_spatial,
+            apply_lens_blur_spatial,
+            apply_lens_corrections_spatial,
+            apply_transform_spatial,
+        )
+
+        img = np.random.RandomState(42).uniform(0.1, 0.9, (64, 64, 3)).astype(np.float32)
+
+        # Detail
+        res_detail = apply_detail_spatial(img, DetailSettings(sharpen_amount=60.0, sharpen_masking=20.0))
+        assert res_detail.shape == img.shape
+        assert not np.isnan(res_detail).any()
+
+        # Lens Corrections
+        res_lens = apply_lens_corrections_spatial(img, LensCorrectionsSettings(distortion=15.0, vignette_amount=-30.0))
+        assert res_lens.shape == img.shape
+
+        # Transform
+        res_trans = apply_transform_spatial(img, TransformSettings(rotate=5.0, scale=105.0))
+        assert res_trans.shape == img.shape
+
+        # Lens Blur
+        res_blur = apply_lens_blur_spatial(img, LensBlurSettings(enabled=True, blur_amount=25.0, bokeh_style="bubble"))
+        assert res_blur.shape == img.shape
+
+        # Effects
+        res_fx = apply_effects_spatial(img, EffectsSettings(vignette_amount=-40.0, grain_amount=20.0))
+        assert res_fx.shape == img.shape
+        assert np.min(res_fx) >= 0.0 and np.max(res_fx) <= 1.0
+
+    def test_full_baking_with_lightroom_develop_settings(self) -> None:
+        from stealzalut.core.lightroom_models import LightroomDevelopSettings, BasicSettings, ColorGradingSettings
+        from stealzalut.core.pipeline import bake_full_pipeline_lut
+
+        settings = LightroomDevelopSettings(
+            basic=BasicSettings(exposure=0.5, contrast=15.0, temp=10.0),
+            color_grading=ColorGradingSettings(shadow_hue=210.0, shadow_sat=30.0),
+        )
+
+        baked = bake_full_pipeline_lut(None, Step2Params(), Step3Params(), size=17, lr_settings=settings)
+        assert baked.shape == (17**3, 3)
+        assert np.min(baked) >= 0.0
+        assert np.max(baked) <= 1.0
+        assert not np.isnan(baked).any()
+        assert not np.isinf(baked).any()
+
+

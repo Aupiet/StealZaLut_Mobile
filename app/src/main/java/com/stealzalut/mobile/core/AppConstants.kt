@@ -66,6 +66,9 @@ object AppConstants {
     const val OPACITY_CONTAINER_HEAVY: Float = 0.85f
     const val OPACITY_BORDER_SUBTLE: Float = 0.4f
     const val OPACITY_BORDER_MEDIUM: Float = 0.5f
+    const val OPACITY_DISABLED_LABEL: Float = 0.4f
+    const val OPACITY_DISABLED_CONTAINER: Float = 0.35f
+    const val OPACITY_DIVIDER: Float = 0.12f
 
     // --- Stepper Funnel Steps ---
     const val STEP_1_SOURCE: Int = 1

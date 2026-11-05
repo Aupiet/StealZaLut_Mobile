@@ -70,6 +70,7 @@ def run_export_pipeline(
     sharpen: float = 0.0,
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
+    lr_settings: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Execute the full WYSIWYG LUT-export pipeline.
 
@@ -77,6 +78,13 @@ def run_export_pipeline(
     colorimetric post-grading directly into the 3D grid, and writes an Adobe .cube file.
     """
     start: float = time.monotonic()
+
+    if isinstance(lr_settings, str) and lr_settings.strip():
+        import json
+        try:
+            lr_settings = json.loads(lr_settings)
+        except Exception:
+            pass
 
     try:
         # Resolve Step 2 parameters with backward-compatible aliases
@@ -130,6 +138,7 @@ def run_export_pipeline(
             step2_params=step2,
             step3_params=step3,
             size=lut_size,
+            lr_settings=lr_settings,
         )
         del raw_lut
 
@@ -194,9 +203,17 @@ def run_image_export_pipeline(
     sharpen: float = 0.0,
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
+    lr_settings: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Execute high-resolution image export with absolute WYSIWYG fidelity."""
     start: float = time.monotonic()
+
+    if isinstance(lr_settings, str) and lr_settings.strip():
+        import json
+        try:
+            lr_settings = json.loads(lr_settings)
+        except Exception:
+            pass
 
     try:
         eff_luma = preserve_luminance if luma_lock is None else luma_lock
@@ -248,6 +265,7 @@ def run_image_export_pipeline(
             step2_params=step2,
             step3_params=step3,
             size=lut_size,
+            lr_settings=lr_settings,
         )
         del raw_lut
 
@@ -273,13 +291,14 @@ def run_image_export_pipeline(
         del src_work, baked_lut
 
         # 6. Apply 2D spatial effects (clarity, sharpen, grain) on the graded image
-        if clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
+        if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             from stealzalut.utils.image_io import to_float32, to_uint8
             graded_f = to_float32(graded)
             graded_f = apply_step3_color_grading(
                 graded_f,
                 params=step3,
                 is_lut_baking=False,
+                lr_settings=lr_settings,
             )
             graded = to_uint8(graded_f)
             del graded_f

@@ -30,6 +30,10 @@ import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
+import com.stealzalut.mobile.data.model.LightroomDevelopModel
+import com.stealzalut.mobile.data.model.LightroomDeserializer
+import com.stealzalut.mobile.data.model.LightroomSerializer
+import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -752,7 +756,8 @@ class PythonBridgeRepository(private val context: Context) {
         clarity: Float = 0.0f,
         sharpen: Float = 0.0f,
         grain: Float = 0.0f,
-        customLutPath: String? = null
+        customLutPath: String? = null,
+        lightroomParams: LightroomDevelopModel? = null
     ): PreviewResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -782,7 +787,8 @@ class PythonBridgeRepository(private val context: Context) {
                 clarity.toDouble(),
                 sharpen.toDouble(),
                 grain.toDouble(),
-                customLutPath
+                customLutPath,
+                lightroomParams?.let { LightroomSerializer.toJson(it) }
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -822,7 +828,8 @@ class PythonBridgeRepository(private val context: Context) {
         tint: Float = 0.0f,
         vibrance: Float = 0.0f,
         saturation: Float = 0.0f,
-        customLutPath: String? = null
+        customLutPath: String? = null,
+        lightroomParams: LightroomDevelopModel? = null
     ): CubeExportResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -863,7 +870,8 @@ class PythonBridgeRepository(private val context: Context) {
                 skinToneLock.toDouble(),
                 extremesRolloff.toDouble(),
                 spatial3d.toDouble(),
-                customLutPath
+                customLutPath,
+                lightroomParams?.let { LightroomSerializer.toJson(it) }
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -918,7 +926,8 @@ class PythonBridgeRepository(private val context: Context) {
         clarity: Float = 0.0f,
         sharpen: Float = 0.0f,
         grain: Float = 0.0f,
-        customLutPath: String? = null
+        customLutPath: String? = null,
+        lightroomParams: LightroomDevelopModel? = null
     ): ImageExportResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -960,7 +969,8 @@ class PythonBridgeRepository(private val context: Context) {
                 skinToneLock.toDouble(),
                 extremesRolloff.toDouble(),
                 spatial3d.toDouble(),
-                customLutPath
+                customLutPath,
+                lightroomParams?.let { LightroomSerializer.toJson(it) }
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -1015,6 +1025,8 @@ class PythonBridgeRepository(private val context: Context) {
                 "grain" to preset.step3Params.grain.toDouble()
             )
 
+            val lrJson = LightroomSerializer.toJson(preset.lightroomParams)
+
             val pyResult = bridge.callAttr(
                 "save_preset_bridge",
                 preset.name,
@@ -1022,7 +1034,8 @@ class PythonBridgeRepository(private val context: Context) {
                 step3Map,
                 preset.lutReference,
                 preset.thumbnailBase64,
-                presetsDir.absolutePath
+                presetsDir.absolutePath,
+                lrJson
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -1086,6 +1099,21 @@ class PythonBridgeRepository(private val context: Context) {
                     grain = s3Obj?.callAttr("get", "grain")?.toDouble()?.toFloat() ?: 0.0f
                 )
 
+                val lrObj = item.callAttr("get", "lightroom_params")
+                val lrParams = if (lrObj != null && !lrObj.toString().equals("null", ignoreCase = true)) {
+                    val str = lrObj.toString()
+                    val lrJson = if (str.startsWith("{")) str else {
+                        // In case Chaquopy represented it as a map or json representation
+                        runCatching {
+                            val map = lrObj.asMap()
+                            JSONObject(map.map { (k, v) -> k.toString() to v.toString() }.toMap()).toString()
+                        }.getOrDefault("{}")
+                    }
+                    runCatching { LightroomDeserializer.fromJson(lrJson) }.getOrDefault(LightroomDevelopModel())
+                } else {
+                    LightroomDevelopModel()
+                }
+
                 list.add(
                     EditPreset(
                         id = id,
@@ -1095,6 +1123,7 @@ class PythonBridgeRepository(private val context: Context) {
                         lutReference = lutRef,
                         step2Params = s2,
                         step3Params = s3,
+                        lightroomParams = lrParams,
                         filePath = filePath
                     )
                 )

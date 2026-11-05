@@ -362,6 +362,7 @@
     <string name="editor_actions_export">Exportar</string>
     <string name="editor_export_photo">Foto HD</string>
     <string name="editor_export_options_title">Opciones de Exportación</string>
+    <string name="editor_actions_menu">Acciones</string>
     <string name="editor_tab_presets_desc">Presets y LUTs</string>
     <string name="common_undo">Deshacer</string>
     <string name="common_redo">Rehacer</string>
@@ -442,4 +443,159 @@
     <string name="dialog_finish_studio_title">Finalizar sesión</string>
     <string name="dialog_finish_studio_msg">¿Seguro que desea finalizar? Se perderán los cambios no guardados.</string>
     <string name="dialog_finish_confirm">Finalizar</string>
+
+    <!-- Herramientas de Barra Superior -->
+    <string name="tool_global_adjustments">Ajustes globales</string>
+    <string name="tool_crop_straighten">Recortar y enderezar</string>
+    <string name="tool_healing">Eliminación de manchas</string>
+    <string name="tool_red_eye">Corrección de ojos rojos</string>
+    <string name="tool_masking">Máscara</string>
+    <string name="tool_presets_auto">Ajustes y Auto</string>
+
+    <!-- 10 Paneles de Revelado Lightroom Classic -->
+    <string name="section_histogram">Histograma</string>
+    <string name="section_basic">Básico</string>
+    <string name="section_tone_curve">Curva de tonos</string>
+    <string name="section_color_mixer">Mezclador de color</string>
+    <string name="section_color_grading">Gradación de color</string>
+    <string name="section_detail">Detalle</string>
+    <string name="section_lens_corrections">Correcciones de lente</string>
+    <string name="section_transform">Transformar</string>
+    <string name="section_lens_blur">Desenfoque de lente</string>
+    <string name="section_effects">Efectos</string>
+    <string name="section_calibration">Calibración</string>
+
+    <!-- Panel Básico -->
+    <string name="sub_white_balance">Equilibrio de blancos</string>
+    <string name="sub_tone">Tono</string>
+    <string name="sub_presence">Presencia</string>
+    <string name="slider_temp">Temp</string>
+    <string name="slider_tint">Matiz</string>
+    <string name="slider_exposure">Exposición</string>
+    <string name="slider_contrast">Contraste</string>
+    <string name="slider_highlights">Altas luces</string>
+    <string name="slider_shadows">Sombras</string>
+    <string name="slider_whites">Blancos</string>
+    <string name="slider_blacks">Negros</string>
+    <string name="slider_texture">Textura</string>
+    <string name="slider_clarity">Claridad</string>
+    <string name="slider_dehaze">Borrar neblina</string>
+    <string name="slider_vibrance">Intensidad</string>
+    <string name="slider_saturation">Saturación</string>
+
+    <!-- Panel Curva de tonos -->
+    <string name="mode_parametric">Paramétrica</string>
+    <string name="mode_point">Puntos</string>
+    <string name="tone_curve_edit_active">Editar</string>
+    <string name="tone_curve_edit_locked">Bloqueado</string>
+    <string name="channel_rgb">RGB</string>
+    <string name="channel_red">Rojo</string>
+    <string name="channel_green">Verde</string>
+    <string name="channel_blue">Azul</string>
+    <string name="slider_lights">Tonos claros</string>
+    <string name="slider_darks">Tonos oscuros</string>
+    <string name="slider_split_shadow">División de sombras</string>
+    <string name="slider_split_midtone">División de medios</string>
+    <string name="slider_split_highlight">División de luces</string>
+
+    <!-- Panel Mezclador de color -->
+    <string name="mode_hsl">HSL</string>
+    <string name="mode_point_color">Color de punto</string>
+    <string name="tab_hue">Tono</string>
+    <string name="tab_sat">Saturación</string>
+    <string name="tab_lum">Luminancia</string>
+    <string name="color_red">Rojo</string>
+    <string name="color_orange">Naranja</string>
+    <string name="color_yellow">Amarillo</string>
+    <string name="color_green">Verde</string>
+    <string name="color_aqua">Aguamarina</string>
+    <string name="color_blue">Azul</string>
+    <string name="color_purple">Púrpura</string>
+    <string name="color_magenta">Magenta</string>
+    <string name="eyedropper_label">Muestreador de color</string>
+    <string name="slider_range">Rango</string>
+
+    <!-- Panel Gradación de color -->
+    <string name="wheel_shadows">Sombras</string>
+    <string name="wheel_midtones">Tonos medios</string>
+    <string name="wheel_highlights">Altas luces</string>
+    <string name="wheel_global">Global</string>
+    <string name="slider_blending">Fusión</string>
+    <string name="slider_balance">Equilibrio</string>
+    <string name="slider_luminance">Luminancia</string>
+
+    <!-- Panel Detalle -->
+    <string name="group_sharpening">Enfoque</string>
+    <string name="slider_sharpen_amount">Cantidad</string>
+    <string name="slider_sharpen_radius">Radio</string>
+    <string name="slider_sharpen_detail">Detalle</string>
+    <string name="slider_sharpen_masking">Máscara</string>
+    <string name="group_noise_reduction">Reducción de ruido</string>
+    <string name="slider_nr_luminance">Luminancia</string>
+    <string name="slider_nr_lum_detail">Detalle de luminancia</string>
+    <string name="slider_nr_color">Color</string>
+
+    <!-- Panel Correcciones de lente -->
+    <string name="slider_distortion">Distorsión</string>
+    <string name="chk_remove_ca">Quitar aberración cromática</string>
+    <string name="slider_ca_red_cyan">Borde rojo/cian</string>
+    <string name="slider_ca_blue_yellow">Borde azul/amarillo</string>
+    <string name="slider_lens_vignette">Viñeteado de lente</string>
+    <string name="slider_midpoint">Punto medio</string>
+
+    <!-- Panel Transformar -->
+    <string name="slider_vertical">Vertical</string>
+    <string name="slider_horizontal">Horizontal</string>
+    <string name="slider_rotate">Girar</string>
+    <string name="slider_aspect">Aspecto</string>
+    <string name="slider_scale">Escala</string>
+    <string name="slider_offset_x">Desplazamiento X</string>
+    <string name="slider_offset_y">Desplazamiento Y</string>
+
+    <!-- Panel Desenfoque de lente -->
+    <string name="chk_enable_lens_blur">Activar desenfoque de lente</string>
+    <string name="slider_blur_amount">Cantidad de desenfoque</string>
+    <string name="label_bokeh_style">Estilo de bokeh</string>
+    <string name="slider_bokeh_boost">Realce de bokeh</string>
+    <string name="slider_focal_range">Rango focal</string>
+    <string name="bokeh_circle">Círculo</string>
+    <string name="bokeh_bubble">Burbuja</string>
+    <string name="bokeh_blade5">5 Palas</string>
+    <string name="bokeh_blade7">7 Palas</string>
+    <string name="bokeh_ring">Anillo</string>
+
+    <!-- Panel Efectos -->
+    <string name="group_post_crop_vignette">Viñeteado posterior</string>
+    <string name="slider_roundness">Redondez</string>
+    <string name="slider_feather">Desvanecer</string>
+    <string name="group_grain">Grano</string>
+    <string name="slider_grain_size">Tamaño</string>
+    <string name="slider_grain_roughness">Rugosidad</string>
+
+    <!-- Panel Calibración -->
+    <string name="slider_shadows_tint">Tono de sombras</string>
+    <string name="group_red_primary">Primario rojo</string>
+    <string name="group_green_primary">Primario verde</string>
+    <string name="group_blue_primary">Primario azul</string>
+
+    <!-- Accesibilidad y Acciones -->
+    <string name="desc_toggle_section">Activar o desactivar sección</string>
+    <string name="desc_expand_section">Desplegar sección</string>
+    <string name="desc_collapse_section">Plegar sección</string>
+    <string name="btn_reset_section">Restablecer</string>
+
+    <!-- Herramientas Locales y Geométricas -->
+    <string name="crop_original">Original</string>
+    <string name="crop_square">1:1 Cuadrado</string>
+    <string name="crop_portrait">4:5 Retrato</string>
+    <string name="crop_widescreen">16:9 Panorámico</string>
+    <string name="heal_mode_heal">Corregir</string>
+    <string name="heal_mode_clone">Clonar</string>
+    <string name="slider_brush_size">Tamaño de pincel</string>
+    <string name="mask_linear">Degradado lineal</string>
+    <string name="mask_radial">Degradado radial</string>
+    <string name="mask_brush">Pincel</string>
+    <string name="mask_invert">Invertir máscara</string>
+    <string name="slider_pupil_size">Tamaño de pupila</string>
+    <string name="slider_darken">Oscurecer</string>
 </resources>

@@ -25,6 +25,9 @@ from stealzalut.core.lut_engine import (
     generate_identity_grid,
     generate_identity_lattice,
 )
+from stealzalut.core.lightroom_color import apply_full_lightroom_color_pipeline
+from stealzalut.core.lightroom_models import LightroomDevelopSettings
+from stealzalut.core.lightroom_spatial import apply_full_lightroom_spatial_pipeline
 
 
 # ---------------------------------------------------------------------------
@@ -265,6 +268,7 @@ def apply_step3_color_grading(
     rgb: NDArray[np.float32],
     params: Step3Params,
     is_lut_baking: bool = False,
+    lr_settings: Optional[Union[LightroomDevelopSettings, Dict[str, Any]]] = None,
 ) -> NDArray[np.float32]:
     """Execute Stage 3: Post-Grading colorimetric and spatial enhancements.
 
@@ -275,11 +279,24 @@ def apply_step3_color_grading(
         rgb: Float32 image array in [0.0, 1.0].
         params: Active Step3Params configuration.
         is_lut_baking: True when applying to 3D LUT identity lattice for .cube baking.
+        lr_settings: Optional full Adobe Lightroom Classic develop settings.
 
     Returns:
         Graded float32 array in [0.0, 1.0].
     """
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
+
+    # If Lightroom develop settings are provided, run through Lightroom engine
+    if lr_settings is not None:
+        if isinstance(lr_settings, dict):
+            lr_obj = LightroomDevelopSettings.from_dict(lr_settings)
+        else:
+            lr_obj = lr_settings
+
+        out = apply_full_lightroom_color_pipeline(out, lr_obj)
+        if not is_lut_baking and out.ndim >= 2 and min(out.shape[:2]) >= 16:
+            out = apply_full_lightroom_spatial_pipeline(out, lr_obj)
+        return np.clip(out, 0.0, 1.0).astype(np.float32)
 
     # 1. Linear Exposure Compensation (EV)
     if abs(params.exposure) > 1e-4:
@@ -391,6 +408,7 @@ def bake_full_pipeline_lut(
     step2_params: Step2Params,
     step3_params: Step3Params,
     size: int = 33,
+    lr_settings: Optional[Union[LightroomDevelopSettings, Dict[str, Any]]] = None,
 ) -> NDArray[np.float32]:
     """Bake Stages 1, 2, and 3 (Colorimetric) directly into a 3D LUT volume.
 
@@ -402,6 +420,7 @@ def bake_full_pipeline_lut(
         step2_params: Active Stage 2 parameters.
         step3_params: Active Stage 3 parameters.
         size: Grid size per axis (default 33).
+        lr_settings: Optional full Adobe Lightroom Classic develop settings.
 
     Returns:
         Fully baked 3D LUT array of shape (size^3, 3) with values in [0.0, 1.0].
@@ -425,6 +444,7 @@ def bake_full_pipeline_lut(
         refined_lut,
         params=step3_params,
         is_lut_baking=True,
+        lr_settings=lr_settings,
     )
 
     # Clamping and sanity validation (no NaN or Inf)

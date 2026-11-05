@@ -96,6 +96,12 @@ object AppDimens {
     val ProgressBarHeight: Dp = 16.dp
     val HistogramHeight: Dp = 64.dp
     val HistogramWidth: Dp = 120.dp
+    val ToneCurveCanvasHeight: Dp = 180.dp
+    val ColorWheelSize: Dp = 130.dp
+    val ColorWheelThumbSize: Dp = 18.dp
+    val PointColorPipetteSize: Dp = 36.dp
+    val ToolIconSize: Dp = 22.dp
+    val EditorPanelMaxHeight: Dp = 230.dp
 
     // --- Elevations ---
     val DialogElevation: Dp = 6.dp

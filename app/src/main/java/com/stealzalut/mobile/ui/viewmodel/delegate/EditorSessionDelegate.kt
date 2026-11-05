@@ -9,6 +9,7 @@ import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.ImageExportResult
+import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.repository.SavedImageRepository
 import com.stealzalut.mobile.ui.viewmodel.ExportType
@@ -47,7 +48,8 @@ data class StandaloneEditorDebounceRequest(
     val clarity: Float,
     val sharpen: Float,
     val grain: Float,
-    val customLutPath: String?
+    val customLutPath: String?,
+    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel()
 )
 
 data class EditorParamsSnapshot(
@@ -69,7 +71,8 @@ data class EditorParamsSnapshot(
     val sharpen: Float,
     val grain: Float,
     val customLutPath: String?,
-    val customLutName: String?
+    val customLutName: String?,
+    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel()
 )
 
 @OptIn(FlowPreview::class)
@@ -89,6 +92,11 @@ class EditorSessionDelegate(
     // Undo / Redo Stacks (Phase 4 UX Pro)
     private val undoStack = ArrayDeque<EditorParamsSnapshot>()
     private val redoStack = ArrayDeque<EditorParamsSnapshot>()
+
+    val lightroomDelegate: EditorLightroomDelegate = EditorLightroomDelegate(
+        stateFlow = stateFlow,
+        onScheduleUpdate = { scheduleEditorPreviewUpdate() }
+    )
 
     init {
         scope.launch {
@@ -122,7 +130,8 @@ class EditorSessionDelegate(
             sharpen = s.step3Sharpen,
             grain = s.step3Grain,
             customLutPath = s.editorCustomLutPath,
-            customLutName = s.editorCustomLutName
+            customLutName = s.editorCustomLutName,
+            lightroomParams = s.editorLightroomParams
         )
     }
 
@@ -172,7 +181,8 @@ class EditorSessionDelegate(
                 step3Sharpen = snapshot.sharpen,
                 step3Grain = snapshot.grain,
                 editorCustomLutPath = snapshot.customLutPath,
-                editorCustomLutName = snapshot.customLutName
+                editorCustomLutName = snapshot.customLutName,
+                editorLightroomParams = snapshot.lightroomParams
             )
         }
         scheduleEditorPreviewUpdate()
@@ -507,7 +517,8 @@ class EditorSessionDelegate(
             clarity = stateFlow.value.step3Clarity,
             sharpen = stateFlow.value.step3Sharpen,
             grain = stateFlow.value.step3Grain,
-            customLutPath = stateFlow.value.editorCustomLutPath
+            customLutPath = stateFlow.value.editorCustomLutPath,
+            lightroomParams = stateFlow.value.editorLightroomParams
         )
         editorDebounceFlow.tryEmit(req)
     }
@@ -536,7 +547,8 @@ class EditorSessionDelegate(
                 clarity = req.clarity,
                 sharpen = req.sharpen,
                 grain = req.grain,
-                customLutPath = req.customLutPath
+                customLutPath = req.customLutPath,
+                lightroomParams = req.lightroomParams
             )
 
             when (res) {
@@ -587,7 +599,8 @@ class EditorSessionDelegate(
                 tint = stateFlow.value.step3Tint,
                 vibrance = stateFlow.value.step3Vibrance,
                 saturation = stateFlow.value.step3Saturation,
-                customLutPath = stateFlow.value.editorCustomLutPath
+                customLutPath = stateFlow.value.editorCustomLutPath,
+                lightroomParams = stateFlow.value.editorLightroomParams
             )
 
             when (res) {
@@ -655,7 +668,8 @@ class EditorSessionDelegate(
                 clarity = stateFlow.value.step3Clarity,
                 sharpen = stateFlow.value.step3Sharpen,
                 grain = stateFlow.value.step3Grain,
-                customLutPath = stateFlow.value.editorCustomLutPath
+                customLutPath = stateFlow.value.editorCustomLutPath,
+                lightroomParams = stateFlow.value.editorLightroomParams
             )
 
             when (res) {

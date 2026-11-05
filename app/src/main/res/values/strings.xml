@@ -362,6 +362,7 @@
     <string name="editor_actions_export">Export</string>
     <string name="editor_export_photo">HD Photo</string>
     <string name="editor_export_options_title">Export Options</string>
+    <string name="editor_actions_menu">Actions</string>
     <string name="editor_tab_presets_desc">Presets &amp; LUTs</string>
     <string name="common_undo">Undo</string>
     <string name="common_redo">Redo</string>
@@ -442,4 +443,159 @@
     <string name="dialog_finish_studio_title">Finish Session</string>
     <string name="dialog_finish_studio_msg">Are you sure you want to finish? Any unsaved edits will be lost.</string>
     <string name="dialog_finish_confirm">Finish</string>
+
+    <!-- Toolbar Tools -->
+    <string name="tool_global_adjustments">Global Adjustments</string>
+    <string name="tool_crop_straighten">Crop &amp; Straighten</string>
+    <string name="tool_healing">Healing</string>
+    <string name="tool_red_eye">Red Eye</string>
+    <string name="tool_masking">Masking</string>
+    <string name="tool_presets_auto">Presets &amp; Auto</string>
+
+    <!-- 10 Develop Panels -->
+    <string name="section_histogram">Histogram</string>
+    <string name="section_basic">Basic Adjustments</string>
+    <string name="section_tone_curve">Tone Curve</string>
+    <string name="section_color_mixer">Color Mixer</string>
+    <string name="section_color_grading">Color Grading</string>
+    <string name="section_detail">Detail</string>
+    <string name="section_lens_corrections">Lens Corrections</string>
+    <string name="section_transform">Transform</string>
+    <string name="section_lens_blur">Lens Blur</string>
+    <string name="section_effects">Effects</string>
+    <string name="section_calibration">Calibration</string>
+
+    <!-- Basic Panel -->
+    <string name="sub_white_balance">White Balance</string>
+    <string name="sub_tone">Tone</string>
+    <string name="sub_presence">Presence</string>
+    <string name="slider_temp">Temp</string>
+    <string name="slider_tint">Tint</string>
+    <string name="slider_exposure">Exposure</string>
+    <string name="slider_contrast">Contrast</string>
+    <string name="slider_highlights">Highlights</string>
+    <string name="slider_shadows">Shadows</string>
+    <string name="slider_whites">Whites</string>
+    <string name="slider_blacks">Blacks</string>
+    <string name="slider_texture">Texture</string>
+    <string name="slider_clarity">Clarity</string>
+    <string name="slider_dehaze">Dehaze</string>
+    <string name="slider_vibrance">Vibrance</string>
+    <string name="slider_saturation">Saturation</string>
+
+    <!-- Tone Curve Panel -->
+    <string name="mode_parametric">Parametric</string>
+    <string name="mode_point">Point</string>
+    <string name="tone_curve_edit_active">Edit Mode</string>
+    <string name="tone_curve_edit_locked">Locked</string>
+    <string name="channel_rgb">RGB</string>
+    <string name="channel_red">Red</string>
+    <string name="channel_green">Green</string>
+    <string name="channel_blue">Blue</string>
+    <string name="slider_lights">Lights</string>
+    <string name="slider_darks">Darks</string>
+    <string name="slider_split_shadow">Shadow Split</string>
+    <string name="slider_split_midtone">Midtone Split</string>
+    <string name="slider_split_highlight">Highlight Split</string>
+
+    <!-- Color Mixer Panel -->
+    <string name="mode_hsl">HSL</string>
+    <string name="mode_point_color">Point Color</string>
+    <string name="tab_hue">Hue</string>
+    <string name="tab_sat">Saturation</string>
+    <string name="tab_lum">Luminance</string>
+    <string name="color_red">Red</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_green">Green</string>
+    <string name="color_aqua">Aqua</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_magenta">Magenta</string>
+    <string name="eyedropper_label">Sample Target Color</string>
+    <string name="slider_range">Range</string>
+
+    <!-- Color Grading Panel -->
+    <string name="wheel_shadows">Shadows</string>
+    <string name="wheel_midtones">Midtones</string>
+    <string name="wheel_highlights">Highlights</string>
+    <string name="wheel_global">Global</string>
+    <string name="slider_blending">Blending</string>
+    <string name="slider_balance">Balance</string>
+    <string name="slider_luminance">Luminance</string>
+
+    <!-- Detail Panel -->
+    <string name="group_sharpening">Sharpening</string>
+    <string name="slider_sharpen_amount">Amount</string>
+    <string name="slider_sharpen_radius">Radius</string>
+    <string name="slider_sharpen_detail">Detail</string>
+    <string name="slider_sharpen_masking">Masking</string>
+    <string name="group_noise_reduction">Noise Reduction</string>
+    <string name="slider_nr_luminance">Luminance</string>
+    <string name="slider_nr_lum_detail">Detail</string>
+    <string name="slider_nr_color">Color</string>
+
+    <!-- Lens Corrections Panel -->
+    <string name="slider_distortion">Distortion</string>
+    <string name="chk_remove_ca">Remove Chromatic Aberration</string>
+    <string name="slider_ca_red_cyan">Fringe Red/Cyan</string>
+    <string name="slider_ca_blue_yellow">Fringe Blue/Yellow</string>
+    <string name="slider_lens_vignette">Lens Vignetting</string>
+    <string name="slider_midpoint">Midpoint</string>
+
+    <!-- Transform Panel -->
+    <string name="slider_vertical">Vertical</string>
+    <string name="slider_horizontal">Horizontal</string>
+    <string name="slider_rotate">Rotate</string>
+    <string name="slider_aspect">Aspect</string>
+    <string name="slider_scale">Scale</string>
+    <string name="slider_offset_x">Offset X</string>
+    <string name="slider_offset_y">Offset Y</string>
+
+    <!-- Lens Blur Panel -->
+    <string name="chk_enable_lens_blur">Apply Lens Blur</string>
+    <string name="slider_blur_amount">Blur Amount</string>
+    <string name="label_bokeh_style">Bokeh Style</string>
+    <string name="slider_bokeh_boost">Bokeh Boost</string>
+    <string name="slider_focal_range">Focal Range</string>
+    <string name="bokeh_circle">Circle</string>
+    <string name="bokeh_bubble">Bubble</string>
+    <string name="bokeh_blade5">5-Blade</string>
+    <string name="bokeh_blade7">7-Blade</string>
+    <string name="bokeh_ring">Ring</string>
+
+    <!-- Effects Panel -->
+    <string name="group_post_crop_vignette">Post-Crop Vignette</string>
+    <string name="slider_roundness">Roundness</string>
+    <string name="slider_feather">Feather</string>
+    <string name="group_grain">Grain</string>
+    <string name="slider_grain_size">Size</string>
+    <string name="slider_grain_roughness">Roughness</string>
+
+    <!-- Calibration Panel -->
+    <string name="slider_shadows_tint">Shadows Tint</string>
+    <string name="group_red_primary">Red Primary</string>
+    <string name="group_green_primary">Green Primary</string>
+    <string name="group_blue_primary">Blue Primary</string>
+
+    <!-- Accessibility Descriptions -->
+    <string name="desc_toggle_section">Toggle section effect</string>
+    <string name="desc_expand_section">Expand section</string>
+    <string name="desc_collapse_section">Collapse section</string>
+    <string name="btn_reset_section">Reset</string>
+
+    <!-- Local & Geometric Tool Overlays -->
+    <string name="crop_original">Original</string>
+    <string name="crop_square">1:1 Square</string>
+    <string name="crop_portrait">4:5 Portrait</string>
+    <string name="crop_widescreen">16:9 Wide</string>
+    <string name="heal_mode_heal">Heal</string>
+    <string name="heal_mode_clone">Clone</string>
+    <string name="slider_brush_size">Brush Size</string>
+    <string name="mask_linear">Linear Gradient</string>
+    <string name="mask_radial">Radial Gradient</string>
+    <string name="mask_brush">Brush</string>
+    <string name="mask_invert">Invert Mask</string>
+    <string name="slider_pupil_size">Pupil Size</string>
+    <string name="slider_darken">Darken</string>
 </resources>

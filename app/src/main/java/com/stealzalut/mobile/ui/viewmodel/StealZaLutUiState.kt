@@ -9,6 +9,7 @@ import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.EditPreset
+import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.data.model.Step2Model
@@ -141,6 +142,21 @@ data class StealZaLutUiState(
     val savedEditingPresets: ImmutableList<EditPreset> = persistentListOf(),
     val selectedEditingPreset: EditPreset? = null,
     val isSaveEditingPresetDialogVisible: Boolean = false,
+
+    // Adobe Lightroom Classic Develop Engine state
+    val editorLightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
+    val editorActiveTool: Int = 0, // 0 = Global Panels, 1 = Crop, 2 = Healing, 3 = Red Eye, 4 = Masking, 5 = Presets / Auto-edit
+    val isHistogramExpanded: Boolean = true,
+    val isBasicExpanded: Boolean = true,
+    val isToneCurveExpanded: Boolean = false,
+    val isColorMixerExpanded: Boolean = false,
+    val isColorGradingExpanded: Boolean = false,
+    val isDetailExpanded: Boolean = false,
+    val isLensCorrectionsExpanded: Boolean = false,
+    val isTransformExpanded: Boolean = false,
+    val isLensBlurExpanded: Boolean = false,
+    val isEffectsExpanded: Boolean = false,
+    val isCalibrationExpanded: Boolean = false,
 
     // ========================================================================
     // 2. PALETTES & PRESETS

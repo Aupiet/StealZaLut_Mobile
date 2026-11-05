@@ -499,6 +499,7 @@ class PresetLibraryDelegate(
                 step3Clarity = preset.step3Params.clarity,
                 step3Sharpen = preset.step3Params.sharpen,
                 step3Grain = preset.step3Params.grain,
+                editorLightroomParams = preset.lightroomParams,
                 userMessage = if (lutMissingWarning) {
                     UiText.DynamicString("Preset « ${preset.name} » appliqué (la LUT 3D d'origine est introuvable sur cet appareil)")
                 } else {

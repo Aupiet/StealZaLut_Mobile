@@ -175,9 +175,17 @@ def run_transfer_pipeline(
     extremes_rolloff: float = 0.0,
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
+    lr_settings: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Execute the unified WYSIWYG colour-transfer and editing pipeline."""
     start: float = time.monotonic()
+
+    if isinstance(lr_settings, str) and lr_settings.strip():
+        import json
+        try:
+            lr_settings = json.loads(lr_settings)
+        except Exception:
+            pass
 
     try:
         eff_luma = preserve_luminance if luma_lock is None else luma_lock
@@ -229,6 +237,7 @@ def run_transfer_pipeline(
             step2_params=step2,
             step3_params=step3,
             size=lut_size,
+            lr_settings=lr_settings,
         )
         del raw_lut
 
@@ -240,12 +249,13 @@ def run_transfer_pipeline(
         del src_work, baked_lut
 
         # 5. Apply 2D spatial effects if active
-        if clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
+        if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             trans_f = to_float32(transferred)
             trans_f = apply_step3_color_grading(
                 trans_f,
                 params=step3,
                 is_lut_baking=False,
+                lr_settings=lr_settings,
             )
             transferred = to_uint8(trans_f)
             del trans_f

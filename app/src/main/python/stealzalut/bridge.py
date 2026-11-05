@@ -119,6 +119,7 @@ def process_preview(
     extremes_rolloff: float = 0.0,
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
+    develop_settings_json: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Generate a colour-transferred preview image using the exact 3D LUT."""
     try:
@@ -167,6 +168,7 @@ def process_preview(
             extremes_rolloff=extremes_rolloff,
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
+            lr_settings=develop_settings_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(
@@ -201,6 +203,7 @@ def process_editor_preview(
     sharpen: float = 0.0,
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
+    develop_settings_json: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute preview generation for the Standalone Photo Editor (no reference image)."""
     return process_preview(
@@ -227,6 +230,7 @@ def process_editor_preview(
         extremes_rolloff=extremes_rolloff,
         spatial_3d=spatial_3d,
         custom_lut_path=custom_lut_path,
+        develop_settings_json=develop_settings_json,
     )
 
 
@@ -260,6 +264,7 @@ def export_cube_file(
     extremes_rolloff: float = 0.0,
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
+    develop_settings_json: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compute and export a 3-D LUT as an Adobe ``.cube`` file."""
     try:
@@ -312,6 +317,7 @@ def export_cube_file(
             extremes_rolloff=extremes_rolloff,
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
+            lr_settings=develop_settings_json,
         )
         if res.get("status") == "success":
             path = res.get("cube_path") or res.get("lut_path")
@@ -359,6 +365,7 @@ def export_graded_image(
     extremes_rolloff: float = 0.0,
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
+    develop_settings_json: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Export the graded source image directly in high resolution."""
     try:
@@ -405,6 +412,7 @@ def export_graded_image(
             extremes_rolloff=extremes_rolloff,
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
+            lr_settings=develop_settings_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(
@@ -422,11 +430,12 @@ def export_graded_image(
 
 def save_preset_bridge(
     name: str,
-    step2_params: Dict[str, Any],
-    step3_params: Dict[str, Any],
+    step2_params: Any,
+    step3_params: Any,
     lut_reference: Optional[str] = None,
     thumbnail_base64: Optional[str] = None,
     output_dir: Optional[str] = None,
+    lightroom_params: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Create and save a new editing preset."""
     try:
@@ -436,6 +445,7 @@ def save_preset_bridge(
             step3_params=step3_params,
             lut_reference=lut_reference,
             thumbnail_base64=thumbnail_base64,
+            lightroom_params=lightroom_params,
         )
         saved_path = save_preset(preset_dict, directory=output_dir)
         return {

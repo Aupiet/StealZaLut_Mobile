@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,10 +59,13 @@ fun EditorViewport(
     executionTimeMs: Double?,
     lutName: String?,
     onChangePhoto: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isHistogramExpanded: Boolean = false,
+    onToggleHistogram: () -> Unit = {},
+    isComputingAutoEdit: Boolean = false,
+    onApplyAutoEdit: () -> Unit = {}
 ) {
     var isHoldingCompare by remember { mutableStateOf(false) }
-    var showHistogram by remember { mutableStateOf(false) }
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
@@ -189,14 +195,14 @@ fun EditorViewport(
                 }
             }
 
-            // Top-right controls (Change photo, histogram toggle, processing indicator)
+            // Top-right controls (Histogram toggle, Change photo, processing indicator)
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(AppDimens.SpacingSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isProcessing) {
+                if (isProcessing && !isComputingAutoEdit) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
                         strokeWidth = AppDimens.BorderThick,
@@ -205,14 +211,35 @@ fun EditorViewport(
                     Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                 }
                 FilledTonalIconButton(
-                    onClick = { showHistogram = !showHistogram },
+                    onClick = onApplyAutoEdit,
+                    enabled = !isComputingAutoEdit && !isProcessing,
+                    modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                ) {
+                    if (isComputingAutoEdit) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(AppDimens.IconSmall),
+                            strokeWidth = AppDimens.BorderThick,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AutoFixHigh,
+                            contentDescription = stringResource(R.string.btn_auto_edit),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                FilledTonalIconButton(
+                    onClick = onToggleHistogram,
                     modifier = Modifier.size(AppDimens.ViewportButtonSize)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = stringResource(R.string.histogram_toggle_desc),
-                        modifier = Modifier.size(AppDimens.IconSmall),
-                        tint = if (showHistogram) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        imageVector = Icons.Default.BarChart,
+                        contentDescription = stringResource(R.string.section_histogram),
+                        tint = if (isHistogramExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(AppDimens.IconSmall)
                     )
                 }
                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
@@ -228,14 +255,24 @@ fun EditorViewport(
                 }
             }
 
-            // Bottom-right RGB Histogram overlay
-            if (showHistogram && displayBitmap != null) {
-                SzlRgbHistogram(
-                    bitmap = displayBitmap,
+            // Bottom Histogram overlay inside viewport
+            if (isHistogramExpanded) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
                         .padding(AppDimens.SpacingSmall)
-                )
+                ) {
+                    SzlRgbHistogram(
+                        bitmap = previewBitmap ?: sourceBitmap,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AppDimens.HistogramHeight)
+                            .padding(AppDimens.SpacingMicro)
+                    )
+                }
             }
         }
     }

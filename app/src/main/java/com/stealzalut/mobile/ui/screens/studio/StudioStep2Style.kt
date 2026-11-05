@@ -240,6 +240,7 @@ private fun StudioPresetCard(
                     if (file.exists()) {
                         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                         BitmapFactory.decodeFile(file.absolutePath, opts)
+                        if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
                         var sample = 1
                         val maxDim = maxOf(opts.outWidth, opts.outHeight)
                         while (maxDim / (sample * 2) >= 300) {
@@ -249,7 +250,7 @@ private fun StudioPresetCard(
                         BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
                     } else null
                 } else null
-            } catch (_: Exception) {
+            } catch (t: Throwable) {
                 null
             }
         }

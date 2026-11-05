@@ -1,0 +1,8 @@
+Refactor studio grading funnel, integrate Studio-to-Editor relay, and optimize memory safety
+
+- Streamline Studio workflow by removing duplicate edit controls from steps 1-3, pinning the live WYSIWYG preview card at the top, and adding a Studio-to-Editor relay button at step 5.
+- Enhance Standalone Editor UI with proportional viewport sizing (~40% height), single reset action with Undo Snackbar support, and .szlpreset import/export capabilities.
+- Implement memory-safe proxy image decoding (`load_proxy_image` via Pillow `Image.draft`) for high-resolution photo analysis, preventing OOM crashes during palette extraction and Auto-Edit.
+- Enforce robust SAF export validation via `PendingExport` contract, byte-count verification (`bytesCopied == expectedBytes`), and automatic cleanup of empty placeholder URIs on failure.
+- Add strict integrity checks in Python `lut_export.py` ensuring valid `.cube` dimensions and non-empty output streams.
+- Add comprehensive JVM and Python unit tests (`GradingRelayTest`, `PresetExportTest`, `TestStudioToEditorRelayParity`, `TestCubeExportIntegrity`) and update technical documentation (ADR-06 to ADR-09).

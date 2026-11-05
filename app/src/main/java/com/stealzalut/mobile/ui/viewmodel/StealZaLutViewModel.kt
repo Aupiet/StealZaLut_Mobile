@@ -314,6 +314,8 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
         return try {
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(path, options)
+            if (options.outWidth <= 0 || options.outHeight <= 0) return null
+
             var sampleSize = 1
             val maxActual = maxOf(options.outWidth, options.outHeight)
             while (maxActual / (sampleSize * 2) >= maxDim) {
@@ -321,7 +323,8 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
             }
             val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
             BitmapFactory.decodeFile(path, decodeOptions)
-        } catch (_: Exception) {
+        } catch (t: Throwable) {
+            android.util.Log.e("StealZaLutViewModel", "decodeSampledBitmap error: ${t.localizedMessage}", t)
             null
         }
     }

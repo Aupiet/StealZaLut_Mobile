@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -119,6 +120,9 @@ class PresetLibraryDelegate(
         }
     }
 
+    private var activePaletteJob: Job? = null
+    private var currentPaletteFile: File? = null
+
     private val paletteExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         Log.e("PresetLibraryDelegate", "Palette extraction failed", throwable)
         stateFlow.update {
@@ -130,11 +134,21 @@ class PresetLibraryDelegate(
     }
 
     fun setPalettePhoto(uri: Uri) {
-        scope.launch(paletteExceptionHandler) {
+        activePaletteJob?.cancel()
+        activePaletteJob = scope.launch(paletteExceptionHandler) {
             stateFlow.update { it.copy(isExtractingPalette = true, errorMessage = null) }
-            val cacheResult = bridgeRepository.cacheImageFromUri(uri, "palette_input.jpg")
+            val filename = "palette_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->
+                    bridgeRepository.lruCacheManager.protectFile(file.absolutePath)
+                    val oldFile = currentPaletteFile
+                    currentPaletteFile = file
+                    if (oldFile != null && oldFile.absolutePath != file.absolutePath) {
+                        bridgeRepository.lruCacheManager.unprotectFile(oldFile.absolutePath)
+                        oldFile.delete()
+                    }
+
                     val thumbnail = withContext(Dispatchers.IO) {
                         runCatching {
                             decodeSampledBitmap(file.absolutePath, 512)
@@ -295,19 +309,29 @@ class PresetLibraryDelegate(
             )
             when (result) {
                 is CubeExportResult.Success -> {
-                    val fileName = File(result.cubePath).name
-                    stateFlow.update {
-                        it.copy(
-                            isExportingCube = false,
-                            exportedCubePath = result.cubePath,
-                            pendingExport = PendingExport(
-                                sourcePath = result.cubePath,
-                                suggestedFileName = fileName,
-                                exportType = ExportType.CUBE_LUT
+                    val target = File(result.cubePath)
+                    if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                        stateFlow.update {
+                            it.copy(
+                                isExportingCube = false,
+                                errorMessage = UiText.Resource(R.string.err_export_io, listOf("Fichier .cube généré vide ou introuvable"))
                             )
-                        )
+                        }
+                    } else {
+                        val fileName = target.name
+                        stateFlow.update {
+                            it.copy(
+                                isExportingCube = false,
+                                exportedCubePath = target.canonicalPath,
+                                pendingExport = PendingExport(
+                                    sourcePath = target.canonicalPath,
+                                    suggestedFileName = fileName,
+                                    exportType = ExportType.CUBE_LUT
+                                )
+                            )
+                        }
+                        onReadyToSave(target.canonicalPath)
                     }
-                    onReadyToSave(result.cubePath)
                 }
                 is CubeExportResult.Error -> {
                     stateFlow.update {
@@ -340,19 +364,29 @@ class PresetLibraryDelegate(
             )
             when (result) {
                 is CubeExportResult.Success -> {
-                    val fileName = File(result.cubePath).name
-                    stateFlow.update {
-                        it.copy(
-                            isExportingCube = false,
-                            exportedCubePath = result.cubePath,
-                            pendingExport = PendingExport(
-                                sourcePath = result.cubePath,
-                                suggestedFileName = fileName,
-                                exportType = ExportType.CUBE_LUT
+                    val target = File(result.cubePath)
+                    if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                        stateFlow.update {
+                            it.copy(
+                                isExportingCube = false,
+                                errorMessage = UiText.Resource(R.string.err_export_io, listOf("Fichier .cube généré vide ou introuvable"))
                             )
-                        )
+                        }
+                    } else {
+                        val fileName = target.name
+                        stateFlow.update {
+                            it.copy(
+                                isExportingCube = false,
+                                exportedCubePath = target.canonicalPath,
+                                pendingExport = PendingExport(
+                                    sourcePath = target.canonicalPath,
+                                    suggestedFileName = fileName,
+                                    exportType = ExportType.CUBE_LUT
+                                )
+                            )
+                        }
+                        onReadyToSave(target.canonicalPath)
                     }
-                    onReadyToSave(result.cubePath)
                 }
                 is CubeExportResult.Error -> {
                     stateFlow.update {
@@ -421,11 +455,33 @@ class PresetLibraryDelegate(
     }
 
     fun applyEditingPreset(preset: EditPreset) {
+        val resolvedLutPath: String? = preset.lutReference?.let { lutPath ->
+            val direct = File(lutPath)
+            if (direct.exists() && direct.isFile && direct.length() > 0L) {
+                direct.absolutePath
+            } else {
+                val fileName = direct.name
+                val imported = File(File(application.filesDir, "imported_luts"), fileName)
+                if (imported.exists() && imported.isFile && imported.length() > 0L) {
+                    imported.absolutePath
+                } else {
+                    val inLuts = File(File(application.filesDir, "luts"), fileName)
+                    if (inLuts.exists() && inLuts.isFile && inLuts.length() > 0L) {
+                        inLuts.absolutePath
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
+
+        val lutMissingWarning = preset.lutReference != null && resolvedLutPath == null
+
         stateFlow.update {
             it.copy(
                 selectedEditingPreset = preset,
-                editorCustomLutPath = preset.lutReference,
-                editorCustomLutName = preset.lutReference?.let { p -> File(p).name },
+                editorCustomLutPath = resolvedLutPath,
+                editorCustomLutName = resolvedLutPath?.let { p -> File(p).name },
                 step2Intensity = preset.step2Params.globalIntensity,
                 step2LumaLock = preset.step2Params.lumaLock,
                 step2NeutralAxisLock = preset.step2Params.neutralAxisLock,
@@ -443,7 +499,11 @@ class PresetLibraryDelegate(
                 step3Clarity = preset.step3Params.clarity,
                 step3Sharpen = preset.step3Params.sharpen,
                 step3Grain = preset.step3Params.grain,
-                userMessage = UiText.Resource(R.string.msg_preset_applied, listOf(preset.name))
+                userMessage = if (lutMissingWarning) {
+                    UiText.DynamicString("Preset « ${preset.name} » appliqué (la LUT 3D d'origine est introuvable sur cet appareil)")
+                } else {
+                    UiText.Resource(R.string.msg_preset_applied, listOf(preset.name))
+                }
             )
         }
         onTriggerEditorPreviewCallback()

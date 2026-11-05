@@ -83,6 +83,8 @@ class EditorSessionDelegate(
 ) {
     private val editorDebounceFlow = MutableSharedFlow<StandaloneEditorDebounceRequest>(replay = 1)
     private var activeStandaloneJob: Job? = null
+    private var activeEditorSourceJob: Job? = null
+    private var currentEditorSourceFile: File? = null
 
     // Undo / Redo Stacks (Phase 4 UX Pro)
     private val undoStack = ArrayDeque<EditorParamsSnapshot>()
@@ -177,11 +179,22 @@ class EditorSessionDelegate(
     }
 
     fun setEditorSourceImage(uri: Uri) {
-        scope.launch {
+        activeEditorSourceJob?.cancel()
+        activeStandaloneJob?.cancel()
+        activeEditorSourceJob = scope.launch {
             stateFlow.update { it.copy(isEditorProcessing = true, errorMessage = null) }
-            val cacheResult = bridgeRepository.cacheImageFromUri(uri, "editor_source_${System.currentTimeMillis()}.jpg")
+            val filename = "editor_source_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->
+                    bridgeRepository.lruCacheManager.protectFile(file.absolutePath)
+                    val oldFile = currentEditorSourceFile
+                    currentEditorSourceFile = file
+                    if (oldFile != null && oldFile.absolutePath != file.absolutePath) {
+                        bridgeRepository.lruCacheManager.unprotectFile(oldFile.absolutePath)
+                        oldFile.delete()
+                    }
+
                     val thumbnail = withContext(Dispatchers.IO) {
                         decodeSampledBitmap(file.absolutePath, 1080)
                     }
@@ -553,6 +566,7 @@ class EditorSessionDelegate(
     }
 
     fun exportEditorCube(onSuccess: (String) -> Unit) {
+        if (stateFlow.value.isEditorExportingCube) return
         val src = stateFlow.value.editorSourcePath ?: return
         scope.launch {
             stateFlow.update { it.copy(isEditorExportingCube = true, errorMessage = null) }
@@ -578,20 +592,29 @@ class EditorSessionDelegate(
 
             when (res) {
                 is CubeExportResult.Success -> {
-                    val fileName = File(res.cubePath).name
-                    stateFlow.update {
-                        it.copy(
-                            isEditorExportingCube = false,
-                            exportedCubePath = res.cubePath,
-                            pendingExport = PendingExport(
-                                sourcePath = res.cubePath,
-                                suggestedFileName = fileName,
-                                exportType = ExportType.CUBE_LUT
-                            ),
-                            userMessage = UiText.Resource(R.string.msg_lut_cube_exported)
-                        )
+                    val target = File(res.cubePath)
+                    if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                        stateFlow.update {
+                            it.copy(
+                                isEditorExportingCube = false,
+                                errorMessage = UiText.Resource(R.string.err_export_io, listOf("Fichier .cube généré vide ou introuvable"))
+                            )
+                        }
+                    } else {
+                        val fileName = target.name
+                        stateFlow.update {
+                            it.copy(
+                                isEditorExportingCube = false,
+                                exportedCubePath = target.canonicalPath,
+                                pendingExport = PendingExport(
+                                    sourcePath = target.canonicalPath,
+                                    suggestedFileName = fileName,
+                                    exportType = ExportType.CUBE_LUT
+                                )
+                            )
+                        }
+                        onSuccess(fileName)
                     }
-                    onSuccess(fileName)
                 }
                 is CubeExportResult.Error -> {
                     stateFlow.update {
@@ -606,6 +629,7 @@ class EditorSessionDelegate(
     }
 
     fun exportEditorImage(onSavedImageRecorded: () -> Unit) {
+        if (stateFlow.value.isEditorExportingImage) return
         val src = stateFlow.value.editorSourcePath ?: return
         scope.launch {
             stateFlow.update { it.copy(isEditorExportingImage = true, errorMessage = null) }

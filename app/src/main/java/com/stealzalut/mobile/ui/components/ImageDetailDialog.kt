@@ -85,6 +85,7 @@ fun ImageDetailDialog(
                 if (f.exists()) {
                     val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                     BitmapFactory.decodeFile(f.absolutePath, opts)
+                    if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
                     var sample = 1
                     val maxDim = maxOf(opts.outWidth, opts.outHeight)
                     while (maxDim / (sample * 2) >= 1440) {
@@ -93,7 +94,7 @@ fun ImageDetailDialog(
                     val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
                     BitmapFactory.decodeFile(f.absolutePath, decodeOpts)
                 } else null
-            } catch (_: Exception) {
+            } catch (t: Throwable) {
                 null
             }
         }

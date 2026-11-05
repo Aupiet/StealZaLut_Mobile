@@ -14,10 +14,33 @@ class LruCacheManager(
     private val maxSizeBytes: Long = DEFAULT_MAX_SIZE_BYTES
 ) {
 
+    private val protectedPaths: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
     init {
         if (!previewDir.exists()) {
             previewDir.mkdirs()
         }
+    }
+
+    /**
+     * Marks a file path as protected against LRU pruning and age expiration.
+     */
+    fun protectFile(path: String) {
+        protectedPaths.add(File(path).absolutePath)
+    }
+
+    /**
+     * Unprotects a file path when it is no longer actively in use.
+     */
+    fun unprotectFile(path: String) {
+        protectedPaths.remove(File(path).absolutePath)
+    }
+
+    /**
+     * Checks if a file path is currently protected.
+     */
+    fun isProtected(path: String): Boolean {
+        return protectedPaths.contains(File(path).absolutePath)
     }
 
     /**
@@ -34,6 +57,7 @@ class LruCacheManager(
     /**
      * Prunes files that are older than [maxAgeMs] and ensures the total directory
      * size does not exceed [maxBytes] using a Least-Recently-Used (oldest modified first) strategy.
+     * Protected active source/reference files are never deleted.
      */
     @Synchronized
     fun cleanupOldOrExcessFiles(
@@ -45,9 +69,13 @@ class LruCacheManager(
         val now = System.currentTimeMillis()
         val files = previewDir.listFiles()?.filter { it.isFile } ?: return
 
-        // 1. Remove files older than 24 hours
+        // 1. Remove files older than maxAgeMs, skipping protected files
         val remainingFiles = mutableListOf<File>()
         for (file in files) {
+            if (isProtected(file.absolutePath)) {
+                remainingFiles.add(file)
+                continue
+            }
             val age = now - file.lastModified()
             if (age > maxAgeMs) {
                 file.delete()
@@ -62,6 +90,9 @@ class LruCacheManager(
             // Sort ascending: oldest files first
             remainingFiles.sortBy { it.lastModified() }
             for (file in remainingFiles) {
+                if (isProtected(file.absolutePath)) {
+                    continue
+                }
                 if (totalSize <= maxBytes * 0.8) {
                     // Stop once we've brought the cache below 80% to prevent continuous trashing
                     break

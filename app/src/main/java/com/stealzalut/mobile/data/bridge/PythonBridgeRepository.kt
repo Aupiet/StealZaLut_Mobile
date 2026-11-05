@@ -50,20 +50,44 @@ class PythonBridgeRepository(private val context: Context) {
         File(context.cacheDir, LruCacheManager.PREVIEWS_DIR_NAME)
     )
 
+    // Dedicated directory for active source/reference inputs, isolated from auto-pruned previews
+    val inputsDir: File = File(context.cacheDir, "stealzalut_inputs").apply { mkdirs() }
+
     /**
      * Resolves an Android Content Uri by caching the stream into internal storage
-     * so Python can read a POSIX path.
+     * within [inputsDir] so Python can read a POSIX path.
+     * Active input files are kept strictly isolated from the LRU previews cache.
      */
     suspend fun cacheImageFromUri(uri: Uri, cacheFilename: String): Result<File> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val previewsDir = lruCacheManager.previewDir
-                val targetFile = File(previewsDir, cacheFilename)
-                context.contentResolver.openInputStream(uri)?.use { input ->
+                val targetFile = File(inputsDir, cacheFilename)
+                val bytesCopied = context.contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(targetFile).use { output ->
                         input.copyTo(output)
                     }
                 } ?: throw IllegalArgumentException("Impossible d'ouvrir le flux pour l'URI: $uri")
+
+                if (!targetFile.exists() || targetFile.length() <= 0L || bytesCopied <= 0L) {
+                    targetFile.delete()
+                    throw IllegalStateException("Le fichier en cache est vide ou incomplet: $cacheFilename")
+                }
+
+                // If not a LUT file, verify that it can be decoded bounds-first
+                if (!cacheFilename.endsWith(".cube", ignoreCase = true)) {
+                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    try {
+                        BitmapFactory.decodeFile(targetFile.absolutePath, opts)
+                        if (opts.outWidth <= 0 || opts.outHeight <= 0) {
+                            targetFile.delete()
+                            throw IllegalArgumentException("Format d'image non reconnu ou corrompu: $cacheFilename")
+                        }
+                    } catch (t: Throwable) {
+                        targetFile.delete()
+                        throw IllegalStateException("Échec de vérification du format d'image: ${t.localizedMessage}", t)
+                    }
+                }
+
                 targetFile
             }
         }
@@ -146,7 +170,8 @@ class PythonBridgeRepository(private val context: Context) {
 
             val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
             val timestamp = System.currentTimeMillis()
-            val cubeFile = File(outputDir, "StealZaLUT_${timestamp}_${lutSize.size}.cube")
+            val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
+            val cubeFile = File(outputDir, "StealZaLUT_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
 
             val pyResult: PyObject = bridge.callAttr(
                 "export_cube_file",
@@ -175,9 +200,16 @@ class PythonBridgeRepository(private val context: Context) {
                 val path = pyResult.callAttr("get", "lut_path")?.toString()
                     ?: pyResult.callAttr("get", "cube_path")?.toString()
                     ?: cubeFile.absolutePath
-                val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
-                val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                CubeExportResult.Success(cubePath = path, lutSize = size, executionTimeMs = timeMs)
+                val target = File(path)
+                if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                    android.util.Log.e("PythonBridgeRepository", "Python reported success but generated cube file is missing or empty: $path")
+                    val domainError = LutDomainError.ExportIoError("Fichier .cube généré introuvable ou vide sur le stockage interne")
+                    CubeExportResult.Error(error = domainError, customMessage = "Fichier .cube généré introuvable ou vide sur le stockage interne")
+                } else {
+                    val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
+                    val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
+                    CubeExportResult.Success(cubePath = target.canonicalPath, lutSize = size, executionTimeMs = timeMs)
+                }
             } else {
                 val errorCode = pyResult.callAttr("get", "error_code")?.toString()
                 val message = pyResult.callAttr("get", "message")?.toString()
@@ -334,7 +366,8 @@ class PythonBridgeRepository(private val context: Context) {
 
             val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
             val timestamp = System.currentTimeMillis()
-            val cubeFile = File(outputDir, "StealZaLUT_Auto_${timestamp}_${lutSize.size}.cube")
+            val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
+            val cubeFile = File(outputDir, "StealZaLUT_Auto_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
 
             val pyResult: PyObject = bridge.callAttr(
                 "export_auto_edit_cube",
@@ -348,9 +381,16 @@ class PythonBridgeRepository(private val context: Context) {
                 val path = pyResult.callAttr("get", "cube_path")?.toString()
                     ?: pyResult.callAttr("get", "lut_path")?.toString()
                     ?: cubeFile.absolutePath
-                val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
-                val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                CubeExportResult.Success(cubePath = path, lutSize = size, executionTimeMs = timeMs)
+                val target = File(path)
+                if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                    android.util.Log.e("PythonBridgeRepository", "Python reported success but generated auto cube file is missing or empty: $path")
+                    val domainError = LutDomainError.ExportIoError("Fichier .cube généré introuvable ou vide sur le stockage interne")
+                    CubeExportResult.Error(error = domainError, customMessage = "Fichier .cube généré introuvable ou vide sur le stockage interne")
+                } else {
+                    val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
+                    val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
+                    CubeExportResult.Success(cubePath = target.canonicalPath, lutSize = size, executionTimeMs = timeMs)
+                }
             } else {
                 val errorCode = pyResult.callAttr("get", "error_code")?.toString()
                 val message = pyResult.callAttr("get", "message")?.toString()
@@ -790,7 +830,8 @@ class PythonBridgeRepository(private val context: Context) {
 
             val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
             val timestamp = System.currentTimeMillis()
-            val cubeFile = File(outputDir, "StealZaLUT_Editor_${timestamp}_${lutSize.size}.cube")
+            val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
+            val cubeFile = File(outputDir, "StealZaLUT_Editor_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
 
             val pyResult: PyObject = bridge.callAttr(
                 "export_cube_file",
@@ -827,10 +868,19 @@ class PythonBridgeRepository(private val context: Context) {
 
             val status = pyResult.callAttr("get", "status")?.toString()
             if (status == "success") {
-                val path = pyResult.callAttr("get", "lut_path")?.toString() ?: cubeFile.absolutePath
-                val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
-                val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                CubeExportResult.Success(cubePath = path, lutSize = size, executionTimeMs = timeMs)
+                val path = pyResult.callAttr("get", "lut_path")?.toString()
+                    ?: pyResult.callAttr("get", "cube_path")?.toString()
+                    ?: cubeFile.absolutePath
+                val target = File(path)
+                if (!target.exists() || !target.isFile || target.length() <= 0L) {
+                    android.util.Log.e("PythonBridgeRepository", "Python reported success but generated editor cube file is missing or empty: $path")
+                    val domainError = LutDomainError.ExportIoError("Fichier .cube généré introuvable ou vide sur le stockage interne")
+                    CubeExportResult.Error(error = domainError, customMessage = "Fichier .cube généré introuvable ou vide sur le stockage interne")
+                } else {
+                    val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
+                    val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
+                    CubeExportResult.Success(cubePath = target.canonicalPath, lutSize = size, executionTimeMs = timeMs)
+                }
             } else {
                 val errorCode = pyResult.callAttr("get", "error_code")?.toString()
                 val message = pyResult.callAttr("get", "message")?.toString()

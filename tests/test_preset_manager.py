@@ -155,6 +155,30 @@ class TestPresetManager:
         assert imported["name"] == "Exportable"
         assert imported["step3_params"]["grain"] == 0.5
 
+    def test_export_and_import_preset_with_embedded_lut(self, tmp_path: Path) -> None:
+        source_dir = str(tmp_path / "device_a_presets")
+        target_dir = str(tmp_path / "device_b_presets")
+        export_file = str(tmp_path / "shared.szlpreset")
+
+        # Create a mock .cube file on "device A"
+        cube_file = tmp_path / "device_a_storage" / "cinematic.cube"
+        cube_file.parent.mkdir(parents=True, exist_ok=True)
+        cube_file.write_text('TITLE "Cinematic"\nLUT_3D_SIZE 2\n0.0 0.0 0.0\n0.0 0.0 1.0\n')
+
+        orig = create_preset("WithLUT", lut_reference=str(cube_file))
+        save_preset(orig, directory=source_dir)
+
+        # Export on device A
+        out = export_preset(orig["id"], export_path=export_file, directory=source_dir)
+
+        # Import on device B
+        imported = import_preset(out, target_directory=target_dir)
+        assert imported["lut_reference"] is not None
+        assert Path(imported["lut_reference"]).is_file()
+        assert Path(imported["lut_reference"]).read_text() == cube_file.read_text()
+        # Verify it unpacked inside device B's imported_luts directory
+        assert "device_b_presets" in imported["lut_reference"]
+
 
 class TestPresetBridge:
     """Validate Chaquopy Kotlin-facing Preset Bridge API."""

@@ -347,6 +347,17 @@ def export_preset(
     preset = load_preset(preset_id_or_path, directory=directory)
     # Remove internal metadata key before export
     clean_data = {k: v for k, v in preset.items() if not k.startswith("_")}
+
+    # Bundle referenced 3D LUT directly into the preset if available on disk for cross-device portability
+    lut_ref = clean_data.get("lut_reference")
+    if lut_ref and os.path.isfile(lut_ref):
+        try:
+            with open(lut_ref, "r", encoding="utf-8", errors="replace") as fh:
+                clean_data["lut_embedded_cube"] = fh.read()
+            clean_data["lut_filename"] = os.path.basename(lut_ref)
+        except Exception:
+            pass
+
     os.makedirs(os.path.dirname(os.path.abspath(export_path)) or ".", exist_ok=True)
     with open(export_path, "w", encoding="utf-8") as fh:
         json.dump(clean_data, fh, indent=2, ensure_ascii=False)
@@ -359,7 +370,7 @@ def import_preset(
 ) -> Dict[str, Any]:
     """Import a .szlpreset file from an external path into the presets directory.
 
-    Validates schema and migrates if needed.
+    Validates schema, unbundles any embedded 3D LUT into local storage, and migrates if needed.
 
     Args:
         import_path: External file path to import.
@@ -373,8 +384,30 @@ def import_preset(
 
     preset = load_preset(import_path)
     clean_data = {k: v for k, v in preset.items() if not k.startswith("_")}
-    # Generate new ID if preset with same ID already exists in target
     target_dir = target_directory or get_default_presets_dir()
+
+    # Unpack embedded 3D LUT if bundled in preset
+    embedded_cube = clean_data.get("lut_embedded_cube")
+    lut_filename = clean_data.get("lut_filename") or f"preset_{clean_data.get('id', 'imported')}.cube"
+    if embedded_cube:
+        luts_dir = os.path.join(target_dir, "imported_luts")
+        os.makedirs(luts_dir, exist_ok=True)
+        local_cube_path = os.path.join(luts_dir, lut_filename)
+        with open(local_cube_path, "w", encoding="utf-8") as fh:
+            fh.write(embedded_cube)
+        clean_data["lut_reference"] = os.path.abspath(local_cube_path)
+    else:
+        # Check if legacy absolute lut_reference is present but points to a non-existent path on this device
+        old_ref = clean_data.get("lut_reference")
+        if old_ref and not os.path.isfile(old_ref):
+            candidate = os.path.join(target_dir, "imported_luts", os.path.basename(old_ref))
+            if os.path.isfile(candidate):
+                clean_data["lut_reference"] = os.path.abspath(candidate)
+            else:
+                clean_data["lut_reference"] = None
+                clean_data["lut_missing_reference"] = old_ref
+
+    # Generate new ID if preset with same ID already exists in target
     existing_ids = {p["id"] for p in list_presets(target_dir)}
     if clean_data["id"] in existing_ids:
         clean_data["id"] = str(uuid.uuid4())

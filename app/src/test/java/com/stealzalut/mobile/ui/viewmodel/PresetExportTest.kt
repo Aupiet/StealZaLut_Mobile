@@ -65,7 +65,10 @@ class PresetExportTest {
             referenceImagePath = tempRefFile.absolutePath
         )
 
-        val outCubePath = "/data/user/0/com.stealzalut/cache/test_preset.cube"
+        val tempCube = File.createTempFile("test_preset_", ".cube").apply {
+            writeText("TITLE Test\nLUT_3D_SIZE 2\n0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n1 1 1\n")
+        }
+        val outCubePath = tempCube.canonicalPath
         coEvery {
             bridgeRepository.exportCube(
                 srcPath = "",
@@ -87,6 +90,7 @@ class PresetExportTest {
         assertEquals(ExportType.CUBE_LUT, stateFlow.value.pendingExport?.exportType)
         assertEquals(outCubePath, stateFlow.value.pendingExport?.sourcePath)
 
+        tempCube.delete()
         tempRefFile.delete()
     }
 
@@ -99,7 +103,10 @@ class PresetExportTest {
             intensity = 1.0f
         )
 
-        val outCubePath = "/data/user/0/com.stealzalut/cache/test_palette.cube"
+        val tempCube = File.createTempFile("test_palette_", ".cube").apply {
+            writeText("TITLE Test\nLUT_3D_SIZE 2\n0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n1 1 1\n")
+        }
+        val outCubePath = tempCube.canonicalPath
         coEvery {
             bridgeRepository.exportCube(
                 srcPath = "",
@@ -120,6 +127,7 @@ class PresetExportTest {
         assertNotNull(stateFlow.value.pendingExport)
         assertEquals(ExportType.CUBE_LUT, stateFlow.value.pendingExport?.exportType)
 
+        tempCube.delete()
         tempRefFile.delete()
     }
 }

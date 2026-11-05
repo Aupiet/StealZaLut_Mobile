@@ -729,6 +729,7 @@ def extract_palette(image_path: str, num_colors: int = 6) -> Dict[str, Any]:
             return resp
         from stealzalut.config import PALETTE_RESIZE_DIM
         from stealzalut.utils.image_io import load_proxy_image
+
         img = load_proxy_image(image_path, max_dim=PALETTE_RESIZE_DIM)
         hex_colors = extract_dominant_palette(img, num_colors=num_colors)
         if not hex_colors:

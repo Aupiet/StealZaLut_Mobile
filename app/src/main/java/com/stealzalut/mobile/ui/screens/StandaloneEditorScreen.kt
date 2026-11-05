@@ -122,7 +122,11 @@ fun StandaloneEditorScreen(
     val presetExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        uri?.let { viewModel.savePendingExportToUri(it) }
+        if (uri != null) {
+            viewModel.savePendingExportToUri(uri)
+        } else {
+            viewModel.cancelPendingExport()
+        }
     }
 
     val presetImportLauncher = rememberLauncherForActivityResult(

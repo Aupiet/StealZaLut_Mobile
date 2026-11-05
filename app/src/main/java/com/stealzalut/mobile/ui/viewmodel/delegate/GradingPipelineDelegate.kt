@@ -23,6 +23,7 @@ import com.stealzalut.mobile.ui.viewmodel.ExportType
 import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -56,13 +57,30 @@ class GradingPipelineDelegate(
     private val savedImageRepository: SavedImageRepository,
     private val stateFlow: MutableStateFlow<StealZaLutUiState>,
     private val scope: CoroutineScope,
-    private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?
+    private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val previewDebounceFlow = MutableSharedFlow<PreviewDebounceRequest>(replay = 1)
     private var activeGradingJob: Job? = null
+    private var activeSourceJob: Job? = null
+    private var activeCustomRefJob: Job? = null
+    private var currentSourceFile: File? = null
+    private var currentCustomRefFile: File? = null
 
     fun clearCaches() {
         activeGradingJob?.cancel()
+        activeSourceJob?.cancel()
+        activeCustomRefJob?.cancel()
+        currentSourceFile?.let {
+            bridgeRepository.lruCacheManager.unprotectFile(it.absolutePath)
+            it.delete()
+            currentSourceFile = null
+        }
+        currentCustomRefFile?.let {
+            bridgeRepository.lruCacheManager.unprotectFile(it.absolutePath)
+            it.delete()
+            currentCustomRefFile = null
+        }
         scope.launch {
             bridgeRepository.clearCaches()
         }
@@ -80,11 +98,22 @@ class GradingPipelineDelegate(
     }
 
     fun setSourceImage(uri: Uri) {
-        scope.launch {
+        activeSourceJob?.cancel()
+        activeGradingJob?.cancel()
+        activeSourceJob = scope.launch {
             stateFlow.update { it.copy(isProcessingPreview = true, errorMessage = null) }
-            val cacheResult = bridgeRepository.cacheImageFromUri(uri, "source_input.jpg")
+            val filename = "source_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->
+                    bridgeRepository.lruCacheManager.protectFile(file.absolutePath)
+                    val oldFile = currentSourceFile
+                    currentSourceFile = file
+                    if (oldFile != null && oldFile.absolutePath != file.absolutePath) {
+                        bridgeRepository.lruCacheManager.unprotectFile(oldFile.absolutePath)
+                        oldFile.delete()
+                    }
+
                     val thumbnail = withContext(Dispatchers.IO) {
                         decodeSampledBitmap(file.absolutePath, 1080)
                     }
@@ -134,11 +163,22 @@ class GradingPipelineDelegate(
     }
 
     fun setCustomReferenceForApply(uri: Uri) {
-        scope.launch {
+        activeCustomRefJob?.cancel()
+        activeGradingJob?.cancel()
+        activeCustomRefJob = scope.launch {
             stateFlow.update { it.copy(isProcessingPreview = true, errorMessage = null) }
-            val cacheResult = bridgeRepository.cacheImageFromUri(uri, "custom_ref_apply.jpg")
+            val filename = "custom_ref_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->
+                    bridgeRepository.lruCacheManager.protectFile(file.absolutePath)
+                    val oldFile = currentCustomRefFile
+                    currentCustomRefFile = file
+                    if (oldFile != null && oldFile.absolutePath != file.absolutePath) {
+                        bridgeRepository.lruCacheManager.unprotectFile(oldFile.absolutePath)
+                        oldFile.delete()
+                    }
+
                     val thumbnail = withContext(Dispatchers.IO) {
                         decodeSampledBitmap(file.absolutePath, 1080)
                     }
@@ -438,6 +478,7 @@ class GradingPipelineDelegate(
 
     fun exportCube(onReadyToSave: (String) -> Unit) {
         val current = stateFlow.value
+        if (current.isExportingCube) return
         val src = current.sourcePath
         val ref = current.effectiveReferencePath
 
@@ -498,6 +539,7 @@ class GradingPipelineDelegate(
 
     fun openInEditorFromStudio() {
         val current = stateFlow.value
+        if (current.isExportingCube) return
         val src = current.sourcePath
         val ref = current.effectiveReferencePath
         if (src == null || ref == null) {
@@ -564,12 +606,12 @@ class GradingPipelineDelegate(
         }
     }
 
-    fun savePendingExportToUri(destinationUri: Uri) {
+    fun savePendingExportToUri(destinationUri: Uri): Job {
         val pending = stateFlow.value.pendingExport
         if (pending == null) {
             cleanupEmptyUri(destinationUri)
             stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_no_pending_export)) }
-            return
+            return Job().apply { complete() }
         }
 
         val sourceFile = File(pending.sourcePath)
@@ -581,14 +623,14 @@ class GradingPipelineDelegate(
                     errorMessage = UiText.Resource(R.string.err_lut_path_not_found)
                 )
             }
-            return
+            return Job().apply { complete() }
         }
 
         val expectedBytes = sourceFile.length()
 
-        scope.launch {
+        return scope.launch {
             try {
-                val bytesCopied = withContext(Dispatchers.IO) {
+                val bytesCopied = withContext(ioDispatcher) {
                     val outStream = (try {
                         context.contentResolver.openOutputStream(destinationUri, "wt")
                     } catch (_: Exception) {
@@ -596,9 +638,11 @@ class GradingPipelineDelegate(
                     }) ?: context.contentResolver.openOutputStream(destinationUri)
                     ?: throw IOException("Failed to open output stream for URI: $destinationUri")
                     outStream.use { out ->
-                        sourceFile.inputStream().use { inStream ->
+                        val copied = sourceFile.inputStream().use { inStream ->
                             inStream.copyTo(out)
                         }
+                        out.flush()
+                        copied
                     }
                 }
 
@@ -608,6 +652,20 @@ class GradingPipelineDelegate(
                         it.copy(
                             pendingExport = null,
                             errorMessage = UiText.Resource(R.string.err_export_io, listOf("Corrupted copy ($bytesCopied / $expectedBytes bytes)"))
+                        )
+                    }
+                    return@launch
+                }
+
+                // Streaming post-write verification directly from destination document
+                val verifyResult = verifyDestinationDocument(destinationUri, expectedBytes, pending.exportType)
+                if (verifyResult.isFailure) {
+                    cleanupEmptyUri(destinationUri)
+                    val errorDetail = verifyResult.exceptionOrNull()?.localizedMessage ?: "Vérification document échouée"
+                    stateFlow.update {
+                        it.copy(
+                            pendingExport = null,
+                            errorMessage = UiText.Resource(R.string.err_export_io, listOf(errorDetail))
                         )
                     }
                     return@launch
@@ -635,8 +693,8 @@ class GradingPipelineDelegate(
         }
     }
 
-    fun saveExportedCubeToUri(destinationUri: Uri) {
-        savePendingExportToUri(destinationUri)
+    fun saveExportedCubeToUri(destinationUri: Uri): Job {
+        return savePendingExportToUri(destinationUri)
     }
 
     fun cancelPendingExport() {
@@ -652,6 +710,65 @@ class GradingPipelineDelegate(
             }
         } catch (_: Exception) {
             // Ignored if document already removed or unsupported
+        }
+    }
+
+    private suspend fun verifyDestinationDocument(
+        uri: Uri,
+        expectedBytes: Long,
+        exportType: ExportType
+    ): Result<Unit> = withContext(ioDispatcher) {
+        runCatching {
+            val inStream = context.contentResolver.openInputStream(uri)
+                ?: throw IOException("Impossible d'ouvrir le flux de lecture pour l'URI: $uri")
+
+            inStream.use { stream ->
+                if (exportType == ExportType.CUBE_LUT) {
+                    val reader = stream.bufferedReader()
+                    var lutSize: Int? = null
+                    var dataCount = 0
+                    var line: String?
+
+                    while (reader.readLine().also { line = it } != null) {
+                        val trimmed = line!!.trim()
+                        if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("TITLE")) {
+                            continue
+                        }
+                        if (trimmed.startsWith("LUT_3D_SIZE")) {
+                            val parts = trimmed.split("\\s+".toRegex())
+                            if (parts.size >= 2) {
+                                lutSize = parts[1].toIntOrNull()
+                            }
+                            continue
+                        }
+                        if (trimmed.startsWith("DOMAIN_MIN") || trimmed.startsWith("DOMAIN_MAX")) {
+                            continue
+                        }
+                        val parts = trimmed.split("\\s+".toRegex())
+                        if (parts.size == 3 && parts[0].toFloatOrNull() != null && parts[1].toFloatOrNull() != null && parts[2].toFloatOrNull() != null) {
+                            dataCount++
+                        }
+                    }
+
+                    if (lutSize == null || lutSize <= 0) {
+                        throw IOException("Entête LUT_3D_SIZE introuvable ou invalide dans le fichier exporté.")
+                    }
+                    val expectedTriplets = lutSize * lutSize * lutSize
+                    if (dataCount != expectedTriplets) {
+                        throw IOException("Fichier .cube incomplet : $dataCount triplets trouvés sur $expectedTriplets attendus.")
+                    }
+                } else {
+                    var totalRead = 0L
+                    val buffer = ByteArray(8192)
+                    var read: Int
+                    while (stream.read(buffer).also { read = it } != -1) {
+                        totalRead += read
+                    }
+                    if (totalRead <= 0L || totalRead != expectedBytes) {
+                        throw IOException("Vérification des octets échouée ($totalRead / $expectedBytes octets)")
+                    }
+                }
+            }
         }
     }
 

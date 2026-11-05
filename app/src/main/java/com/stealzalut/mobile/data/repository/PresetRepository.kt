@@ -146,6 +146,7 @@ class PresetRepository(private val context: Context) {
 
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(sourcePath, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
 
             var sampleSize = 1
             val maxDim = maxOf(bounds.outWidth, bounds.outHeight)
@@ -174,7 +175,8 @@ class PresetRepository(private val context: Context) {
             }
             scaled.recycle()
             thumbFile.absolutePath
-        } catch (_: Exception) {
+        } catch (t: Throwable) {
+            android.util.Log.e("PresetRepository", "Thumbnail generation error", t)
             null
         }
     }

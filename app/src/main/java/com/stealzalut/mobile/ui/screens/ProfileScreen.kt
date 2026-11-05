@@ -272,6 +272,7 @@ private fun InstagramGridThumbnail(
                 if (file.exists()) {
                     val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                     BitmapFactory.decodeFile(file.absolutePath, opts)
+                    if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
                     var sample = 1
                     val maxDim = maxOf(opts.outWidth, opts.outHeight)
                     while (maxDim / (sample * 2) >= 300) {
@@ -280,7 +281,7 @@ private fun InstagramGridThumbnail(
                     val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
                     BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
                 } else null
-            } catch (_: Exception) {
+            } catch (t: Throwable) {
                 null
             }
         }
@@ -337,6 +338,7 @@ private fun PresetCardWithColorSpectrum(
                     if (file.exists()) {
                         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                         BitmapFactory.decodeFile(file.absolutePath, opts)
+                        if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
                         var sample = 1
                         val maxDim = maxOf(opts.outWidth, opts.outHeight)
                         while (maxDim / (sample * 2) >= 600) {
@@ -346,7 +348,7 @@ private fun PresetCardWithColorSpectrum(
                         BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
                     } else null
                 } else null
-            } catch (_: Exception) {
+            } catch (t: Throwable) {
                 null
             }
         }

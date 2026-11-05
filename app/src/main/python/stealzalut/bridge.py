@@ -31,8 +31,12 @@ from stealzalut.config import (
 from stealzalut.core.preset_manager import (
     create_preset,
     delete_preset,
+    duplicate_preset,
+    export_preset,
+    import_preset,
     list_presets,
     load_preset,
+    rename_preset,
     save_preset,
 )
 from stealzalut.utils.image_io import extract_dominant_palette, load_image
@@ -468,6 +472,75 @@ def delete_preset_bridge(path_or_id: str, directory: Optional[str] = None) -> Di
         return {
             "status": "success" if ok else "error",
             "deleted": ok,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def duplicate_preset_bridge(
+    path_or_id: str,
+    new_name: Optional[str] = None,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Duplicate an existing editing preset."""
+    try:
+        dup = duplicate_preset(path_or_id, new_name=new_name, directory=directory)
+        return {
+            "status": "success",
+            "preset": dup,
+            "preset_id": dup["id"],
+            "preset_path": dup.get("_file_path"),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def rename_preset_bridge(
+    path_or_id: str,
+    new_name: str,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Rename an existing editing preset."""
+    try:
+        updated = rename_preset(path_or_id, new_name=new_name, directory=directory)
+        return {
+            "status": "success",
+            "preset": updated,
+            "preset_id": updated["id"],
+            "preset_path": updated.get("_file_path"),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def export_preset_bridge(
+    path_or_id: str,
+    export_path: str,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Export an editing preset to a file."""
+    try:
+        final_path = export_preset(path_or_id, export_path=export_path, directory=directory)
+        return {
+            "status": "success",
+            "export_path": final_path,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def import_preset_bridge(
+    import_path: str,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Import an editing preset from an external file."""
+    try:
+        imported = import_preset(import_path, target_directory=directory)
+        return {
+            "status": "success",
+            "preset": imported,
+            "preset_id": imported["id"],
+            "preset_path": imported.get("_file_path"),
         }
     except Exception as exc:  # noqa: BLE001
         return _make_error_response(exc=exc)

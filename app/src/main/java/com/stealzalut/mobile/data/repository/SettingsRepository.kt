@@ -6,6 +6,7 @@ import com.stealzalut.mobile.data.cache.LruCacheManager
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.ui.theme.AppThemes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,15 +36,19 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_MAX_EXPORT_DIM = "key_max_export_dim"
         private const val KEY_EXPORT_FORMAT = "key_export_format"
         private const val KEY_EXPORT_QUALITY = "key_export_quality"
+        private const val KEY_SELECTED_THEME_ID = "key_selected_theme_id"
+        private const val KEY_DEVELOPER_MODE = "key_developer_mode"
     }
 
     private fun loadSettings(): AppSettings {
         val lutSizeVal = prefs.getInt(KEY_DEFAULT_LUT_SIZE, 33)
         val methodKey = prefs.getString(KEY_DEFAULT_METHOD, "hm-mkl-hm") ?: "hm-mkl-hm"
         val proxyDim = prefs.getInt(KEY_ANALYSIS_PROXY_DIM, 512)
-        val exportDim = prefs.getInt(KEY_MAX_EXPORT_DIM, 2048)
+        val exportDim = prefs.getInt(KEY_MAX_EXPORT_DIM, 3840)
         val format = prefs.getString(KEY_EXPORT_FORMAT, "JPEG") ?: "JPEG"
         val quality = prefs.getInt(KEY_EXPORT_QUALITY, 95)
+        val themeId = prefs.getString(KEY_SELECTED_THEME_ID, AppThemes.DEFAULT_THEME_ID) ?: AppThemes.DEFAULT_THEME_ID
+        val devMode = prefs.getBoolean(KEY_DEVELOPER_MODE, false)
 
         return AppSettings(
             defaultLutSize = LutSize.fromSize(lutSizeVal),
@@ -51,7 +56,9 @@ class SettingsRepository(private val context: Context) {
             analysisProxyDim = proxyDim,
             maxExportDim = exportDim,
             exportFormat = format,
-            exportQuality = quality
+            exportQuality = quality,
+            selectedThemeId = themeId,
+            developerMode = devMode
         )
     }
 
@@ -65,6 +72,8 @@ class SettingsRepository(private val context: Context) {
             .putInt(KEY_MAX_EXPORT_DIM, settings.maxExportDim)
             .putString(KEY_EXPORT_FORMAT, settings.exportFormat)
             .putInt(KEY_EXPORT_QUALITY, settings.exportQuality)
+            .putString(KEY_SELECTED_THEME_ID, settings.selectedThemeId)
+            .putBoolean(KEY_DEVELOPER_MODE, settings.developerMode)
             .apply()
         _settingsFlow.value = settings
     }

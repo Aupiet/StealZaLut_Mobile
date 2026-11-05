@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Card
@@ -45,6 +46,7 @@ import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.ui.theme.AppThemes
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import kotlin.math.roundToInt
 
@@ -162,6 +164,109 @@ fun SettingsScreen(
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // Section: Appearance & Theme
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = CardDefaults.outlinedCardBorder()
+        ) {
+            Column(
+                modifier = Modifier.padding(AppDimens.SpacingStandard),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconNormal),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.settings_section_appearance),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_theme_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
+                    AppThemes.allThemes.forEach { themeSpec ->
+                        val isSelected = settings.selectedThemeId == themeSpec.id
+                        val themeName = stringResource(themeSpec.nameRes)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                viewModel.updateSettings(settings.copy(selectedThemeId = themeSpec.id))
+                            },
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
+                                .semantics { contentDescription = themeName },
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            leadingIcon = {
+                                Surface(
+                                    modifier = Modifier.size(AppDimens.IconMicro),
+                                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                                    color = themeSpec.colorScheme.primary,
+                                    border = androidx.compose.foundation.BorderStroke(AppDimens.BorderThin, themeSpec.colorScheme.outline)
+                                ) {}
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(themeSpec.nameRes),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // Developer Mode toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = AppDimens.SpacingSmall),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_developer_mode_title),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_developer_mode_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = settings.developerMode,
+                        onCheckedChange = { isChecked ->
+                            viewModel.updateSettings(settings.copy(developerMode = isChecked))
+                        }
+                    )
                 }
             }
         }
@@ -430,6 +535,6 @@ fun SettingsScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(AppDimens.SpacingSpacious))
+        Spacer(modifier = Modifier.height(AppDimens.ListBottomPadding))
     }
 }

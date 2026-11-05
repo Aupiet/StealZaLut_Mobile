@@ -1,8 +1,9 @@
 """Editing Preset Manager (.szlpreset / JSON).
 
-Handles serialization, loading, listing, and validation of editing presets
-capturing the complete state of Stage 2 (Filter Refinement) and Stage 3 (Post-Grading),
-along with optional 3D LUT references and base64 preview thumbnails.
+Handles serialization, loading, listing, validation, migration, duplicating,
+and renaming of editing presets capturing the complete state of Stage 2
+(Filter Refinement) and Stage 3 (Post-Grading), along with optional 3D LUT
+references and base64 preview thumbnails. Conforms to schema_version 2.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import json
 import os
+import shutil
 import time
 from typing import Any, Dict, List, Optional
 import uuid
@@ -18,6 +20,7 @@ from stealzalut.core.pipeline import Step2Params, Step3Params
 
 
 DEFAULT_PRESETS_DIR_NAME: str = "szl_presets"
+SCHEMA_VERSION: int = 2
 
 
 def get_default_presets_dir() -> str:
@@ -30,6 +33,45 @@ def get_default_presets_dir() -> str:
     return os.path.abspath(base_dir)
 
 
+def migrate_preset(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Migrate legacy preset schema (v1 or unversioned) to current schema v2.
+
+    Ensures all parameters conform to Step2Params and Step3Params defaults,
+    timestamps are valid, and schema_version is normalized to SCHEMA_VERSION.
+
+    Args:
+        data: Raw preset dictionary.
+
+    Returns:
+        Migrated and validated preset dictionary conforming to schema v2.
+    """
+    version = data.get("schema_version", 1)
+    data["schema_version"] = SCHEMA_VERSION
+
+    if "id" not in data or not data["id"]:
+        data["id"] = str(uuid.uuid4())
+
+    if "name" not in data or not str(data["name"]).strip():
+        data["name"] = "Sans titre"
+    else:
+        data["name"] = str(data["name"]).strip()
+
+    if "created_at" not in data or not isinstance(data["created_at"], (int, float)):
+        data["created_at"] = int(time.time() * 1000)
+
+    # Normalize parameters via dataclasses (ensuring robust defaults)
+    data["step2_params"] = Step2Params.from_dict(data.get("step2_params")).to_dict()
+    data["step3_params"] = Step3Params.from_dict(data.get("step3_params")).to_dict()
+
+    if "lut_reference" not in data:
+        data["lut_reference"] = None
+
+    if "thumbnail_base64" not in data:
+        data["thumbnail_base64"] = None
+
+    return data
+
+
 def create_preset(
     name: str,
     step2_params: Optional[Step2Params | Dict[str, Any]] = None,
@@ -37,6 +79,7 @@ def create_preset(
     lut_reference: Optional[str] = None,
     thumbnail_base64: Optional[str] = None,
     preset_id: Optional[str] = None,
+    schema_version: int = SCHEMA_VERSION,
 ) -> Dict[str, Any]:
     """Create a standardized editing preset dictionary.
 
@@ -47,14 +90,16 @@ def create_preset(
         lut_reference: Path or relative identifier to active 3D LUT (or None).
         thumbnail_base64: Base64-encoded thumbnail string (or None).
         preset_id: Optional UUID string (generated if not provided).
+        schema_version: Schema version number (default: SCHEMA_VERSION).
 
     Returns:
-        Structured preset dictionary conforming to the .szlpreset schema.
+        Structured preset dictionary conforming to the .szlpreset schema v2.
     """
     p2 = Step2Params.from_dict(step2_params if isinstance(step2_params, dict) else asdict(step2_params) if step2_params else None)
     p3 = Step3Params.from_dict(step3_params if isinstance(step3_params, dict) else asdict(step3_params) if step3_params else None)
 
     return {
+        "schema_version": schema_version,
         "id": preset_id or str(uuid.uuid4()),
         "name": name.strip() or "Sans titre",
         "created_at": int(time.time() * 1000),
@@ -80,8 +125,8 @@ def save_preset(
     Returns:
         Absolute path of the saved preset file.
     """
-    p_id = preset_data.get("id") or str(uuid.uuid4())
-    preset_data["id"] = p_id
+    preset_data = migrate_preset(preset_data)
+    p_id = preset_data["id"]
 
     if filepath:
         out_path = os.path.abspath(filepath)
@@ -103,14 +148,14 @@ def load_preset(
     preset_path_or_id: str,
     directory: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Load and validate an editing preset from disk.
+    """Load, validate, and migrate an editing preset from disk.
 
     Args:
         preset_path_or_id: File path or preset ID.
         directory: Directory to search in when a preset ID is provided.
 
     Returns:
-        Validated preset dictionary.
+        Validated and migrated preset dictionary conforming to schema v2.
 
     Raises:
         FileNotFoundError: If the preset file cannot be located.
@@ -147,15 +192,9 @@ def load_preset(
     if not isinstance(data, dict):
         raise ValueError("Invalid preset content: root must be a JSON object.")
 
-    # Schema validation & normalisation
-    if "id" not in data or "name" not in data:
-        raise ValueError("Preset is missing required 'id' or 'name' fields.")
-
-    # Normalize step2 and step3 params
-    data["step2_params"] = Step2Params.from_dict(data.get("step2_params")).to_dict()
-    data["step3_params"] = Step3Params.from_dict(data.get("step3_params")).to_dict()
-
-    return data
+    migrated = migrate_preset(data)
+    migrated["_file_path"] = os.path.abspath(target_path)
+    return migrated
 
 
 def list_presets(directory: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -177,7 +216,6 @@ def list_presets(directory: Optional[str] = None) -> List[Dict[str, Any]]:
             fpath = os.path.join(target_dir, fname)
             try:
                 p = load_preset(fpath)
-                p["_file_path"] = fpath
                 presets.append(p)
             except Exception:
                 continue
@@ -222,3 +260,126 @@ def delete_preset(preset_id_or_path: str, directory: Optional[str] = None) -> bo
         except OSError:
             return False
     return False
+
+
+def duplicate_preset(
+    preset_id_or_path: str,
+    new_name: Optional[str] = None,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Duplicate an existing preset with a new ID and name.
+
+    Args:
+        preset_id_or_path: File path or preset ID of the source preset.
+        new_name: Optional custom name (defaults to '<original_name> (Copie)').
+        directory: Working directory.
+
+    Returns:
+        The newly created duplicated preset dictionary.
+    """
+    source = load_preset(preset_id_or_path, directory=directory)
+    base_name = source.get("name", "Preset")
+    copy_name = new_name.strip() if new_name and new_name.strip() else f"{base_name} (Copie)"
+
+    new_preset = create_preset(
+        name=copy_name,
+        step2_params=source.get("step2_params"),
+        step3_params=source.get("step3_params"),
+        lut_reference=source.get("lut_reference"),
+        thumbnail_base64=source.get("thumbnail_base64"),
+    )
+    saved_path = save_preset(new_preset, directory=directory)
+    new_preset["_file_path"] = saved_path
+    return new_preset
+
+
+def rename_preset(
+    preset_id_or_path: str,
+    new_name: str,
+    directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Rename an existing preset.
+
+    Args:
+        preset_id_or_path: File path or preset ID of the preset to rename.
+        new_name: New name for the preset.
+        directory: Working directory.
+
+    Returns:
+        The updated preset dictionary.
+    """
+    existing = load_preset(preset_id_or_path, directory=directory)
+    old_file_path = existing.get("_file_path")
+
+    cleaned_name = new_name.strip()
+    if not cleaned_name:
+        raise ValueError("Preset name cannot be empty.")
+
+    existing["name"] = cleaned_name
+    new_path = save_preset(existing, directory=directory)
+    existing["_file_path"] = new_path
+
+    # Clean up old file if name change caused a new filename
+    if old_file_path and os.path.isfile(old_file_path) and os.path.abspath(old_file_path) != os.path.abspath(new_path):
+        try:
+            os.remove(old_file_path)
+        except OSError:
+            pass
+
+    return existing
+
+
+def export_preset(
+    preset_id_or_path: str,
+    export_path: str,
+    directory: Optional[str] = None,
+) -> str:
+    """Export a preset to a standalone .szlpreset file at export_path.
+
+    Args:
+        preset_id_or_path: Preset identifier or path.
+        export_path: Destination file path.
+        directory: Directory to search preset in.
+
+    Returns:
+        Canonical absolute export path.
+    """
+    preset = load_preset(preset_id_or_path, directory=directory)
+    # Remove internal metadata key before export
+    clean_data = {k: v for k, v in preset.items() if not k.startswith("_")}
+    os.makedirs(os.path.dirname(os.path.abspath(export_path)) or ".", exist_ok=True)
+    with open(export_path, "w", encoding="utf-8") as fh:
+        json.dump(clean_data, fh, indent=2, ensure_ascii=False)
+    return os.path.abspath(export_path)
+
+
+def import_preset(
+    import_path: str,
+    target_directory: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Import a .szlpreset file from an external path into the presets directory.
+
+    Validates schema and migrates if needed.
+
+    Args:
+        import_path: External file path to import.
+        target_directory: Storage directory to import into.
+
+    Returns:
+        The imported and registered preset dictionary.
+    """
+    if not os.path.isfile(import_path):
+        raise FileNotFoundError(f"File to import not found: {import_path}")
+
+    preset = load_preset(import_path)
+    clean_data = {k: v for k, v in preset.items() if not k.startswith("_")}
+    # Generate new ID if preset with same ID already exists in target
+    target_dir = target_directory or get_default_presets_dir()
+    existing_ids = {p["id"] for p in list_presets(target_dir)}
+    if clean_data["id"] in existing_ids:
+        clean_data["id"] = str(uuid.uuid4())
+        clean_data["name"] = f"{clean_data['name']} (Importé)"
+
+    saved_path = save_preset(clean_data, directory=target_dir)
+    clean_data["_file_path"] = saved_path
+    return clean_data

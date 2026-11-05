@@ -111,6 +111,7 @@
     <string name="comparison_title">Interactive Comparison</string>
     <string name="comparison_side_by_side">Side-by-Side</string>
     <string name="comparison_split_wipe">Interactive Curtain</string>
+    <string name="comparison_hold_to_compare">Hold to Compare</string>
     <string name="comparison_original_label">ORIGINAL</string>
     <string name="comparison_lut_label">GRADED</string>
     <string name="comparison_handle_desc">Curtain slider divider handle</string>
@@ -244,6 +245,7 @@
     <string name="common_save">Save</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_share">Share</string>
+    <string name="share_cube_title">Share 3D LUT (.cube)</string>
     <string name="common_delete">Delete</string>
     <string name="common_retry">Retry</string>
     <string name="common_continue">Continue</string>
@@ -332,4 +334,99 @@
     <string name="dialog_preset_saved">Preset saved successfully!</string>
     <string name="dialog_preset_applied">Preset applied: %1$s</string>
     <string name="dialog_preset_deleted">Preset deleted.</string>
+
+    <!-- Design System Themes -->
+    <string name="theme_amber_noir">Amber Noir (Default)</string>
+    <string name="theme_cyan_studio">Cyan Studio</string>
+    <string name="theme_oled_black">OLED Pure Black</string>
+    <string name="theme_daylight">Daylight Light</string>
+    <string name="settings_section_appearance">Appearance &amp; Theme</string>
+    <string name="settings_theme_label">Color Theme</string>
+    <string name="settings_theme_desc">Select visual grading environment</string>
+    <string name="settings_developer_mode_title">Developer Mode</string>
+    <string name="settings_developer_mode_desc">Show internal Chaquopy execution timings</string>
+    <string name="settings_max_export_native">Original (Full Resolution)</string>
+
+    <!-- Editor & UI Elements -->
+    <string name="editor_section_base_lut">Base 3D LUT (.CUBE)</string>
+    <string name="editor_no_lut_mode">No LUT loaded (Direct grading mode)</string>
+    <string name="editor_my_presets_title">My Editing Presets (.szlpreset)</string>
+    <string name="editor_btn_apply">Apply</string>
+    <string name="editor_btn_delete">Delete</string>
+    <string name="editor_btn_remove_lut">Remove LUT</string>
+    <string name="editor_btn_reset_all">Reset All</string>
+    <string name="editor_compare_original_badge">ORIGINAL (Before)</string>
+    <string name="editor_actions_export">Export</string>
+    <string name="editor_export_photo">HD Photo</string>
+    <string name="editor_export_options_title">Export Options</string>
+    <string name="editor_tab_presets_desc">Presets &amp; LUTs</string>
+    <string name="common_undo">Undo</string>
+    <string name="common_redo">Redo</string>
+    <string name="common_rename">Rename</string>
+    <string name="common_duplicate">Duplicate</string>
+    <string name="preset_default_name_format">Style %1$s</string>
+
+    <!-- Feedback Messages -->
+    <string name="msg_preset_selected">Preset \'%1$s\' selected!</string>
+    <string name="msg_auto_edit_applied">Auto-Edit applied: Exp %1$+.2f EV | Cont %2$+.0f%% | Shadows %3$+.0f%%</string>
+    <string name="msg_photo_saved">Photo saved to Gallery and Library!</string>
+    <string name="msg_photo_hd_saved">HD photo saved to Android Gallery!</string>
+    <string name="msg_preset_saved">Preset \'%1$s\' saved!</string>
+    <string name="msg_palette_extracted">Palette extracted successfully!</string>
+    <string name="msg_preset_deleted">Preset deleted.</string>
+    <string name="msg_photo_deleted">Photo removed from library.</string>
+    <string name="msg_lut_cube_saved">3D LUT (.cube) saved successfully!</string>
+    <string name="msg_lut_cube_exported">3D LUT (.cube) exported successfully!</string>
+    <string name="msg_editing_preset_saved">Editing preset saved!</string>
+    <string name="msg_preset_applied">Preset applied: %1$s</string>
+    <string name="msg_settings_saved">Settings saved.</string>
+    <string name="msg_language_updated">Language updated successfully.</string>
+
+    <!-- Error Messages -->
+    <string name="err_source_image_not_found">Source image not found or inaccessible.</string>
+    <string name="err_reference_image_not_found">Reference image not found or inaccessible.</string>
+    <string name="err_matrix_singularity">Matrix singularity detected (source or reference image is too uniform).</string>
+    <string name="err_out_of_memory">Insufficient memory to process high resolution image.</string>
+    <string name="err_export_io">Disk access or write error: %1$s</string>
+    <string name="err_generic">An unexpected error occurred: %1$s</string>
+    <string name="err_source_load">Error loading source image: %1$s</string>
+    <string name="err_reference_load">Error loading reference image: %1$s</string>
+    <string name="err_select_source_first">Please select a source photo first.</string>
+    <string name="err_select_source_and_ref">Cannot export: please select a source photo and reference style.</string>
+    <string name="err_preset_no_ref">This preset does not contain a valid reference image to regenerate the LUT.</string>
+    <string name="err_lut_path_not_found">Error: LUT file path not found.</string>
+    <string name="err_save_failed">Error saving file: %1$s</string>
+    <string name="err_image_load_failed">Failed to load image: %1$s</string>
+    <string name="err_lut_import_failed">Error importing LUT: %1$s</string>
+    <string name="err_mediastore">MediaStore error: %1$s</string>
+    <string name="err_cache_clear_failed">Failed to clear temporary cache.</string>
+
+    <!-- Detail Dialog & Miscellaneous Labels -->
+    <string name="detail_title">Image Details</string>
+    <string name="detail_close">Close</string>
+    <string name="detail_info_title">Image Information</string>
+    <string name="detail_resolution_label">Resolution:</string>
+    <string name="detail_high_res">High Resolution</string>
+    <string name="detail_date_label">Grading Date:</string>
+    <string name="detail_file_size_label">File Size:</string>
+    <string name="detail_unknown">Unknown</string>
+    <string name="detail_preset_used">Preset used: %1$s</string>
+    <string name="detail_default_look">StealZaLUT Look</string>
+    <string name="detail_algorithm">Algorithm: %1$s • Intensity: %2$d%%</string>
+    <string name="detail_swatches_title">Look color palette (tap to copy hex):</string>
+    <string name="detail_btn_apply">Apply this Look in Studio</string>
+    <string name="detail_btn_share">Share</string>
+    <string name="detail_btn_delete">Delete</string>
+    <string name="profile_default_look_name">Look</string>
+    <string name="palettes_mire_content_desc">Color calibration target</string>
+    <string name="palettes_btn_apply_studio">Use in Studio</string>
+    <string name="editor_dialog_default_name">My Preset</string>
+    <string name="editor_filter_intensity_label">Base LUT Intensity</string>
+    <string name="editor_calibration_hint">Calibration masks operate on an active base LUT or grade.</string>
+    <string name="histogram_toggle_desc">RGB Histogram</string>
+    <string name="msg_preset_duplicated">Preset duplicated</string>
+    <string name="msg_preset_renamed">Preset renamed</string>
+    <string name="dialog_rename_title">Rename preset</string>
+    <string name="dialog_rename_confirm">Rename</string>
+    <string name="dialog_duplicate_title">Duplicate preset</string>
 </resources>

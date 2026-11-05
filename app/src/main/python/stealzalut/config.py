@@ -75,3 +75,11 @@ LUMINANCE_ALIGN_WEIGHT: float = 0.35
 
 # Cache settings
 MAX_LUT_CACHE_SIZE: int = 4
+
+# Dominant Palette Extraction parameters
+PALETTE_RESIZE_DIM: int = 256
+PALETTE_DEFAULT_COLORS: int = 6
+PALETTE_MIN_LUMA: float = 8.0
+PALETTE_MIN_CHROMA: float = 6.0
+PALETTE_DELTA_E_THRESHOLD: float = 12.0
+

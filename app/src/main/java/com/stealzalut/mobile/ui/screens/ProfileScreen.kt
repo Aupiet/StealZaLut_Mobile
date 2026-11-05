@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -33,6 +34,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
+import com.stealzalut.mobile.ui.components.SzlBottomGradientScrim
+import com.stealzalut.mobile.ui.components.SzlEmptyState
+import com.stealzalut.mobile.ui.theme.ColorCardReference
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Palette
@@ -112,7 +116,7 @@ fun ProfileScreen(
             onApplyLook = { viewModel.applyLookFromSavedImage(it) },
             onShare = {
                 val intent = viewModel.createShareImageIntent(it.filePath)
-                context.startActivity(Intent.createChooser(intent, "Partager la photo"))
+                context.startActivity(Intent.createChooser(intent, context.getString(R.string.detail_btn_share)))
             },
             onDelete = {
                 viewModel.deleteSavedImage(it.id)
@@ -194,7 +198,8 @@ fun ProfileScreen(
         // Tab 0: Photos - Instagram Style 3-Column Square Grid
         if (uiState.profileSelectedTab == 0) {
             if (uiState.savedImages.isEmpty()) {
-                EmptyStateCard(
+                SzlEmptyState(
+                    icon = Icons.Default.PhotoLibrary,
                     title = stringResource(R.string.profile_no_photos_title),
                     description = stringResource(R.string.profile_no_photos_desc),
                     actionLabel = stringResource(R.string.nav_studio),
@@ -203,8 +208,9 @@ fun ProfileScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
+                    contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
@@ -220,7 +226,8 @@ fun ProfileScreen(
         } else {
             // Tab 1: Thèmes & Presets (avec Photo de la Mire de Couleurs pour chaque preset)
             if (uiState.savedPresets.isEmpty()) {
-                EmptyStateCard(
+                SzlEmptyState(
+                    icon = Icons.Default.Palette,
                     title = stringResource(R.string.profile_no_themes_title),
                     description = stringResource(R.string.profile_no_themes_desc),
                     actionLabel = stringResource(R.string.nav_palettes),
@@ -229,6 +236,7 @@ fun ProfileScreen(
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                    contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(uiState.savedPresets, key = { it.id }) { preset ->
@@ -288,40 +296,25 @@ private fun InstagramGridThumbnail(
         if (thumbnailBitmap != null) {
             Image(
                 bitmap = thumbnailBitmap!!.asImageBitmap(),
-                contentDescription = image.themeName ?: "Photo",
+                contentDescription = image.themeName ?: stringResource(R.string.profile_default_look_name),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(AppDimens.ProgressBarHeight),
+                    strokeWidth = AppDimens.BorderThick,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Gradient overlay at bottom with theme label
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))
-                    )
-                )
-                .padding(horizontal = 4.dp, vertical = 2.dp)
-        ) {
-            Text(
-                text = image.themeName ?: "Look",
-                color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        // Semantic gradient overlay at bottom with look label (Bug B10 fix)
+        SzlBottomGradientScrim(
+            text = image.themeName ?: stringResource(R.string.profile_default_look_name),
+            modifier = Modifier.align(Alignment.BottomStart)
+        )
     }
 }
 
@@ -417,16 +410,16 @@ private fun PresetCardWithColorSpectrum(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(AppDimens.CalibrationCardLargeHeight)
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
-                    .background(Color(0xFF202228))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(AppDimens.CornerRadiusNormal)),
+                    .background(ColorCardReference.NeutralDarkBackground)
+                    .border(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(AppDimens.CornerRadiusNormal)),
                 contentAlignment = Alignment.Center
             ) {
                 if (cardBitmap != null) {
                     Image(
                         bitmap = cardBitmap!!.asImageBitmap(),
-                        contentDescription = "Mire des couleurs du preset",
+                        contentDescription = stringResource(R.string.palettes_mire_content_desc),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -516,102 +509,48 @@ private fun FallbackVisualColorCard(paletteHexes: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+            .padding(AppDimens.SpacingNormal),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
         // Highlights
         Row(
-            modifier = Modifier.fillMaxWidth().height(22.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightLarge),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
         ) {
-            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color.White))
-            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color(0xFFF0F0F0)))
+            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(Color.White))
+            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(ColorCardReference.WhiteStep))
         }
 
         // Grayscale ramp
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
-                .clip(RoundedCornerShape(3.dp))
+                .height(AppDimens.ProgressIndicatorSize)
+                .clip(RoundedCornerShape(AppDimens.CornerRadiusMire))
                 .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(Color.Black, Color(0xFF333333), Color(0xFF666666), Color(0xFF999999), Color(0xFFCCCCCC), Color.White)
-                    )
+                    Brush.horizontalGradient(ColorCardReference.NeutralRamp)
                 )
         )
 
         // Midtones
         Row(
-            modifier = Modifier.fillMaxWidth().height(18.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightStandard),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
         ) {
-            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color(0xFF767676)))
-            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color(0xFF808080)))
+            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(ColorCardReference.GrayMiddle1))
+            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(ColorCardReference.GrayMiddle2))
         }
 
         // 12 patches
-        val defaultColors = listOf(
-            Color(0xFFCD9B84), Color(0xFF9B6E55), Color(0xFF5F3E2D),
-            Color(0xFFE12D2D), Color(0xFF2DB937), Color(0xFF2D55E1),
-            Color(0xFF2DD7E1), Color(0xFFD72DD7), Color(0xFFEBD723),
-            Color(0xFF4B7DB9), Color(0xFF559B55), Color(0xFFD77D2D)
-        )
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        val defaultColors = ColorCardReference.ColorCheckerPatches
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
             for (i in 0 until 6) {
-                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(defaultColors[i]))
+                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(defaultColors[i]))
             }
         }
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
             for (i in 6 until 12) {
-                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(defaultColors[i]))
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyStateCard(
-    title: String,
-    description: String,
-    actionLabel: String,
-    onAction: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = CardDefaults.outlinedCardBorder()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(AppDimens.SpacingHuge),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
-        ) {
-            Icon(
-                imageVector = Icons.Default.PhotoLibrary,
-                contentDescription = null,
-                modifier = Modifier.size(AppDimens.IconExtraLarge),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Button(
-                onClick = onAction,
-                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
-            ) {
-                Text(text = actionLabel, fontWeight = FontWeight.Bold)
+                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(defaultColors[i]))
             }
         }
     }

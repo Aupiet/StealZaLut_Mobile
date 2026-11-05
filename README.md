@@ -1,10 +1,11 @@
 # StealZaLUT Mobile
 
-[![Android API 26+](https://img.shields.io/badge/Android-API%2026%2B%20(Oreo%20%E2%86%92%2015)-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
+[![Android API 24+](https://img.shields.io/badge/Android-API%2024%2B%20(Nougat%20%E2%86%92%2015)-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20(Material%203)-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2016.1-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
+[![Tests: 91 Pytest](https://img.shields.io/badge/Tests-91%20Pytest%20%2B%20JVM%20Guard-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Architecture: ARCHITECTURE.md](https://img.shields.io/badge/Doc-ARCHITECTURE.md-blue.svg)](ARCHITECTURE.md)
 
@@ -85,24 +86,44 @@ Un espace de création dédié accessible directement depuis la barre de navigat
   - *Couleur* : Température, Teinte, Vibrance, Saturation.
   - *Effets* : Clarté, Netteté, Grain argentique.
 - **Expérience tactile haut de gamme** :
-  - **Comparaison Avant/Après instantanée** : Maintenez le doigt appuyé sur l'image pour afficher l'original en temps réel.
-  - **Pinch-to-zoom & Panoramique** : Inspectez les détails de votre cliché jusqu'à $4\times$.
+  - **Comparaison 3 Modes** :
+    - *Côte à côte (Side-by-side)* : Affichage simultané de l'original et de la version étalonnée.
+    - *Rideau interactif (Split-wipe)* : Poignée glissante tactile pour comparer le cliché à n'importe quelle position.
+    - *Appui maintenu (Hold-to-compare)* : Maintenez le doigt n'importe où pour visualiser instantanément l'original.
+  - **Pinch-to-zoom & Panoramique synchronisés** : Inspectez les détails jusqu'à $4\times$, réinitialisable par double-tap ($1\times$).
   - **Double-tap Reset** : Double-cliquez sur n'importe quel curseur pour le ramener à sa valeur neutre.
+  - **Undo / Redo illimité** : Annulez et rétablissez librement vos manipulations d'édition depuis la barre supérieure.
+  - **Histogramme RVB temps réel** : Analyse dynamique des canaux Rouge, Vert, Bleu superposable à l'image.
 
 ---
 
-### 2.4 Système de Presets d'Édition (`.szlpreset`)
+### 2.4 Système de Presets d'Édition (`.szlpreset` v2)
 
-- **Format ouvert et pérenne** : Fichiers JSON légers (`.szlpreset`) enregistrant la totalité de vos réglages (Étape 2, Étape 3, métadonnées, chemin de la LUT associée et miniature encodée).
-- **CRUD complet** : Créez, sauvegardez, appliquez et supprimez vos presets en un geste dans l'application.
+- **Format ouvert et versionné (Schéma v2)** : Fichiers JSON légers (`.szlpreset`) enregistrant la totalité de vos réglages (Étape 2, Étape 3, métadonnées, chemin de la LUT associée et miniature encodée) avec migration automatique et rétro-compatibilité totale avec les anciens formats non versionnés.
+- **Opérations étendues** :
+  - Sauvegarder, appliquer, supprimer, dupliquer et renommer des presets.
+  - Importer et exporter des fichiers `.szlpreset` autonomes pour le partage entre appareils.
 
 ---
 
-### 2.5 Exportation Conforme Adobe 3D LUT (`.cube`) & HaldCLUT
+### 2.5 Qualité d'Image HD & Exportation Conforme Adobe 3D LUT (`.cube`)
 
 - **Conformité stricte Adobe** : Ordre de parcours $B \to G \to R$ (le canal Rouge varie le plus rapidement dans le fichier texte).
 - **Assainissement des données** : Clamping rigoureux dans $[0.0, 1.0]$, remplacement des valeurs `NaN` et `Inf`, en-têtes standardisés reconnus par DaVinci Resolve, Premiere Pro, Final Cut Pro, Photoshop, CapCut et les moniteurs de tournage SmallHD / Atomos.
 - **Baking complet des 3 Étapes** : Tous les réglages colorimétriques de l'Étape 1, de l'Étape 2 et de l'Étape 3 sont fusionnés dans la table `.cube` exportée (avec contournement automatique des effets 2D spatiaux non-linéaires).
+- **Tiling Mémoire Anti-OOM (Images > 12 MP)** : Traitement vectorisé par blocs/tranches de rangées (plafond 2 Mpx par tranche) garantissant une empreinte RAM minimale ($< 100\text{ Mo}$) et zéro artefact de raccord aux bords de tuiles, même sur des photographies de 50 à 100 Mpx.
+- **Préservation Intégrale des Métadonnées EXIF** : Conservation automatique de l'orientation (normalisée à 1 pour éviter toute double rotation), de l'appareil, de l'objectif, de l'exposition et des données de capture.
+
+---
+
+### 2.6 Design System Multi-Thèmes & Accessibilité (WCAG AA)
+
+- **4 Thèmes interchangeables** :
+  - *Ambre Noir* : Esthétique studio cinématographique sombre d'origine.
+  - *Cyan Studio* : Ambiance chambre noire professionnelle cyan profond.
+  - *OLED Noir Absolu* : Fond 100% noir pour économie de batterie sur écrans AMOLED.
+  - *Lumière du Jour* : Thème clair à fort contraste pour utilisation en extérieur sous le soleil.
+- **Zéro Flash au Démarrage & Zéro Artefact** : Démarrage synchronisé avec `windowBackground`, bascule à chaud sans perte d'état et tests de contraste WCAG AA validés par test JVM.
 
 ---
 
@@ -155,7 +176,7 @@ graph TD
 $env:PYTHONPATH="app/src/main/python"
 pytest tests/
 ```
-> **Résultat attendu :** 83 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs de scènes nocturnes, baking 3 étapes et format Adobe `.cube`).
+> **Résultat attendu :** 91 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF et persistance presets v2).
 
 ### Exécuter les tests unitaires Android (Kotlin JVM)
 ```powershell

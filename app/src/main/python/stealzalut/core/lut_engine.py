@@ -316,27 +316,54 @@ def apply_lut_trilinear(
     return np.clip(out, 0.0, 1.0).astype(np.float32)
 
 
+LUT_CHUNK_PIXEL_LIMIT: int = 2_097_152  # 2 Megapixels per chunk (~24 MB peak RAM)
+
+
 def apply_lut(
     image: NDArray[Union[np.uint8, np.float32, np.float64]],
     lut: NDArray[Union[np.float32, np.float64]],
+    chunk_limit: int = LUT_CHUNK_PIXEL_LIMIT,
 ) -> NDArray[Union[np.uint8, np.float32]]:
     """Apply a 3-D LUT to an RGB image, preserving the input data type.
+
+    For high-resolution images (> 2 MP, e.g. 12 MP - 50 MP HD exports), applies
+    row-based chunked processing to strictly constrain mobile RAM peak consumption
+    and eliminate Out-Of-Memory (OOM) failures.
+
+    Because trilinear LUT interpolation is a purely point-wise pixel transformation,
+    chunking guarantees 100% bit-exact parity with zero seam or boundary artifacts.
 
     Args:
         image: RGB array of shape ``(H, W, 3)``, dtype uint8 or float.
         lut: 3D LUT array of shape ``(N, N, N, 3)`` or ``(N ** 3, 3)``.
+        chunk_limit: Maximum pixels processed per chunk (default 2M pixels).
 
     Returns:
         Graded array with the same shape and dtype as *image*.
     """
     is_uint8 = image.dtype == np.uint8
-    img_f = to_float32(image) if is_uint8 else image.astype(np.float32)
+    h, w = image.shape[:2]
 
-    out_f = apply_lut_trilinear(img_f, lut)
+    if h * w <= chunk_limit:
+        img_f = to_float32(image) if is_uint8 else image.astype(np.float32)
+        out_f = apply_lut_trilinear(img_f, lut)
+        return to_uint8(out_f) if is_uint8 else out_f
 
-    if is_uint8:
-        return to_uint8(out_f)
-    return out_f
+    # Large image chunked processing (preserves memory on mobile)
+    out = np.empty_like(image, dtype=np.uint8 if is_uint8 else np.float32)
+    chunk_rows = max(32, chunk_limit // w)
+
+    for y_start in range(0, h, chunk_rows):
+        y_end = min(y_start + chunk_rows, h)
+        chunk = image[y_start:y_end]
+        chunk_f = to_float32(chunk) if is_uint8 else chunk.astype(np.float32)
+        chunk_out_f = apply_lut_trilinear(chunk_f, lut)
+        if is_uint8:
+            out[y_start:y_end] = to_uint8(chunk_out_f)
+        else:
+            out[y_start:y_end] = chunk_out_f
+
+    return out
 
 
 def generate_lut_from_pair(

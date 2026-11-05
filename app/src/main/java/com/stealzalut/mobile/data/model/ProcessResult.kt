@@ -1,6 +1,8 @@
 package com.stealzalut.mobile.data.model
 
 import androidx.compose.runtime.Immutable
+import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.UiText
 
 /**
  * Domain-specific error hierarchy bridging Python Chaquopy and Kotlin Android.
@@ -13,6 +15,20 @@ sealed interface LutDomainError {
     @Immutable data object OutOfMemoryError : LutDomainError
     @Immutable data class ExportIoError(val details: String) : LutDomainError
     @Immutable data class GenericError(val details: String) : LutDomainError
+
+    val uiText: UiText
+        get() = when (this) {
+            is SourceImageNotFound -> UiText.Resource(R.string.err_source_image_not_found)
+            is ReferenceImageNotFound -> UiText.Resource(R.string.err_reference_image_not_found)
+            is MatrixSingularityError -> UiText.Resource(R.string.err_matrix_singularity)
+            is OutOfMemoryError -> UiText.Resource(R.string.err_out_of_memory)
+            is ExportIoError -> UiText.Resource(R.string.err_export_io, listOf(details))
+            is GenericError -> if (details.isBlank()) {
+                UiText.Resource(R.string.err_generic, listOf("Unknown error"))
+            } else {
+                UiText.DynamicString(details)
+            }
+        }
 
     val userMessage: String
         get() = when (this) {

@@ -111,6 +111,7 @@
     <string name="comparison_title">Comparaison Interactive</string>
     <string name="comparison_side_by_side">Côte à côte</string>
     <string name="comparison_split_wipe">Rideau interactif</string>
+    <string name="comparison_hold_to_compare">Appui long</string>
     <string name="comparison_original_label">ORIGINAL</string>
     <string name="comparison_lut_label">ÉTALONNÉ</string>
     <string name="comparison_handle_desc">Poignée de séparation du rideau</string>
@@ -244,6 +245,7 @@
     <string name="common_save">Enregistrer</string>
     <string name="common_cancel">Annuler</string>
     <string name="common_share">Partager</string>
+    <string name="share_cube_title">Partager la LUT (.cube)</string>
     <string name="common_delete">Supprimer</string>
     <string name="common_retry">Réessayer</string>
     <string name="common_continue">Continuer</string>
@@ -332,4 +334,99 @@
     <string name="dialog_preset_saved">Preset d\'édition sauvegardé avec succès !</string>
     <string name="dialog_preset_applied">Preset appliqué : %1$s</string>
     <string name="dialog_preset_deleted">Preset supprimé.</string>
+
+    <!-- Thèmes du Design System -->
+    <string name="theme_amber_noir">Amber Noir (Défaut)</string>
+    <string name="theme_cyan_studio">Cyan Studio</string>
+    <string name="theme_oled_black">OLED Noir Absolu</string>
+    <string name="theme_daylight">Daylight Clair</string>
+    <string name="settings_section_appearance">Apparence &amp; Thème</string>
+    <string name="settings_theme_label">Thème Colorimétrique</string>
+    <string name="settings_theme_desc">Sélectionnez l\'ambiance visuelle du studio</string>
+    <string name="settings_developer_mode_title">Mode Développeur</string>
+    <string name="settings_developer_mode_desc">Afficher les temps d\'exécution internes Chaquopy</string>
+    <string name="settings_max_export_native">Originale (Pleine Résolution)</string>
+
+    <!-- Éditeur & Éléments UI -->
+    <string name="editor_section_base_lut">Table 3D LUT de base (.CUBE)</string>
+    <string name="editor_no_lut_mode">Aucune LUT chargée (Mode étalonnage direct)</string>
+    <string name="editor_my_presets_title">Mes Presets d\'Édition (.szlpreset)</string>
+    <string name="editor_btn_apply">Appliquer</string>
+    <string name="editor_btn_delete">Supprimer</string>
+    <string name="editor_btn_remove_lut">Retirer LUT</string>
+    <string name="editor_btn_reset_all">Réinitialiser tout</string>
+    <string name="editor_compare_original_badge">ORIGINAL (Avant)</string>
+    <string name="editor_actions_export">Exporter</string>
+    <string name="editor_export_photo">Photo HD</string>
+    <string name="editor_export_options_title">Options d\'Exportation</string>
+    <string name="editor_tab_presets_desc">Presets &amp; LUTs</string>
+    <string name="common_undo">Annuler</string>
+    <string name="common_redo">Rétablir</string>
+    <string name="common_rename">Renommer</string>
+    <string name="common_duplicate">Dupliquer</string>
+    <string name="preset_default_name_format">Style %1$s</string>
+
+    <!-- Messages de Feedback -->
+    <string name="msg_preset_selected">Preset \'%1$s\' sélectionné !</string>
+    <string name="msg_auto_edit_applied">Auto-Edit appliqué : Exp %1$+.2f EV | Cont %2$+.0f%% | Ombres %3$+.0f%%</string>
+    <string name="msg_photo_saved">Photo enregistrée dans la Galerie et votre Bibliothèque !</string>
+    <string name="msg_photo_hd_saved">Photo HD enregistrée dans la Galerie Android !</string>
+    <string name="msg_preset_saved">Preset \'%1$s\' sauvegardé !</string>
+    <string name="msg_palette_extracted">Palette extraite avec succès !</string>
+    <string name="msg_preset_deleted">Preset supprimé.</string>
+    <string name="msg_photo_deleted">Photo supprimée de la bibliothèque.</string>
+    <string name="msg_lut_cube_saved">LUT .cube enregistrée avec succès !</string>
+    <string name="msg_lut_cube_exported">LUT 3D (.cube) exportée avec succès !</string>
+    <string name="msg_editing_preset_saved">Preset d\'édition sauvegardé !</string>
+    <string name="msg_preset_applied">Preset appliqué : %1$s</string>
+    <string name="msg_settings_saved">Paramètres enregistrés.</string>
+    <string name="msg_language_updated">Langue mise à jour avec succès.</string>
+
+    <!-- Messages d\'Erreur -->
+    <string name="err_source_image_not_found">Image source introuvable ou inaccessible.</string>
+    <string name="err_reference_image_not_found">Image de référence introuvable ou inaccessible.</string>
+    <string name="err_matrix_singularity">Singularité matricielle détectée (image source ou référence trop uniforme).</string>
+    <string name="err_out_of_memory">Mémoire insuffisante pour effectuer le traitement haute résolution.</string>
+    <string name="err_export_io">Erreur d\'écriture ou d\'accès disque : %1$s</string>
+    <string name="err_generic">Une erreur inattendue est survenue : %1$s</string>
+    <string name="err_source_load">Erreur chargement source : %1$s</string>
+    <string name="err_reference_load">Erreur chargement référence : %1$s</string>
+    <string name="err_select_source_first">Veuillez d\'abord sélectionner une photo source.</string>
+    <string name="err_select_source_and_ref">Impossible d\'exporter : veuillez sélectionner une photo source et un style de référence.</string>
+    <string name="err_preset_no_ref">Ce preset ne contient pas d\'image de référence valide pour régénérer la LUT.</string>
+    <string name="err_lut_path_not_found">Erreur : chemin du fichier LUT introuvable.</string>
+    <string name="err_save_failed">Erreur lors de l\'enregistrement : %1$s</string>
+    <string name="err_image_load_failed">Impossible de charger la photo : %1$s</string>
+    <string name="err_lut_import_failed">Erreur import LUT : %1$s</string>
+    <string name="err_mediastore">Erreur MediaStore : %1$s</string>
+    <string name="err_cache_clear_failed">Erreur lors du vidage du cache temporaire.</string>
+
+    <!-- Boîte de dialogue Détails & Libellés Divers -->
+    <string name="detail_title">Détails de la Photo</string>
+    <string name="detail_close">Fermer</string>
+    <string name="detail_info_title">Informations de l\'image</string>
+    <string name="detail_resolution_label">Résolution :</string>
+    <string name="detail_high_res">Haute Résolution</string>
+    <string name="detail_date_label">Date d\'étalonnage :</string>
+    <string name="detail_file_size_label">Taille du fichier :</string>
+    <string name="detail_unknown">Inconnue</string>
+    <string name="detail_preset_used">Preset utilisé : %1$s</string>
+    <string name="detail_default_look">Look StealZaLUT</string>
+    <string name="detail_algorithm">Algorithme : %1$s • Intensité : %2$d%%</string>
+    <string name="detail_swatches_title">Nuancier du look (Touchez pour copier le code hex) :</string>
+    <string name="detail_btn_apply">Appliquer ce Look dans le Studio</string>
+    <string name="detail_btn_share">Partager</string>
+    <string name="detail_btn_delete">Supprimer</string>
+    <string name="profile_default_look_name">Look</string>
+    <string name="palettes_mire_content_desc">Mire de calibrage des couleurs</string>
+    <string name="palettes_btn_apply_studio">Utiliser dans le Studio</string>
+    <string name="editor_dialog_default_name">Mon Preset</string>
+    <string name="editor_filter_intensity_label">Intensité LUT de base</string>
+    <string name="editor_calibration_hint">Les masques de calibrage opèrent sur une LUT chargée ou un filtre actif.</string>
+    <string name="histogram_toggle_desc">Histogramme RVB</string>
+    <string name="msg_preset_duplicated">Preset dupliqué</string>
+    <string name="msg_preset_renamed">Preset renommé</string>
+    <string name="dialog_rename_title">Renommer le preset</string>
+    <string name="dialog_rename_confirm">Renommer</string>
+    <string name="dialog_duplicate_title">Dupliquer le preset</string>
 </resources>

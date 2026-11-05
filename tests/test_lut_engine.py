@@ -391,3 +391,34 @@ class TestGenerateLutFromPair:
             "Red neon beacon should remain vibrant red"
         )
 
+
+class TestChunkedApplyLut:
+    """Validate that chunked / tiled apply_lut produces 100% bit-exact results."""
+
+    def test_chunked_vs_unchunked_parity(self) -> None:
+        lut = generate_identity_lattice(17)
+        lut_perturbed = np.clip(lut * 0.9 + 0.05, 0.0, 1.0)
+
+        h, w = 200, 300
+        y = np.linspace(0, 255, h, dtype=np.uint8)[:, None]
+        x = np.linspace(0, 255, w, dtype=np.uint8)[None, :]
+        r = np.tile(x, (h, 1))
+        g = np.tile(y, (1, w))
+        b = ((r.astype(int) + g.astype(int)) // 2).astype(np.uint8)
+        img = np.stack([r, g, b], axis=-1)
+
+        res_full = apply_lut(img, lut_perturbed, chunk_limit=h * w + 1000)
+        res_chunked = apply_lut(img, lut_perturbed, chunk_limit=1500)
+
+        assert np.array_equal(res_full, res_chunked), "Chunked apply_lut must be bit-exact with unchunked"
+
+    def test_chunked_float_parity(self) -> None:
+        lut = generate_identity_lattice(17)
+        img_f = np.random.RandomState(42).rand(100, 150, 3).astype(np.float32)
+
+        res_full = apply_lut(img_f, lut, chunk_limit=100000)
+        res_chunked = apply_lut(img_f, lut, chunk_limit=500)
+
+        np.testing.assert_allclose(res_full, res_chunked, atol=1e-6)
+
+

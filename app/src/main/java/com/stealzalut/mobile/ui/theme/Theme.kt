@@ -1,62 +1,47 @@
-﻿package com.stealzalut.mobile.ui.theme
+package com.stealzalut.mobile.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val CinematicColorScheme = darkColorScheme(
-    primary = AccentAmber,
-    onPrimary = Color(0xFF1E1400),
-    primaryContainer = AccentAmberContainer,
-    onPrimaryContainer = Color(0xFFFFDF9E),
-
-    secondary = AccentCyan,
-    onSecondary = Color(0xFF00363D),
-    secondaryContainer = AccentCyanContainer,
-    onSecondaryContainer = Color(0xFFB8EAFF),
-
-    tertiary = AccentCyan,
-    tertiaryContainer = AccentCyanContainer,
-    onTertiaryContainer = Color(0xFFB8EAFF),
-
-    background = DarkBackground,
-    onBackground = TextPrimary,
-    surface = DarkSurface,
-    onSurface = TextPrimary,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = TextSecondary,
-    outline = DarkOutline,
-    outlineVariant = DarkOutline.copy(alpha = 0.5f)
-)
-
+/**
+ * Main theme composable for StealZaLUT Mobile.
+ *
+ * Supports dynamic hot-switching across themes defined in [AppThemes]
+ * with seamless preservation of compose tree state and zero artifacts.
+ */
 @Composable
 fun StealZaLut_MobileTheme(
-    darkTheme: Boolean = true, // Default to dark cinematic mode for color-grading accuracy
+    themeId: String? = AppThemes.DEFAULT_THEME_ID,
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = CinematicColorScheme
+    val themeSpec = AppThemes.getThemeSpec(themeId)
+    val colorScheme = themeSpec.colorScheme
+    val szlColors = themeSpec.szlColors
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            val window = (view.context as? Activity)?.window
+            if (window != null) {
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                insetsController.isAppearanceLightStatusBars = !themeSpec.isDark
+                insetsController.isAppearanceLightNavigationBars = !themeSpec.isDark
+            }
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalSzlColors provides szlColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = Shapes,
+            content = content
+        )
+    }
 }
-

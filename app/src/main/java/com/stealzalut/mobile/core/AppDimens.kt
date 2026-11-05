@@ -14,6 +14,7 @@ object AppDimens {
     // --- Spacing & Padding ---
     val SpacingNone: Dp = 0.dp
     val SpacingMicro: Dp = 2.dp
+    val SpacingTiny: Dp = 3.dp
     val SpacingExtraSmall: Dp = 4.dp
     val SpacingSmall: Dp = 6.dp
     val SpacingMedium: Dp = 8.dp
@@ -29,8 +30,11 @@ object AppDimens {
     val ScreenPaddingHorizontal: Dp = 16.dp
     val ScreenPaddingVertical: Dp = 8.dp
     val BottomBarElevation: Dp = 8.dp
+    val ListBottomPadding: Dp = 96.dp
 
     // --- Corner Radii ---
+    val CornerRadiusTiny: Dp = 2.dp
+    val CornerRadiusMire: Dp = 3.dp
     val CornerRadiusMicro: Dp = 4.dp
     val CornerRadiusSmall: Dp = 6.dp
     val CornerRadiusMedium: Dp = 8.dp
@@ -52,6 +56,7 @@ object AppDimens {
 
     // --- Icon Sizes ---
     val IconMicro: Dp = 14.dp
+    val IconSizeSmall: Dp = 16.dp
     val IconSmall: Dp = 18.dp
     val IconNormal: Dp = 20.dp
     val IconMedium: Dp = 24.dp
@@ -63,6 +68,7 @@ object AppDimens {
     val ImagePickerHeight: Dp = 160.dp
     val ImagePickerCollapsedHeight: Dp = 120.dp
     val DoubleViewHeight: Dp = 260.dp
+    val HeightViewportStandard: Dp = 260.dp
     val MireBoxHeight: Dp = 220.dp
     val MireThumbnailWidth: Dp = 72.dp
     val MireThumbnailHeight: Dp = 48.dp
@@ -75,4 +81,38 @@ object AppDimens {
     val ComputeLoaderSize: Dp = 120.dp
     val ProgressIndicatorSize: Dp = 20.dp
     val PhotoDetailImageMaxHeight: Dp = 320.dp
+    val TabHeightCompact: Dp = 48.dp
+    val CalibrationCardHeight: Dp = 110.dp
+    val CalibrationCardLargeHeight: Dp = 140.dp
+    val CalibrationRowHeightLarge: Dp = 22.dp
+    val CalibrationRowHeightStandard: Dp = 18.dp
+    val CalibrationRowHeightMedium: Dp = 16.dp
+    val CalibrationRowHeightSmall: Dp = 14.dp
+    val CalibrationRowHeightMicro: Dp = 12.dp
+    val EmptyStateIconSize: Dp = 64.dp
+    val ViewportButtonSize: Dp = 36.dp
+    val ResetIconSize: Dp = 24.dp
+    val ProgressBarHeight: Dp = 16.dp
+    val HistogramHeight: Dp = 64.dp
+    val HistogramWidth: Dp = 120.dp
+
+    // --- Elevations ---
+    val DialogElevation: Dp = 6.dp
+    val ElevationLow: Dp = 2.dp
+    val ElevationNormal: Dp = 4.dp
+    val ElevationMedium: Dp = 6.dp
+
+    // --- Typography Scale Tokens ---
+    val FontDisplayLarge: TextUnit = 32.sp
+    val FontDisplayMedium: TextUnit = 28.sp
+    val FontDisplaySmall: TextUnit = 24.sp
+    val FontTitleLarge: TextUnit = 20.sp
+    val FontTitleMedium: TextUnit = 16.sp
+    val FontTitleSmall: TextUnit = 14.sp
+    val FontBodyLarge: TextUnit = 16.sp
+    val FontBodyMedium: TextUnit = 14.sp
+    val FontBodySmall: TextUnit = 12.sp
+    val FontLabelLarge: TextUnit = 13.sp
+    val FontLabelMedium: TextUnit = 11.sp
+    val FontLabelSmall: TextUnit = 10.sp
 }

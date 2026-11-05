@@ -107,6 +107,38 @@ class PresetRepository(private val context: Context) {
         }
     }
 
+    suspend fun duplicatePreset(presetId: String, newName: String? = null): Result<ColorimetryPreset> = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            runCatching {
+                val current = loadUserPresets().toMutableList()
+                val orig = current.firstOrNull { it.id == presetId }
+                    ?: error("Preset not found: $presetId")
+                val copyName = newName?.takeIf { it.isNotBlank() } ?: "${orig.name} (Copie)"
+                val copy = orig.copy(
+                    id = java.util.UUID.randomUUID().toString(),
+                    name = copyName,
+                    createdAt = System.currentTimeMillis()
+                )
+                current.add(0, copy)
+                writeUserPresets(current)
+                copy
+            }
+        }
+    }
+
+    suspend fun renamePreset(presetId: String, newName: String): Result<Unit> = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            runCatching {
+                val current = loadUserPresets().toMutableList()
+                val index = current.indexOfFirst { it.id == presetId }
+                if (index >= 0) {
+                    current[index] = current[index].copy(name = newName.trim())
+                    writeUserPresets(current)
+                }
+            }
+        }
+    }
+
     private fun generateWebpThumbnail(sourcePath: String, presetId: String): String? {
         return try {
             val srcFile = File(sourcePath)

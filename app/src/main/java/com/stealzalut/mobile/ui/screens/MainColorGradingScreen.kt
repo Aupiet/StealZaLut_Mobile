@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
@@ -41,19 +44,20 @@ fun MainColorGradingScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // React to user messages and errors
     LaunchedEffect(uiState.userMessage) {
         uiState.userMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
+            snackbarHostState.showSnackbar(msg.asString(context), duration = SnackbarDuration.Short)
             viewModel.dismissMessage()
         }
     }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { err ->
-            snackbarHostState.showSnackbar(err, duration = SnackbarDuration.Long)
+            snackbarHostState.showSnackbar(err.asString(context), duration = SnackbarDuration.Long)
             viewModel.dismissMessage()
         }
     }
@@ -82,6 +86,28 @@ fun MainColorGradingScreen(
                     }
                 },
                 actions = {
+                    if (uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null) {
+                        IconButton(
+                            onClick = { viewModel.undoEditor() },
+                            enabled = viewModel.canUndoEditor()
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Undo,
+                                contentDescription = stringResource(R.string.common_undo),
+                                tint = if (viewModel.canUndoEditor()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.redoEditor() },
+                            enabled = viewModel.canRedoEditor()
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Redo,
+                                contentDescription = stringResource(R.string.common_redo),
+                                tint = if (viewModel.canRedoEditor()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+                    }
                     IconButton(onClick = { viewModel.openMetricsInfo() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.HelpOutline,
@@ -90,7 +116,7 @@ fun MainColorGradingScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.stealzalut.mobile.core.AppConstants
+import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
@@ -162,8 +163,8 @@ data class StealZaLutUiState(
     val currentLanguageTag: String = "en",
 
     // Feedback
-    val userMessage: String? = null,
-    val errorMessage: String? = null
+    val userMessage: UiText? = null,
+    val errorMessage: UiText? = null
 ) {
     val effectiveReferencePath: String?
         get() = if (styleBSourceMode == 0) {

@@ -1,6 +1,7 @@
 package com.stealzalut.mobile.data.model
 
 import androidx.compose.runtime.Immutable
+import com.stealzalut.mobile.ui.theme.AppThemes
 
 /**
  * Global application preferences and processing parameters.
@@ -11,13 +12,17 @@ import androidx.compose.runtime.Immutable
  * @property maxExportDim Max dimension for direct image export (0 for full resolution, 2048, 3840)
  * @property exportFormat Direct image export format ("JPEG" or "PNG")
  * @property exportQuality JPEG compression quality (80-100)
+ * @property selectedThemeId Identifier of selected UI visual theme in [AppThemes]
+ * @property developerMode Whether developer timings and diagnostics are displayed
  */
 @Immutable
 data class AppSettings(
     val defaultLutSize: LutSize = LutSize.STANDARD,
     val defaultMethod: ColorTransferMethod = ColorTransferMethod.HM_MKL_HM,
     val analysisProxyDim: Int = 512,
-    val maxExportDim: Int = 2048,
+    val maxExportDim: Int = 3840,
     val exportFormat: String = "JPEG",
-    val exportQuality: Int = 95
+    val exportQuality: Int = 95,
+    val selectedThemeId: String = AppThemes.DEFAULT_THEME_ID,
+    val developerMode: Boolean = false
 )

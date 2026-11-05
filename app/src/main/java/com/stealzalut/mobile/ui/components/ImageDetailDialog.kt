@@ -107,10 +107,10 @@ fun ImageDetailDialog(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(AppDimens.SpacingSpacious),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            tonalElevation = AppDimens.DialogElevation
         ) {
             Column(
                 modifier = Modifier
@@ -132,7 +132,7 @@ fun ImageDetailDialog(
                         )
                         Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                         Text(
-                            text = image.themeName ?: "Détails de la Photo",
+                            text = image.themeName ?: stringResource(R.string.detail_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -141,7 +141,7 @@ fun ImageDetailDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Fermer"
+                            contentDescription = stringResource(R.string.detail_close)
                         )
                     }
                 }
@@ -158,7 +158,7 @@ fun ImageDetailDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(320.dp)
+                            .height(AppDimens.PhotoDetailImageMaxHeight)
                             .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center
@@ -166,7 +166,7 @@ fun ImageDetailDialog(
                         if (fullBitmap != null) {
                             Image(
                                 bitmap = fullBitmap!!.asImageBitmap(),
-                                contentDescription = image.themeName ?: "Photo",
+                                contentDescription = image.themeName ?: stringResource(R.string.detail_title),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Fit
                             )
@@ -189,7 +189,7 @@ fun ImageDetailDialog(
                             verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
                         ) {
                             Text(
-                                text = "Informations de l'image",
+                                text = stringResource(R.string.detail_info_title),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -198,9 +198,9 @@ fun ImageDetailDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Résolution :", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.detail_resolution_label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
-                                    if (image.width > 0) "${image.width} × ${image.height} px" else "Haute Résolution",
+                                    if (image.width > 0) "${image.width} × ${image.height} px" else stringResource(R.string.detail_high_res),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -209,18 +209,19 @@ fun ImageDetailDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Date d'étalonnage :", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.detail_date_label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(dateStr, style = MaterialTheme.typography.bodySmall)
                             }
+                            val unknownStr = stringResource(R.string.detail_unknown)
                             val fileSize = remember(image.filePath) {
                                 val f = File(image.filePath)
-                                if (f.exists()) String.format(Locale.getDefault(), "%.2f Mo", f.length() / (1024.0 * 1024.0)) else "Inconnue"
+                                if (f.exists()) String.format(Locale.getDefault(), "%.2f Mo", f.length() / (1024.0 * 1024.0)) else unknownStr
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Taille du fichier :", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.detail_file_size_label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(fileSize, style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -248,7 +249,7 @@ fun ImageDetailDialog(
                                 )
                                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                                 Text(
-                                    text = "Preset utilisé : ${image.themeName ?: "Look StealZaLUT"}",
+                                    text = stringResource(R.string.detail_preset_used, image.themeName ?: stringResource(R.string.detail_default_look)),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -256,7 +257,7 @@ fun ImageDetailDialog(
 
                             val methodObj = ColorTransferMethod.fromKey(image.method ?: "hm-mkl-hm")
                             Text(
-                                text = "Algorithme : ${stringResource(methodObj.displayNameRes)} • Intensité : ${(image.intensity * 100).toInt()}%",
+                                text = stringResource(R.string.detail_algorithm, stringResource(methodObj.displayNameRes), (image.intensity * 100).toInt()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -264,7 +265,7 @@ fun ImageDetailDialog(
                             if (image.paletteHexes.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
                                 PaletteSwatchesView(
-                                    title = "Nuancier du look (Touchez pour copier le code hex) :",
+                                    title = stringResource(R.string.detail_swatches_title),
                                     colors = image.paletteHexes
                                 )
                             }
@@ -287,7 +288,7 @@ fun ImageDetailDialog(
                                 )
                                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                                 Text(
-                                    text = "Appliquer ce Look dans le Studio",
+                                    text = stringResource(R.string.detail_btn_apply),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -311,7 +312,7 @@ fun ImageDetailDialog(
                     ) {
                         Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
                         Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(text = "Partager", fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.detail_btn_share), fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -324,7 +325,7 @@ fun ImageDetailDialog(
                     ) {
                         Icon(imageVector = Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
                         Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(text = "Supprimer", fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.detail_btn_delete), fontWeight = FontWeight.Bold)
                     }
                 }
             }

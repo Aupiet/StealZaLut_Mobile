@@ -418,3 +418,30 @@ class TestCubeBakingAndParser:
         assert not np.isinf(parsed_lut).any()
         assert np.min(parsed_lut) >= 0.0
         assert np.max(parsed_lut) <= 1.0
+
+    def test_exif_preservation_on_image_export(self, tmp_path: Path) -> None:
+        """Validate that source image EXIF tags are preserved and orientation reset to 1."""
+        src_path = tmp_path / "source_with_exif.jpg"
+        export_path = tmp_path / "exported_with_exif.jpg"
+
+        img = Image.new("RGB", (64, 64), color=(180, 100, 50))
+        exif = img.getexif()
+        exif[0x010F] = "StealZaLutCamera"
+        exif[0x0112] = 6
+        img.save(str(src_path), exif=exif)
+
+        res = run_image_export_pipeline(
+            src_path=str(src_path),
+            output_image_path=str(export_path),
+            max_export_dim=0,
+        )
+
+        assert res["status"] == "success"
+        assert export_path.is_file()
+
+        with Image.open(str(export_path)) as out_img:
+            out_exif = out_img.getexif()
+            assert out_exif is not None
+            assert out_exif.get(0x010F) == "StealZaLutCamera"
+            assert out_exif.get(0x0112) == 1
+

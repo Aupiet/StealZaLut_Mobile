@@ -31,6 +31,7 @@ from stealzalut.core.pipeline import (
 )
 from stealzalut.utils.image_io import (
     create_proxy_image,
+    get_clean_exif_bytes,
     load_image,
     resolve_export_dimensions,
     save_image,
@@ -285,8 +286,14 @@ def run_image_export_pipeline(
 
         out_h, out_w = graded.shape[:2]
 
-        # 7. Save image to disk
-        saved_path: str = save_image(graded, output_image_path, quality=quality)
+        # 7. Extract EXIF metadata from source image and save to disk
+        source_exif = get_clean_exif_bytes(src_path)
+        saved_path: str = save_image(
+            graded,
+            output_image_path,
+            quality=quality,
+            exif_bytes=source_exif,
+        )
         del graded
 
         elapsed_ms: float = (time.monotonic() - start) * 1000.0

@@ -1068,6 +1068,60 @@ class PythonBridgeRepository(private val context: Context) {
     }
 
     /**
+     * Duplicates an existing editing preset.
+     */
+    suspend fun duplicateEditingPresetBridge(presetIdOrPath: String, newName: String? = null): Boolean = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val presetsDir = File(context.filesDir, "szl_presets")
+            val pyResult = bridge.callAttr("duplicate_preset_bridge", presetIdOrPath, newName, presetsDir.absolutePath)
+            pyResult.callAttr("get", "status")?.toString() == "success"
+        }.getOrDefault(false)
+    }
+
+    /**
+     * Renames an existing editing preset.
+     */
+    suspend fun renameEditingPresetBridge(presetIdOrPath: String, newName: String): Boolean = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val presetsDir = File(context.filesDir, "szl_presets")
+            val pyResult = bridge.callAttr("rename_preset_bridge", presetIdOrPath, newName, presetsDir.absolutePath)
+            pyResult.callAttr("get", "status")?.toString() == "success"
+        }.getOrDefault(false)
+    }
+
+    /**
+     * Exports an editing preset to a file.
+     */
+    suspend fun exportEditingPresetBridge(presetIdOrPath: String, exportPath: String): String? = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val presetsDir = File(context.filesDir, "szl_presets")
+            val pyResult = bridge.callAttr("export_preset_bridge", presetIdOrPath, exportPath, presetsDir.absolutePath)
+            if (pyResult.callAttr("get", "status")?.toString() == "success") {
+                pyResult.callAttr("get", "export_path")?.toString()
+            } else null
+        }.getOrNull()
+    }
+
+    /**
+     * Imports an editing preset from a file.
+     */
+    suspend fun importEditingPresetBridge(importPath: String): Boolean = withContext(pythonDispatcher) {
+        runCatching {
+            val py = Python.getInstance()
+            val bridge = py.getModule("stealzalut.bridge")
+            val presetsDir = File(context.filesDir, "szl_presets")
+            val pyResult = bridge.callAttr("import_preset_bridge", importPath, presetsDir.absolutePath)
+            pyResult.callAttr("get", "status")?.toString() == "success"
+        }.getOrDefault(false)
+    }
+
+    /**
      * Builds a Share Intent for any generated file using FileProvider.
      */
     fun createShareIntent(filePath: String, mimeType: String = "*/*"): Intent {

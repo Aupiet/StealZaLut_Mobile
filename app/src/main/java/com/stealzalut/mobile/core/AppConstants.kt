@@ -57,7 +57,7 @@ object AppConstants {
     // --- Export Defaults ---
     const val DEFAULT_JPEG_QUALITY: Int = 92
     const val DEFAULT_PROXY_DIMENSION: Int = 1024
-    const val DEFAULT_EXPORT_DIMENSION: Int = 2048
+    const val DEFAULT_EXPORT_DIMENSION: Int = 3840
 
     // --- Alpha / Opacity Values ---
     const val OPACITY_CONTAINER_SUBTLE: Float = 0.3f

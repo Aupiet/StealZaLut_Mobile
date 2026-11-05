@@ -69,6 +69,29 @@ def test_palette_extraction_degenerate_uniform_red():
         assert hex_code.upper() == "#FF0000"
 
 
+def test_palette_extraction_night_scene_captures_vibrant_neons():
+    """Verify that night scenes with bright neons extract vivid colors and not only blacks."""
+    # 95% dark night city sky/buildings (black/dark navy) + 5% intense neon cyan & red signs
+    night_img = np.full((200, 200, 3), 12, dtype=np.uint8)
+    # Bright cyan neon sign
+    night_img[20:40, 20:80] = [0, 230, 255]
+    # Bright red neon sign
+    night_img[100:120, 100:150] = [255, 30, 40]
+
+    palette = extract_dominant_palette(night_img, num_colors=6)
+    assert len(palette) == 6
+
+    # Verify that not all colors are dark (at least one vivid/bright color is captured)
+    def is_bright_or_vivid(hex_str: str) -> bool:
+        r = int(hex_str[1:3], 16)
+        g = int(hex_str[3:5], 16)
+        b = int(hex_str[5:7], 16)
+        return max(r, g, b) > 100
+
+    vivid_count = sum(1 for c in palette if is_bright_or_vivid(c))
+    assert vivid_count >= 1, f"Expected vibrant colors in night scene palette, got: {palette}"
+
+
 if __name__ == "__main__":
     test_palette_extraction_counts_and_format()
     test_palette_extraction_degenerate_uniform_black()

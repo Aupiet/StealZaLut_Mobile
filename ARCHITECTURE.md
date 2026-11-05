@@ -207,52 +207,101 @@ Le Mode Éditeur Pur permet d'éditer une photo source **sans sélectionner d'im
 
 ---
 
-## 7. Arborescence Complète des Fichiers
+## 7. Arborescence Complète et Découpée des Fichiers
+
+L'application respecte une modularité stricte (< 400 lignes par fichier, zéro monolithe) :
 
 ```
 StealZaLut_Mobile/
-├── ARCHITECTURE.md                          [Créé] Documentation architecturale globale
+├── ARCHITECTURE.md                          Documentation architecturale globale
+├── CODING_STANDARDS.md                      Charte technique et invariants WYSIWYG
+├── LICENSE                                  Licence open-source MIT
 ├── app/
 │   └── src/
-│       └── main/
-│           ├── python/stealzalut/
-│           │   ├── __init__.py
-│           │   ├── config.py                [Mis à jour] Nouvelles constantes de presets & pipeline
-│           │   ├── bridge.py                [Mis à jour] Façade Kotlin Chaquopy (Étapes 2/3, Presets)
-│           │   ├── core/
-│           │   │   ├── __init__.py
-│           │   │   ├── color_space.py       [Créé] Espaces perceptuels OKLab, CIE LAB, smoothstep
-│           │   │   ├── pipeline.py          [Créé] Moteur Étapes 2 & 3, Baking LUT et masques
-│           │   │   ├── preset_manager.py    [Créé] Gestionnaire de presets JSON / .szlpreset
-│           │   │   ├── lut_engine.py        [Mis à jour] Réparation 3D lattice & baking unifié
-│           │   │   ├── lut_export.py        [Mis à jour] Export Adobe .cube conforme
-│           │   │   ├── color_transfer.py    [Mis à jour] Intégration pipeline
-│           │   │   └── auto_edit.py         [Existant] Moteur LightCraft Auto Edit
-│           │   └── workers/
-│           │       ├── transfer_worker.py   [Mis à jour] Cache 3 étapes & réactivité
-│           │       └── export_worker.py     [Mis à jour] Baking complet .cube et images HD
-│           ├── java/com/stealzalut/mobile/
-│           │   ├── data/
-│           │   │   ├── bridge/
-│           │   │   │   └── PythonBridgeRepository.kt [Mis à jour] Appels Étapes 2/3 & Presets
-│           │   │   ├── model/
-│           │   │   │   ├── ColorimetryPreset.kt      [Mis à jour] Support step2/step3 params
-│           │   │   │   └── EditPreset.kt             [Créé] Modèle de données pour les presets
-│           │   │   └── repository/
-│           │   │       └── PresetRepository.kt       [Mis à jour] Persistance presets .szlpreset
-│           │   └── ui/
-│           │       ├── navigation/
-│           │       │   └── AppDestination.kt         [Mis à jour] Ajout destination EDITOR
-│           │       ├── screens/
-│           │       │   ├── ApplyThemeScreen.kt       [Mis à jour] Intégration Étapes 2 & 3
-│           │       │   ├── StandaloneEditorScreen.kt [Créé] Nouvelle page Éditeur Photo Seul
-│           │       │   └── MainColorGradingScreen.kt [Mis à jour] Navigation 5 onglets
-│           │       └── viewmodel/
-│           │           ├── StealZaLutUiState.kt      [Mis à jour] Champs Étapes 2/3 & presets
-│           │           └── StealZaLutViewModel.kt    [Mis à jour] Gestion Étapes 2/3 & Éditeur
-└── tests/
-    ├── test_pipeline.py                     [Créé] Tests unitaires du pipeline en 3 étapes & OKLab
-    ├── test_preset_manager.py               [Créé] Tests de persistance et validation presets
-    ├── test_lut_engine.py                   [Mis à jour] Tests du nouveau moteur de LUT
-    └── test_lut_export.py                   [Mis à jour] Tests du baking et de l'exportation .cube
+│       ├── main/
+│       │   ├── python/stealzalut/
+│       │   │   ├── config.py                Constantes système, algorithmes et seuils
+│       │   │   ├── bridge.py                Façade unique JNI/Chaquopy (status: success/error)
+│       │   │   ├── core/
+│       │   │   │   ├── color_space.py       Espaces perceptuels OKLab, CIE LAB, smoothstep
+│       │   │   │   ├── pipeline.py          Moteur Étapes 2 & 3, Baking LUT et masques
+│       │   │   │   ├── preset_manager.py    Gestionnaire de presets v2, migration, duplication, export
+│       │   │   │   ├── lut_engine.py        Lattice 3D, interpolation trilinéaire & chunking anti-OOM
+│       │   │   │   ├── lut_export.py        Exportation Adobe .cube 1.0 conforme
+│       │   │   │   ├── color_transfer.py    Transferts optimaux (MKL, MVGD, Reinhard, HM)
+│       │   │   │   └── auto_edit.py         Analyse optique Rec. 2020 LightCraft
+│       │   │   ├── utils/
+│       │   │   │   └── image_io.py          I/O Pillow, préservation EXIF et extraction de palettes
+│       │   │   └── workers/
+│       │   │       ├── transfer_worker.py   Caches LRU double niveau (_RAW_LUT_CACHE, proxy)
+│       │   │       └── export_worker.py     Orchestration baking .cube et export photos HD
+│       │   └── java/com/stealzalut/mobile/
+│       │       ├── core/
+│       │       │   ├── AppConstants.kt      Constantes logiques, seuils d'opacité, durées
+│       │       │   ├── AppDimens.kt         Jetons de dimensions, paddings et rayons
+│       │       │   └── UiText.kt            Encapsulation i18n des chaînes pour ViewModel
+│       │       ├── data/
+│       │       │   ├── bridge/
+│       │       │   │   └── PythonBridgeRepository.kt Façade thread-safe sur pythonDispatcher
+│       │       │   ├── model/
+│       │       │   │   ├── ColorimetryPreset.kt Modèle preset Studio / Palettes
+│       │       │   │   ├── EditPreset.kt        Modèle preset Éditeur (.szlpreset)
+│       │       │   │   └── AppSettings.kt       Persistance des préférences et thèmes
+│       │       │   └── repository/
+│       │       │       ├── PresetRepository.kt  Persistance JSON des presets Studio
+│       │       │       └── SettingsRepository.kt Gestion SharedPreferences
+│       │       └── ui/
+│       │           ├── components/
+│       │           │   ├── DoubleViewComparison.kt Comparateur 3 modes (Split, Side-by-side, Hold)
+│       │           │   ├── SzlEmptyState.kt     Composant standard d'état vide
+│       │           │   ├── SzlRgbHistogram.kt   Histogramme RVB temps réel superposable
+│       │           │   ├── SzlImageBadge.kt     Badge sémantique sur image (compareBadge)
+│       │           │   └── ...
+│       │           ├── theme/
+│       │           │   ├── SzlColors.kt         Rôles sémantiques étendus (CompositionLocal)
+│       │           │   ├── ThemeSpec.kt         Contrat de thème (colorScheme, SzlColors)
+│       │           │   ├── Themes.kt            Registre des 4 thèmes (Ambre, Cyan, OLED, Daylight)
+│       │           │   ├── Theme.kt             Provider StealZaLut_MobileTheme
+│       │           │   └── ColorCardReference.kt Constantes de mire ColorChecker physiques
+│       │           ├── screens/
+│       │           │   ├── studio/              Studio de gradation découpé en 7 étapes/vues
+│       │           │   │   ├── StudioStepper.kt
+│       │           │   │   ├── StudioStep1Source.kt
+│       │           │   │   ├── StudioStep2Style.kt
+│       │           │   │   ├── StudioStep3Parameters.kt
+│       │           │   │   ├── StudioStep4Computing.kt
+│       │           │   │   ├── StudioStep5Result.kt
+│       │           │   │   └── StudioComponents.kt
+│       │           │   ├── editor/              Éditeur photo seul découpé en 6 vues
+│       │           │   │   ├── EditorViewport.kt
+│       │           │   │   ├── EditorPresetsTab.kt
+│       │           │   │   ├── EditorCalibrationTab.kt
+│       │           │   │   ├── EditorLightTab.kt
+│       │           │   │   ├── EditorColorTab.kt
+│       │           │   │   └── EditorEffectsTab.kt
+│       │           │   ├── ApplyThemeScreen.kt  Orchestrateur Studio (< 200 lignes)
+│       │           │   ├── StandaloneEditorScreen.kt Orchestrateur Éditeur (< 320 lignes)
+│       │           │   ├── ProfileScreen.kt     Galerie et presets enregistrés
+│       │           │   └── SettingsScreen.kt    Sélecteur de thèmes et paramètres
+│       │           └── viewmodel/
+│       │               ├── StealZaLutViewModel.kt Façade UDF (< 350 lignes)
+│       │               ├── StealZaLutUiState.kt État immuable (@Immutable)
+│       │               └── delegate/            Délégués spécialisés par domaine
+│       │                   ├── StudioFlowDelegate.kt
+│       │                   ├── GradingPipelineDelegate.kt
+│       │                   ├── EditorSessionDelegate.kt
+│       │                   └── PresetLibraryDelegate.kt
+│       └── test/java/com/stealzalut/mobile/
+│           ├── DesignSystemGuardTest.kt     Test JVM de garde (zéro Color/dp/sp/text en dur)
+│           ├── ThemeContrastTest.kt         Test de conformité contraste WCAG AA sur les 4 thèmes
+│           └── StealZaLutViewModelTest.kt   Tests unitaires UDF du ViewModel
+└── tests/                                   91 tests Pytest (100% verts)
+    ├── test_auto_edit.py
+    ├── test_bridge.py
+    ├── test_color_transfer.py
+    ├── test_colorset_worker.py
+    ├── test_lut_engine.py
+    ├── test_lut_export.py
+    ├── test_pipeline.py
+    └── test_preset_manager.py
 ```

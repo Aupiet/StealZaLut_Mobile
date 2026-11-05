@@ -6,6 +6,8 @@ import androidx.compose.runtime.Immutable
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.repository.SettingsRepository
 import kotlinx.coroutines.channels.Channel
@@ -21,12 +23,12 @@ data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val cacheSizeMb: Double = 0.0,
     val currentLanguageTag: String = "en",
-    val userMessage: String? = null,
-    val errorMessage: String? = null
+    val userMessage: UiText? = null,
+    val errorMessage: UiText? = null
 )
 
 sealed interface SettingsUiEffect {
-    data class ShowSnackbar(val message: String) : SettingsUiEffect
+    data class ShowSnackbar(val message: UiText) : SettingsUiEffect
 }
 
 class SettingsViewModel(
@@ -51,14 +53,15 @@ class SettingsViewModel(
 
     fun updateSettings(newSettings: AppSettings) {
         settingsRepository.saveSettings(newSettings)
+        val msg = UiText.Resource(R.string.msg_settings_saved)
         _uiState.update {
             it.copy(
                 settings = newSettings,
-                userMessage = "Paramètres enregistrés."
+                userMessage = msg
             )
         }
         viewModelScope.launch {
-            _effects.send(SettingsUiEffect.ShowSnackbar("Paramètres enregistrés."))
+            _effects.send(SettingsUiEffect.ShowSnackbar(msg))
         }
     }
 
@@ -71,7 +74,7 @@ class SettingsViewModel(
         AppCompatDelegate.setApplicationLocales(appLocales)
         _uiState.update { it.copy(currentLanguageTag = languageTag) }
         viewModelScope.launch {
-            _effects.send(SettingsUiEffect.ShowSnackbar("Langue changée / Language updated"))
+            _effects.send(SettingsUiEffect.ShowSnackbar(UiText.Resource(R.string.msg_language_updated)))
         }
     }
 
@@ -86,7 +89,11 @@ class SettingsViewModel(
         viewModelScope.launch {
             val cleared = settingsRepository.clearCache()
             refreshCacheSize()
-            val msg = if (cleared) "Cache temporaire vidé." else "Erreur vidage cache."
+            val msg = if (cleared) {
+                UiText.Resource(R.string.msg_cache_cleared)
+            } else {
+                UiText.Resource(R.string.err_cache_clear_failed)
+            }
             _uiState.update { it.copy(userMessage = msg) }
             _effects.send(SettingsUiEffect.ShowSnackbar(msg))
         }

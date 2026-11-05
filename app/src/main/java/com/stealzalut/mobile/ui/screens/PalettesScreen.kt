@@ -63,9 +63,11 @@ import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.ui.theme.ColorCardReference
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.ui.components.ImagePickerCard
 import com.stealzalut.mobile.ui.components.PaletteSwatchesView
+import com.stealzalut.mobile.ui.components.SzlEmptyState
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 
 @Composable
@@ -256,10 +258,10 @@ fun PalettesScreen(
                 )
 
                 if (uiState.savedPresets.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.palettes_no_presets),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    SzlEmptyState(
+                        icon = Icons.Default.Palette,
+                        title = stringResource(R.string.palettes_no_presets),
+                        description = stringResource(R.string.wizard_step_2_no_saved)
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)) {
@@ -358,16 +360,16 @@ private fun PresetItemCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .height(AppDimens.CalibrationCardHeight)
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
-                    .background(Color(0xFF202228))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(AppDimens.CornerRadiusNormal)),
+                    .background(ColorCardReference.NeutralDarkBackground)
+                    .border(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(AppDimens.CornerRadiusNormal)),
                 contentAlignment = Alignment.Center
             ) {
                 if (cardBitmap != null) {
                     Image(
                         bitmap = cardBitmap!!.asImageBitmap(),
-                        contentDescription = "Mire des couleurs",
+                        contentDescription = stringResource(R.string.palettes_mire_content_desc),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -376,35 +378,30 @@ private fun PresetItemCard(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(AppDimens.SpacingMedium),
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
                     ) {
-                        Row(modifier = Modifier.fillMaxWidth().height(16.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(Color.White))
-                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(Color(0xFFF0F0F0)))
+                        Row(modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightMedium), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
+                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(Color.White))
+                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(ColorCardReference.WhiteStep))
                         }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(14.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .height(AppDimens.CalibrationRowHeightSmall)
+                                .clip(RoundedCornerShape(AppDimens.CornerRadiusTiny))
                                 .background(
-                                    Brush.horizontalGradient(
-                                        listOf(Color.Black, Color(0xFF333333), Color(0xFF666666), Color(0xFF999999), Color.White)
-                                    )
+                                    Brush.horizontalGradient(ColorCardReference.NeutralRampFive)
                                 )
                         )
-                        Row(modifier = Modifier.fillMaxWidth().height(12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(Color(0xFF767676)))
-                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(Color(0xFF808080)))
+                        Row(modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightMicro), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
+                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(ColorCardReference.GrayMiddle1))
+                            Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(ColorCardReference.GrayMiddle2))
                         }
-                        val patches = listOf(
-                            Color(0xFFCD9B84), Color(0xFF9B6E55), Color(0xFF5F3E2D),
-                            Color(0xFFE12D2D), Color(0xFF2DB937), Color(0xFF2D55E1)
-                        )
-                        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val patches = ColorCardReference.PrimaryCardPatches
+                        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
                             for (p in patches) {
-                                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(p))
+                                Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusTiny)).background(p))
                             }
                         }
                     }
@@ -441,7 +438,7 @@ private fun PresetItemCard(
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                 shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(
                     imageVector = Icons.Default.Tune,

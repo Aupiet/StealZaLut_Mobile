@@ -116,4 +116,12 @@ internal object ColorPrimitives {
 
     val CompareBadgeDark = Color(0xFFB91C1C)
     val OnCompareBadgeLight = Color(0xFFFFFFFF)
+
+    // --- Darkroom & Curve Inspection Primitives ---
+    val DarkroomBlack = Color(0xFF0E0E11)
+    val DarkroomBlackLight = Color(0xFF141418)
+    val ToneCurveRed = Color(0xFFFF5252)
+    val ToneCurveGreen = Color(0xFF69F0AE)
+    val ToneCurveBlue = Color(0xFF448AFF)
+    val ToneCurveRgb = Color(0xFFF0F2F5)
 }

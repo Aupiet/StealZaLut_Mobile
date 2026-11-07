@@ -412,6 +412,14 @@ class PresetLibraryDelegate(
         stateFlow.update { it.copy(isSaveEditingPresetDialogVisible = false) }
     }
 
+    fun openEditorPresetsSheet() {
+        stateFlow.update { it.copy(isEditorPresetsSheetVisible = true) }
+    }
+
+    fun dismissEditorPresetsSheet() {
+        stateFlow.update { it.copy(isEditorPresetsSheetVisible = false) }
+    }
+
     fun saveCurrentEditingPreset(name: String) {
         scope.launch {
             dismissSaveEditingPresetDialog()

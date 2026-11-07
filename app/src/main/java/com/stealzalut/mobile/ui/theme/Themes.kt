@@ -72,7 +72,12 @@ object AppThemes {
             onChipSelected = ColorPrimitives.AmberOnContainer,
             navIndicator = ColorPrimitives.AmberContainer,
             compareBadge = ColorPrimitives.CompareBadgeDark,
-            onCompareBadge = ColorPrimitives.OnCompareBadgeLight
+            onCompareBadge = ColorPrimitives.OnCompareBadgeLight,
+            photoDarkroom = ColorPrimitives.DarkroomBlack,
+            toneCurveRed = ColorPrimitives.ToneCurveRed,
+            toneCurveGreen = ColorPrimitives.ToneCurveGreen,
+            toneCurveBlue = ColorPrimitives.ToneCurveBlue,
+            toneCurveRgb = ColorPrimitives.ToneCurveRgb
         )
     )
 
@@ -130,7 +135,12 @@ object AppThemes {
             onChipSelected = ColorPrimitives.CyanOnContainer,
             navIndicator = ColorPrimitives.CyanContainer,
             compareBadge = ColorPrimitives.CompareBadgeDark,
-            onCompareBadge = ColorPrimitives.OnCompareBadgeLight
+            onCompareBadge = ColorPrimitives.OnCompareBadgeLight,
+            photoDarkroom = ColorPrimitives.DarkroomBlack,
+            toneCurveRed = ColorPrimitives.ToneCurveRed,
+            toneCurveGreen = ColorPrimitives.ToneCurveGreen,
+            toneCurveBlue = ColorPrimitives.ToneCurveBlue,
+            toneCurveRgb = ColorPrimitives.ToneCurveRgb
         )
     )
 
@@ -188,7 +198,12 @@ object AppThemes {
             onChipSelected = ColorPrimitives.OledOnContainer,
             navIndicator = ColorPrimitives.OledContainer,
             compareBadge = ColorPrimitives.CompareBadgeDark,
-            onCompareBadge = ColorPrimitives.OnCompareBadgeLight
+            onCompareBadge = ColorPrimitives.OnCompareBadgeLight,
+            photoDarkroom = ColorPrimitives.OledBackground,
+            toneCurveRed = ColorPrimitives.ToneCurveRed,
+            toneCurveGreen = ColorPrimitives.ToneCurveGreen,
+            toneCurveBlue = ColorPrimitives.ToneCurveBlue,
+            toneCurveRgb = ColorPrimitives.ToneCurveRgb
         )
     )
 
@@ -246,7 +261,12 @@ object AppThemes {
             onChipSelected = ColorPrimitives.LightOnContainer,
             navIndicator = ColorPrimitives.LightContainer,
             compareBadge = ColorPrimitives.CompareBadgeDark,
-            onCompareBadge = Color.White
+            onCompareBadge = Color.White,
+            photoDarkroom = ColorPrimitives.DarkroomBlackLight,
+            toneCurveRed = ColorPrimitives.ToneCurveRed,
+            toneCurveGreen = ColorPrimitives.ToneCurveGreen,
+            toneCurveBlue = ColorPrimitives.ToneCurveBlue,
+            toneCurveRgb = ColorPrimitives.DarkroomBlackLight
         )
     )
 

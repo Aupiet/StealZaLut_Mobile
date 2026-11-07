@@ -1,7 +1,14 @@
 package com.stealzalut.mobile.ui.screens.editor
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -12,21 +19,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,11 +51,24 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.components.SzlImageBadge
 import com.stealzalut.mobile.ui.components.SzlRgbHistogram
+import com.stealzalut.mobile.ui.theme.ColorCardReference
+import com.stealzalut.mobile.ui.theme.szlColors
 
+/**
+ * High-end Darkroom Photo Viewport inspired by Lightroom and Halide.
+ * Features:
+ * - Neutral darkroom canvas background (#0E0E11) preventing color perception skew.
+ * - Minimalist floating translucent frosted-glass control strip.
+ * - Compact floating animated Glassmorphism RGB Histogram overlay.
+ * - Tactile hold-to-compare with high-visibility original badge.
+ * - Synchronized 1x..4x pinch-to-zoom and pan.
+ */
 @Composable
 fun EditorViewport(
     sourceBitmap: Bitmap?,
@@ -69,211 +87,225 @@ fun EditorViewport(
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+    var isHistogramEnlarged by remember { mutableStateOf(false) }
 
     val displayBitmap = if (isHoldingCompare && sourceBitmap != null) sourceBitmap else (previewBitmap ?: sourceBitmap)
 
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(AppDimens.CornerRadiusCard)),
-        shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        scale = (scale * zoom).coerceIn(1f, 4f)
-                        if (scale > 1f) {
-                            offsetX += pan.x
-                            offsetY += pan.y
-                        } else {
-                            offsetX = 0f
-                            offsetY = 0f
-                        }
+            .background(MaterialTheme.szlColors.photoDarkroom)
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 4f)
+                    if (scale > 1f) {
+                        offsetX += pan.x
+                        offsetY += pan.y
+                    } else {
+                        offsetX = 0f
+                        offsetY = 0f
                     }
                 }
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var isHoldActive = false
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var isHoldActive = false
+                    try {
+                        withTimeout(400L) {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id }
+                                if (change == null || !change.pressed) {
+                                    return@withTimeout
+                                }
+                                val distance = (change.position - down.position).getDistance()
+                                if (event.changes.size > 1 || distance > 18f) {
+                                    return@withTimeout
+                                }
+                            }
+                        }
+                    } catch (e: PointerEventTimeoutCancellationException) {
+                        isHoldActive = true
+                    }
+
+                    if (isHoldActive) {
                         try {
-                            withTimeout(400L) {
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull { it.id == down.id }
-                                    if (change == null || !change.pressed) {
-                                        return@withTimeout
-                                    }
-                                    val distance = (change.position - down.position).getDistance()
-                                    if (event.changes.size > 1 || distance > 18f) {
-                                        return@withTimeout
-                                    }
+                            isHoldingCompare = true
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id }
+                                if (change == null || !change.pressed) {
+                                    break
                                 }
                             }
-                        } catch (e: PointerEventTimeoutCancellationException) {
-                            isHoldActive = true
-                        }
-
-                        if (isHoldActive) {
-                            try {
-                                isHoldingCompare = true
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull { it.id == down.id }
-                                    if (change == null || !change.pressed) {
-                                        break
-                                    }
-                                }
-                            } finally {
-                                isHoldingCompare = false
-                            }
+                        } finally {
+                            isHoldingCompare = false
                         }
                     }
                 }
-        ) {
-            displayBitmap?.let { bmp ->
-                Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            translationX = offsetX
-                            translationY = offsetY
-                        }
-                )
             }
-
-            // Compare badge overlay (semantic compareBadge role, zero errorContainer hijack)
-            if (isHoldingCompare) {
-                SzlImageBadge(
-                    text = stringResource(R.string.editor_compare_original_badge),
-                    alignment = Alignment.TopCenter,
-                    isCompareMode = true
-                )
-            } else {
-                Surface(
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = AppDimens.SpacingSmall)
-                ) {
-                    Text(
-                        text = stringResource(R.string.editor_hold_compare),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
-                    )
-                }
-            }
-
-            // Top-left LUT status badge
-            Row(
+    ) {
+        // --- 1. Photo Canvas ---
+        displayBitmap?.let { bmp ->
+            Image(
+                bitmap = bmp.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(AppDimens.SpacingSmall),
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offsetX
+                        translationY = offsetY
+                    }
+            )
+        }
+
+        // --- 2. Minimalist Translucent Floating Top Toolbar ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppDimens.SpacingSmall)
+                .align(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left Pill: Active LUT indicator
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                border = androidx.compose.foundation.BorderStroke(
+                    AppDimens.BorderThin,
+                    ColorCardReference.WhiteStep.copy(alpha = 0.12f)
+                )
             ) {
-                Surface(
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                    color = if (lutName != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.padding(AppDimens.SpacingMicro)
+                Row(
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingSmall),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(AppDimens.SpacingSmall)
+                            .clip(CircleShape)
+                            .background(if (lutName != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                     Text(
                         text = lutName ?: stringResource(R.string.editor_no_lut_badge),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (lutName != null) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            // Top-right controls (Histogram toggle, Change photo, processing indicator)
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(AppDimens.SpacingSmall),
-                verticalAlignment = Alignment.CenterVertically
+            // Right Pill Group: Histogram, Import Photo
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                border = androidx.compose.foundation.BorderStroke(
+                    AppDimens.BorderThin,
+                    ColorCardReference.WhiteStep.copy(alpha = 0.12f)
+                )
             ) {
-                if (isProcessing && !isComputingAutoEdit) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
-                        strokeWidth = AppDimens.BorderThick,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                }
-                FilledTonalIconButton(
-                    onClick = onApplyAutoEdit,
-                    enabled = !isComputingAutoEdit && !isProcessing,
-                    modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                Row(
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingExtraSmall, vertical = AppDimens.SpacingMicro),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isComputingAutoEdit) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(AppDimens.IconSmall),
-                            strokeWidth = AppDimens.BorderThick,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
+                    // Histogram Toggle Button
+                    IconButton(
+                        onClick = onToggleHistogram,
+                        modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.AutoFixHigh,
-                            contentDescription = stringResource(R.string.btn_auto_edit),
-                            tint = MaterialTheme.colorScheme.primary,
+                            imageVector = Icons.Default.BarChart,
+                            contentDescription = stringResource(R.string.section_histogram),
+                            tint = if (isHistogramExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                    }
+
+                    // Change Photo Button
+                    IconButton(
+                        onClick = onChangePhoto,
+                        modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddPhotoAlternate,
+                            contentDescription = stringResource(R.string.editor_change_image),
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(AppDimens.IconSmall)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                FilledTonalIconButton(
-                    onClick = onToggleHistogram,
-                    modifier = Modifier.size(AppDimens.ViewportButtonSize)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.BarChart,
-                        contentDescription = stringResource(R.string.section_histogram),
-                        tint = if (isHistogramExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(AppDimens.IconSmall)
-                    )
-                }
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                FilledTonalIconButton(
-                    onClick = onChangePhoto,
-                    modifier = Modifier.size(AppDimens.ViewportButtonSize)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AddPhotoAlternate,
-                        contentDescription = stringResource(R.string.editor_change_image),
-                        modifier = Modifier.size(AppDimens.IconSmall)
-                    )
-                }
             }
+        }
 
-            // Bottom Histogram overlay inside viewport
-            if (isHistogramExpanded) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(AppDimens.SpacingSmall)
+        // --- 3. Hold-to-Compare Feedback Overlay ---
+        if (isHoldingCompare) {
+            SzlImageBadge(
+                text = stringResource(R.string.editor_compare_original_badge),
+                alignment = Alignment.TopCenter,
+                isCompareMode = true
+            )
+        } else {
+            // Subtle unobtrusive hint pill at the bottom
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = AppDimens.SpacingSmall)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingMicro),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SzlRgbHistogram(
-                        bitmap = previewBitmap ?: sourceBitmap,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(AppDimens.HistogramHeight)
-                            .padding(AppDimens.SpacingMicro)
+                    Icon(
+                        imageVector = Icons.Default.Compare,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconMicro),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                    Text(
+                        text = stringResource(R.string.editor_hold_compare),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+        }
+
+        // --- 4. Processing Progress Spinner ---
+        if (isProcessing && !isComputingAutoEdit) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(AppDimens.AvatarSize),
+                strokeWidth = AppDimens.BorderMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        // --- 5. Compact Floating Animated Glassmorphism RGB Histogram ---
+        AnimatedVisibility(
+            visible = isHistogramExpanded,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(AppDimens.SpacingMedium)
+        ) {
+            SzlRgbHistogram(
+                bitmap = previewBitmap ?: sourceBitmap,
+                isEnlarged = isHistogramEnlarged,
+                onClick = { isHistogramEnlarged = !isHistogramEnlarged }
+            )
         }
     }
 }

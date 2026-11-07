@@ -1,8 +1,0 @@
-feat: implement Lightroom-style develop panels and preset serialization
-
-- Add comprehensive Lightroom-style develop panels (Basic, Tone Curve, Color Mixer, Color Grading, Detail, Effects, Calibration, Lens Blur, Lens Corrections, Transform).
-- Implement SzlAccordionSection for collapsible UI panels.
-- Add LightroomSerializer and LightroomDeserializer for advanced preset data model conversion to and from Python layer.
-- Introduce EditorDevelopPanelsList, EditorToolbar, and EditorActionsDropdownToolbar to revamp the Standalone Editor experience.
-- Enhance Python pipeline with lightroom_models.py, lightroom_color.py, lightroom_spatial.py, spatial_filters.py, and spline_interpolator.py to support complex grading math.
-- Delegate logic to EditorLightroomDelegate for better ViewModel separation.

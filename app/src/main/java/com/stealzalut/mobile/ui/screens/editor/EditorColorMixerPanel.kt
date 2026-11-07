@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +22,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorMixerModel
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
@@ -40,8 +45,8 @@ import com.stealzalut.mobile.ui.theme.ColorCardReference
 
 /**
  * Lightroom Classic Color Mixer / TSL Develop Panel.
- * Implements the horizontal 8-color spectral picker with single unified sliders for Hue,
- * Saturation, and Luminance per active color.
+ * Implements the horizontal 8-color spectral picker with zero vertical scroll,
+ * featuring interactive H/S/L pills and a single active tactile slider.
  */
 @Composable
 fun EditorColorMixerPanel(
@@ -51,6 +56,7 @@ fun EditorColorMixerPanel(
 ) {
     val isHsl = colorMixer.mode.equals("hsl", ignoreCase = true)
     var selectedColorIndex by remember { mutableIntStateOf(0) } // 0..7
+    var activeProperty by remember { mutableIntStateOf(0) } // 0 = Hue, 1 = Sat, 2 = Lum, 3 = Range (point color only)
 
     val spectralColors = listOf(
         Pair(ColorCardReference.HslRed, R.string.color_red),
@@ -151,38 +157,11 @@ fun EditorColorMixerPanel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = AppDimens.SpacingSmall),
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+            .padding(vertical = AppDimens.SpacingMicro),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-        // --- Mode Selector: HSL Spectrum vs Point Color Pipette ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            FilterChip(
-                selected = isHsl,
-                onClick = { onUpdateColorMixer { it.copy(mode = "hsl") } },
-                label = { Text(stringResource(R.string.mode_hsl)) },
-                modifier = Modifier.weight(1f)
-            )
-            FilterChip(
-                selected = !isHsl,
-                onClick = { onUpdateColorMixer { it.copy(mode = "point_color") } },
-                label = { Text(stringResource(R.string.mode_point_color)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Colorize,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconMicro)
-                    )
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
+        // --- 8 Spectral Color Buttons (Horizontal Row) ---
         if (isHsl) {
-            // --- 8 Spectral Color Buttons (Horizontal Row) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -217,18 +196,57 @@ fun EditorColorMixerPanel(
                 }
             }
 
-            // --- Selected Color Header & Reset ---
+            // --- Property Selector Pills: [ Teinte ] [ Saturation ] [ Luminance ] + Reset ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(spectralColors[selectedColorIndex].second),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = spectralColors[selectedColorIndex].first
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val properties = listOf(
+                        Triple(0, R.string.tab_hue, getCurrentHue()),
+                        Triple(1, R.string.tab_sat, getCurrentSat()),
+                        Triple(2, R.string.tab_lum, getCurrentLum())
+                    )
+
+                    properties.forEach { (propIndex, labelRes, propValue) ->
+                        val isSelected = activeProperty == propIndex
+                        Surface(
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                AppDimens.BorderThin,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                            ),
+                            modifier = Modifier.clickable { activeProperty = propIndex }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(labelRes),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (propValue != 0f) {
+                                    Spacer(modifier = Modifier.width(AppDimens.SpacingMicro))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(AppDimens.SpacingMicro)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 IconButton(
                     onClick = { resetCurrentColor() },
                     modifier = Modifier.size(AppDimens.MinInteractiveTarget)
@@ -242,84 +260,116 @@ fun EditorColorMixerPanel(
                 }
             }
 
-            // --- Unified 3 Sliders for the Active Color: Hue, Saturation, Luminance ---
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_hue),
-                value = getCurrentHue(),
-                onValueChange = { updateCurrentHue(it) },
-                min = -100.0f,
-                max = 100.0f
-            )
-
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_sat),
-                value = getCurrentSat(),
-                onValueChange = { updateCurrentSat(it) },
-                min = -100.0f,
-                max = 100.0f
-            )
-
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_lum),
-                value = getCurrentLum(),
-                onValueChange = { updateCurrentLum(it) },
-                min = -100.0f,
-                max = 100.0f
-            )
+            // --- Single Active Slider (Zero Scroll) ---
+            when (activeProperty) {
+                0 -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_hue),
+                    value = getCurrentHue(),
+                    onValueChange = { updateCurrentHue(it) },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+                1 -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_sat),
+                    value = getCurrentSat(),
+                    onValueChange = { updateCurrentSat(it) },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+                else -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_lum),
+                    value = getCurrentLum(),
+                    onValueChange = { updateCurrentLum(it) },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+            }
         } else {
-            // --- Point Color Controls ---
+            // --- Point Color Mode (Pipette) ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.eyedropper_label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Box(
-                    modifier = Modifier
-                        .size(AppDimens.PointColorPipetteSize)
-                        .clip(CircleShape)
-                        .background(Color(colorMixer.pointTargetR, colorMixer.pointTargetG, colorMixer.pointTargetB))
-                        .border(AppDimens.BorderMedium, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(AppDimens.SwatchSize)
+                            .clip(CircleShape)
+                            .background(Color(colorMixer.pointTargetR, colorMixer.pointTargetG, colorMixer.pointTargetB))
+                            .border(AppDimens.BorderMedium, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    )
+                    Text(
+                        text = stringResource(R.string.eyedropper_label),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
+                    listOf(
+                        Triple(0, R.string.tab_hue, colorMixer.pointHueShift != 0f),
+                        Triple(1, R.string.tab_sat, colorMixer.pointSatShift != 0f),
+                        Triple(2, R.string.tab_lum, colorMixer.pointLumShift != 0f),
+                        Triple(3, R.string.slider_range, false)
+                    ).forEach { (idx, labelRes, isModified) ->
+                        val isSelected = activeProperty == idx
+                        Surface(
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                AppDimens.BorderThin,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                            ),
+                            modifier = Modifier.clickable { activeProperty = idx }
+                        ) {
+                            Text(
+                                text = stringResource(labelRes),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
+                            )
+                        }
+                    }
+                }
             }
 
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_hue),
-                value = colorMixer.pointHueShift,
-                onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointHueShift = newVal, pointActive = true) } },
-                min = -100.0f,
-                max = 100.0f
-            )
-
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_sat),
-                value = colorMixer.pointSatShift,
-                onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointSatShift = newVal, pointActive = true) } },
-                min = -100.0f,
-                max = 100.0f
-            )
-
-            SzlBipolarSlider(
-                title = stringResource(R.string.tab_lum),
-                value = colorMixer.pointLumShift,
-                onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointLumShift = newVal, pointActive = true) } },
-                min = -100.0f,
-                max = 100.0f
-            )
-
-            SzlSlider(
-                title = stringResource(R.string.slider_range),
-                value = colorMixer.pointRange / 100.0f,
-                onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointRange = newVal * 100.0f) } },
-                min = 0.05f,
-                max = 1.0f,
-                step = 0.01f,
-                presets = null
-            )
+            when (activeProperty) {
+                0 -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_hue),
+                    value = colorMixer.pointHueShift,
+                    onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointHueShift = newVal, pointActive = true) } },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+                1 -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_sat),
+                    value = colorMixer.pointSatShift,
+                    onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointSatShift = newVal, pointActive = true) } },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+                2 -> SzlBipolarSlider(
+                    title = stringResource(R.string.tab_lum),
+                    value = colorMixer.pointLumShift,
+                    onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointLumShift = newVal, pointActive = true) } },
+                    min = -100.0f,
+                    max = 100.0f
+                )
+                else -> SzlSlider(
+                    title = stringResource(R.string.slider_range),
+                    value = colorMixer.pointRange / 100.0f,
+                    onValueChange = { newVal -> onUpdateColorMixer { it.copy(pointRange = newVal * 100.0f) } },
+                    min = 0.05f,
+                    max = 1.0f,
+                    step = 0.01f,
+                    presets = null
+                )
+            }
         }
     }
 }

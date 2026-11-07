@@ -206,6 +206,7 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun resetStep3Params() = editorSessionDelegate.resetStep3Params()
     fun resetEditingParameters() = editorSessionDelegate.resetEditingParameters()
     fun resetAllEditorParams() = editorSessionDelegate.resetAllEditorParams()
+    fun closeEditorPhoto() = editorSessionDelegate.closeEditorPhoto()
     fun exportEditorCube(onSuccess: (String) -> Unit) = editorSessionDelegate.exportEditorCube(onSuccess)
     fun exportEditorImage() = editorSessionDelegate.exportEditorImage { loadSavedImages() }
 
@@ -240,6 +241,8 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun loadEditingPresets() = presetLibraryDelegate.loadEditingPresets()
     fun openSaveEditingPresetDialog() = presetLibraryDelegate.openSaveEditingPresetDialog()
     fun dismissSaveEditingPresetDialog() = presetLibraryDelegate.dismissSaveEditingPresetDialog()
+    fun openEditorPresetsSheet() = presetLibraryDelegate.openEditorPresetsSheet()
+    fun dismissEditorPresetsSheet() = presetLibraryDelegate.dismissEditorPresetsSheet()
     fun saveCurrentEditingPreset(name: String) = presetLibraryDelegate.saveCurrentEditingPreset(name)
     fun applyEditingPreset(preset: EditPreset) = presetLibraryDelegate.applyEditingPreset(preset)
     fun deleteEditingPreset(presetId: String) = presetLibraryDelegate.deleteEditingPreset(presetId)

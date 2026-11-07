@@ -3,15 +3,10 @@ package com.stealzalut.mobile.ui.screens.editor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -21,19 +16,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.BasicAdjustmentsModel
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
+import com.stealzalut.mobile.ui.theme.ColorCardReference
+import kotlin.math.abs
 
 /**
- * Horizontal, compact Basic Adjustments Develop Panel.
- * Uses a horizontal parameter tab strip and prominent active slider,
- * minimizing vertical screen usage to keep the photo preview as large as possible.
+ * Compact Basic Adjustments Develop Panel with horizontal parameter strip,
+ * specialized color gradients for Temp and Tint, and zero redundant reset buttons.
  */
 @Composable
 fun EditorBasicPanel(
@@ -41,6 +37,7 @@ fun EditorBasicPanel(
     onUpdateBasic: ((BasicAdjustmentsModel) -> BasicAdjustmentsModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
     var selectedParamIndex by remember { mutableIntStateOf(0) }
 
     val params = listOf(
@@ -79,13 +76,28 @@ fun EditorBasicPanel(
         }
     }
 
-    fun resetSelectedValue() = updateSelectedValue(0f)
+    val tempGradient = Brush.horizontalGradient(
+        listOf(
+            ColorCardReference.HistogramBlue.copy(alpha = 0.6f),
+            ColorCardReference.NeutralDarkBackground,
+            ColorCardReference.HslOrange.copy(alpha = 0.6f)
+        )
+    )
+
+    val tintGradient = Brush.horizontalGradient(
+        listOf(
+            ColorCardReference.HistogramGreen.copy(alpha = 0.6f),
+            ColorCardReference.NeutralDarkBackground,
+            ColorCardReference.HslMagenta.copy(alpha = 0.6f)
+        )
+    )
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .verticalScroll(scrollState)
             .padding(vertical = AppDimens.SpacingSmall),
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
         // --- 1. Horizontal Parameter Selector Strip ---
         ScrollableTabRow(
@@ -94,7 +106,7 @@ fun EditorBasicPanel(
             modifier = Modifier.fillMaxWidth()
         ) {
             params.forEachIndexed { index, (labelRes, value) ->
-                val hasAdjustment = kotlin.math.abs(value) > 0.001f
+                val hasAdjustment = abs(value) > 0.001f
                 Tab(
                     selected = selectedParamIndex == index,
                     onClick = { selectedParamIndex = index },
@@ -109,45 +121,44 @@ fun EditorBasicPanel(
             }
         }
 
-        // --- 2. Active Parameter Slider & Reset Button ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-        ) {
-            Box(modifier = Modifier.weight(1f)) {
-                if (selectedParamIndex == 0) {
-                    SzlBipolarSlider(
-                        title = stringResource(R.string.slider_exposure),
-                        value = basic.exposure,
-                        onValueChange = { updateSelectedValue(it) },
-                        min = -5.0f,
-                        max = 5.0f,
-                        defaultValue = 0.0f,
-                        unit = "EV",
-                        decimals = 2
-                    )
-                } else {
-                    SzlBipolarSlider(
-                        title = stringResource(params[selectedParamIndex].first),
-                        value = params[selectedParamIndex].second,
-                        onValueChange = { updateSelectedValue(it) },
-                        min = -100.0f,
-                        max = 100.0f,
-                        defaultValue = 0.0f
-                    )
-                }
-            }
-
-            IconButton(
-                onClick = { resetSelectedValue() },
-                modifier = Modifier.size(AppDimens.MinInteractiveTarget)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.RestartAlt,
-                    contentDescription = stringResource(R.string.btn_reset_section),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(AppDimens.IconSmall)
+        // --- 2. Active Parameter Slider ---
+        Box(modifier = Modifier.fillMaxWidth()) {
+            when (selectedParamIndex) {
+                0 -> SzlBipolarSlider(
+                    title = stringResource(R.string.slider_exposure),
+                    value = basic.exposure,
+                    onValueChange = { updateSelectedValue(it) },
+                    min = -5.0f,
+                    max = 5.0f,
+                    defaultValue = 0.0f,
+                    unit = "EV",
+                    decimals = 2
+                )
+                6 -> SzlBipolarSlider(
+                    title = stringResource(R.string.slider_temp),
+                    value = basic.temp,
+                    onValueChange = { updateSelectedValue(it) },
+                    min = -100.0f,
+                    max = 100.0f,
+                    defaultValue = 0.0f,
+                    trackGradient = tempGradient
+                )
+                7 -> SzlBipolarSlider(
+                    title = stringResource(R.string.slider_tint),
+                    value = basic.tint,
+                    onValueChange = { updateSelectedValue(it) },
+                    min = -100.0f,
+                    max = 100.0f,
+                    defaultValue = 0.0f,
+                    trackGradient = tintGradient
+                )
+                else -> SzlBipolarSlider(
+                    title = stringResource(params[selectedParamIndex].first),
+                    value = params[selectedParamIndex].second,
+                    onValueChange = { updateSelectedValue(it) },
+                    min = -100.0f,
+                    max = 100.0f,
+                    defaultValue = 0.0f
                 )
             }
         }

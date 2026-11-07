@@ -106,3 +106,45 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   4. Barre d'outils accessible avec gestion native des insets de navigation gestuelle Android (`navigationBarsPadding()`).
   5. Correction de l'appui maintenu comparateur (`EditorViewport`) avec détection stationnaire de 400 ms sur le conteneur complet et relâchement garanti via `finally { isHoldingCompare = false }`.
   6. Intégration complète de l'import/export SAF de presets `.szlpreset` dans `EditorPresetsTab` avec prévention des ID en doublon.
+
+---
+
+## ADR-10 : Refonte UI/UX Complète, Ergonomie Zero-Scroll & Stabilisation Profil
+
+- **Contexte :**
+  1. La page Profil provoquait un crash immédiat au lancement à cause d'une erreur de formatage (`IllegalFormatConversionException`) dans les pastilles de statistiques (`R.string.profile_tab_photos` attendant `%1$d` et recevant `""`).
+  2. L'éditeur autonome nécessitait trop de défilement vertical, particulièrement dans les panneaux Courbe de tonalité (`EditorToneCurvePanel`) et Étalonnage des couleurs (`EditorColorGradingPanel`), masquant la photo en cours d'édition.
+  3. Dans le Studio, l'Étape 3 manquait de lisibilité avec ses cartes de paramètres empilées verticalement sans hiérarchie claire.
+  4. L'affichage de l'extraction de palette prenait trop de place verticalement avec des champs de texte verbeux au détriment des nuanciers visuels.
+- **Décision :**
+  1. **Stabilisation Profil :** Création de chaînes dédiées non paramétrées `profile_stat_photos` et `profile_stat_presets`, et contrainte des listes `LazyVerticalGrid` / `LazyColumn` via `Box(modifier = Modifier.weight(1f).fillMaxWidth())` éliminant tout crash.
+  2. **Ergonomie Zero-Scroll dans l'Éditeur :**
+     - *Courbe de tonalité :* Séparation nette en 2 modes dédiés : Mode Courbe à points (`ToneCurveZeroScrollHeight` 120dp) avec spline cubique, 4 zones et presets S-Curve instantanés ; et Mode Zones avec curseurs Hautes lumières et Ombres. Aucun défilement vertical requis.
+     - *Color Grading :* 5 onglets thématiques (Ombres, Tons moyens, Hautes lumières, Global, Mélange/Équilibre), roue compacte 100dp (`ColorWheelZeroScrollSize`) et curseur de luminance sans aucun chevauchement ni défilement vertical.
+     - *Tiroir rétractable :* Poignée tactile et chevron permettant de replier le tiroir pour laisser la photo occuper 100% de la hauteur de l'écran.
+  3. **Studio Étape 3 façon Éditeur :** Remplacement de la longue liste de cartes par une barre de pilules thématiques tactiles (*Intensité & Lumière*, *Couleurs & Peau*, *Méthode Colorimétrique*, *Grille 3D LUT*), offrant un espace propre, catégorisé et cohérent avec l'Éditeur sous l'aperçu WYSIWYG épinglé.
+  4. **Nuanciers Cinéma Compacts :** Resserrement des cartes de nuanciers (`CinemaSwatchCompactWidth` 76dp, `CinemaSwatchCompactHeight` 96dp), affichage `#HEX` et `%` sur une seule ligne façon Pantone/ShotDeck, et compactage du formulaire d'enregistrement de presets en une rangée de boutons unifiés.
+
+---
+
+## ADR-11 : Sauvegarde Session & BackHandler, Zéro Défilement Intégral, Toolbox Unifiée et Ergonomie Tactile
+
+- **Contexte :**
+  1. Lors de l'appui sur le bouton Retour physique/gestuel Android, l'application se fermait brutalement sans sauvegarder l'édition photo en cours.
+  2. Plusieurs sous-menus de l'éditeur (`ColorMixer`, `Detail`, `Effects`, `Calibration`) utilisaient encore des listes verticales à défilement (`verticalScroll`) réduisant la visibilité du canevas photo.
+  3. L'histogramme du viewport n'offrait pas de vue agrandie pour analyser précisément les canaux spectraux et le clipping.
+  4. La page Profil comportait un en-tête volumineux avec avatar et textes génériques gaspillant l'espace visuel avant la galerie de photos et de styles.
+  5. Les accès Presets et Auto-Edit (IA) surchargeaient la barre d'outils inférieure et le viewport de l'éditeur.
+  6. Le toucher sur la courbe de tonalités créait des points parasites lors d'un simple toucher ou glissement.
+  7. La page Palettes dépassait la hauteur d'écran avec textes encombrants et boutons d'action tronqués par la barre de navigation.
+- **Décision :**
+  1. **Gestion du BackHandler & Préservation de brouillon :** Intégration de `BackHandler` dans `MainColorGradingScreen` interceptant le retour dans l'éditeur pour afficher un dialogue de confirmation (Enregistrer Preset, Revenir au Studio avec session préservée en mémoire, ou Abandonner/Fermer la photo). Dans le Studio, le retour recule d'une étape (`wizardStep - 1`).
+  2. **Zéro-Scroll Intégral sur 100% des panneaux de développement :**
+     - `EditorColorMixerPanel` : 8 pastilles de couleur horizontales, pilules de sélection Teinte / Saturation / Luminance et un seul curseur actif.
+     - `EditorDetailPanel`, `EditorEffectsPanel`, `EditorCalibrationPanel` : transformation en sélecteurs horizontaux à pilules avec curseur actif unique. Aucun défilement vertical requis sur aucun panneau de l'éditeur.
+  3. **Histogramme RVB Agrandissable (HUD) :** Clic tactile sur l'histogramme pour afficher un HUD étendu (280×150dp) avec lignes de repère 25/50/75%, légendes L/R/G/B et analyse spectrale.
+  4. **Allègement Profil :** Suppression de la carte d'en-tête redondante, centrant l'affichage immédiatement sur les onglets Photos et Presets.
+  5. **Boîte à Outils Haut-Gauche :** Déplacement d'Auto-Edit (IA) et de la Bibliothèque de Presets dans `EditorActionsDropdownToolbar` en haut à gauche, avec ouverture des presets via `ModalBottomSheet` et libération de la barre inférieure pour les 7 outils de retouche purs.
+  6. **Courbe de Tonalités Tactile :** Création de point uniquement sur appui long (`onLongPress`), déplacement du point le plus proche sur simple toucher/glissement, et suppression sur double-tap.
+  7. **Page Palettes Compacte Single-Page :** Prévisualisation compacte (`ImagePickerCollapsedHeight` 120dp), masquage du bandeau d'introduction lorsque l'image est active, nuanciers avec Hex et % empilés verticalement sans chevauchement, garantissant un affichage 100% visible sans scroll.
+

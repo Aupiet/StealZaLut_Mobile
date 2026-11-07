@@ -1,5 +1,7 @@
 package com.stealzalut.mobile.ui.components
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -26,8 +29,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -38,11 +48,10 @@ import com.stealzalut.mobile.core.AppDimens
 import kotlin.math.roundToInt
 
 /**
- * Standard unipolar slider component with [-]/[+] buttons and track-aligned presets.
- *
- * Resolves Bug B7: Preset chips (0%, 25%, 50%, 75%, 100%) align precisely with the slider track
- * by factoring in the 48dp IconButton width and spacing.
+ * Standard unipolar slider component with tactile [-]/[+] buttons,
+ * mechanical ruler tick-marks, and track-aligned presets.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SzlSlider(
     title: String,
@@ -56,10 +65,12 @@ fun SzlSlider(
     step: Float = 0.05f,
     presets: List<Float>? = listOf(0.0f, 0.25f, 0.50f, 0.75f, 1.0f)
 ) {
+    val haptic = LocalHapticFeedback.current
     val percentage = (value * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt()
+    val isModified = value > min
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Header
+        // Header: Title and Interactive Reset Percentage Badge
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -89,7 +100,21 @@ fun SzlSlider(
             }
             Surface(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-                color = MaterialTheme.colorScheme.primaryContainer
+                color = if (isModified) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                border = androidx.compose.foundation.BorderStroke(
+                    AppDimens.BorderThin,
+                    if (isModified) MaterialTheme.colorScheme.primary.copy(alpha = AppConstants.OPACITY_BORDER_MEDIUM)
+                    else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
+                    .clickable(
+                        role = Role.Button,
+                        enabled = isModified
+                    ) {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onValueChange(min)
+                    }
             ) {
                 Text(
                     text = "$percentage %",
@@ -99,7 +124,7 @@ fun SzlSlider(
                     ),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = if (isModified) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -129,6 +154,7 @@ fun SzlSlider(
             FilledTonalIconButton(
                 onClick = {
                     val next = (value - step).coerceAtLeast(min)
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onValueChange((next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER)
                 },
                 modifier = Modifier
@@ -145,10 +171,19 @@ fun SzlSlider(
                 )
             }
 
-            // Slider Track
+            val trackInactiveColor = MaterialTheme.colorScheme.surfaceVariant
+            val trackActiveColor = MaterialTheme.colorScheme.primary
+            val tickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+
+            // Graduated Slider Track
             Slider(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { newVal ->
+                    if ((newVal == min && value != min) || (newVal == max && value != max)) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                    onValueChange(newVal)
+                },
                 valueRange = min..max,
                 modifier = Modifier
                     .weight(1f)
@@ -157,13 +192,57 @@ fun SzlSlider(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary,
                     inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                ),
+                track = { _ ->
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AppDimens.EditorSliderTrackHeight)
+                    ) {
+                        val trackHeight = size.height
+                        val cornerRadius = CornerRadius(trackHeight / 2f, trackHeight / 2f)
+
+                        // Base track
+                        drawRoundRect(
+                            color = trackInactiveColor,
+                            topLeft = Offset(0f, 0f),
+                            size = Size(size.width, trackHeight),
+                            cornerRadius = cornerRadius
+                        )
+
+                        // Mechanical Ruler Ticks (every 10%)
+                        val totalTicks = 10
+                        for (i in 1 until totalTicks) {
+                            val tickX = (i / totalTicks.toFloat()) * size.width
+                            drawLine(
+                                color = tickColor,
+                                start = Offset(tickX, trackHeight * 0.2f),
+                                end = Offset(tickX, trackHeight * 0.8f),
+                                strokeWidth = 1.5f
+                            )
+                        }
+
+                        // Active fill
+                        val range = max - min
+                        val frac = if (range > 0f) ((value - min) / range).coerceIn(0f, 1f) else 0f
+                        val fillWidth = frac * size.width
+                        if (fillWidth > 0f) {
+                            drawRoundRect(
+                                color = trackActiveColor,
+                                topLeft = Offset(0f, 0f),
+                                size = Size(fillWidth, trackHeight),
+                                cornerRadius = cornerRadius
+                            )
+                        }
+                    }
+                }
             )
 
             // Plus button
             FilledTonalIconButton(
                 onClick = {
                     val next = (value + step).coerceAtMost(max)
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onValueChange((next * AppConstants.INTENSITY_PERCENT_MULTIPLIER).roundToInt() / AppConstants.INTENSITY_PERCENT_MULTIPLIER)
                 },
                 modifier = Modifier
@@ -181,7 +260,7 @@ fun SzlSlider(
             }
         }
 
-        // Quick Preset Chips precisely aligned with the Slider Track (Bug B7 fix)
+        // Quick Preset Chips precisely aligned with the Slider Track
         if (presets != null && presets.isNotEmpty()) {
             Row(
                 modifier = Modifier
@@ -192,7 +271,10 @@ fun SzlSlider(
                 presets.forEach { valFloat ->
                     val label = "${(valFloat * AppConstants.INTENSITY_PERCENT_MULTIPLIER).toInt()}%"
                     TextButton(
-                        onClick = { onValueChange(valFloat) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onValueChange(valFloat)
+                        },
                         modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinInteractiveTarget),
                         shape = RoundedCornerShape(AppDimens.CornerRadiusSmall)
                     ) {

@@ -142,6 +142,7 @@ data class StealZaLutUiState(
     val savedEditingPresets: ImmutableList<EditPreset> = persistentListOf(),
     val selectedEditingPreset: EditPreset? = null,
     val isSaveEditingPresetDialogVisible: Boolean = false,
+    val isEditorPresetsSheetVisible: Boolean = false,
 
     // Adobe Lightroom Classic Develop Engine state
     val editorLightroomParams: LightroomDevelopModel = LightroomDevelopModel(),

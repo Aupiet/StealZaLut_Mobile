@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -104,36 +103,38 @@ fun PalettesScreen(
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSpacious)
+        verticalArrangement = Arrangement.spacedBy(if (uiState.palettePhotoBitmap != null) AppDimens.SpacingSmall else AppDimens.SpacingSpacious)
     ) {
-        // Section Header
-        Surface(
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Palette,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+        // Section Header (Only shown when no photo is loaded)
+        if (uiState.palettePhotoBitmap == null) {
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconNormal),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                        Text(
+                            text = stringResource(R.string.palettes_header_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
                     Text(
-                        text = stringResource(R.string.palettes_header_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        text = stringResource(R.string.palettes_header_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
-                Text(
-                    text = stringResource(R.string.palettes_header_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
@@ -143,6 +144,7 @@ fun PalettesScreen(
             subtitle = stringResource(R.string.palettes_picker_subtitle),
             badgeText = stringResource(R.string.wizard_step_2_ref_badge),
             bitmap = uiState.palettePhotoBitmap,
+            previewHeight = AppDimens.ImagePickerCollapsedHeight,
             onImageSelected = { uri ->
                 viewModel.setPalettePhoto(uri)
                 if (presetName.isBlank()) {
@@ -182,24 +184,18 @@ fun PalettesScreen(
                 border = CardDefaults.outlinedCardBorder()
             ) {
                 Column(
-                    modifier = Modifier.padding(AppDimens.SpacingStandard),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingLarge)
+                    modifier = Modifier.padding(AppDimens.SpacingNormal),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                 ) {
                     PaletteSwatchesView(
                         title = stringResource(R.string.palettes_swatches_title),
                         colors = uiState.extractedPalette
                     )
 
-                    // Save as Preset Form
+                    // Streamlined Preset Action Form (Minimalist footprint)
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                     ) {
-                        Text(
-                            text = stringResource(R.string.dialog_save_theme_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-
                         OutlinedTextField(
                             value = presetName,
                             onValueChange = { presetName = it },
@@ -209,75 +205,71 @@ fun PalettesScreen(
                             shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
                         )
 
-                        OutlinedTextField(
-                            value = presetNotes,
-                            onValueChange = { presetNotes = it },
-                            label = { Text(stringResource(R.string.dialog_notes_label)) },
-                            maxLines = 2,
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
-                        )
-
-                        Button(
-                            onClick = {
-                                viewModel.saveExtractedPreset(presetName, presetNotes.ifBlank { null })
-                            },
-                            enabled = presetName.isNotBlank() && !uiState.isSavingPreset && !uiState.isExtractingPalette,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                         ) {
-                            if (uiState.isSavingPreset) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
-                                    strokeWidth = AppDimens.BorderThick,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Save,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(AppDimens.IconNormal)
-                                )
-                                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                                Text(
-                                    text = stringResource(R.string.dialog_btn_save),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.exportCubeFromPaletteImage { cubePath ->
-                                    exportCubeLauncher.launch(File(cubePath).name)
+                            Button(
+                                onClick = {
+                                    viewModel.saveExtractedPreset(presetName, presetNotes.ifBlank { null })
+                                },
+                                enabled = presetName.isNotBlank() && !uiState.isSavingPreset && !uiState.isExtractingPalette,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                if (uiState.isSavingPreset) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                                        strokeWidth = AppDimens.BorderThick,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Save,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(AppDimens.IconNormal)
+                                    )
+                                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                                    Text(
+                                        text = stringResource(R.string.dialog_btn_save),
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
-                            },
-                            enabled = !uiState.isExportingCube && !uiState.isSavingPreset && !uiState.isExtractingPalette,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
-                        ) {
-                            if (uiState.isExportingCube) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
-                                    strokeWidth = AppDimens.BorderThick,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.FileDownload,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(AppDimens.IconNormal)
-                                )
-                                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                                Text(
-                                    text = stringResource(R.string.palettes_btn_export_cube),
-                                    fontWeight = FontWeight.Bold
-                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.exportCubeFromPaletteImage { cubePath ->
+                                        exportCubeLauncher.launch(File(cubePath).name)
+                                    }
+                                },
+                                enabled = !uiState.isExportingCube && !uiState.isSavingPreset && !uiState.isExtractingPalette,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
+                            ) {
+                                if (uiState.isExportingCube) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
+                                        strokeWidth = AppDimens.BorderThick,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.FileDownload,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(AppDimens.IconNormal)
+                                    )
+                                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                                    Text(
+                                        text = stringResource(R.string.palettes_btn_export_cube),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -401,7 +393,7 @@ private fun PresetItemCard(
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Supprimer",
+                        contentDescription = stringResource(R.string.common_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

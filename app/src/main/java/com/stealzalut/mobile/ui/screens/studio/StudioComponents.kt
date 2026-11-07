@@ -1,5 +1,6 @@
 package com.stealzalut.mobile.ui.screens.studio
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,10 @@ fun SectionTitleBanner(
     Surface(
         shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
+        border = BorderStroke(
+            AppDimens.BorderThin,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+        ),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {

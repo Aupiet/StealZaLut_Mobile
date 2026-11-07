@@ -49,7 +49,8 @@ fun ImagePickerCard(
     badgeText: String,
     bitmap: Bitmap?,
     onImageSelected: (android.net.Uri) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    previewHeight: androidx.compose.ui.unit.Dp = AppDimens.ImagePickerHeight
 ) {
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -107,7 +108,7 @@ fun ImagePickerCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(AppDimens.ImagePickerHeight)
+                    .height(if (bitmap != null) previewHeight else AppDimens.ImagePickerHeight)
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusCard))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(

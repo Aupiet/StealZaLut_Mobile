@@ -1,8 +1,10 @@
 package com.stealzalut.mobile.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -10,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,13 +27,16 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,11 +60,92 @@ fun MainColorGradingScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showExitEditorConfirmDialog by remember { mutableStateOf(false) }
 
     val exportCubeLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri ->
         if (uri != null) viewModel.savePendingExportToUri(uri) else viewModel.cancelPendingExport()
+    }
+
+    // Intercept hardware/gesture Back to preserve unsaved drafts and prevent accidental exits
+    val isEditorWithPhoto = uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null
+    val isStudioWizardOngoing = uiState.currentDestination == AppDestination.STUDIO && uiState.wizardStep > 1
+    val isNotStudio = uiState.currentDestination != AppDestination.STUDIO
+
+    BackHandler(enabled = isEditorWithPhoto || isStudioWizardOngoing || isNotStudio) {
+        when {
+            isEditorWithPhoto -> {
+                showExitEditorConfirmDialog = true
+            }
+            isStudioWizardOngoing -> {
+                viewModel.setWizardStep(uiState.wizardStep - 1)
+            }
+            isNotStudio -> {
+                viewModel.navigateTo(AppDestination.STUDIO)
+            }
+        }
+    }
+
+    if (showExitEditorConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitEditorConfirmDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.editor_exit_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.editor_exit_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitEditorConfirmDialog = false
+                        viewModel.openSaveEditingPresetDialog()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.editor_btn_save_draft),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showExitEditorConfirmDialog = false
+                            viewModel.navigateTo(AppDestination.STUDIO)
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.editor_btn_leave),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            showExitEditorConfirmDialog = false
+                            viewModel.closeEditorPhoto()
+                            viewModel.navigateTo(AppDestination.STUDIO)
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.editor_btn_close_image),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        )
     }
 
     // React to user messages and errors
@@ -97,6 +184,8 @@ fun MainColorGradingScreen(
                                 }
                             },
                             onSavePreset = { viewModel.openSaveEditingPresetDialog() },
+                            onAutoEditAi = { viewModel.applyEditorAutoEdit() },
+                            onOpenPresets = { viewModel.openEditorPresetsSheet() },
                             onResetAll = {
                                 viewModel.resetAllEditorParams()
                                 scope.launch {

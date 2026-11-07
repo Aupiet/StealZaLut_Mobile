@@ -41,6 +41,7 @@ object AppDimens {
     val CornerRadiusNormal: Dp = 10.dp
     val CornerRadiusCard: Dp = 12.dp
     val CornerRadiusLarge: Dp = 16.dp
+    val CornerRadiusEditorSheet: Dp = 24.dp
     val CornerRadiusPill: Dp = 999.dp
 
     // --- Touch Targets (WCAG 2.1 AA Compliance >= 48dp) ---
@@ -77,6 +78,13 @@ object AppDimens {
     val SwatchHeight: Dp = 44.dp
     val CurtainHandleSize: Dp = 36.dp
     val AvatarSize: Dp = 52.dp
+    val ProfileAvatarSize: Dp = 64.dp
+    val ProfileStatCardWidth: Dp = 100.dp
+    val SettingsThemeSwatchSize: Dp = 36.dp
+    val SettingsThemeCardHeight: Dp = 72.dp
+    val InfoCardIconSize: Dp = 40.dp
+    val ToneCurveCanvasCompactHeight: Dp = 150.dp
+    val ColorWheelCompactSize: Dp = 120.dp
     val ThumbnailCardSize: Dp = 80.dp
     val StepperIndicatorHeight: Dp = 6.dp
     val ComputeLoaderSize: Dp = 120.dp
@@ -96,12 +104,38 @@ object AppDimens {
     val ProgressBarHeight: Dp = 16.dp
     val HistogramHeight: Dp = 64.dp
     val HistogramWidth: Dp = 120.dp
+    val HistogramOverlayHeight: Dp = 56.dp
+    val HistogramOverlayWidth: Dp = 110.dp
+    val HistogramEnlargedWidth: Dp = 280.dp
+    val HistogramEnlargedHeight: Dp = 150.dp
+    val CinemaSwatchGridWidth: Dp = 82.dp
     val ToneCurveCanvasHeight: Dp = 180.dp
     val ColorWheelSize: Dp = 130.dp
+    val ColorWheelGlowSize: Dp = 142.dp
     val ColorWheelThumbSize: Dp = 18.dp
     val PointColorPipetteSize: Dp = 36.dp
     val ToolIconSize: Dp = 22.dp
-    val EditorPanelMaxHeight: Dp = 230.dp
+    val EditorPanelMaxHeight: Dp = 300.dp
+    val EditorPanelMinHeight: Dp = 200.dp
+    val EditorSliderTrackHeight: Dp = 6.dp
+    val EditorSliderThumbSize: Dp = 18.dp
+    val CinemaSwatchCardWidth: Dp = 96.dp
+    val CinemaSwatchCardHeight: Dp = 132.dp
+    val CinemaSwatchColorHeight: Dp = 76.dp
+    val CinemaSwatchCompactWidth: Dp = 76.dp
+    val CinemaSwatchCompactHeight: Dp = 96.dp
+    val CinemaSwatchCompactColorHeight: Dp = 58.dp
+    val ToneCurveZeroScrollHeight: Dp = 120.dp
+    val ColorWheelZeroScrollSize: Dp = 100.dp
+    val StudioStep3PillHeight: Dp = 38.dp
+    val CinemaRibbonHeight: Dp = 14.dp
+    val StepperPillHeight: Dp = 36.dp
+    val DrawerHandleWidth: Dp = 36.dp
+    val DrawerHandleHeight: Dp = 4.dp
+    val ToneCurveCompactHeight: Dp = 136.dp
+    val ColorWheelMiniSize: Dp = 108.dp
+    val ColorWheelMiniGlowSize: Dp = 124.dp
+    val ButtonHeightCompact: Dp = 40.dp
 
     // --- Elevations ---
     val DialogElevation: Dp = 6.dp

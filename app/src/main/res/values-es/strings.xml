@@ -126,7 +126,7 @@
     <string name="palettes_header_desc">Extrae colores dominantes de cualquier foto y gestiona presets reutilizables.</string>
     <string name="palettes_picker_title">Extraer desde Imagen</string>
     <string name="palettes_picker_subtitle">Toca para analizar la paleta de una foto</string>
-    <string name="palettes_swatches_title">Muestras de color dominantes (Toca para copiar código hex):</string>
+    <string name="palettes_swatches_title">Colores dominantes</string>
     <string name="palettes_saved_section_title">Presets Guardados (%1$d)</string>
     <string name="palettes_no_presets">Sin presets guardados aún.\nExtrae una paleta para enriquecer tu biblioteca.</string>
     <string name="palettes_btn_apply">Usar en Studio</string>
@@ -566,9 +566,11 @@
 
     <!-- Panel Efectos -->
     <string name="group_post_crop_vignette">Viñeteado posterior</string>
+    <string name="slider_vignette">Viñeteado</string>
     <string name="slider_roundness">Redondez</string>
     <string name="slider_feather">Desvanecer</string>
     <string name="group_grain">Grano</string>
+    <string name="slider_grain">Grano</string>
     <string name="slider_grain_size">Tamaño</string>
     <string name="slider_grain_roughness">Rugosidad</string>
 
@@ -598,4 +600,39 @@
     <string name="mask_invert">Invertir máscara</string>
     <string name="slider_pupil_size">Tamaño de pupila</string>
     <string name="slider_darken">Oscurecer</string>
+
+    <!-- Professional Studio & Editor Tokens -->
+    <string name="color_grading_hue_format">Tono: %1$d°</string>
+    <string name="color_grading_sat_format">Sat: %1$d%%</string>
+    <string name="palette_dominance_format">%1$d%% del encuadre</string>
+    <string name="palette_shot_cinema">Muestrario de Cine</string>
+    <string name="btn_tap_to_reset">Toca para restablecer</string>
+    <string name="tone_curve_zone_shadows">Sombras</string>
+    <string name="tone_curve_zone_darks">Oscuros</string>
+    <string name="tone_curve_zone_lights">Claros</string>
+    <string name="tone_curve_zone_highlights">Altas Luces</string>
+    <string name="profile_spectrum_title">Espectro y Calibración de Color</string>
+    <string name="profile_stat_photos">Fotos</string>
+    <string name="profile_stat_presets">Ajustes</string>
+    <string name="editor_collapse_panel">Contraer herramientas</string>
+    <string name="editor_expand_panel">Expandir herramientas</string>
+    <string name="editor_fullscreen_toggle">Pantalla completa</string>
+    <string name="tab_blending_balance">Mezcla y Equilibrio</string>
+    <string name="studio_quick_tip">Consejo Pro</string>
+    <string name="studio_quick_tip_desc">Elige una foto de referencia con tonos cinematográficos ricos para una transferencia óptima.</string>
+    <string name="studio_cat_intensity">Intensidad y Luz</string>
+    <string name="studio_cat_protection">Color y Piel</string>
+    <string name="studio_cat_method">Método</string>
+    <string name="studio_cat_lut_size">Rejilla 3D</string>
+    <string name="tone_curve_mode_curve">Curva</string>
+    <string name="tone_curve_mode_zones">Zonas</string>
+    <string name="swatch_percent_format">%1$d%%</string>
+    <string name="editor_exit_dialog_title">¿Salir del editor?</string>
+    <string name="editor_exit_dialog_message">Tus ajustes se guardan en la sesión. ¿Qué deseas hacer?</string>
+    <string name="editor_btn_save_draft">Guardar como Preset</string>
+    <string name="editor_btn_leave">Volver al Studio</string>
+    <string name="editor_btn_close_image">Cerrar foto</string>
+    <string name="editor_enlarged_histogram_title">Histograma RGB Detallado</string>
+    <string name="menu_auto_edit_ai">Auto-Edit (IA)</string>
+    <string name="menu_presets_luts">Presets y LUTs</string>
 </resources>

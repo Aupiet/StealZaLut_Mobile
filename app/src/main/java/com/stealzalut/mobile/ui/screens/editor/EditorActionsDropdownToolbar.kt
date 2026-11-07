@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.RestartAlt
@@ -31,6 +33,8 @@ import com.stealzalut.mobile.core.AppDimens
 /**
  * Vertical dropdown actions toolbar located in the top-left of StandaloneEditorScreen.
  * Replaces the heavy bottom bar and provides quick access to:
+ * - Auto-Edit (AI)
+ * - Presets & LUTs Library
  * - Save Preset
  * - Export HD Photo
  * - Export .CUBE LUT
@@ -44,7 +48,9 @@ fun EditorActionsDropdownToolbar(
     onExportCube: () -> Unit,
     onSavePreset: () -> Unit,
     onResetAll: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAutoEditAi: () -> Unit = {},
+    onOpenPresets: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -74,7 +80,55 @@ fun EditorActionsDropdownToolbar(
             onDismissRequest = { isExpanded = false },
             modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            // 1. Sauvegarder Preset
+            // 1. Auto-Edit (IA)
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.menu_auto_edit_ai),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.AutoFixHigh,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                },
+                onClick = {
+                    isExpanded = false
+                    onAutoEditAi()
+                }
+            )
+
+            // 2. Bibliothèque de Presets & LUTs
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.menu_presets_luts),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Collections,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                },
+                onClick = {
+                    isExpanded = false
+                    onOpenPresets()
+                }
+            )
+
+            HorizontalDivider()
+
+            // 3. Sauvegarder Preset
             DropdownMenuItem(
                 text = {
                     Text(

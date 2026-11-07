@@ -36,7 +36,12 @@ data class SzlColors(
     val onChipSelected: Color,
     val navIndicator: Color,
     val compareBadge: Color,
-    val onCompareBadge: Color
+    val onCompareBadge: Color,
+    val photoDarkroom: Color,
+    val toneCurveRed: Color,
+    val toneCurveGreen: Color,
+    val toneCurveBlue: Color,
+    val toneCurveRgb: Color
 )
 
 val LocalSzlColors = staticCompositionLocalOf<SzlColors> {

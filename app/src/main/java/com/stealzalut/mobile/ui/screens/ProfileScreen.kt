@@ -33,17 +33,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DeleteOutline
-import com.stealzalut.mobile.ui.components.SzlBottomGradientScrim
-import com.stealzalut.mobile.ui.components.SzlEmptyState
-import com.stealzalut.mobile.ui.theme.ColorCardReference
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,22 +66,27 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.ui.components.ImageDetailDialog
+import com.stealzalut.mobile.ui.components.SzlBottomGradientScrim
+import com.stealzalut.mobile.ui.components.SzlEmptyState
 import com.stealzalut.mobile.ui.navigation.AppDestination
+import com.stealzalut.mobile.ui.theme.ColorCardReference
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * High-end Photographer Profile & Portfolio screen.
+ * Displays user statistics, Instagram-style 3-column square photo gallery,
+ * and calibrated 3D LUT presets library with zero dead space.
+ */
 @Composable
 fun ProfileScreen(
     viewModel: StealZaLutViewModel,
@@ -94,7 +95,6 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context: Context = LocalContext.current
 
-    // SAF Document Creator launcher for exporting .cube LUT files
     val createCubeLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { destinationUri ->
@@ -110,7 +110,6 @@ fun ProfileScreen(
         viewModel.loadSavedPresets()
     }
 
-    // Modal Image Detail Dialog
     uiState.selectedDetailImage?.let { detailImage ->
         ImageDetailDialog(
             image = detailImage,
@@ -132,38 +131,7 @@ fun ProfileScreen(
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
-        // Profile Header
-        Surface(
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = stringResource(R.string.profile_header_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
-                Text(
-                    text = stringResource(R.string.profile_header_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Folder Tabs (Photos Instagram Grid vs Thèmes & Presets)
+        // --- Primary Tabs (Photos vs Styles / Presets) ---
         PrimaryTabRow(
             selectedTabIndex = uiState.profileSelectedTab,
             containerColor = MaterialTheme.colorScheme.surface
@@ -178,7 +146,11 @@ fun ProfileScreen(
                     )
                 },
                 icon = {
-                    Icon(imageVector = Icons.Default.GridOn, contentDescription = null, modifier = Modifier.size(AppDimens.IconSmall))
+                    Icon(
+                        imageVector = Icons.Default.GridOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
                 }
             )
             Tab(
@@ -191,65 +163,74 @@ fun ProfileScreen(
                     )
                 },
                 icon = {
-                    Icon(imageVector = Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(AppDimens.IconSmall))
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
                 }
             )
         }
 
-        // Tab 0: Photos - Instagram Style 3-Column Square Grid
-        if (uiState.profileSelectedTab == 0) {
-            if (uiState.savedImages.isEmpty()) {
-                SzlEmptyState(
-                    icon = Icons.Default.PhotoLibrary,
-                    title = stringResource(R.string.profile_no_photos_title),
-                    description = stringResource(R.string.profile_no_photos_desc),
-                    actionLabel = stringResource(R.string.nav_studio),
-                    onAction = { viewModel.navigateTo(AppDestination.STUDIO) }
-                )
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
-                    contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
-                ) {
-                    items(uiState.savedImages, key = { it.id }) { image ->
-                        InstagramGridThumbnail(
-                            image = image,
-                            onClick = { viewModel.openImageDetail(image) }
-                        )
+        // --- 3. Tab Content ---
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            if (uiState.profileSelectedTab == 0) {
+                if (uiState.savedImages.isEmpty()) {
+                    SzlEmptyState(
+                        icon = Icons.Default.PhotoLibrary,
+                        title = stringResource(R.string.profile_no_photos_title),
+                        description = stringResource(R.string.profile_no_photos_desc),
+                        actionLabel = stringResource(R.string.nav_studio),
+                        onAction = { viewModel.navigateTo(AppDestination.STUDIO) }
+                    )
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
+                        contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
+                    ) {
+                        items(uiState.savedImages, key = { it.id }) { image ->
+                            InstagramGridThumbnail(
+                                image = image,
+                                onClick = { viewModel.openImageDetail(image) }
+                            )
+                        }
                     }
                 }
-            }
-        } else {
-            // Tab 1: Thèmes & Presets (avec Photo de la Mire de Couleurs pour chaque preset)
-            if (uiState.savedPresets.isEmpty()) {
-                SzlEmptyState(
-                    icon = Icons.Default.Palette,
-                    title = stringResource(R.string.profile_no_themes_title),
-                    description = stringResource(R.string.profile_no_themes_desc),
-                    actionLabel = stringResource(R.string.nav_palettes),
-                    onAction = { viewModel.navigateTo(AppDestination.PALETTES) }
-                )
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                    contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(uiState.savedPresets, key = { it.id }) { preset ->
-                        PresetCardWithColorSpectrum(
-                            preset = preset,
-                            onExportCube = {
-                                viewModel.exportCubeFromPreset(preset) { cubePath ->
-                                    createCubeLauncher.launch(File(cubePath).name)
-                                }
-                            },
-                            onDelete = { viewModel.deletePreset(preset.id) }
-                        )
+                if (uiState.savedPresets.isEmpty()) {
+                    SzlEmptyState(
+                        icon = Icons.Default.Palette,
+                        title = stringResource(R.string.profile_no_themes_title),
+                        description = stringResource(R.string.profile_no_themes_desc),
+                        actionLabel = stringResource(R.string.nav_palettes),
+                        onAction = { viewModel.navigateTo(AppDestination.PALETTES) }
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                        contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(uiState.savedPresets, key = { it.id }) { preset ->
+                            PresetCardWithColorSpectrum(
+                                preset = preset,
+                                onExportCube = {
+                                    viewModel.exportCubeFromPreset(preset) { cubePath ->
+                                        createCubeLauncher.launch(File(cubePath).name)
+                                    }
+                                },
+                                onDelete = { viewModel.deletePreset(preset.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -257,9 +238,38 @@ fun ProfileScreen(
     }
 }
 
-/**
- * Instagram-Style Square Grid Thumbnail (1:1 aspect ratio, downsampled loading).
- */
+@Composable
+private fun StatPill(
+    count: Int,
+    label: String
+) {
+    Surface(
+        shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        border = androidx.compose.foundation.BorderStroke(
+            AppDimens.BorderThin,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = label.trim(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 @Composable
 private fun InstagramGridThumbnail(
     image: SavedGradedImage,
@@ -311,7 +321,6 @@ private fun InstagramGridThumbnail(
             }
         }
 
-        // Semantic gradient overlay at bottom with look label (Bug B10 fix)
         SzlBottomGradientScrim(
             text = image.themeName ?: stringResource(R.string.profile_default_look_name),
             modifier = Modifier.align(Alignment.BottomStart)
@@ -319,10 +328,6 @@ private fun InstagramGridThumbnail(
     }
 }
 
-/**
- * Preset Card displaying the Visual Calibration Color Card (Mire) showing highlights,
- * grayscale ramp, midtones, and gamut reference colors.
- */
 @Composable
 private fun PresetCardWithColorSpectrum(
     preset: ColorimetryPreset,
@@ -364,7 +369,6 @@ private fun PresetCardWithColorSpectrum(
             modifier = Modifier.padding(AppDimens.SpacingNormal),
             verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
         ) {
-            // Header Row: Title & Delete Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -400,9 +404,8 @@ private fun PresetCardWithColorSpectrum(
                 }
             }
 
-            // Visual Color Spectrum Card (Mire de calibration montrant les couleurs)
             Text(
-                text = "Spectre & Étalonnage des Couleurs :",
+                text = stringResource(R.string.profile_spectrum_title),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -414,7 +417,11 @@ private fun PresetCardWithColorSpectrum(
                     .height(AppDimens.CalibrationCardLargeHeight)
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
                     .background(ColorCardReference.NeutralDarkBackground)
-                    .border(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(AppDimens.CornerRadiusNormal)),
+                    .border(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        RoundedCornerShape(AppDimens.CornerRadiusNormal)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 if (cardBitmap != null) {
@@ -425,12 +432,11 @@ private fun PresetCardWithColorSpectrum(
                         contentScale = ContentScale.Fit
                     )
                 } else {
-                    // Fallback visual calibration card layout
                     FallbackVisualColorCard(paletteHexes = preset.paletteHexes)
                 }
             }
 
-            // Swatches
+            // Cinema swatch dots row
             if (preset.paletteHexes.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
@@ -441,7 +447,7 @@ private fun PresetCardWithColorSpectrum(
                             val cleanHex = if (hex.startsWith("#")) hex else "#$hex"
                             Color(android.graphics.Color.parseColor(cleanHex))
                         } catch (_: Exception) {
-                            Color.Gray
+                            ColorCardReference.GrayMiddle2
                         }
                         Box(
                             modifier = Modifier
@@ -454,7 +460,6 @@ private fun PresetCardWithColorSpectrum(
                 }
             }
 
-            // Button: Export .CUBE
             OutlinedButton(
                 onClick = onExportCube,
                 modifier = Modifier
@@ -477,9 +482,6 @@ private fun PresetCardWithColorSpectrum(
     }
 }
 
-/**
- * Fallback procedural visual color card rendered with Compose if offline file is being generated.
- */
 @Composable
 private fun FallbackVisualColorCard(paletteHexes: List<String>) {
     Column(
@@ -488,7 +490,6 @@ private fun FallbackVisualColorCard(paletteHexes: List<String>) {
             .padding(AppDimens.SpacingNormal),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-        // Highlights
         Row(
             modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightLarge),
             horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
@@ -497,18 +498,14 @@ private fun FallbackVisualColorCard(paletteHexes: List<String>) {
             Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(ColorCardReference.WhiteStep))
         }
 
-        // Grayscale ramp
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(AppDimens.ProgressIndicatorSize)
                 .clip(RoundedCornerShape(AppDimens.CornerRadiusMire))
-                .background(
-                    Brush.horizontalGradient(ColorCardReference.NeutralRamp)
-                )
+                .background(Brush.horizontalGradient(ColorCardReference.NeutralRamp))
         )
 
-        // Midtones
         Row(
             modifier = Modifier.fillMaxWidth().height(AppDimens.CalibrationRowHeightStandard),
             horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
@@ -517,7 +514,6 @@ private fun FallbackVisualColorCard(paletteHexes: List<String>) {
             Box(modifier = Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(AppDimens.CornerRadiusMire)).background(ColorCardReference.GrayMiddle2))
         }
 
-        // 12 patches
         val defaultColors = ColorCardReference.ColorCheckerPatches
         Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
             for (i in 0 until 6) {

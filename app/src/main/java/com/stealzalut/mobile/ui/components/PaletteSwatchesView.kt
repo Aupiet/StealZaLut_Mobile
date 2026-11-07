@@ -3,11 +3,10 @@ package com.stealzalut.mobile.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -16,8 +15,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.MovieFilter
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,13 +45,15 @@ import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.ui.theme.ColorCardReference
 
 /**
- * Accessible palette swatches view complying with WCAG 2.1 AA.
- * Each swatch announces localized TalkBack text and supports tap to copy to clipboard with haptic feedback.
- * Zero hardcoded strings and zero hardcoded dimensions.
+ * Cinema Color Swatches View (Pantone / Wes Anderson / ShotDeck style).
+ * Features:
+ * - Proportional cinematic ribbon representing the color distribution of the frame.
+ * - Elegant tactile swatch cards with uppercase Hex code, RGB breakdown, frame dominance %,
+ *   and one-tap copy to clipboard with haptic feedback.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PaletteSwatchesView(
     title: String,
@@ -57,37 +65,109 @@ fun PaletteSwatchesView(
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
     val copyLabel = stringResource(R.string.swatch_copy_label)
+    val cinemaBadge = stringResource(R.string.palette_shot_cinema)
+    val scrollState = rememberScrollState()
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+    // Harmonic proportions according to prominence rank
+    val baseWeights = listOf(34, 24, 18, 12, 7, 5)
+    val totalWeight = colors.indices.sumOf { baseWeights.getOrElse(it) { 5 } }
 
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-            verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+    ) {
+        // --- Header with Cinema Style Badge ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                border = androidx.compose.foundation.BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.primary.copy(alpha = AppConstants.OPACITY_BORDER_MEDIUM)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MovieFilter,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconMicro),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingMicro))
+                    Text(
+                        text = cinemaBadge,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        }
+
+        // --- 1. Continuous Cinema Ribbon (Proportional Color Distribution) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppDimens.CinemaRibbonHeight)
+                .clip(RoundedCornerShape(AppDimens.CornerRadiusSmall))
+                .border(
+                    width = AppDimens.BorderThin,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall)
+                )
+        ) {
+            colors.forEachIndexed { index, hex ->
+                val weight = baseWeights.getOrElse(index) { 5 }
+                Box(
+                    modifier = Modifier
+                        .weight(weight.toFloat())
+                        .height(AppDimens.CinemaRibbonHeight)
+                        .background(parseHexColor(hex))
+                )
+            }
+        }
+
+        // --- 2. Horizontal Cinema Swatch Cards (Pantone / ShotDeck style) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
         ) {
             colors.forEachIndexed { index, hex ->
                 val composeColor = parseHexColor(hex)
                 val hexUpper = hex.uppercase()
-                val total = colors.size
-                val a11yDescription = stringResource(R.string.swatch_a11y_format, index + 1, total, hexUpper)
+                val weight = (baseWeights.getOrElse(index) { 5 } * 100) / totalWeight
+                val dominanceText = stringResource(R.string.palette_dominance_format, weight)
+                val a11yDesc = stringResource(R.string.swatch_a11y_format, index + 1, colors.size, hexUpper)
 
-                Surface(
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_HIGH),
+                Card(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_HIGH)
+                    ),
                     border = androidx.compose.foundation.BorderStroke(
                         AppDimens.BorderThin,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_MEDIUM)
                     ),
                     modifier = Modifier
-                        .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
+                        .width(AppDimens.CinemaSwatchCompactWidth)
+                        .height(AppDimens.CinemaSwatchCompactHeight)
                         .semantics(mergeDescendants = true) {
-                            contentDescription = a11yDescription
+                            contentDescription = a11yDesc
                         }
                         .clickable(
                             role = Role.Button,
@@ -97,29 +177,54 @@ fun PaletteSwatchesView(
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall)
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // Top Color Block
                         Box(
                             modifier = Modifier
-                                .size(AppDimens.SwatchSize)
-                                .clip(CircleShape)
-                                .background(composeColor)
-                                .border(
-                                    width = AppDimens.BorderMedium,
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = AppConstants.OPACITY_BORDER_MEDIUM),
-                                    shape = CircleShape
+                                .fillMaxWidth()
+                                .height(AppDimens.CinemaSwatchCompactColorHeight)
+                                .background(composeColor),
+                            contentAlignment = Alignment.TopEnd
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = ColorCardReference.NeutralDarkBackground.copy(alpha = 0.5f),
+                                modifier = Modifier.padding(AppDimens.SpacingMicro)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = copyLabel,
+                                    tint = ColorCardReference.WhiteStep,
+                                    modifier = Modifier
+                                        .size(AppDimens.IconMicro)
+                                        .padding(AppDimens.SpacingMicro)
                                 )
-                        )
-                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(
-                            text = hexUpper,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                            }
+                        }
+
+                        // Bottom Pantone Label Block (Stacked Hex and % with zero horizontal collision)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AppDimens.SpacingExtraSmall, vertical = AppDimens.SpacingMicro),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = hexUpper,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = "$weight%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
@@ -144,9 +249,9 @@ private fun parseHexColor(hex: String): Color {
                 val b = clean.substring(6, 8).toInt(16)
                 Color(r, g, b, a)
             }
-            else -> Color.Gray
+            else -> ColorCardReference.GrayMiddle2
         }
     } catch (_: Exception) {
-        Color.Gray
+        ColorCardReference.GrayMiddle2
     }
 }

@@ -311,32 +311,56 @@ fun CompactInfoCard(
             verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(AppDimens.IconLarge)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconSmall),
-                        tint = MaterialTheme.colorScheme.primary
+                    Box(
+                        modifier = Modifier
+                            .size(AppDimens.IconLarge)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconSmall),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(titleRes),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
-                Text(
-                    text = stringResource(titleRes),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                if (isRecommended) {
+                    Surface(
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Text(
+                            text = "PRO",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(
+                                horizontal = AppDimens.SpacingSmall,
+                                vertical = AppDimens.SpacingMicro
+                            )
+                        )
+                    }
+                }
             }
 
             Text(

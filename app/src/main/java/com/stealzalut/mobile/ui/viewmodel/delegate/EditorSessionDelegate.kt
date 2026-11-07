@@ -722,4 +722,21 @@ class EditorSessionDelegate(
             }
         }
     }
+
+    fun closeEditorPhoto() {
+        undoStack.clear()
+        redoStack.clear()
+        stateFlow.update {
+            it.copy(
+                editorSourceUri = null,
+                editorSourcePath = null,
+                editorSourceBitmap = null,
+                editorPreviewBitmap = null,
+                editorPreviewPath = null,
+                editorCustomLutPath = null,
+                editorCustomLutName = null,
+                selectedEditingPreset = null
+            )
+        }
+    }
 }

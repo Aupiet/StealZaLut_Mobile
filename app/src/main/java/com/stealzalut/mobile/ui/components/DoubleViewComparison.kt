@@ -49,8 +49,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -75,6 +77,7 @@ fun DoubleViewComparison(
     height: androidx.compose.ui.unit.Dp = AppDimens.DoubleViewHeight,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     var splitFraction by remember { mutableFloatStateOf(AppConstants.SPLIT_WIPE_DEFAULT_FRACTION) }
 
     // Synchronized Zoom & Pan state
@@ -187,7 +190,9 @@ fun DoubleViewComparison(
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
                             if (size.width > 0) {
-                                splitFraction = (offset.x / size.width.toFloat()).coerceIn(0.01f, 0.99f)
+                                val newFraction = (offset.x / size.width.toFloat()).coerceIn(0.01f, 0.99f)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                splitFraction = newFraction
                             }
                         }
                     }
@@ -196,7 +201,11 @@ fun DoubleViewComparison(
                             change.consume()
                             if (size.width > 0) {
                                 val delta = dragAmount / size.width.toFloat()
-                                splitFraction = (splitFraction + delta).coerceIn(0.01f, 0.99f)
+                                val newFraction = (splitFraction + delta).coerceIn(0.01f, 0.99f)
+                                if ((splitFraction < 0.5f && newFraction >= 0.5f) || (splitFraction > 0.5f && newFraction <= 0.5f)) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                }
+                                splitFraction = newFraction
                             }
                         }
                     }

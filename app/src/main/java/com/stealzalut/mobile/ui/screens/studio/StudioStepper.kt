@@ -14,10 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,12 +63,12 @@ fun StudioStepper(
 
                 val targetCircleBg = when {
                     isCompleted -> MaterialTheme.colorScheme.primary
-                    isCurrent -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    isCurrent -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 }
                 val targetContentColor = when {
                     isCompleted -> MaterialTheme.colorScheme.onPrimary
-                    isCurrent -> MaterialTheme.colorScheme.onPrimaryContainer
+                    isCurrent -> MaterialTheme.colorScheme.onPrimary
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
@@ -90,10 +89,10 @@ fun StudioStepper(
                         .clip(CircleShape)
                         .background(animatedCircleBg)
                         .then(
-                            if (isCurrent) {
+                            if (!isCurrent && !isCompleted) {
                                 Modifier.border(
-                                    width = AppDimens.BorderMedium,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    width = AppDimens.BorderThin,
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                                     shape = CircleShape
                                 )
                             } else {
@@ -105,7 +104,7 @@ fun StudioStepper(
                 ) {
                     if (isCompleted) {
                         Icon(
-                            imageVector = Icons.Default.Check,
+                            imageVector = MaterialTheme.icons.statusCheck,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconSmall),
                             tint = animatedContentColor

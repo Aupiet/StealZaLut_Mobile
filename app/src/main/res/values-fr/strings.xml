@@ -8,7 +8,7 @@
     <string name="nav_studio">Studio</string>
     <string name="nav_palettes">Palettes</string>
     <string name="nav_profile">Profil</string>
-    <string name="nav_settings">Paramètres</string>
+    <string name="nav_settings">Réglages</string>
 
     <!-- Destination Subtitles -->
     <string name="dest_subtitle_studio">Transfert Colorimétrique &amp; 3D LUT</string>
@@ -38,35 +38,36 @@
     <string name="lut_size_17_nodes">4 913 nœuds</string>
     <string name="lut_size_33_label">33x33x33 Standard</string>
     <string name="lut_size_33_nodes">35 937 nœuds (Recommandé)</string>
-    <string name="lut_size_65_label">65x65x65 Haute Précision</string>
-    <string name="lut_size_65_nodes">274 625 nœuds</string>
+    <string name="lut_size_65_label">64x64x64 Haute Précision (Adobe)</string>
+    <string name="lut_size_65_nodes">262 144 nœuds</string>
 
     <!-- Studio Funnel Stepper -->
-    <string name="wizard_step_1_title">Étape 1 : Votre Photo</string>
-    <string name="wizard_step_1_subtitle">Sélectionnez la photo source A à étalonner</string>
-    <string name="wizard_step_1_empty">Touchez pour importer votre photo</string>
+    <string name="wizard_step_1_title">Studio Colorimétrique</string>
+    <string name="wizard_step_1_subtitle">Transférez la signature chromatique d\'un film</string>
+    <string name="wizard_step_1_empty">Déposez votre photo source A</string>
     <string name="wizard_step_1_badge">Source A</string>
-    <string name="wizard_step_1_change">Changer de photo</string>
-    <string name="wizard_step_1_btn_next">Étape suivante : Choisir le Style B</string>
+    <string name="wizard_step_1_change">Changer de photo source</string>
+    <string name="wizard_step_1_ready">Photo source prête</string>
+    <string name="wizard_step_1_btn_next">Continuer vers Référence (2/5) →</string>
 
-    <string name="wizard_step_2_title">Étape 2 : Style de Référence</string>
-    <string name="wizard_step_2_subtitle">Choisissez une photo de référence B ou un preset sauvegardé</string>
-    <string name="wizard_step_2_tab_photo_b">Photo de Référence B</string>
-    <string name="wizard_step_2_tab_saved">Presets Sauvegardés</string>
-    <string name="wizard_step_2_ref_empty">Touchez pour importer la photo de référence B</string>
+    <string name="wizard_step_2_title">Sélection Référence</string>
+    <string name="wizard_step_2_subtitle">Choisissez un nuancier cinéma extrait ou votre propre photo</string>
+    <string name="wizard_step_2_tab_photo_b">Photo de Référence</string>
+    <string name="wizard_step_2_tab_saved">Nuanciers Cinéma</string>
+    <string name="wizard_step_2_ref_empty">Déposez votre photo de référence B</string>
     <string name="wizard_step_2_ref_badge">Style B</string>
     <string name="wizard_step_2_no_saved">Aucun preset sauvegardé pour l\'instant. Importez directement une photo de référence B ou extrayez une palette.</string>
     <string name="wizard_step_2_btn_back">Retour</string>
-    <string name="wizard_step_2_btn_next">Étape suivante : Réglages</string>
+    <string name="wizard_step_2_btn_next">Continuer vers Paramètres (3/5) →</string>
 
-    <string name="wizard_step_3_title">Étape 3 : Réglages &amp; Prévisualisation</string>
-    <string name="wizard_step_3_subtitle">Ajustez indépendamment chaque paramètre avec aperçu en temps réel (WYSIWYG)</string>
+    <string name="wizard_step_3_title">Ajustement du Transfert</string>
+    <string name="wizard_step_3_subtitle">Aperçu temps réel du style appliqué sur l\'image source</string>
     <string name="wizard_step_3_method_title">Algorithme de Transfert</string>
     <string name="wizard_step_3_intensity_title">Intensité du Transfert</string>
     <string name="wizard_step_3_lut_size_title">Résolution de la Grille 3D LUT (.cube)</string>
     <string name="wizard_step_3_btn_back">Retour</string>
-    <string name="wizard_step_3_btn_run">Finaliser &amp; Exporter</string>
-    <string name="wizard_step_3_preview_title">Aperçu en Direct (WYSIWYG)</string>
+    <string name="wizard_step_3_btn_run">Générer le Rendu LUT (4/5) →</string>
+    <string name="wizard_step_3_preview_title">Aperçu en direct (WYSIWYG)</string>
     <string name="wizard_step_3_computing_badge">Calcul en cours…</string>
     <string name="wizard_step_3_independent_params_title">Critères d\'Intensité Indépendants</string>
     <string name="param_intensity_title">Force Globale du Transfert</string>
@@ -80,22 +81,23 @@
     <string name="param_smooth_title">Lissage Spatial 3D</string>
     <string name="param_smooth_desc">Filtre 3D éliminant tout effet de banding ou de postérisation.</string>
 
-    <string name="wizard_step_4_title">Calcul Colorimétrique en cours...</string>
-    <string name="wizard_step_4_subtitle">Traitement scientifique hors-ligne accéléré par NumPy &amp; SciPy</string>
+    <string name="wizard_step_4_title">Génération en cours</string>
+    <string name="wizard_step_4_subtitle">Calcul colorimétrique haute fidélité 64-bit</string>
     <string name="wizard_step_4_stage_1">Étape 1/3 : Analyse des distributions chromatiques RGB...</string>
     <string name="wizard_step_4_stage_2">Étape 2/3 : Calcul de la matrice de covariance &amp; alignement...</string>
     <string name="wizard_step_4_stage_3">Étape 3/3 : Finalisation de la matrice de transfert...</string>
     <string name="wizard_step_4_tech_badge">Moteur Python 3.10 • Float32</string>
 
-    <string name="wizard_step_5_title">Étape 5 : Aperçu &amp; Export</string>
-    <string name="wizard_step_5_subtitle">Ajustez l\'opacité en direct (GPU 120 FPS) et exportez</string>
+    <string name="wizard_step_5_title">Chef-d\'œuvre Colorimétrique</string>
+    <string name="wizard_step_5_subtitle">Signature Blade Runner 2049 appliquée</string>
     <string name="wizard_step_5_autosave_badge">Mélange d\'opacité GPU temps réel</string>
     <string name="wizard_step_5_btn_save_gallery">Enregistrer la photo dans la Galerie</string>
     <string name="wizard_step_5_exporting_image">Enregistrement...</string>
     <string name="wizard_step_5_exporting_cube">Exportation du LUT...</string>
     <string name="wizard_step_5_saved_badge">Photo enregistrée dans la Galerie (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Sauvegarder le Style en Preset</string>
-    <string name="wizard_step_5_btn_export_cube">Exporter 3D LUT (.CUBE)</string>
+    <string name="wizard_step_5_btn_export_cube">Enregistrer le fichier (.CUBE)</string>
+    <string name="wizard_step_5_btn_share_cube">Partager la 3D LUT (.CUBE)</string>
     <string name="wizard_step_5_btn_reset">Terminer</string>
 
     <!-- Intensity Slider -->
@@ -131,7 +133,7 @@
     <string name="palettes_no_presets">Aucun preset sauvegardé pour l\'instant.\nExtrayez une palette pour enrichir votre bibliothèque.</string>
     <string name="palettes_btn_apply">Utiliser dans le Studio</string>
     <string name="palettes_btn_delete">Supprimer le Preset</string>
-    <string name="palettes_btn_export_cube">Exporter .CUBE</string>
+    <string name="palettes_btn_export_cube">Partager la 3D LUT (.CUBE)</string>
 
     <!-- Profile & Library Screen -->
     <string name="profile_header_title">Mon Profil &amp; Bibliothèque</string>
@@ -223,8 +225,8 @@
     <string name="info_lut_33_catch">Standard Pro vidéo : équilibre parfait entre fidélité et compacité.</string>
     <string name="info_lut_33_ideal">Standard Pro vidéo &amp; DaVinci Resolve</string>
 
-    <string name="info_lut_65_title">65³ (274 625 nœuds)</string>
-    <string name="info_lut_65_catch">Précision chirurgicale : maille ultra-dense pour un étalonnage photo sans compromis.</string>
+    <string name="info_lut_65_title">64³ (262 144 nœuds)</string>
+    <string name="info_lut_65_catch">Précision chirurgicale Adobe : maille 64³ pour un étalonnage photo sans compromis.</string>
     <string name="info_lut_65_ideal">Mastering photo haute fidélité</string>
 
     <string name="info_control_intensity_title" formatted="false">Intensité (0% à 100%)</string>
@@ -296,7 +298,7 @@
     <string name="editor_import_cube">Importer .CUBE</string>
     <string name="editor_save_preset">Sauvegarder Preset</string>
     <string name="editor_export_hd">Exporter Photo HD</string>
-    <string name="editor_export_cube">Exporter .CUBE</string>
+    <string name="editor_export_cube">Partager la 3D LUT (.CUBE)</string>
     <string name="editor_hold_compare">Maintenir pour comparer</string>
     <string name="editor_double_tap_reset">Double-tap pour réinitialiser le curseur</string>
     <string name="editor_no_presets">Aucun preset d\'édition. Enregistrez vos réglages ou importez un fichier .CUBE.</string>
@@ -342,6 +344,8 @@
     <string name="theme_cyan_studio">Cyan Studio</string>
     <string name="theme_oled_black">OLED Noir Absolu</string>
     <string name="theme_daylight">Daylight Clair</string>
+    <string name="theme_system_default">Système par défaut</string>
+    <string name="theme_material_you">Couleurs dynamiques (Material You)</string>
     <string name="settings_section_appearance">Apparence &amp; Thème</string>
     <string name="settings_theme_label">Thème Colorimétrique</string>
     <string name="settings_theme_desc">Sélectionnez l\'ambiance visuelle du studio</string>
@@ -352,7 +356,7 @@
     <!-- Éditeur & Éléments UI -->
     <string name="editor_section_base_lut">Table 3D LUT de base (.CUBE)</string>
     <string name="editor_no_lut_mode">Aucune LUT chargée (Mode étalonnage direct)</string>
-    <string name="editor_my_presets_title">Mes Presets d\'Édition (.szlpreset)</string>
+    <string name="editor_my_presets_title">Mes Presets d\'Édition</string>
     <string name="editor_btn_apply">Appliquer</string>
     <string name="editor_btn_delete">Supprimer</string>
     <string name="editor_btn_remove_lut">Retirer LUT</string>
@@ -436,7 +440,7 @@
     <string name="err_no_pending_export">Aucun export en attente ou la session d\'export a expiré.</string>
     <string name="err_palette_extraction_failed">Échec de l\'extraction de la palette depuis l\'image.</string>
     <string name="editor_btn_import_preset">Importer</string>
-    <string name="editor_btn_export_preset">Exporter le preset (.szlpreset)</string>
+    <string name="editor_btn_export_preset">Exporter le preset</string>
     <string name="msg_preset_imported">Preset « %1$s » importé avec succès !</string>
     <string name="err_preset_import_failed">Échec de l\'importation du preset : fichier invalide ou corrompu.</string>
     <string name="btn_edit_in_editor">Retoucher dans l\'éditeur</string>
@@ -588,9 +592,9 @@
 
     <!-- Outils Locaux et Géométriques -->
     <string name="crop_original">Original</string>
-    <string name="crop_square">1:1 Carré</string>
-    <string name="crop_portrait">4:5 Portrait</string>
-    <string name="crop_widescreen">16:9 Panoramique</string>
+    <string name="crop_square">1:1</string>
+    <string name="crop_portrait">4:5</string>
+    <string name="crop_widescreen">16:9</string>
     <string name="heal_mode_heal">Corriger</string>
     <string name="heal_mode_clone">Dupliquer</string>
     <string name="slider_brush_size">Taille de forme</string>
@@ -633,6 +637,59 @@
     <string name="editor_btn_leave">Retour au Studio</string>
     <string name="editor_btn_close_image">Fermer la photo</string>
     <string name="editor_enlarged_histogram_title">Histogramme RVB Détaillé</string>
-    <string name="menu_auto_edit_ai">Auto-Edit (IA)</string>
+    <string name="menu_auto_edit_ai">Auto-Édition (IA)</string>
     <string name="menu_presets_luts">Presets &amp; LUTs</string>
+
+    <!-- Crop & Straighten (FE-005) -->
+    <string name="crop_free">Libre</string>
+    <string name="crop_straighten_title">Redressement horizon</string>
+    <string name="unit_degrees">°</string>
+    <string name="common_zero">0</string>
+    <string name="tool_crop">Recadrer</string>
+    <string name="tool_geometry">Géométrie</string>
+    <string name="tool_optics">Optique</string>
+
+    <!-- Export Dialog (FE-013) -->
+    <string name="export_dialog_subtitle">Rendu master haute résolution sans perte</string>
+    <string name="export_dialog_title">Exporter la photo</string>
+    <string name="export_dialog_format">Format de fichier</string>
+    <string name="export_dialog_format_jpeg">JPEG (Optimisé)</string>
+    <string name="export_dialog_format_png">PNG (Sans perte)</string>
+    <string name="export_dialog_quality">Qualité de compression</string>
+    <string name="export_dialog_resolution">Résolution cible</string>
+    <string name="export_dialog_filesize_est">Poids estimé</string>
+    <string name="export_dialog_confirm">Exporter maintenant</string>
+    <string name="export_dialog_progress">Exportation par tuiles en cours…</string>
+
+    <!-- Clipping Indicators (FE-017) -->
+    <string name="clipping_shadows_alert">Sous-exposition (Ombres coupées)</string>
+    <string name="clipping_highlights_alert">Sur-exposition (Hautes lumières brûlées)</string>
+    <string name="editor_empty_headline">Sublimez vos photographies</string>
+    <string name="editor_empty_subtitle">Développez vos fichiers RAW ou JPEG avec la puissance de l\'émulation argentique.</string>
+    <string name="editor_empty_advice_title">CONSEIL PHOTO DU LABO</string>
+    <string name="editor_empty_advice_desc">Pour un rendu cinéma chaleureux, combinez l\'abaissement des hautes lumières et un léger virage sépia dans le panneau 3-Way.</string>
+    <string name="editor_empty_btn">Choisir une photo</string>
+    <string name="editor_compare">Comparer</string>
+    <string name="tool_label_crop">Rogner</string>
+    <string name="tool_label_basic">Base</string>
+    <string name="tool_label_curves">Courbes</string>
+    <string name="tool_label_hsl">TSL</string>
+    <string name="tool_label_3way">3-Way</string>
+    <string name="tool_label_detail">Détail</string>
+    <string name="tool_label_effects">Effets</string>
+    <string name="tool_label_calibration">Calib.</string>
+    <string name="tool_label_geometry">Géométrie</string>
+    <string name="tool_label_optics">Optique</string>
+    <string name="group_light">Lumière</string>
+    <string name="group_tone">Tons</string>
+    <string name="group_color">Couleur</string>
+    <string name="group_texture">Texture</string>
+    <string name="hint_double_tap_reset">Double-tap sur un curseur pour réinitialiser à 0</string>
+    <string name="wizard_step_4_title_stage">Interpolation Tetrahedral LUT 33x33x33</string>
+    <string name="profile_title">Galerie Créative</string>
+    <string name="profile_subtitle">Photos sauvegardées et presets LUT 3D</string>
+    <string name="settings_title">Préférences &amp; Thèmes</string>
+    <string name="settings_subtitle">Personnalisation du design system modulaire</string>
+    <string name="settings_theme_header">Thème d\'application</string>
+    <string name="settings_icons_header">Jeu d\'icônes</string>
 </resources>

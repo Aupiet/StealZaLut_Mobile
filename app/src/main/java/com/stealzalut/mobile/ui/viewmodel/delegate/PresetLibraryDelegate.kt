@@ -45,10 +45,47 @@ class PresetLibraryDelegate(
     private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?,
     private val onTriggerEditorPreviewCallback: () -> Unit
 ) {
+    val builtInCinemaPresets = listOf(
+        ColorimetryPreset(
+            id = "builtin_blade_runner",
+            name = "Blade Runner 2049 (Orange & Teal)",
+            paletteHexes = listOf("#1E3A5F", "#0F4C81", "#2D3748", "#F6AD55", "#ED8936", "#C53030"),
+            isBuiltIn = true,
+            notes = "Atmosphère brumeuse néon crépusculaire"
+        ),
+        ColorimetryPreset(
+            id = "builtin_grand_budapest",
+            name = "Grand Budapest Hotel (Pastel Vintage)",
+            paletteHexes = listOf("#FBB6CE", "#F687B3", "#E2E8F0", "#FEFCBF", "#FBD38D", "#9AE6B4"),
+            isBuiltIn = true,
+            notes = "Tons roses feutrés, cyan doux et crème"
+        ),
+        ColorimetryPreset(
+            id = "builtin_matrix",
+            name = "The Matrix (Cyberpunk Green)",
+            paletteHexes = listOf("#0D2818", "#04471C", "#058C42", "#16DB65", "#020202", "#1F2421"),
+            isBuiltIn = true,
+            notes = "Teinte verte phosphorique et contrastes profonds"
+        ),
+        ColorimetryPreset(
+            id = "builtin_amelie",
+            name = "Amélie Poulain (Warm Warmth)",
+            paletteHexes = listOf("#2D5A27", "#8FBC8F", "#FFD700", "#FF8C00", "#B22222", "#4A0E17"),
+            isBuiltIn = true,
+            notes = "Jaune doré saturé et ombres émeraude"
+        )
+    )
+
     fun loadSavedPresets() {
         scope.launch {
-            val list = presetRepository.getAllPresets()
-            stateFlow.update { it.copy(savedPresets = list.toImmutableList()) }
+            val userPresets = presetRepository.getAllPresets()
+            val all = builtInCinemaPresets + userPresets
+            stateFlow.update {
+                it.copy(
+                    savedPresets = all.toImmutableList(),
+                    selectedTheme = it.selectedTheme ?: builtInCinemaPresets.firstOrNull()
+                )
+            }
         }
     }
 

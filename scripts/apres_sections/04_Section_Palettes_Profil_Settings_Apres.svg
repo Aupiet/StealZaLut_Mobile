@@ -1,0 +1,562 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2190 980" width="2190" height="980">
+  <defs>
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap');
+      text { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', monospace; }
+      .serif { font-family: 'Playfair Display', Georgia, serif; }
+      .title { font-weight: 700; fill: #FFFFFF; }
+      .subtitle { font-weight: 500; fill: #94A3B8; font-size: 13px; }
+      .section-banner { fill: #161B22; stroke: #E5A93C; stroke-width: 1.5; rx: 16; }
+    </style>
+    <linearGradient id="photoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" /><stop offset="50%" stop-color="#0F172A" /><stop offset="100%" stop-color="#090D16" />
+    </linearGradient>
+    <linearGradient id="warmSunset" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" /><stop offset="40%" stop-color="#D97706" /><stop offset="80%" stop-color="#991B1B" /><stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" /><stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    
+  </defs>
+
+  <!-- Section Canvas Background -->
+  <rect width="2190" height="980" fill="#08090C" />
+
+  <!-- Section Top Header Banner -->
+  <g transform="translate(40, 20)">
+    <rect width="2110" height="54" class="section-banner" />
+    <circle cx="28" cy="27" r="12" fill="#E5A93C" />
+    <path d="M24 27 L27 30 L33 24" stroke="#000000" stroke-width="2" fill="none" stroke-linecap="round" />
+    <text x="50" y="33" class="serif title" font-size="20">02 · Après / Section 4 : Palettes, Profil Créatif & Paramètres Système</text>
+    <rect x="1950" y="14" width="180" height="26" rx="6" fill="#10B981" fill-opacity="0.15" stroke="#10B981" stroke-width="1" />
+    <text x="2040" y="31" text-anchor="middle" font-size="11" font-weight="700" fill="#10B981">SECTION APRÈS • VALIDÉ</text>
+  </g>
+
+  
+        <!-- Frame: Palettes - Extracteur Nuances -->
+        <g id="Palettes_-_Extracteur_Nuances" transform="translate(40, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Palettes / Extracteur Nuances</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <g transform="translate(20, 78)">
+    <text x="0" y="24" class="serif title" font-size="24">Extracteur de Nuances</text>
+    <text x="0" y="44" class="subtitle">Créez des nuanciers maîtres depuis vos photos</text>
+  </g>
+  <g transform="translate(20, 138)">
+    <rect width="350" height="230" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <!-- Extracted Palette Swatches Card -->
+  <g transform="translate(20, 386)">
+    <rect width="350" height="230" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(20, 20)">
+      <text x="0" y="16" class="title" font-size="15">Nuances Clés Extraites (6 Dominantes)</text>
+      <text x="0" y="34" class="subtitle" font-size="12">Harmonie : Complémentaire divisée</text>
+      <g transform="translate(0, 52)">
+        <rect x="0" y="0" width="46" height="52" rx="10" fill="#1A365D" />
+        <text x="23" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#1A36</text>
+
+        <rect x="52" y="0" width="46" height="52" rx="10" fill="#2E5B88" />
+        <text x="75" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#2E5B</text>
+
+        <rect x="104" y="0" width="46" height="52" rx="10" fill="#E28743" />
+        <text x="127" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#E287</text>
+
+        <rect x="156" y="0" width="46" height="52" rx="10" fill="#E76F51" />
+        <text x="179" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#E76F</text>
+
+        <rect x="208" y="0" width="46" height="52" rx="10" fill="#F4A261" />
+        <text x="231" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#F4A2</text>
+
+        <rect x="260" y="0" width="46" height="52" rx="10" fill="#B91C1C" />
+        <text x="283" y="70" text-anchor="middle" class="mono" font-size="10" fill="#94A3B8">#B91C</text>
+      </g>
+      <g transform="translate(0, 140)">
+        <rect width="310" height="46" rx="14" fill="#21262D" stroke="#30363D" />
+        <text x="155" y="28" text-anchor="middle" font-size="13" font-weight="600" fill="#E5A93C">Enregistrer dans ma collection</text>
+      </g>
+    </g>
+  </g>
+  <g transform="translate(20, 630)">
+    <rect width="350" height="54" rx="16" fill="url(#goldAccent)" />
+    <text x="175" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#000000">Échantillonner une nouvelle image</text>
+  </g>
+
+    <!-- Main Bottom Nav (Clean, chic) -->
+    <g id="mainBottomNav" transform="translate(0, 756)">
+      <rect width="390" height="88" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 8)">
+          
+          <path d="M27 10 L35 22 L19 22 Z" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Studio</text>
+        </g>
+        
+      
+        <g transform="translate(88, 8)">
+          
+          <path d="M22 14 L32 14 M27 9 L27 19 M19 23 L35 23" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Éditeur</text>
+        </g>
+        
+      
+        <g transform="translate(164, 8)">
+          <rect x="0" y="0" width="54" height="46" rx="14" fill="#E5A93C" fill-opacity="0.12" />
+          <circle cx="23" cy="15" r="5" fill="#E5A93C" fill-opacity="0.5" /><circle cx="31" cy="15" r="5" fill="#E5A93C" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#E5A93C">Palettes</text>
+        </g>
+        
+      
+        <g transform="translate(240, 8)">
+          
+          <circle cx="27" cy="13" r="4.5" stroke="#94A3B8" stroke-width="1.8" fill="none" /><path d="M19 23 C19 19 23 19 27 19 C31 19 35 19 35 23" stroke="#94A3B8" stroke-width="1.8" fill="none" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Profil</text>
+        </g>
+        
+      
+        <g transform="translate(316, 8)">
+          
+          <circle cx="27" cy="16" r="5.5" stroke="#94A3B8" stroke-width="1.8" fill="none" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Réglages</text>
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Profil - Galerie Photos -->
+        <g id="Profil_-_Galerie_Photos" transform="translate(470, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Profil / Galerie Photos</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <g transform="translate(20, 78)">
+    <text x="0" y="24" class="serif title" font-size="24">Galerie Créative</text>
+    <text x="0" y="44" class="subtitle">14 chefs-d'œuvre développés avec StealZaLUT</text>
+  </g>
+  <!-- Filter tabs -->
+  <g transform="translate(20, 134)">
+    <rect x="0" y="0" width="110" height="34" rx="17" fill="#E5A93C" /><text x="55" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#000000">Toutes (14)</text>
+    <rect x="120" y="0" width="100" height="34" rx="17" fill="#21262D" stroke="#30363D" /><text x="170" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="#CBD5E1">Portraits</text>
+    <rect x="230" y="0" width="100" height="34" rx="17" fill="#21262D" stroke="#30363D" /><text x="280" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="#CBD5E1">Paysages</text>
+  </g>
+  <!-- Grid -->
+  <g transform="translate(20, 184)">
+    <rect x="0" y="0" width="170" height="230" rx="18" fill="url(#warmSunset)" stroke="#30363D" />
+    <rect x="10" y="10" width="75" height="22" rx="11" fill="#000000" fill-opacity="0.6" />
+    <text x="47" y="25" text-anchor="middle" font-size="10" font-weight="700" fill="#E5A93C">Blade 2049</text>
+
+    <rect x="180" y="0" width="170" height="230" rx="18" fill="url(#photoGrad)" stroke="#30363D" />
+    <rect x="190" y="10" width="75" height="22" rx="11" fill="#000000" fill-opacity="0.6" />
+    <text x="227" y="25" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">Moody B&amp;W</text>
+
+    <rect x="0" y="245" width="170" height="230" rx="18" fill="#1E293B" stroke="#30363D" />
+    <rect x="180" y="245" width="170" height="230" rx="18" fill="#0F172A" stroke="#30363D" />
+  </g>
+
+    <!-- Main Bottom Nav (Clean, chic) -->
+    <g id="mainBottomNav" transform="translate(0, 756)">
+      <rect width="390" height="88" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 8)">
+          
+          <path d="M27 10 L35 22 L19 22 Z" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Studio</text>
+        </g>
+        
+      
+        <g transform="translate(88, 8)">
+          
+          <path d="M22 14 L32 14 M27 9 L27 19 M19 23 L35 23" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Éditeur</text>
+        </g>
+        
+      
+        <g transform="translate(164, 8)">
+          
+          <circle cx="23" cy="15" r="5" fill="#94A3B8" fill-opacity="0.5" /><circle cx="31" cy="15" r="5" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Palettes</text>
+        </g>
+        
+      
+        <g transform="translate(240, 8)">
+          <rect x="0" y="0" width="54" height="46" rx="14" fill="#E5A93C" fill-opacity="0.12" />
+          <circle cx="27" cy="13" r="4.5" stroke="#E5A93C" stroke-width="1.8" fill="none" /><path d="M19 23 C19 19 23 19 27 19 C31 19 35 19 35 23" stroke="#E5A93C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#E5A93C">Profil</text>
+        </g>
+        
+      
+        <g transform="translate(316, 8)">
+          
+          <circle cx="27" cy="16" r="5.5" stroke="#94A3B8" stroke-width="1.8" fill="none" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Réglages</text>
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Profil - Styles & LUTs -->
+        <g id="Profil_-_Styles_&_LUTs" transform="translate(900, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Profil / Styles & LUTs</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <g transform="translate(20, 78)">
+    <text x="0" y="24" class="serif title" font-size="24">Styles &amp; Profils</text>
+    <text x="0" y="44" class="subtitle">Presets personnels et fichiers 3D LUT sauvegardés</text>
+  </g>
+  <g transform="translate(20, 138)">
+    <!-- Style Card 1 -->
+    <rect width="350" height="96" rx="18" fill="#161B22" stroke="#E5A93C" stroke-width="1.5" />
+    <g transform="translate(16, 16)">
+      <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#warmSunset)" />
+      <text x="76" y="24" class="title" font-size="15">Paris Sunset Gold</text>
+      <text x="76" y="42" class="subtitle" font-size="12">Créé le 8 nov. 2026 • 8 photos éditées</text>
+      <rect x="76" y="48" width="65" height="18" rx="9" fill="#E5A93C" fill-opacity="0.15" />
+      <text x="108" y="61" text-anchor="middle" class="mono" font-size="10" font-weight="700" fill="#E5A93C">PRESET</text>
+    </g>
+  </g>
+  <g transform="translate(20, 248)">
+    <rect width="350" height="96" rx="18" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 16)">
+      <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#photoGrad)" />
+      <text x="76" y="24" class="title" font-size="15">Nordic Winter Cold</text>
+      <text x="76" y="42" class="subtitle" font-size="12">Créé le 2 nov. 2026 • 3 photos éditées</text>
+      <rect x="76" y="48" width="55" height="18" rx="9" fill="#38BDF8" fill-opacity="0.15" />
+      <text x="103" y="61" text-anchor="middle" class="mono" font-size="10" font-weight="700" fill="#38BDF8">.CUBE</text>
+    </g>
+  </g>
+
+    <!-- Main Bottom Nav (Clean, chic) -->
+    <g id="mainBottomNav" transform="translate(0, 756)">
+      <rect width="390" height="88" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 8)">
+          
+          <path d="M27 10 L35 22 L19 22 Z" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Studio</text>
+        </g>
+        
+      
+        <g transform="translate(88, 8)">
+          
+          <path d="M22 14 L32 14 M27 9 L27 19 M19 23 L35 23" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Éditeur</text>
+        </g>
+        
+      
+        <g transform="translate(164, 8)">
+          
+          <circle cx="23" cy="15" r="5" fill="#94A3B8" fill-opacity="0.5" /><circle cx="31" cy="15" r="5" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Palettes</text>
+        </g>
+        
+      
+        <g transform="translate(240, 8)">
+          <rect x="0" y="0" width="54" height="46" rx="14" fill="#E5A93C" fill-opacity="0.12" />
+          <circle cx="27" cy="13" r="4.5" stroke="#E5A93C" stroke-width="1.8" fill="none" /><path d="M19 23 C19 19 23 19 27 19 C31 19 35 19 35 23" stroke="#E5A93C" stroke-width="1.8" fill="none" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#E5A93C">Profil</text>
+        </g>
+        
+      
+        <g transform="translate(316, 8)">
+          
+          <circle cx="27" cy="16" r="5.5" stroke="#94A3B8" stroke-width="1.8" fill="none" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Réglages</text>
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Enregistrer Preset -->
+        <g id="Éditeur_-_Enregistrer_Preset" transform="translate(1330, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Enregistrer Preset</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <rect width="390" height="844" fill="#000000" fill-opacity="0.7" />
+  <g transform="translate(24, 210)">
+    <rect width="342" height="424" rx="24" fill="#161B22" stroke="#30363D" />
+    <g transform="translate(24, 28)">
+      <text x="0" y="20" class="serif title" font-size="20">Enregistrer le Preset</text>
+      <text x="0" y="42" class="subtitle" font-size="13">Capture l'état actuel de votre retouche</text>
+      
+      <!-- Input -->
+      <g transform="translate(0, 64)">
+        <text x="0" y="14" class="subtitle" font-size="12">Nom du style</text>
+        <rect x="0" y="24" width="294" height="48" rx="12" fill="#0D1117" stroke="#E5A93C" stroke-width="1.5" />
+        <text x="16" y="54" class="title" font-size="14">Paris Golden Hour 2026</text>
+      </g>
+
+      <!-- Category Selector -->
+      <g transform="translate(0, 155)">
+        <text x="0" y="14" class="subtitle" font-size="12">Catégorie</text>
+        <g transform="translate(0, 24)">
+          <rect x="0" y="0" width="85" height="32" rx="16" fill="#E5A93C" /><text x="42" y="21" text-anchor="middle" font-size="12" font-weight="700" fill="#000000">Portrait</text>
+          <rect x="95" y="0" width="85" height="32" rx="16" fill="#21262D" stroke="#30363D" /><text x="137" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#CBD5E1">Paysage</text>
+          <rect x="190" y="0" width="95" height="32" rx="16" fill="#21262D" stroke="#30363D" /><text x="237" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#CBD5E1">Argentique</text>
+        </g>
+      </g>
+
+      <!-- Buttons 48dp+ -->
+      <g transform="translate(0, 250)">
+        <rect width="294" height="52" rx="16" fill="url(#goldAccent)" />
+        <text x="147" y="32" text-anchor="middle" font-size="15" font-weight="700" fill="#000000">Enregistrer dans le Profil</text>
+
+        <rect y="64" width="294" height="46" rx="14" fill="#21262D" stroke="#30363D" />
+        <text x="147" y="93" text-anchor="middle" font-size="14" font-weight="600" fill="#94A3B8">Annuler</text>
+      </g>
+    </g>
+  </g>
+
+        </g>
+        
+        <!-- Frame: Paramètres - Thèmes & Système -->
+        <g id="Paramètres_-_Thèmes_&_Système" transform="translate(1760, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Paramètres / Thèmes & Système</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <g transform="translate(20, 78)">
+    <text x="0" y="24" class="serif title" font-size="24">Préférences &amp; Thèmes</text>
+    <text x="0" y="44" class="subtitle">Personnalisation du design system modulaire</text>
+  </g>
+  <!-- Theme Selection Section -->
+  <g transform="translate(20, 138)">
+    <rect width="350" height="340" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(20, 20)">
+      <text x="0" y="16" class="title" font-size="15">Thème d'application (FE-020, FE-021)</text>
+      
+      <!-- Option 1: Système -->
+      <g transform="translate(0, 32)">
+        <rect width="310" height="46" rx="12" fill="#0D1117" stroke="#30363D" />
+        <circle cx="24" cy="23" r="8" fill="#38BDF8" />
+        <text x="44" y="28" font-size="13" font-weight="600" fill="#FFFFFF">Système par défaut (Auto Jour/Nuit)</text>
+      </g>
+
+      <!-- Option 2: AmberNoir (Active) -->
+      <g transform="translate(0, 86)">
+        <rect width="310" height="46" rx="12" fill="#0D1117" stroke="#E5A93C" stroke-width="1.5" />
+        <circle cx="24" cy="23" r="8" fill="#E5A93C" />
+        <text x="44" y="28" font-size="13" font-weight="700" fill="#E5A93C">AmberNoir (Signature)</text>
+        <circle cx="286" cy="23" r="10" fill="#E5A93C" />
+        <text x="286" y="27" text-anchor="middle" font-size="10" font-weight="700" fill="#000000">✓</text>
+      </g>
+
+      <!-- Option 3: CyanStudio -->
+      <g transform="translate(0, 140)">
+        <rect width="310" height="46" rx="12" fill="#0D1117" stroke="#30363D" />
+        <circle cx="24" cy="23" r="8" fill="#26C6DA" />
+        <text x="44" y="28" font-size="13" font-weight="600" fill="#FFFFFF">CyanStudio (Pro Lab)</text>
+      </g>
+
+      <!-- Option 4: OledBlack -->
+      <g transform="translate(0, 194)">
+        <rect width="310" height="46" rx="12" fill="#0D1117" stroke="#30363D" />
+        <circle cx="24" cy="23" r="8" fill="#FF6D00" />
+        <text x="44" y="28" font-size="13" font-weight="600" fill="#FFFFFF">OledBlack (Contraste Pur)</text>
+      </g>
+
+      <!-- Option 5: Daylight -->
+      <g transform="translate(0, 248)">
+        <rect width="310" height="46" rx="12" fill="#0D1117" stroke="#30363D" />
+        <circle cx="24" cy="23" r="8" fill="#C85A17" />
+        <text x="44" y="28" font-size="13" font-weight="600" fill="#FFFFFF">Daylight (Clair Chaud)</text>
+      </g>
+    </g>
+  </g>
+  <!-- Icon Set Section -->
+  <g transform="translate(20, 495)">
+    <rect width="350" height="150" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(20, 20)">
+      <text x="0" y="16" class="title" font-size="15">Jeu d'icônes (SzlIconSet)</text>
+      <g transform="translate(0, 32)">
+        <rect width="310" height="42" rx="12" fill="#0D1117" stroke="#E5A93C" stroke-width="1.5" />
+        <text x="16" y="26" font-size="13" font-weight="700" fill="#E5A93C">Rounded Icons (Chic &amp; Doux)</text>
+        <circle cx="286" cy="21" r="9" fill="#E5A93C" />
+        <text x="286" y="25" text-anchor="middle" font-size="9" font-weight="700" fill="#000000">✓</text>
+      </g>
+      <g transform="translate(0, 82)">
+        <rect width="310" height="42" rx="12" fill="#0D1117" stroke="#30363D" />
+        <text x="16" y="26" font-size="13" font-weight="600" fill="#CBD5E1">Outlined Icons (Précision Studio)</text>
+      </g>
+    </g>
+  </g>
+
+    <!-- Main Bottom Nav (Clean, chic) -->
+    <g id="mainBottomNav" transform="translate(0, 756)">
+      <rect width="390" height="88" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 8)">
+          
+          <path d="M27 10 L35 22 L19 22 Z" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Studio</text>
+        </g>
+        
+      
+        <g transform="translate(88, 8)">
+          
+          <path d="M22 14 L32 14 M27 9 L27 19 M19 23 L35 23" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Éditeur</text>
+        </g>
+        
+      
+        <g transform="translate(164, 8)">
+          
+          <circle cx="23" cy="15" r="5" fill="#94A3B8" fill-opacity="0.5" /><circle cx="31" cy="15" r="5" fill="#94A3B8" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Palettes</text>
+        </g>
+        
+      
+        <g transform="translate(240, 8)">
+          
+          <circle cx="27" cy="13" r="4.5" stroke="#94A3B8" stroke-width="1.8" fill="none" /><path d="M19 23 C19 19 23 19 27 19 C31 19 35 19 35 23" stroke="#94A3B8" stroke-width="1.8" fill="none" stroke-linecap="round" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Profil</text>
+        </g>
+        
+      
+        <g transform="translate(316, 8)">
+          <rect x="0" y="0" width="54" height="46" rx="14" fill="#E5A93C" fill-opacity="0.12" />
+          <circle cx="27" cy="16" r="5.5" stroke="#E5A93C" stroke-width="1.8" fill="none" />
+          <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#E5A93C">Réglages</text>
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+</svg>

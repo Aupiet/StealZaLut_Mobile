@@ -32,13 +32,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +39,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
@@ -131,6 +125,21 @@ fun ProfileScreen(
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
+        // Title Banner matching Figma Node 12:1757 / 12:1813
+        val profTitle = if (uiState.profileSelectedTab == 0) 
+            stringResource(R.string.profile_title) 
+        else 
+            "Styles & Profils"
+        val profSubtitle = if (uiState.profileSelectedTab == 0) 
+            stringResource(R.string.profile_subtitle) 
+        else 
+            "Presets personnels et fichiers 3D LUT sauvegardés"
+
+        com.stealzalut.mobile.ui.screens.studio.SectionTitleBanner(
+            title = profTitle,
+            subtitle = profSubtitle
+        )
+
         // --- Primary Tabs (Photos vs Styles / Presets) ---
         PrimaryTabRow(
             selectedTabIndex = uiState.profileSelectedTab,
@@ -147,7 +156,7 @@ fun ProfileScreen(
                 },
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.GridOn,
+                        imageVector = MaterialTheme.icons.actionGrid,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -164,7 +173,7 @@ fun ProfileScreen(
                 },
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Palette,
+                        imageVector = MaterialTheme.icons.toolColorMixer,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -181,7 +190,7 @@ fun ProfileScreen(
             if (uiState.profileSelectedTab == 0) {
                 if (uiState.savedImages.isEmpty()) {
                     SzlEmptyState(
-                        icon = Icons.Default.PhotoLibrary,
+                        icon = MaterialTheme.icons.navProfile,
                         title = stringResource(R.string.profile_no_photos_title),
                         description = stringResource(R.string.profile_no_photos_desc),
                         actionLabel = stringResource(R.string.nav_studio),
@@ -189,7 +198,7 @@ fun ProfileScreen(
                     )
                 } else {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
+                        columns = GridCells.Fixed(2),
                         horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
                         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro),
                         contentPadding = PaddingValues(bottom = AppDimens.ListBottomPadding),
@@ -208,7 +217,7 @@ fun ProfileScreen(
             } else {
                 if (uiState.savedPresets.isEmpty()) {
                     SzlEmptyState(
-                        icon = Icons.Default.Palette,
+                        icon = MaterialTheme.icons.toolColorMixer,
                         title = stringResource(R.string.profile_no_themes_title),
                         description = stringResource(R.string.profile_no_themes_desc),
                         actionLabel = stringResource(R.string.nav_palettes),
@@ -224,9 +233,7 @@ fun ProfileScreen(
                             PresetCardWithColorSpectrum(
                                 preset = preset,
                                 onExportCube = {
-                                    viewModel.exportCubeFromPreset(preset) { cubePath ->
-                                        createCubeLauncher.launch(File(cubePath).name)
-                                    }
+                                    viewModel.exportAndShareCubeFromPreset(context, preset)
                                 },
                                 onDelete = { viewModel.deletePreset(preset.id) }
                             )
@@ -397,7 +404,7 @@ private fun PresetCardWithColorSpectrum(
 
                 IconButton(onClick = onDelete) {
                     Icon(
-                        imageVector = Icons.Default.DeleteOutline,
+                        imageVector = MaterialTheme.icons.actionDelete,
                         contentDescription = stringResource(R.string.profile_btn_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -468,7 +475,7 @@ private fun PresetCardWithColorSpectrum(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
             ) {
                 Icon(
-                    imageVector = Icons.Default.FileDownload,
+                    imageVector = MaterialTheme.icons.actionExport,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )

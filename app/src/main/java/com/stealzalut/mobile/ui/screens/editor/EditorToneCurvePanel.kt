@@ -22,16 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -180,7 +175,7 @@ fun EditorToneCurvePanel(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                            imageVector = MaterialTheme.icons.toolToneCurve,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconMicro),
                             tint = if (curveSubMode == 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -209,7 +204,7 @@ fun EditorToneCurvePanel(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Tune,
+                            imageVector = MaterialTheme.icons.toolBasic,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconMicro),
                             tint = if (curveSubMode == 1) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -233,7 +228,7 @@ fun EditorToneCurvePanel(
                         modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                     ) {
                         Icon(
-                            imageVector = if (isEditMode) Icons.Default.Edit else Icons.Default.Lock,
+                            imageVector = if (isEditMode) MaterialTheme.icons.actionEdit else MaterialTheme.icons.statusLock,
                             contentDescription = null,
                             tint = if (isEditMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                             modifier = Modifier.size(AppDimens.IconSmall)
@@ -247,7 +242,7 @@ fun EditorToneCurvePanel(
                         modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.RestartAlt,
+                            imageVector = MaterialTheme.icons.actionReset,
                             contentDescription = stringResource(R.string.btn_reset_section),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(AppDimens.IconSmall)

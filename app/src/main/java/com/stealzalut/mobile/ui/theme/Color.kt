@@ -11,26 +11,26 @@ import androidx.compose.ui.graphics.Color
  */
 internal object ColorPrimitives {
 
-    // --- Amber Noir Primitive Palette (Default Studio) ---
-    val AmberPrimary = Color(0xFFFFB300)
-    val AmberOnPrimary = Color(0xFF1E1400)
-    val AmberContainer = Color(0xFF3D2D00)
-    val AmberOnContainer = Color(0xFFFFDF9E)
-    val AmberSecondary = Color(0xFFFFC107)
-    val AmberOnSecondary = Color(0xFF261900)
-    val AmberSecondaryContainer = Color(0xFF4A3400)
-    val AmberOnSecondaryContainer = Color(0xFFFFE082)
-    val AmberTertiary = Color(0xFFFFB74D)
-    val AmberTertiaryContainer = Color(0xFF4E2600)
-    val AmberOnTertiaryContainer = Color(0xFFFFD199)
+    // --- Amber Noir Primitive Palette (Default Studio & Chic / Ludique Aesthetic) ---
+    val AmberPrimary = Color(0xFFF59E0B) // Warm Signature Gold
+    val AmberOnPrimary = Color(0xFF000000) // Deep contrast black on gold
+    val AmberContainer = Color(0xFF332005)
+    val AmberOnContainer = Color(0xFFFDE68A)
+    val AmberSecondary = Color(0xFFD97706)
+    val AmberOnSecondary = Color(0xFF000000)
+    val AmberSecondaryContainer = Color(0xFF452B06)
+    val AmberOnSecondaryContainer = Color(0xFFFDE68A)
+    val AmberTertiary = Color(0xFFFBBF24)
+    val AmberTertiaryContainer = Color(0xFF3B2704)
+    val AmberOnTertiaryContainer = Color(0xFFFEF3C7)
 
-    val NoirBackground = Color(0xFF121417)
-    val NoirSurface = Color(0xFF1A1D24)
-    val NoirSurfaceVariant = Color(0xFF262A34)
-    val NoirOutline = Color(0xFF383E4D)
-    val NoirOutlineVariant = Color(0xFF2E3440)
-    val NoirTextPrimary = Color(0xFFF0F2F5)
-    val NoirTextSecondary = Color(0xFFA0A7B5)
+    val NoirBackground = Color(0xFF0E1116) // Obsidian Slate from Figma
+    val NoirSurface = Color(0xFF161B22) // Rich Card Surface from Figma
+    val NoirSurfaceVariant = Color(0xFF21262D) // Pill / Chip Container from Figma
+    val NoirOutline = Color(0xFF30363D) // Border stroke from Figma
+    val NoirOutlineVariant = Color(0xFF262C36) // Subtle border from Figma
+    val NoirTextPrimary = Color(0xFFF0F6FC) // Crisp white text
+    val NoirTextSecondary = Color(0xFF94A3B8) // Slate 400 subtitle text from Figma
 
     // --- Cyan Studio Primitive Palette ---
     val CyanPrimary = Color(0xFF00E5FF)

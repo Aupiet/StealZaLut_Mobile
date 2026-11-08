@@ -21,7 +21,7 @@ DEFAULT_METHOD: str = "hm-mkl-hm"
 # LUT grid sizes
 LUT_SIZE_FAST: int = 17
 LUT_SIZE_STANDARD: int = 33
-LUT_SIZE_HIGH: int = 65
+LUT_SIZE_HIGH: int = 64
 DEFAULT_LUT_SIZE: int = 33
 
 # Image processing proxy maximum dimension (high fidelity for neon lights & fine details)

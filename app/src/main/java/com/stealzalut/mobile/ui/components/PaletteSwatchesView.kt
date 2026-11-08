@@ -18,13 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.MovieFilter
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -101,7 +99,7 @@ fun PaletteSwatchesView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MovieFilter,
+                        imageVector = MaterialTheme.icons.statusMovieFilter,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconMicro),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -192,7 +190,7 @@ fun PaletteSwatchesView(
                                 modifier = Modifier.padding(AppDimens.SpacingMicro)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ContentCopy,
+                                    imageVector = MaterialTheme.icons.actionDuplicate,
                                     contentDescription = copyLabel,
                                     tint = ColorCardReference.WhiteStep,
                                     modifier = Modifier

@@ -240,19 +240,27 @@ def get_clean_exif_bytes(path: str) -> Optional[bytes]:
         path: Path to the source image file.
 
     Returns:
-        Cleaned EXIF bytes if available, or None.
+        Cleaned EXIF bytes if available and within safe JPEG APP1 bounds (<= 65500 bytes), or None.
     """
     if not os.path.isfile(path):
         return None
     try:
         with Image.open(path) as img:
             exif = img.getexif()
+            raw_bytes: Optional[bytes] = None
             if not exif:
-                return img.info.get("exif")
-            # 0x0112 is EXIF Orientation tag
-            if 0x0112 in exif:
-                exif[0x0112] = 1
-            return exif.tobytes()
+                raw_bytes = img.info.get("exif")
+            else:
+                # 0x0112 is EXIF Orientation tag
+                if 0x0112 in exif:
+                    exif[0x0112] = 1
+                raw_bytes = exif.tobytes()
+            # JPEG standard APP1 marker limit is 65533 bytes.
+            # Oversized EXIF (e.g. embedded thumbnails from camera sensors) causes Pillow to crash
+            # with ValueError: EXIF data is too long.
+            if raw_bytes and len(raw_bytes) <= 65500:
+                return raw_bytes
+            return None
     except Exception:
         return None
 
@@ -297,7 +305,16 @@ def save_image(
             pass
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    pil_img.save(path, **save_kwargs)
+    try:
+        pil_img.save(path, **save_kwargs)
+    except Exception:
+        # If saving with EXIF metadata failed (e.g. malformed or oversized EXIF segment),
+        # retry safely without EXIF so image export never fails unexpectedly.
+        if "exif" in save_kwargs:
+            save_kwargs.pop("exif", None)
+            pil_img.save(path, **save_kwargs)
+        else:
+            raise
     return os.path.abspath(path)
 
 

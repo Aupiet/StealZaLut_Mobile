@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,6 +20,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +79,7 @@ fun SzlBottomActionBar(
                 .semantics { contentDescription = resetDesc }
         ) {
             Icon(
-                imageVector = Icons.Default.RestartAlt,
+                imageVector = MaterialTheme.icons.actionReset,
                 contentDescription = resetDesc,
                 modifier = Modifier.size(AppDimens.IconNormal)
             )
@@ -98,7 +94,7 @@ fun SzlBottomActionBar(
             shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
         ) {
             Icon(
-                imageVector = Icons.Default.Save,
+                imageVector = MaterialTheme.icons.actionSave,
                 contentDescription = null,
                 modifier = Modifier.size(AppDimens.IconSmall)
             )
@@ -129,7 +125,7 @@ fun SzlBottomActionBar(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.FileDownload,
+                        imageVector = MaterialTheme.icons.actionExport,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -155,7 +151,7 @@ fun SzlBottomActionBar(
                         )
                     },
                     leadingIcon = {
-                        Icon(Icons.Default.Save, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(MaterialTheme.icons.actionSave, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     },
                     onClick = {
                         showExportMenu = false
@@ -170,7 +166,7 @@ fun SzlBottomActionBar(
                         )
                     },
                     leadingIcon = {
-                        Icon(Icons.Default.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(MaterialTheme.icons.toolBasic, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     },
                     onClick = {
                         showExportMenu = false

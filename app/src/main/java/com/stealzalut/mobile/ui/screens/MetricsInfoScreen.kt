@@ -17,17 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.MovieFilter
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.ShutterSpeed
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -96,7 +86,7 @@ fun MetricsInfoScreen(
                 navigationIcon = {
                     IconButton(onClick = onClose) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = MaterialTheme.icons.actionClose,
                             contentDescription = stringResource(R.string.common_close)
                         )
                     }
@@ -138,14 +128,14 @@ fun MetricsInfoContent(
         // ====================================================================
         InfoSectionHeader(
             title = stringResource(R.string.info_section_methods_title),
-            icon = Icons.Default.Tune
+            icon = MaterialTheme.icons.toolBasic
         )
 
         CompactInfoCard(
             titleRes = R.string.info_method_hybrid_title,
             catchphraseRes = R.string.info_method_hybrid_catch,
             idealForRes = R.string.info_method_hybrid_ideal,
-            icon = Icons.Default.AutoAwesome,
+            icon = MaterialTheme.icons.toolEffects,
             isRecommended = true
         )
 
@@ -153,21 +143,21 @@ fun MetricsInfoContent(
             titleRes = R.string.info_method_reinhard_title,
             catchphraseRes = R.string.info_method_reinhard_catch,
             idealForRes = R.string.info_method_reinhard_ideal,
-            icon = Icons.Default.BrightnessMedium
+            icon = MaterialTheme.icons.statusBrightness
         )
 
         CompactInfoCard(
             titleRes = R.string.info_method_hm_title,
             catchphraseRes = R.string.info_method_hm_catch,
             idealForRes = R.string.info_method_hm_ideal,
-            icon = Icons.Default.ColorLens
+            icon = MaterialTheme.icons.toolColorGrading
         )
 
         CompactInfoCard(
             titleRes = R.string.info_method_mkl_title,
             catchphraseRes = R.string.info_method_mkl_catch,
             idealForRes = R.string.info_method_mkl_ideal,
-            icon = Icons.Default.MovieFilter
+            icon = MaterialTheme.icons.statusMovieFilter
         )
 
         // ====================================================================
@@ -175,21 +165,21 @@ fun MetricsInfoContent(
         // ====================================================================
         InfoSectionHeader(
             title = stringResource(R.string.info_section_lut_size_title),
-            icon = Icons.Default.GridOn
+            icon = MaterialTheme.icons.actionGrid
         )
 
         CompactInfoCard(
             titleRes = R.string.info_lut_17_title,
             catchphraseRes = R.string.info_lut_17_catch,
             idealForRes = R.string.info_lut_17_ideal,
-            icon = Icons.Default.ShutterSpeed
+            icon = MaterialTheme.icons.statusShutterSpeed
         )
 
         CompactInfoCard(
             titleRes = R.string.info_lut_33_title,
             catchphraseRes = R.string.info_lut_33_catch,
             idealForRes = R.string.info_lut_33_ideal,
-            icon = Icons.Default.GridOn,
+            icon = MaterialTheme.icons.actionGrid,
             isRecommended = true
         )
 
@@ -197,7 +187,7 @@ fun MetricsInfoContent(
             titleRes = R.string.info_lut_65_title,
             catchphraseRes = R.string.info_lut_65_catch,
             idealForRes = R.string.info_lut_65_ideal,
-            icon = Icons.Default.AutoAwesome
+            icon = MaterialTheme.icons.toolEffects
         )
 
         // ====================================================================
@@ -205,21 +195,21 @@ fun MetricsInfoContent(
         // ====================================================================
         InfoSectionHeader(
             title = stringResource(R.string.info_section_controls_title),
-            icon = Icons.AutoMirrored.Filled.HelpOutline
+            icon = MaterialTheme.icons.actionHelp
         )
 
         CompactInfoCard(
             titleRes = R.string.info_control_intensity_title,
             catchphraseRes = R.string.info_control_intensity_catch,
             idealForRes = R.string.info_control_intensity_ideal,
-            icon = Icons.Default.Tune
+            icon = MaterialTheme.icons.toolBasic
         )
 
         CompactInfoCard(
             titleRes = R.string.info_control_lum_title,
             catchphraseRes = R.string.info_control_lum_catch,
             idealForRes = R.string.info_control_lum_ideal,
-            icon = Icons.Default.BrightnessMedium
+            icon = MaterialTheme.icons.statusBrightness
         )
 
         // ====================================================================
@@ -227,14 +217,14 @@ fun MetricsInfoContent(
         // ====================================================================
         InfoSectionHeader(
             title = stringResource(R.string.info_section_palette_title),
-            icon = Icons.Default.Palette
+            icon = MaterialTheme.icons.toolColorMixer
         )
 
         CompactInfoCard(
             titleRes = R.string.info_palette_title,
             catchphraseRes = R.string.info_palette_catch,
             idealForRes = R.string.info_palette_ideal,
-            icon = Icons.Default.Palette
+            icon = MaterialTheme.icons.toolColorMixer
         )
 
         Spacer(modifier = Modifier.height(AppDimens.SpacingMedium))

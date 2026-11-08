@@ -72,6 +72,7 @@ fun SzlBipolarSlider(
     min: Float,
     max: Float,
     modifier: Modifier = Modifier,
+    onValueChangeFinished: (() -> Unit)? = null,
     defaultValue: Float = 0f,
     unit: String = "",
     decimals: Int = 0,
@@ -157,7 +158,7 @@ fun SzlBipolarSlider(
                 ) {
                     Text(
                         text = formattedValue,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
                         fontWeight = FontWeight.Bold,
                         color = if (isModified) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -182,6 +183,7 @@ fun SzlBipolarSlider(
                 }
                 onValueChange(newVal)
             },
+            onValueChangeFinished = onValueChangeFinished,
             valueRange = min..max,
             interactionSource = interactionSource,
             modifier = Modifier

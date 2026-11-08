@@ -26,13 +26,13 @@ enum class LutSize(
         nodeCountRes = R.string.lut_size_33_nodes
     ),
     HIGH(
-        size = 65,
+        size = 64,
         labelRes = R.string.lut_size_65_label,
         nodeCountRes = R.string.lut_size_65_nodes
     );
 
     companion object {
         fun fromSize(size: Int): LutSize =
-            entries.firstOrNull { it.size == size } ?: STANDARD
+            entries.firstOrNull { it.size == size } ?: if (size == 65) HIGH else STANDARD
     }
 }

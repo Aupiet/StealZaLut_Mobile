@@ -1,0 +1,228 @@
+# -*- coding: utf-8 -*-
+import os
+
+svg_content = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap');
+      text { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', monospace; }
+      .serif { font-family: 'Playfair Display', Georgia, serif; }
+      .title { font-weight: 700; fill: #FFFFFF; }
+      .subtitle { font-weight: 500; fill: #94A3B8; font-size: 13px; }
+      .card { fill: #161B22; stroke: #262C36; stroke-width: 1; rx: 18; }
+      .chip { rx: 16; font-size: 12px; font-weight: 600; }
+    </style>
+    <linearGradient id="sourcePhotoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="50%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="gradedPhotoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="35%" stop-color="#D97706" />
+      <stop offset="70%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#134E4A" />
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APR&#200;S] Studio / &#201;tape 3 Param&#232;tres (WYSIWYG)</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">LIVE AGSL 120 FPS</text>
+  </g>
+
+  <!-- Header -->
+  <g transform="translate(20, 74)">
+    <text x="0" y="20" class="serif title" font-size="22">Ajustement du Transfert</text>
+    <text x="0" y="38" class="subtitle" font-size="12">Aper&#231;u temps r&#233;el du style appliqu&#233; sur l'image source</text>
+  </g>
+
+  <!-- Stepper (1 to 5) -->
+  <g transform="translate(20, 120)">
+    <rect width="350" height="34" rx="10" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 8)">
+      <circle cx="9" cy="9" r="9" fill="#10B981" /><text x="9" y="12.5" text-anchor="middle" font-size="9" font-weight="700" fill="#FFFFFF">&#10003;</text>
+      <line x1="22" y1="9" x2="65" y2="9" stroke="#10B981" stroke-width="2" />
+      <circle cx="78" cy="9" r="9" fill="#10B981" /><text x="78" y="12.5" text-anchor="middle" font-size="9" font-weight="700" fill="#FFFFFF">&#10003;</text>
+      <line x1="91" y1="9" x2="134" y2="9" stroke="#E5A93C" stroke-width="2" />
+      <circle cx="147" cy="9" r="9" fill="#E5A93C" /><text x="147" y="12.5" text-anchor="middle" font-size="10" font-weight="700" fill="#000000">3</text>
+      <line x1="160" y1="9" x2="203" y2="9" stroke="#30363D" stroke-width="2" />
+      <circle cx="216" cy="9" r="8" fill="#21262D" stroke="#30363D" /><text x="216" y="12.5" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">4</text>
+      <line x1="229" y1="9" x2="272" y2="9" stroke="#30363D" stroke-width="2" />
+      <circle cx="285" cy="9" r="8" fill="#21262D" stroke="#30363D" /><text x="285" y="12.5" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">5</text>
+    </g>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 1. LIVE WYSIWYG PREVIEW CARD (SPLIT-VIEW BEFORE / AFTER)  -->
+  <!-- ======================================================== -->
+  <g transform="translate(20, 162)">
+    <rect width="350" height="200" rx="16" fill="#161B22" stroke="#262C36" />
+    
+    <!-- Header of preview card -->
+    <g transform="translate(12, 10)">
+      <circle cx="6" cy="6" r="4" fill="#10B981" />
+      <text x="16" y="9.5" font-size="11" font-weight="700" fill="#FFFFFF">Aper&#231;u en direct (WYSIWYG)</text>
+      <rect x="230" y="0" width="92" height="18" rx="9" fill="#10B981" fill-opacity="0.15" />
+      <text x="276" y="12.5" text-anchor="middle" class="mono" font-size="9.5" font-weight="600" fill="#10B981">12 ms &#8226; 120 FPS</text>
+    </g>
+
+    <!-- Interactive Image Viewport Area with Split -->
+    <g transform="translate(10, 32)">
+      <clipPath id="previewClip">
+        <rect width="330" height="156" rx="12" />
+      </clipPath>
+      <g clip-path="url(#previewClip)">
+        <!-- Left: Source Photo (Neutral / Original) -->
+        <rect x="0" y="0" width="330" height="156" fill="url(#sourcePhotoGrad)" />
+        <circle cx="85" cy="65" r="32" fill="#64748B" fill-opacity="0.4" />
+        <path d="M15 156 L70 95 L125 156 Z" fill="#1E293B" fill-opacity="0.8" />
+
+        <!-- Right: Graded Photo with Applied LUT (Split at x = 165) -->
+        <g>
+          <clipPath id="splitRightClip">
+            <rect x="165" y="0" width="165" height="156" />
+          </clipPath>
+          <g clip-path="url(#splitRightClip)">
+            <rect x="0" y="0" width="330" height="156" fill="url(#gradedPhotoGrad)" />
+            <circle cx="85" cy="65" r="32" fill="#FDE047" fill-opacity="0.35" />
+            <path d="M15 156 L70 95 L125 156 Z" fill="#0F766E" fill-opacity="0.9" />
+          </g>
+        </g>
+
+        <!-- Split Divider Line -->
+        <line x1="165" y1="0" x2="165" y2="156" stroke="#FFFFFF" stroke-width="2" />
+
+        <!-- Central Drag Handle -->
+        <circle cx="165" cy="78" r="14" fill="#FFFFFF" />
+        <path d="M160 78 L163 74 M160 78 L163 82 M170 78 L167 74 M170 78 L167 82" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" />
+
+        <!-- Overlay Labels -->
+        <rect x="8" y="126" width="62" height="20" rx="6" fill="#0F172A" fill-opacity="0.75" />
+        <text x="39" y="140" text-anchor="middle" class="mono" font-size="9" font-weight="700" fill="#E2E8F0">ORIGINAL</text>
+
+        <rect x="230" y="126" width="92" height="20" rx="6" fill="#0F172A" fill-opacity="0.75" />
+        <text x="276" y="140" text-anchor="middle" class="mono" font-size="9" font-weight="700" fill="#F59E0B">LUT APPLIQU&#201;E</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 2. TOOL CATEGORY PILLS (Thumb Zone Ergonomics)          -->
+  <!-- ======================================================== -->
+  <g transform="translate(20, 372)">
+    <!-- Pill 1: Intensite (Active) -->
+    <rect x="0" y="0" width="118" height="32" rx="16" fill="#E5A93C" />
+    <text x="59" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#000000">Intensit&#233; &amp; Luma</text>
+
+    <!-- Pill 2: Couleurs & Peau -->
+    <rect x="124" y="0" width="102" height="32" rx="16" fill="#161B22" stroke="#262C36" />
+    <text x="175" y="20" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Teintes Peau</text>
+
+    <!-- Pill 3: Methode Transfert -->
+    <rect x="232" y="0" width="68" height="32" rx="16" fill="#161B22" stroke="#262C36" />
+    <text x="266" y="20" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">M&#233;thode</text>
+
+    <!-- Pill 4: Grille LUT -->
+    <rect x="306" y="0" width="44" height="32" rx="16" fill="#161B22" stroke="#262C36" />
+    <text x="328" y="20" text-anchor="middle" class="mono" font-size="10" font-weight="600" fill="#94A3B8">64&#179;</text>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 3. TACTILE ADJUSTMENT CARD                              -->
+  <!-- ======================================================== -->
+  <g transform="translate(20, 414)">
+    <rect width="350" height="200" rx="18" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(18, 16)">
+      <!-- Slider 1: Force du Transfert -->
+      <text x="0" y="16" class="title" font-size="13">Intensit&#233; du transfert</text>
+      <text x="314" y="16" text-anchor="end" class="mono" font-size="12" font-weight="700" fill="#E5A93C">80 %</text>
+      <rect x="0" y="26" width="314" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="26" width="251" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="251" cy="29" r="9" fill="#FFFFFF" stroke="#E5A93C" stroke-width="2.5" />
+      <text x="0" y="46" class="subtitle" font-size="10" fill="#64748B">Double-tap pour r&#233;initialiser &#224; 100%</text>
+
+      <!-- Slider 2: Verrouillage Luminance -->
+      <g transform="translate(0, 56)">
+        <text x="0" y="16" class="title" font-size="13">Verrouillage Luminance (Luma Lock)</text>
+        <text x="314" y="16" text-anchor="end" class="mono" font-size="12" font-weight="700" fill="#E5A93C">65 %</text>
+        <rect x="0" y="26" width="314" height="6" rx="3" fill="#21262D" />
+        <rect x="0" y="26" width="204" height="6" rx="3" fill="#E5A93C" />
+        <circle cx="204" cy="29" r="9" fill="#FFFFFF" stroke="#E5A93C" stroke-width="2.5" />
+        <text x="0" y="46" class="subtitle" font-size="10" fill="#64748B">Pr&#233;serve le contraste et l'exposition d'origine</text>
+      </g>
+
+      <!-- Toggle 3: Protection des tons chair -->
+      <g transform="translate(0, 118)">
+        <rect width="314" height="44" rx="12" fill="#0D1117" stroke="#262C36" />
+        <circle cx="20" cy="22" r="6" fill="#F59E0B" />
+        <text x="34" y="20" class="title" font-size="12">Protection des carnations</text>
+        <text x="34" y="33" class="subtitle" font-size="10" fill="#64748B">Emp&#234;che les visages de virer au cyan/vert</text>
+        
+        <rect x="262" y="10" width="42" height="24" rx="12" fill="#E5A93C" />
+        <circle cx="292" cy="22" r="9" fill="#000000" />
+      </g>
+    </g>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 4. PINNED PRIMARY ACTION BAR                            -->
+  <!-- ======================================================== -->
+  <g transform="translate(20, 626)">
+    <rect width="350" height="52" rx="16" fill="url(#goldAccent)" />
+    <text x="175" y="31" text-anchor="middle" font-size="14" font-weight="700" fill="#000000">G&#233;n&#233;rer le Rendu 3D LUT (4/5) &#8594;</text>
+  </g>
+
+  <!-- Main Bottom Nav (Clean, chic) -->
+  <g id="mainBottomNav" transform="translate(0, 756)">
+    <rect width="390" height="88" fill="#12161E" stroke="#262C36" stroke-width="1" />
+    <g transform="translate(12, 8)">
+      <rect x="0" y="0" width="54" height="46" rx="14" fill="#E5A93C" fill-opacity="0.12" />
+      <path d="M27 10 L35 22 L19 22 Z" fill="#E5A93C" />
+      <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#E5A93C">Studio</text>
+    </g>
+    <g transform="translate(88, 8)">
+      <path d="M22 14 L32 14 M27 9 L27 19 M19 23 L35 23" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+      <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">&#201;diteur</text>
+    </g>
+    <g transform="translate(164, 8)">
+      <circle cx="23" cy="15" r="5" fill="#94A3B8" fill-opacity="0.5" /><circle cx="31" cy="15" r="5" fill="#94A3B8" />
+      <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Palettes</text>
+    </g>
+    <g transform="translate(240, 8)">
+      <circle cx="27" cy="13" r="4.5" stroke="#94A3B8" stroke-width="1.8" fill="none" /><path d="M19 23 C19 19 23 19 27 19 C31 19 35 19 35 23" stroke="#94A3B8" stroke-width="1.8" fill="none" stroke-linecap="round" />
+      <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">Profil</text>
+    </g>
+    <g transform="translate(316, 8)">
+      <circle cx="27" cy="16" r="5.5" stroke="#94A3B8" stroke-width="1.8" fill="none" />
+      <text x="27" y="38" text-anchor="middle" font-size="11" font-weight="500" fill="#94A3B8">R&#233;glages</text>
+    </g>
+  </g>
+</svg>"""
+
+with open("scripts/apres_svgs/Studio - Etape 3 Params.svg", "w", encoding="utf-8") as f:
+    f.write(svg_content)
+print("Updated scripts/apres_svgs/Studio - Etape 3 Params.svg successfully")

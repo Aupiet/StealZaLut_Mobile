@@ -24,5 +24,6 @@ data class AppSettings(
     val exportFormat: String = "JPEG",
     val exportQuality: Int = 95,
     val selectedThemeId: String = AppThemes.DEFAULT_THEME_ID,
+    val selectedIconSetId: String = "rounded",
     val developerMode: Boolean = false
 )

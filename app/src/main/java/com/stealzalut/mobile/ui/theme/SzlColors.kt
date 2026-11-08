@@ -41,7 +41,17 @@ data class SzlColors(
     val toneCurveRed: Color,
     val toneCurveGreen: Color,
     val toneCurveBlue: Color,
-    val toneCurveRgb: Color
+    val toneCurveRgb: Color,
+    val clippingShadows: Color = Color(0xFF2979FF),
+    val clippingHighlights: Color = Color(0xFFFF1744),
+    val cropOverlay: Color = Color(0x99000000),
+    val cropHandle: Color = Color(0xFFFFFFFF),
+    val cropGrid: Color = Color(0x4DFFFFFF),
+    val toolActiveDot: Color = Color(0xFFE5A93C),
+    val exportTrack: Color = Color(0xFF21262D),
+    val exportProgress: Color = Color(0xFF10B981),
+    val exportProgressTrack: Color = exportTrack,
+    val exportProgressIndicator: Color = exportProgress
 )
 
 val LocalSzlColors = staticCompositionLocalOf<SzlColors> {
@@ -49,13 +59,18 @@ val LocalSzlColors = staticCompositionLocalOf<SzlColors> {
 }
 
 /**
- * Convenient accessor for extended theme colors: [SzlTheme.colors]
+ * Convenient accessor for extended theme colors and interchangeable icons: [SzlTheme.colors], [SzlTheme.icons]
  */
 object SzlTheme {
     val colors: SzlColors
         @Composable
         @ReadOnlyComposable
         get() = LocalSzlColors.current
+
+    val icons: SzlIconSet
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalSzlIconSet.current
 }
 
 /**

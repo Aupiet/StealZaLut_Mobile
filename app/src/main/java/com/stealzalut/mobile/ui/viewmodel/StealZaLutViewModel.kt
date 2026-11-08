@@ -1,6 +1,8 @@
 package com.stealzalut.mobile.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
+import java.io.File
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -8,6 +10,10 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
+import com.stealzalut.mobile.data.model.LightroomDeserializer
+import com.stealzalut.mobile.data.model.LightroomSerializer
+
 import androidx.lifecycle.viewModelScope
 import java.util.Locale
 import com.stealzalut.mobile.R
@@ -43,7 +49,17 @@ import kotlinx.coroutines.launch
  * - [EditorSessionDelegate]: Standalone photo editor session, parameters, and undo/redo.
  * - [PresetLibraryDelegate]: Presets CRUD, palette extraction, and library management.
  */
-class StealZaLutViewModel(application: Application) : AndroidViewModel(application) {
+class StealZaLutViewModel(
+    application: Application,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+) : AndroidViewModel(application) {
+
+    companion object {
+        private const val KEY_SESSION_EDITOR_URI = "szl_session_editor_uri"
+        private const val KEY_SESSION_EDITOR_PATH = "szl_session_editor_path"
+        private const val KEY_SESSION_LIGHTROOM_JSON = "szl_session_lightroom_json"
+        private const val KEY_SESSION_DESTINATION = "szl_session_destination"
+    }
 
     private val bridgeRepository = PythonBridgeRepository(application.applicationContext)
     private val presetRepository = PresetRepository(application.applicationContext)
@@ -111,6 +127,38 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
                 _uiState.update { it.copy(selectedTheme = presets.first()) }
             }
         }
+
+        // FE-015: Restore session from SavedStateHandle
+        val savedDestName = savedStateHandle.get<String>(KEY_SESSION_DESTINATION)
+        if (savedDestName != null) {
+            runCatching { AppDestination.valueOf(savedDestName) }.getOrNull()?.let { dest ->
+                _uiState.update { it.copy(currentDestination = dest) }
+            }
+        }
+
+        val savedUriStr = savedStateHandle.get<String>(KEY_SESSION_EDITOR_URI)
+        val savedPath = savedStateHandle.get<String>(KEY_SESSION_EDITOR_PATH)
+        val savedLrJson = savedStateHandle.get<String>(KEY_SESSION_LIGHTROOM_JSON)
+        if (savedPath != null && File(savedPath).exists()) {
+            val uri = savedUriStr?.let { Uri.parse(it) } ?: Uri.fromFile(File(savedPath))
+            editorSessionDelegate.setEditorSourceImage(uri)
+            if (savedLrJson != null) {
+                runCatching { LightroomDeserializer.fromJson(savedLrJson) }.getOrNull()?.let { restoredModel ->
+                    _uiState.update { it.copy(editorLightroomParams = restoredModel) }
+                    editorSessionDelegate.scheduleEditorPreviewUpdate()
+                }
+            }
+        }
+
+        // Observe and persist active session
+        viewModelScope.launch {
+            _uiState.collect { state ->
+                state.editorSourceUri?.let { savedStateHandle[KEY_SESSION_EDITOR_URI] = it.toString() }
+                state.editorSourcePath?.let { savedStateHandle[KEY_SESSION_EDITOR_PATH] = it }
+                savedStateHandle[KEY_SESSION_LIGHTROOM_JSON] = LightroomSerializer.toJson(state.editorLightroomParams)
+                savedStateHandle[KEY_SESSION_DESTINATION] = state.currentDestination.name
+            }
+        }
     }
 
     // ========================================================================
@@ -174,6 +222,49 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun getShareIntent(filePath: String): Intent? = gradingPipelineDelegate.getShareIntent(filePath)
     fun openInEditorFromStudio() = gradingPipelineDelegate.openInEditorFromStudio()
 
+    fun shareCube(context: Context, cubePath: String? = null) {
+        val intent = createShareCubeIntent(cubePath) ?: return
+        val chooser = Intent.createChooser(intent, context.getString(R.string.share_cube_title)).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(chooser)
+    }
+
+    fun exportAndShareCube(context: Context) {
+        val currentPath = uiState.value.exportedCubePath
+        if (currentPath != null && File(currentPath).exists() && File(currentPath).length() > 0) {
+            shareCube(context, currentPath)
+        } else {
+            exportCube { path ->
+                shareCube(context, path)
+            }
+        }
+    }
+
+    fun exportAndShareEditorCube(context: Context) {
+        val currentPath = uiState.value.exportedCubePath
+        if (currentPath != null && File(currentPath).exists() && File(currentPath).length() > 0) {
+            shareCube(context, currentPath)
+        } else {
+            exportEditorCube { path ->
+                shareCube(context, path)
+            }
+        }
+    }
+
+    fun exportAndShareCubeFromPreset(context: Context, preset: ColorimetryPreset) {
+        exportCubeFromPreset(preset) { path ->
+            shareCube(context, path)
+        }
+    }
+
+    fun exportAndShareCubeFromPaletteImage(context: Context) {
+        exportCubeFromPaletteImage { path ->
+            shareCube(context, path)
+        }
+    }
+
     // ========================================================================
     // STANDALONE PHOTO EDITOR (EditorSessionDelegate)
     // ========================================================================
@@ -215,6 +306,9 @@ class StealZaLutViewModel(application: Application) : AndroidViewModel(applicati
     fun redoEditor() = editorSessionDelegate.redo()
     fun canUndoEditor(): Boolean = editorSessionDelegate.canUndo()
     fun canRedoEditor(): Boolean = editorSessionDelegate.canRedo()
+    fun pushUndoSnapshot() = editorSessionDelegate.pushUndoSnapshot()
+    fun openExportDialog() { _uiState.update { it.copy(isExportDialogOpen = true) } }
+    fun dismissExportDialog() { _uiState.update { it.copy(isExportDialogOpen = false) } }
     val lightroomDelegate get() = editorSessionDelegate.lightroomDelegate
 
     // ========================================================================

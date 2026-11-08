@@ -92,11 +92,29 @@ def export_cube(
     if not os.path.isfile(abs_path) or os.path.getsize(abs_path) == 0:
         raise OSError(f"Exported .cube file is missing or empty: {output_path}")
 
-    verify_size, verify_data = load_cube_file(abs_path)
-    if verify_size != size or len(verify_data) != expected_rows:
+    # Lightweight streaming verification to avoid heavy list/float allocations on mobile devices
+    header_found = False
+    data_lines_count = 0
+    with open(abs_path, "r", encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if stripped.startswith("LUT_3D_SIZE"):
+                parts = stripped.split()
+                if len(parts) >= 2 and int(parts[1]) == size:
+                    header_found = True
+                continue
+            if stripped.startswith("TITLE") or stripped.startswith("DOMAIN_"):
+                continue
+            parts = stripped.split()
+            if len(parts) == 3:
+                data_lines_count += 1
+
+    if not header_found or data_lines_count != expected_rows:
         raise ValueError(
             f"Integrity check failed for {output_path}: expected {expected_rows} lines "
-            f"for size {size}, but parsed {len(verify_data)} lines."
+            f"for size {size}, but parsed {data_lines_count} lines (header valid: {header_found})."
         )
 
     return abs_path

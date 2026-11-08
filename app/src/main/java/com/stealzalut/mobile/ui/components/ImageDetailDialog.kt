@@ -22,13 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -37,6 +30,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -125,7 +119,7 @@ fun ImageDetailDialog(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Info,
+                            imageVector = MaterialTheme.icons.statusInfo,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(AppDimens.IconNormal)
@@ -140,7 +134,7 @@ fun ImageDetailDialog(
 
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = MaterialTheme.icons.actionClose,
                             contentDescription = stringResource(R.string.detail_close)
                         )
                     }
@@ -242,7 +236,7 @@ fun ImageDetailDialog(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.Palette,
+                                    imageVector = MaterialTheme.icons.toolColorMixer,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(AppDimens.IconSmall)
@@ -287,7 +281,7 @@ fun ImageDetailDialog(
                             .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                         shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
                     ) {
-                        Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
+                        Icon(imageVector = MaterialTheme.icons.actionShare, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
                         Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                         Text(text = stringResource(R.string.detail_btn_share), fontWeight = FontWeight.Bold)
                     }
@@ -300,7 +294,7 @@ fun ImageDetailDialog(
                         shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Icon(imageVector = Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
+                        Icon(imageVector = MaterialTheme.icons.actionDelete, contentDescription = null, modifier = Modifier.size(AppDimens.IconNormal))
                         Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                         Text(text = stringResource(R.string.detail_btn_delete), fontWeight = FontWeight.Bold)
                     }

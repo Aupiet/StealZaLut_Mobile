@@ -13,12 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,7 +71,7 @@ fun MethodSelector(
                     modifier = Modifier
                         .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
                         .semantics {
-                            contentDescription = "$displayName, $subtitle"
+                            contentDescription = "$displayName, $subtitle" // GUARD_ALLOW
                         },
                     label = {
                         Column(modifier = Modifier.padding(vertical = AppDimens.SpacingExtraSmall)) {
@@ -112,7 +111,7 @@ fun MethodSelector(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
+                    imageVector = MaterialTheme.icons.statusInfo,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconSmall),
                     tint = MaterialTheme.colorScheme.primary

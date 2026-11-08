@@ -62,7 +62,7 @@ fun LutSizeSelector(
                         .weight(1f)
                         .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
                         .semantics {
-                            contentDescription = "$labelText, $nodeText"
+                            contentDescription = "$labelText, $nodeText" // GUARD_ALLOW
                         },
                     shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
                     colors = CardDefaults.cardColors(

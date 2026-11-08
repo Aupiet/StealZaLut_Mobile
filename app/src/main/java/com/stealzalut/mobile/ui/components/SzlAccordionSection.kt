@@ -16,16 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowLeft
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,7 +74,7 @@ fun SzlAccordionSection(
                         modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                     ) {
                         Icon(
-                            imageVector = if (isSectionEnabled) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            imageVector = if (isSectionEnabled) MaterialTheme.icons.actionVisibilityOn else MaterialTheme.icons.actionVisibilityOff,
                             contentDescription = stringResource(R.string.desc_toggle_section),
                             tint = if (isSectionEnabled) {
                                 MaterialTheme.colorScheme.primary
@@ -118,7 +113,7 @@ fun SzlAccordionSection(
                             modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.RestartAlt,
+                                imageVector = MaterialTheme.icons.actionReset,
                                 contentDescription = stringResource(R.string.btn_reset_section),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(AppDimens.IconSmall)
@@ -131,7 +126,7 @@ fun SzlAccordionSection(
                         modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                     ) {
                         Icon(
-                            imageVector = if (isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowLeft,
+                            imageVector = if (isExpanded) MaterialTheme.icons.statusArrowDropDown else MaterialTheme.icons.statusArrowLeft,
                             contentDescription = if (isExpanded) {
                                 stringResource(R.string.desc_collapse_section)
                             } else {

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -86,7 +87,27 @@ fun ApplyThemeScreen(
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSpacious)
     ) {
-        // --- 1. Stepper Progress Header ---
+        // --- 1. Title Banner matching Figma (Above Stepper) ---
+        val (screenTitle, screenSubtitle) = when (uiState.wizardStep) {
+            com.stealzalut.mobile.core.AppConstants.STEP_1_SOURCE -> 
+                stringResource(R.string.wizard_step_1_title) to stringResource(R.string.wizard_step_1_subtitle)
+            com.stealzalut.mobile.core.AppConstants.STEP_2_STYLE -> 
+                stringResource(R.string.wizard_step_2_title) to stringResource(R.string.wizard_step_2_subtitle)
+            com.stealzalut.mobile.core.AppConstants.STEP_3_PARAMS -> 
+                stringResource(R.string.wizard_step_3_title) to stringResource(R.string.wizard_step_3_subtitle)
+            com.stealzalut.mobile.core.AppConstants.STEP_4_COMPUTE -> 
+                stringResource(R.string.wizard_step_4_title) to stringResource(R.string.wizard_step_4_subtitle)
+            com.stealzalut.mobile.core.AppConstants.STEP_5_RESULT -> 
+                stringResource(R.string.wizard_step_5_title) to stringResource(R.string.wizard_step_5_subtitle)
+            else -> "" to ""
+        }
+
+        com.stealzalut.mobile.ui.screens.studio.SectionTitleBanner(
+            title = screenTitle,
+            subtitle = screenSubtitle
+        )
+
+        // --- 2. Stepper Progress Header ---
         StudioStepper(
             currentStep = uiState.wizardStep,
             onStepClick = { step ->
@@ -159,9 +180,7 @@ fun ApplyThemeScreen(
                         onLutSizeSelected = { viewModel.setLutSize(it) },
                         isExportingCube = uiState.isExportingCube,
                         onExportCube = {
-                            viewModel.exportCube { cubePath ->
-                                exportCubeLauncher.launch(File(cubePath).name)
-                            }
+                            viewModel.exportAndShareCube(context)
                         },
                         onBack = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) },
                         onRun = { viewModel.runGradingFunnel() }
@@ -194,9 +213,7 @@ fun ApplyThemeScreen(
                             }
                         },
                         onShareCube = {
-                            viewModel.createShareCubeIntent()?.let { intent ->
-                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_cube_title)))
-                            }
+                            viewModel.exportAndShareCube(context)
                         },
                         onReset = { viewModel.resetWizard() }
                     )

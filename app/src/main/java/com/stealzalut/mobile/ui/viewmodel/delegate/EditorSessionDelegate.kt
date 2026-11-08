@@ -135,7 +135,7 @@ class EditorSessionDelegate(
         )
     }
 
-    private fun pushUndoSnapshot() {
+    fun pushUndoSnapshot() {
         undoStack.push(currentSnapshot())
         if (undoStack.size > 50) {
             undoStack.removeLast()

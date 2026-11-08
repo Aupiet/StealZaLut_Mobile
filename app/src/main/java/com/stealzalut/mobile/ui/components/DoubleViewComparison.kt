@@ -23,14 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Compare
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -122,7 +119,7 @@ fun DoubleViewComparison(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ZoomIn,
+                                    imageVector = MaterialTheme.icons.actionZoomIn,
                                     contentDescription = null,
                                     modifier = Modifier.size(AppDimens.IconMicro),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -148,7 +145,7 @@ fun DoubleViewComparison(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Speed,
+                                    imageVector = MaterialTheme.icons.statusSpeed,
                                     contentDescription = null,
                                     modifier = Modifier.size(AppDimens.IconMicro),
                                     tint = MaterialTheme.colorScheme.onTertiaryContainer
@@ -278,7 +275,7 @@ fun DoubleViewComparison(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = Icons.Default.Compare,
+                                    imageVector = MaterialTheme.icons.actionCompare,
                                     contentDescription = handleDesc,
                                     modifier = Modifier.size(AppDimens.IconNormal),
                                     tint = Color.Black
@@ -287,16 +284,16 @@ fun DoubleViewComparison(
                         }
                     }
 
-                    // Labels
+                    // Badges matching Figma Node 12:405 / 12:407 (AVANT / APRÈS)
                     SzlImageBadge(
-                        text = stringResource(R.string.comparison_original_label),
-                        alignment = Alignment.BottomStart,
+                        text = "AVANT",
+                        alignment = Alignment.TopStart,
                         isCompareMode = false
                     )
                     SzlImageBadge(
-                        text = stringResource(R.string.comparison_lut_label),
-                        alignment = Alignment.BottomEnd,
-                        isCompareMode = false
+                        text = "APRÈS",
+                        alignment = Alignment.TopEnd,
+                        isCompareMode = true
                     )
                 } else {
                     Box(

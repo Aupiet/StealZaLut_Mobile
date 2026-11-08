@@ -47,6 +47,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+            all {
+                it.maxHeapSize = "2048m"
+                it.jvmArgs("-Xmx2048m", "-XX:+UseG1GC")
+            }
+        }
+    }
     buildFeatures {
         compose = true
     }

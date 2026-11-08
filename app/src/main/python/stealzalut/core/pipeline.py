@@ -151,7 +151,7 @@ def apply_step2_filter_refinement(
     pure_f = np.clip(pure_rgb.astype(np.float32), 0.0, 1.0)
 
     # 1. Spatial 3D Smoothing (only if input is a 3D LUT volume or cubic lattice)
-    if params.spatial_3d > 1e-4 and (pure_f.ndim == 4 or (pure_f.ndim == 2 and pure_f.shape[0] in (17**3, 33**3, 65**3))):
+    if params.spatial_3d > 1e-4 and (pure_f.ndim == 4 or (pure_f.ndim == 2 and pure_f.shape[0] in (17**3, 33**3, 64**3, 65**3))):
         is_2d = pure_f.ndim == 2
         orig_shape = pure_f.shape
         if is_2d:

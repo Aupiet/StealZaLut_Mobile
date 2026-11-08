@@ -137,6 +137,8 @@ data class StealZaLutUiState(
     val isEditorProcessing: Boolean = false,
     val isEditorExportingCube: Boolean = false,
     val isEditorExportingImage: Boolean = false,
+    val exportProgress: Float = 0f,
+    val isExportDialogOpen: Boolean = false,
     val editorExecutionTimeMs: Double? = null,
     val editorSelectedTab: Int = 0, // 0 = Presets & LUTs, 1 = Calibrage, 2 = Lumière, 3 = Couleur, 4 = Effets
     val savedEditingPresets: ImmutableList<EditPreset> = persistentListOf(),
@@ -189,16 +191,16 @@ data class StealZaLutUiState(
 ) {
     val effectiveReferencePath: String?
         get() = if (styleBSourceMode == 0) {
-            customReferencePath ?: selectedTheme?.referenceImagePath
-        } else {
             selectedTheme?.referenceImagePath ?: customReferencePath
+        } else {
+            customReferencePath ?: selectedTheme?.referenceImagePath
         }
 
     val canProceedToStep2: Boolean
         get() = sourcePath != null
 
     val canProceedToStep3: Boolean
-        get() = effectiveReferencePath != null
+        get() = if (styleBSourceMode == 0) selectedTheme != null else (customReferenceBitmap != null || customReferencePath != null)
 
     val canApply: Boolean
         get() = sourcePath != null && effectiveReferencePath != null &&

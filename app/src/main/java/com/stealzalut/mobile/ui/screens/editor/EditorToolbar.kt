@@ -20,20 +20,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Collections
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.Details
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,22 +34,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.ui.theme.SzlIconSet
+import com.stealzalut.mobile.ui.theme.icons
+import com.stealzalut.mobile.ui.theme.szlColors
 
 data class EditorToolItem(
     val id: Int,
-    val icon: ImageVector,
+    val iconProvider: (SzlIconSet) -> ImageVector,
     @param:StringRes val labelRes: Int
 )
 
 /**
- * Ergonomic one-hand Lightroom-style bottom tool bar.
+ * Ergonomic one-hand Lightroom-style bottom tool bar conforming to Figma [APRÈS] Éditeur / Viewport.
  * Features:
- * - Animated tactile pills with smooth color and elevation transitions.
- * - Glowing modification dot indicators showing which panels have active edits.
- * - Full WCAG-compliant touch targets with horizontal fluid scrolling.
+ * - 10 dedicated photo develop tools with vertical icon-over-short-label layout.
+ * - Fixed 68dp item width showing 5 tools + peeking 6th tool on standard 390dp screens.
+ * - Active amber indicator pill and modified status dot indicator.
+ * - Full WCAG-compliant touch targets (>= 48dp) with horizontal fluid scrolling.
  */
 @Composable
 fun EditorToolbar(
@@ -66,16 +64,22 @@ fun EditorToolbar(
     activeModifications: Set<Int> = emptySet()
 ) {
     val scrollState = rememberScrollState()
+    val iconSet = MaterialTheme.icons
 
-    val tools = listOf(
-        EditorToolItem(0, Icons.Default.Tune, R.string.section_basic),
-        EditorToolItem(1, Icons.AutoMirrored.Filled.ShowChart, R.string.section_tone_curve),
-        EditorToolItem(2, Icons.Default.Palette, R.string.section_color_mixer),
-        EditorToolItem(3, Icons.Default.ColorLens, R.string.section_color_grading),
-        EditorToolItem(4, Icons.Default.Details, R.string.section_detail),
-        EditorToolItem(5, Icons.Default.AutoAwesome, R.string.section_effects),
-        EditorToolItem(6, Icons.Default.Tune, R.string.section_calibration)
-    )
+    val tools = remember {
+        listOf(
+            EditorToolItem(0, { it.toolCrop }, R.string.tool_label_crop),
+            EditorToolItem(1, { it.toolBasic }, R.string.tool_label_basic),
+            EditorToolItem(2, { it.toolToneCurve }, R.string.tool_label_curves),
+            EditorToolItem(3, { it.toolColorMixer }, R.string.tool_label_hsl),
+            EditorToolItem(4, { it.toolColorGrading }, R.string.tool_label_3way),
+            EditorToolItem(5, { it.toolDetail }, R.string.tool_label_detail),
+            EditorToolItem(6, { it.toolEffects }, R.string.tool_label_effects),
+            EditorToolItem(7, { it.toolCalibration }, R.string.tool_label_calibration),
+            EditorToolItem(8, { it.toolGeometry }, R.string.tool_label_geometry),
+            EditorToolItem(9, { it.toolLens }, R.string.tool_label_optics)
+        )
+    }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -91,7 +95,7 @@ fun EditorToolbar(
                 .fillMaxWidth()
                 .horizontalScroll(scrollState)
                 .padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingExtraSmall),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall),
             verticalAlignment = Alignment.CenterVertically
         ) {
             tools.forEach { tool ->
@@ -99,70 +103,63 @@ fun EditorToolbar(
                 val hasModifications = tool.id in activeModifications
 
                 val targetBgColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primaryContainer
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
                 } else {
                     Color.Transparent
                 }
                 val targetContentColor = if (isSelected) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 val animatedBg by animateColorAsState(
                     targetValue = targetBgColor,
-                    animationSpec = tween(durationMillis = 200),
+                    animationSpec = tween(durationMillis = 180),
                     label = "toolBg" // GUARD_ALLOW
                 )
                 val animatedContentColor by animateColorAsState(
                     targetValue = targetContentColor,
-                    animationSpec = tween(durationMillis = 200),
+                    animationSpec = tween(durationMillis = 180),
                     label = "toolContent" // GUARD_ALLOW
                 )
 
-                Box(
+                Column(
                     modifier = Modifier
+                        .width(AppDimens.EditorToolItemWidth)
                         .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
-                        .clip(RoundedCornerShape(AppDimens.CornerRadiusPill))
+                        .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
                         .background(animatedBg)
                         .clickable { onSelectTool(tool.id) }
-                        .padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = AppDimens.SpacingMicro, vertical = AppDimens.SpacingExtraSmall),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = tool.icon,
-                                contentDescription = null,
-                                tint = animatedContentColor,
-                                modifier = Modifier.size(AppDimens.IconSmall)
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                            Text(
-                                text = stringResource(tool.labelRes),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = animatedContentColor
-                            )
-                        }
-
-                        // Glowing modification indicator dot under the tool label
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        Icon(
+                            imageVector = tool.iconProvider(iconSet),
+                            contentDescription = stringResource(tool.labelRes),
+                            tint = animatedContentColor,
+                            modifier = Modifier.size(AppDimens.IconNormal)
+                        )
                         if (hasModifications) {
-                            Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
                             Box(
                                 modifier = Modifier
-                                    .size(AppDimens.SpacingExtraSmall)
+                                    .size(AppDimens.SpacingSmall)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
+                                    .background(MaterialTheme.szlColors.toolActiveDot)
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
+                    Text(
+                        text = stringResource(tool.labelRes),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = animatedContentColor
+                    )
                 }
             }
         }

@@ -19,8 +19,8 @@ class StudioFlowDelegate(
     fun setWizardStep(step: Int) {
         stateFlow.update { state ->
             val canProceedToStep2 = state.sourceBitmap != null
-            val canProceedToStep3 = (state.styleBSourceMode == 0 && state.customReferenceBitmap != null) ||
-                    (state.styleBSourceMode == 1 && state.selectedTheme != null)
+            val canProceedToStep3 = (state.styleBSourceMode == 0 && state.selectedTheme != null) ||
+                    (state.styleBSourceMode == 1 && (state.customReferenceBitmap != null || state.customReferencePath != null))
 
             val isAllowed = when (step) {
                 AppConstants.STEP_1_SOURCE -> true

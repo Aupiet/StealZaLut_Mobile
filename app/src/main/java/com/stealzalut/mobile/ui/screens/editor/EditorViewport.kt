@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,6 +54,7 @@ import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.components.SzlImageBadge
 import com.stealzalut.mobile.ui.components.SzlRgbHistogram
 import com.stealzalut.mobile.ui.theme.ColorCardReference
+import com.stealzalut.mobile.ui.theme.icons
 import com.stealzalut.mobile.ui.theme.szlColors
 
 /**
@@ -95,6 +92,15 @@ fun EditorViewport(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.szlColors.photoDarkroom)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        scale = 1f
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                )
+            }
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 4f)
@@ -146,21 +152,30 @@ fun EditorViewport(
                 }
             }
     ) {
-        // --- 1. Photo Canvas ---
+        // --- 1. Photo Canvas with Darkroom Rounded Frame (Figma parity) ---
         displayBitmap?.let { bmp ->
-            Image(
-                bitmap = bmp.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offsetX
-                        translationY = offsetY
-                    }
-            )
+                    .padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            translationX = offsetX
+                            translationY = offsetY
+                        }
+                )
+            }
         }
 
         // --- 2. Minimalist Translucent Floating Top Toolbar ---
@@ -222,7 +237,7 @@ fun EditorViewport(
                         modifier = Modifier.size(AppDimens.ViewportButtonSize)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.BarChart,
+                            imageVector = MaterialTheme.icons.statusHistogram,
                             contentDescription = stringResource(R.string.section_histogram),
                             tint = if (isHistogramExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(AppDimens.IconSmall)
@@ -235,7 +250,7 @@ fun EditorViewport(
                         modifier = Modifier.size(AppDimens.ViewportButtonSize)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
+                            imageVector = MaterialTheme.icons.actionAddPhoto,
                             contentDescription = stringResource(R.string.editor_change_image),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(AppDimens.IconSmall)
@@ -266,7 +281,7 @@ fun EditorViewport(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Compare,
+                        imageVector = MaterialTheme.icons.actionCompare,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconMicro),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -292,14 +307,14 @@ fun EditorViewport(
             )
         }
 
-        // --- 5. Compact Floating Animated Glassmorphism RGB Histogram ---
+        // --- 5. Compact Floating Animated Glassmorphism RGB Histogram (TopStart parity) ---
         AnimatedVisibility(
             visible = isHistogramExpanded,
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(AppDimens.SpacingMedium)
+                .align(Alignment.TopStart)
+                .padding(start = AppDimens.SpacingNormal, top = AppDimens.TopAppBarHeight + AppDimens.SpacingSmall)
         ) {
             SzlRgbHistogram(
                 bitmap = previewBitmap ?: sourceBitmap,

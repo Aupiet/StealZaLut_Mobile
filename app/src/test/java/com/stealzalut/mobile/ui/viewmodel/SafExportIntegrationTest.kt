@@ -107,6 +107,7 @@ class SafExportIntegrationTest {
         tempCubeFile.delete()
         tempEmptyCubeFile.delete()
         tempTruncatedCubeFile.delete()
+        io.mockk.clearAllMocks()
     }
 
     @Test
@@ -131,6 +132,33 @@ class SafExportIntegrationTest {
         delegate.savePendingExportToUri(destUri).join()
 
         // Verify success state
+        val state = stateFlow.value
+        assertNull(state.pendingExport)
+        assertNull(state.errorMessage)
+        assertNotNull(state.userMessage)
+        assertTrue(writtenBytes.size() > 0)
+        assertEquals(tempCubeFile.length(), writtenBytes.size().toLong())
+    }
+
+    @Test
+    fun `savePendingExportToUri succeeds when writing valid CUBE_LUT even if destination URI denies read permission`() = runTest {
+        val destUri = mockk<Uri>(relaxed = true)
+        val writtenBytes = ByteArrayOutputStream()
+
+        every { contentResolver.openOutputStream(destUri, "wt") } returns writtenBytes
+        every { contentResolver.openOutputStream(destUri) } returns writtenBytes
+        every { contentResolver.openInputStream(destUri) } throws SecurityException("Permission Denial: reading requires android.permission.MANAGE_DOCUMENTS")
+
+        stateFlow.value = StealZaLutUiState(
+            pendingExport = PendingExport(
+                sourcePath = tempCubeFile.canonicalPath,
+                suggestedFileName = "MyLUT.cube",
+                exportType = ExportType.CUBE_LUT
+            )
+        )
+
+        delegate.savePendingExportToUri(destUri).join()
+
         val state = stateFlow.value
         assertNull(state.pendingExport)
         assertNull(state.errorMessage)
@@ -190,7 +218,7 @@ class SafExportIntegrationTest {
     fun `savePendingExportToUri reports error when destination output stream cannot be opened`() = runTest {
         val destUri = mockk<Uri>(relaxed = true)
 
-        every { contentResolver.openOutputStream(destUri, "wt") } throws IOException("Access denied")
+        every { contentResolver.openOutputStream(destUri, any()) } throws IOException("Access denied")
         every { contentResolver.openOutputStream(destUri) } returns null
 
         stateFlow.value = StealZaLutUiState(
@@ -265,5 +293,24 @@ class SafExportIntegrationTest {
         delegate.exportCube { readyCalled = true }
 
         assertFalse(readyCalled)
+    }
+
+    @Test
+    fun `LutSize HIGH size is 64 for Adobe compatibility and maps properly`() {
+        assertEquals(64, LutSize.HIGH.size)
+        assertEquals(LutSize.HIGH, LutSize.fromSize(64))
+        assertEquals(LutSize.HIGH, LutSize.fromSize(65))
+        assertEquals(LutSize.STANDARD, LutSize.fromSize(33))
+        assertEquals(LutSize.FAST, LutSize.fromSize(17))
+    }
+
+    @Test
+    fun `createShareCubeIntent creates ACTION_SEND intent with stream and read permission`() {
+        io.mockk.mockkStatic(androidx.core.content.FileProvider::class)
+        val fakeUri = mockk<Uri>(relaxed = true)
+        every { androidx.core.content.FileProvider.getUriForFile(any(), any(), any()) } returns fakeUri
+
+        val shareIntent = delegate.createShareCubeIntent(tempCubeFile.canonicalPath)
+        assertNotNull(shareIntent)
     }
 }

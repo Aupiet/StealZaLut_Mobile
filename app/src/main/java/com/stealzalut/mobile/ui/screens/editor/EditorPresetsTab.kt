@@ -14,18 +14,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,11 +82,11 @@ fun EditorPresetsTab(
                     Row {
                         if (activeLutName != null) {
                             IconButton(onClick = onClearLut) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.editor_btn_remove_lut), tint = MaterialTheme.colorScheme.error)
+                                Icon(MaterialTheme.icons.actionClose, contentDescription = stringResource(R.string.editor_btn_remove_lut), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                         OutlinedButton(onClick = onImportLut) {
-                            Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(AppDimens.IconSmall))
+                            Icon(MaterialTheme.icons.actionImport, contentDescription = null, modifier = Modifier.size(AppDimens.IconSmall))
                             Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
                             Text(stringResource(R.string.editor_import_cube))
                         }
@@ -115,7 +110,7 @@ fun EditorPresetsTab(
                 if (onImportPreset != null) {
                     OutlinedButton(onClick = onImportPreset) {
                         Icon(
-                            Icons.Default.FileUpload,
+                            MaterialTheme.icons.actionImport,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconSmall)
                         )
@@ -172,7 +167,7 @@ fun EditorPresetsTab(
                             if (onExportPreset != null) {
                                 IconButton(onClick = { onExportPreset(preset) }) {
                                     Icon(
-                                        imageVector = Icons.Default.Share,
+                                        imageVector = MaterialTheme.icons.actionShare,
                                         contentDescription = stringResource(R.string.editor_btn_export_preset),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -181,14 +176,14 @@ fun EditorPresetsTab(
                             if (onDuplicatePreset != null) {
                                 IconButton(onClick = { onDuplicatePreset(preset.id) }) {
                                     Icon(
-                                        imageVector = Icons.Default.Refresh,
+                                        imageVector = MaterialTheme.icons.actionRefresh,
                                         contentDescription = stringResource(R.string.dialog_duplicate_title),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
                             IconButton(onClick = { onDeletePreset(preset.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.editor_btn_delete), tint = MaterialTheme.colorScheme.error)
+                                Icon(MaterialTheme.icons.actionDelete, contentDescription = stringResource(R.string.editor_btn_delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }

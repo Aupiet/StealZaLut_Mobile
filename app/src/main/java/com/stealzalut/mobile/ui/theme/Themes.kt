@@ -17,6 +17,8 @@ object AppThemes {
     const val THEME_CYAN_STUDIO = "cyan_studio"
     const val THEME_OLED_BLACK = "oled_black"
     const val THEME_DAYLIGHT = "daylight"
+    const val THEME_SYSTEM_DEFAULT = "system_default"
+    const val THEME_MATERIAL_YOU = "material_you"
 
     val AmberNoir = ThemeSpec(
         id = DEFAULT_THEME_ID,
@@ -272,7 +274,32 @@ object AppThemes {
 
     val allThemes: List<ThemeSpec> = listOf(AmberNoir, CyanStudio, OledBlack, Daylight)
 
-    fun getThemeSpec(themeId: String?): ThemeSpec {
+    fun getThemeSpec(
+        themeId: String?,
+        isSystemDark: Boolean = true,
+        dynamicColorScheme: androidx.compose.material3.ColorScheme? = null
+    ): ThemeSpec {
+        if (themeId == THEME_SYSTEM_DEFAULT) {
+            val base = if (isSystemDark) AmberNoir else Daylight
+            return base.copy(id = THEME_SYSTEM_DEFAULT, nameRes = R.string.theme_system_default)
+        }
+        if (themeId == THEME_MATERIAL_YOU && dynamicColorScheme != null) {
+            val base = if (isSystemDark) AmberNoir else Daylight
+            return base.copy(
+                id = THEME_MATERIAL_YOU,
+                nameRes = R.string.theme_material_you,
+                colorScheme = dynamicColorScheme,
+                szlColors = base.szlColors.copy(
+                    sliderActive = dynamicColorScheme.primary,
+                    sliderThumb = dynamicColorScheme.primary,
+                    sliderBipolarFill = dynamicColorScheme.primary,
+                    chipSelected = dynamicColorScheme.primaryContainer,
+                    onChipSelected = dynamicColorScheme.onPrimaryContainer,
+                    navIndicator = dynamicColorScheme.primaryContainer
+                ),
+                isDark = isSystemDark
+            )
+        }
         return allThemes.find { it.id == themeId } ?: AmberNoir
     }
 }

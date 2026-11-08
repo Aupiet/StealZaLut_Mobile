@@ -25,12 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,10 +33,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -80,6 +76,7 @@ fun PalettesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     var presetName by remember { mutableStateOf("") }
     var presetNotes by remember { mutableStateOf("") }
@@ -105,38 +102,11 @@ fun PalettesScreen(
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(if (uiState.palettePhotoBitmap != null) AppDimens.SpacingSmall else AppDimens.SpacingSpacious)
     ) {
-        // Section Header (Only shown when no photo is loaded)
-        if (uiState.palettePhotoBitmap == null) {
-            Surface(
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(AppDimens.SpacingNormal)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = null,
-                            modifier = Modifier.size(AppDimens.IconNormal),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(
-                            text = stringResource(R.string.palettes_header_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
-                    Text(
-                        text = stringResource(R.string.palettes_header_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
+        // Section Title Banner matching Figma Node 12:1691
+        com.stealzalut.mobile.ui.screens.studio.SectionTitleBanner(
+            title = stringResource(R.string.palettes_header_title),
+            subtitle = stringResource(R.string.palettes_header_desc)
+        )
 
         // Image Picker Card
         ImagePickerCard(
@@ -228,7 +198,7 @@ fun PalettesScreen(
                                     )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Default.Save,
+                                        imageVector = MaterialTheme.icons.actionSave,
                                         contentDescription = null,
                                         modifier = Modifier.size(AppDimens.IconNormal)
                                     )
@@ -242,9 +212,7 @@ fun PalettesScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    viewModel.exportCubeFromPaletteImage { cubePath ->
-                                        exportCubeLauncher.launch(File(cubePath).name)
-                                    }
+                                    viewModel.exportAndShareCubeFromPaletteImage(context)
                                 },
                                 enabled = !uiState.isExportingCube && !uiState.isSavingPreset && !uiState.isExtractingPalette,
                                 modifier = Modifier
@@ -260,7 +228,7 @@ fun PalettesScreen(
                                     )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Default.FileDownload,
+                                        imageVector = MaterialTheme.icons.actionShare,
                                         contentDescription = null,
                                         modifier = Modifier.size(AppDimens.IconNormal)
                                     )
@@ -297,7 +265,7 @@ fun PalettesScreen(
 
                 if (uiState.savedPresets.isEmpty()) {
                     SzlEmptyState(
-                        icon = Icons.Default.Palette,
+                        icon = MaterialTheme.icons.toolColorMixer,
                         title = stringResource(R.string.palettes_no_presets),
                         description = stringResource(R.string.wizard_step_2_no_saved)
                     )
@@ -307,9 +275,7 @@ fun PalettesScreen(
                             PresetItemCard(
                                 preset = preset,
                                 onExportCube = {
-                                    viewModel.exportCubeFromPreset(preset) { cubePath ->
-                                        exportCubeLauncher.launch(File(cubePath).name)
-                                    }
+                                    viewModel.exportAndShareCubeFromPreset(context, preset)
                                 },
                                 onDelete = { viewModel.deletePreset(preset.id) }
                             )
@@ -392,7 +358,7 @@ private fun PresetItemCard(
 
                 IconButton(onClick = onDelete) {
                     Icon(
-                        imageVector = Icons.Default.DeleteOutline,
+                        imageVector = MaterialTheme.icons.actionDelete,
                         contentDescription = stringResource(R.string.common_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -483,7 +449,7 @@ private fun PresetItemCard(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
             ) {
                 Icon(
-                    imageVector = Icons.Default.FileDownload,
+                    imageVector = MaterialTheme.icons.actionExport,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )

@@ -20,13 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -125,31 +123,7 @@ fun ImagePickerCard(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(AppDimens.SpacingSmall),
-                        shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = AppConstants.OPACITY_CONTAINER_HEAVY)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingExtraSmall),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = null,
-                                modifier = Modifier.size(AppDimens.IconMicro),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
-                            Text(
-                                text = stringResource(R.string.wizard_step_1_change),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+
                 } else {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -157,7 +131,7 @@ fun ImagePickerCard(
                         modifier = Modifier.padding(AppDimens.SpacingLarge)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
+                            imageVector = MaterialTheme.icons.actionAddPhoto,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconExtraLarge),
                             tint = MaterialTheme.colorScheme.primary

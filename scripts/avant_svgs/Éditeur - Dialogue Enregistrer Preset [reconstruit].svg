@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
+    <defs>
+        <clipPath id="sc"><rect width="390" height="844" rx="28"/></clipPath>
+        <linearGradient id="photoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1A365D"/><stop offset="50%" stop-color="#E28743"/><stop offset="100%" stop-color="#B91C1C"/></linearGradient>
+    </defs>
+    <rect width="390" height="844" rx="28" fill="#121417" stroke="#22252C" stroke-width="2"/>
+    <g clip-path="url(#sc)">
+        <!-- Status Bar -->
+        <rect x="0" y="0" width="390" height="34" fill="#1A1D24"/>
+        <text x="24" y="22" font-family="sans-serif" font-size="12" font-weight="600" fill="#F0F2F5">09:41</text>
+        <g transform="translate(324, 12)">
+            <path d="M0 8h2v4H0zm4-3h2v7H4zm4-3h2v10H8zm4-3h2v13h-2z" fill="#F0F2F5"/>
+            <path d="M18 3c-3 0-6 2-7 4l7 9 7-9c-1-2-4-4-7-4z" fill="#F0F2F5"/>
+            <rect x="32" y="3" width="16" height="9" rx="2" fill="none" stroke="#F0F2F5" stroke-width="1.2"/>
+            <rect x="34" y="5" width="10" height="5" rx="1" fill="#F0F2F5"/>
+        </g>
+        
+        <!-- Frame Title Annotation Banner -->
+        <rect x="0" y="34" width="390" height="22" fill="#201500"/>
+        <text x="195" y="49" text-anchor="middle" font-family="monospace" font-size="9" font-weight="bold" fill="#FFB300">[AVANT] Éditeur / Dialogue Enregistrer Preset</text>
+
+        <!-- Top App Bar -->
+        <rect x="0" y="56" width="390" height="50" fill="#1A1D24" stroke="#2E3440" stroke-width="1"/>
+        <text x="195" y="78" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#F0F2F5">StealZaLUT Mobile</text>
+        <text x="195" y="93" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#A0A7B5">Studio &amp; Éditeur Colorimétrique</text>
+        <g transform="translate(16, 68)">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="#FFB300" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(352, 68)">
+            <circle cx="10" cy="10" r="10" fill="none" stroke="#FFB300" stroke-width="1.8"/>
+            <text x="10" y="14" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFB300">?</text>
+        </g>
+        
+        <!-- Screen Content -->
+        <g transform="translate(0, 106)">
+            <rect x="0" y="0" width="390" height="670" fill="#000000" opacity="0.7"/>
+    <!-- Modal Dialog -->
+    <g transform="translate(30, 220)">
+        <rect x="0" y="0" width="330" height="200" rx="16" fill="#1A1D24" stroke="#383E4D" stroke-width="1"/>
+        <text x="24" y="36" font-family="sans-serif" font-size="16" font-weight="bold" fill="#F0F2F5">Enregistrer le préréglage</text>
+        <text x="24" y="58" font-family="sans-serif" font-size="12" fill="#A0A7B5">Donnez un nom mémorable à vos réglages actuels :</text>
+        
+        <!-- Input TextField -->
+        <rect x="24" y="74" width="282" height="44" rx="8" fill="#262A34" stroke="#FFB300" stroke-width="1.5"/>
+        <text x="36" y="101" font-family="sans-serif" font-size="13" fill="#F0F2F5">Sunset Noir Studio 2026</text>
+        
+        <!-- Buttons -->
+        <g transform="translate(130, 142)">
+            <text x="40" y="26" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#A0A7B5">Annuler</text>
+            <rect x="90" y="6" width="94" height="36" rx="18" fill="#FFB300"/>
+            <text x="137" y="29" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1E1400">Sauvegarder</text>
+        </g>
+    </g>
+        </g>
+        
+        <!-- Double Bar Alert if relevant -->
+        
+        <!-- ANNOTATION BUG FE-002: Double bar superposée -->
+        <rect x="10" y="720" width="370" height="20" rx="4" fill="#B91C1C" opacity="0.9"/>
+        <text x="195" y="734" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#FFFFFF">⚠️ BUG FE-002: Double barre de navigation superposée (140dp)</text>
+        
+
+        <!-- Bottom Navigation Bar -->
+        <g id="NavigationBar">
+            <rect x="0" y="776" width="390" height="68" fill="#1A1D24" stroke="#2E3440" stroke-width="1"/>
+            
+        <g>
+            
+            <g transform="translate(27, 788)"><path d="M12 4v4m0 4v8m-4-8h8m-8-6h8" stroke="#A0A7B5" stroke-width="2" stroke-linecap="round"/></g>
+            <text x="39" y="828" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="normal" fill="#A0A7B5">Studio</text>
+        </g>
+        
+        <g>
+            <rect x="93" y="784" width="48" height="28" rx="14" fill="#3D2D00"/>
+            <g transform="translate(105, 788)"><path d="M14 4l6 6-10 10H4v-6L14 4z" stroke="#FFB300" stroke-width="1.8" fill="none"/></g>
+            <text x="117" y="828" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#FFB300">Éditeur</text>
+        </g>
+        
+        <g>
+            
+            <g transform="translate(183, 788)"><circle cx="8" cy="12" r="3" fill="#A0A7B5"/><circle cx="16" cy="9" r="3" fill="#A0A7B5"/><circle cx="16" cy="15" r="3" fill="#A0A7B5"/></g>
+            <text x="195" y="828" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="normal" fill="#A0A7B5">Palettes</text>
+        </g>
+        
+        <g>
+            
+            <g transform="translate(261, 788)"><rect x="5" y="5" width="14" height="14" rx="2" stroke="#A0A7B5" stroke-width="1.8" fill="none"/><circle cx="10" cy="10" r="2" fill="#A0A7B5"/></g>
+            <text x="273" y="828" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="normal" fill="#A0A7B5">Profil</text>
+        </g>
+        
+        <g>
+            
+            <g transform="translate(339, 788)"><circle cx="12" cy="12" r="3" stroke="#A0A7B5" stroke-width="1.8" fill="none"/><path d="M12 2v3m0 14v3M2 12h3m14 12h3" stroke="#A0A7B5" stroke-width="1.8"/></g>
+            <text x="351" y="828" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="normal" fill="#A0A7B5">Paramètres</text>
+        </g>
+        
+        </g>
+    </g>
+</svg>

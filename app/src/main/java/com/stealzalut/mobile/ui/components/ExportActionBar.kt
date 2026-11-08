@@ -9,16 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,7 +84,7 @@ fun ExportActionBar(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Tune,
+                        imageVector = MaterialTheme.icons.toolBasic,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -124,7 +120,7 @@ fun ExportActionBar(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Save,
+                        imageVector = MaterialTheme.icons.actionSave,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -161,7 +157,7 @@ fun ExportActionBar(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.FileDownload,
+                        imageVector = MaterialTheme.icons.actionExport,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
@@ -184,7 +180,7 @@ fun ExportActionBar(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Save,
+                    imageVector = MaterialTheme.icons.actionSave,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconSmall)
                 )

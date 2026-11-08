@@ -11,14 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -138,7 +135,7 @@ fun ParameterSlider(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Remove,
+                    imageVector = MaterialTheme.icons.actionRemove,
                     contentDescription = decDesc,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )
@@ -180,7 +177,7 @@ fun ParameterSlider(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = MaterialTheme.icons.actionAdd,
                     contentDescription = incDesc,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )
@@ -233,6 +230,6 @@ fun IntensitySlider(
         value = intensity,
         onValueChange = onIntensityChange,
         modifier = modifier,
-        icon = Icons.Default.Tune
+        icon = MaterialTheme.icons.toolBasic
     )
 }

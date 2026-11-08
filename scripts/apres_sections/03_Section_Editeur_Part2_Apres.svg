@@ -1,0 +1,1074 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3910 980" width="3910" height="980">
+  <defs>
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,600;0,700;1,600&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap');
+      text { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', monospace; }
+      .serif { font-family: 'Playfair Display', Georgia, serif; }
+      .title { font-weight: 700; fill: #FFFFFF; }
+      .subtitle { font-weight: 500; fill: #94A3B8; font-size: 13px; }
+      .section-banner { fill: #161B22; stroke: #E5A93C; stroke-width: 1.5; rx: 16; }
+    </style>
+    <linearGradient id="photoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" /><stop offset="50%" stop-color="#0F172A" /><stop offset="100%" stop-color="#090D16" />
+    </linearGradient>
+    <linearGradient id="warmSunset" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" /><stop offset="40%" stop-color="#D97706" /><stop offset="80%" stop-color="#991B1B" /><stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" /><stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    
+  </defs>
+
+  <!-- Section Canvas Background -->
+  <rect width="3910" height="980" fill="#08090C" />
+
+  <!-- Section Top Header Banner -->
+  <g transform="translate(40, 20)">
+    <rect width="3830" height="54" class="section-banner" />
+    <circle cx="28" cy="27" r="12" fill="#E5A93C" />
+    <path d="M24 27 L27 30 L33 24" stroke="#000000" stroke-width="2" fill="none" stroke-linecap="round" />
+    <text x="50" y="33" class="serif title" font-size="20">02 · Après / Section 3 : Éditeur Pro — Outils Avancés, Presets & Export HD</text>
+    <rect x="3670" y="14" width="180" height="26" rx="6" fill="#10B981" fill-opacity="0.15" stroke="#10B981" stroke-width="1" />
+    <text x="3760" y="31" text-anchor="middle" font-size="11" font-weight="700" fill="#10B981">SECTION APRÈS • VALIDÉ</text>
+  </g>
+
+  
+        <!-- Frame: Éditeur - Outil 4 3-Way -->
+        <g id="Éditeur_-_Outil_4_3-Way" transform="translate(40, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 4 3-Way</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="320" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <!-- 3-Way Color Wheels Panel -->
+  <g transform="translate(16, 460)">
+    <rect width="358" height="300" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 18)">
+      <!-- Wheel 1: Ombres -->
+      <g transform="translate(10, 0)">
+        <text x="45" y="16" text-anchor="middle" class="title" font-size="13">Ombres</text>
+        <circle cx="45" cy="65" r="40" fill="#0D1117" stroke="#30363D" stroke-width="2" />
+        <circle cx="45" cy="65" r="3" fill="#64748B" />
+        <circle cx="35" cy="55" r="6" fill="#38BDF8" stroke="#FFFFFF" stroke-width="1.5" />
+        <text x="45" y="122" text-anchor="middle" class="mono" font-size="11" fill="#38BDF8">Teal 195°</text>
+      </g>
+      <!-- Wheel 2: Tons Moyens -->
+      <g transform="translate(118, 0)">
+        <text x="45" y="16" text-anchor="middle" class="title" font-size="13">Tons Moyens</text>
+        <circle cx="45" cy="65" r="40" fill="#0D1117" stroke="#30363D" stroke-width="2" />
+        <circle cx="45" cy="65" r="3" fill="#64748B" />
+        <circle cx="48" cy="60" r="6" fill="#E5A93C" stroke="#FFFFFF" stroke-width="1.5" />
+        <text x="45" y="122" text-anchor="middle" class="mono" font-size="11" fill="#E5A93C">Warm 42°</text>
+      </g>
+      <!-- Wheel 3: Hautes Lumières -->
+      <g transform="translate(226, 0)">
+        <text x="45" y="16" text-anchor="middle" class="title" font-size="13">Hautes Lum.</text>
+        <circle cx="45" cy="65" r="40" fill="#0D1117" stroke="#30363D" stroke-width="2" />
+        <circle cx="45" cy="65" r="3" fill="#64748B" />
+        <circle cx="55" cy="50" r="6" fill="#F59E0B" stroke="#FFFFFF" stroke-width="1.5" />
+        <text x="45" y="122" text-anchor="middle" class="mono" font-size="11" fill="#F59E0B">Gold 35°</text>
+      </g>
+      <!-- Master Balance Slider -->
+      <g transform="translate(10, 160)">
+        <text x="0" y="16" class="title" font-size="13">Balance globale</text>
+        <text x="306" y="16" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">+10</text>
+        <rect x="0" y="26" width="306" height="6" rx="3" fill="#21262D" />
+        <rect x="153" y="26" width="30" height="6" rx="3" fill="#E5A93C" />
+        <circle cx="183" cy="29" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+      </g>
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><path d="M11 20 Q19 8 27 14" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Courbes</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="15" cy="14" r="5" fill="#94A3B8" fill-opacity="0.4" /><circle cx="23" cy="14" r="5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">TSL</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7" fill="none" stroke="#E5A93C" stroke-width="2" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">3-Way</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+        <g transform="translate(231, 0)">
+          
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Détail</text>
+          
+        </g>
+        
+        <g transform="translate(304, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#94A3B8" /><circle cx="23" cy="10" r="1.5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Effets</text>
+          
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Outil 5 Détail -->
+        <g id="Éditeur_-_Outil_5_Détail" transform="translate(470, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 5 Détail</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="350" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <g transform="translate(16, 490)">
+    <rect width="358" height="270" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 20)">
+      <text x="0" y="16" class="title" font-size="13">Netteté / Piqué</text>
+      <text x="326" y="16" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">40</text>
+      <rect x="0" y="28" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="28" width="130" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="130" cy="31" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+
+      <text x="0" y="66" class="title" font-size="13">Rayon du contour</text>
+      <text x="326" y="66" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">1.0 px</text>
+      <rect x="0" y="78" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="78" width="108" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="108" cy="81" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+
+      <text x="0" y="116" class="title" font-size="13">Réduction de bruit luminance</text>
+      <text x="326" y="116" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">25</text>
+      <rect x="0" y="128" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="128" width="81" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="81" cy="131" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+
+      <text x="0" y="166" class="title" font-size="13">Réduction de bruit chromatique</text>
+      <text x="326" y="166" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">30</text>
+      <rect x="0" y="178" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="178" width="98" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="98" cy="181" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="15" cy="14" r="5" fill="#94A3B8" fill-opacity="0.4" /><circle cx="23" cy="14" r="5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">TSL</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7" fill="none" stroke="#94A3B8" stroke-width="2" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">3-Way</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#E5A93C" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">Détail</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+        <g transform="translate(231, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#94A3B8" /><circle cx="23" cy="10" r="1.5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Effets</text>
+          
+        </g>
+        
+        <g transform="translate(304, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="8" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="3 3" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Calibr.</text>
+          
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Outil 6 Effets -->
+        <g id="Éditeur_-_Outil_6_Effets" transform="translate(900, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 6 Effets</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="350" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <g transform="translate(16, 490)">
+    <rect width="358" height="270" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 20)">
+      <text x="0" y="16" class="title" font-size="13">Vignettage optique</text>
+      <text x="326" y="16" text-anchor="end" class="mono" font-size="12" fill="#38BDF8">-20</text>
+      <rect x="0" y="28" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="110" y="28" width="53" height="6" rx="3" fill="#38BDF8" />
+      <circle cx="110" cy="31" r="10" fill="#FFFFFF" stroke="#38BDF8" stroke-width="3" />
+
+      <text x="0" y="66" class="title" font-size="13">Grain argentique</text>
+      <text x="326" y="66" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">35</text>
+      <rect x="0" y="78" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="0" y="78" width="114" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="114" cy="81" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+
+      <text x="0" y="116" class="title" font-size="13">Correction du voile (Dehaze)</text>
+      <text x="326" y="116" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">+15</text>
+      <rect x="0" y="128" width="326" height="6" rx="3" fill="#21262D" />
+      <rect x="163" y="128" width="40" height="6" rx="3" fill="#E5A93C" />
+      <circle cx="203" cy="131" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7" fill="none" stroke="#94A3B8" stroke-width="2" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">3-Way</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Détail</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#E5A93C" /><circle cx="23" cy="10" r="1.5" fill="#E5A93C" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">Effets</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+        <g transform="translate(231, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="8" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="3 3" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Calibr.</text>
+          
+        </g>
+        
+        <g transform="translate(304, 0)">
+          
+          <g transform="translate(15, 4)"><rect x="10" y="8" width="18" height="12" rx="2" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Géom.</text>
+          
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Outil 7 Calibration -->
+        <g id="Éditeur_-_Outil_7_Calibration" transform="translate(1330, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 7 Calibration</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="350" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <g transform="translate(16, 490)">
+    <rect width="358" height="270" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 20)">
+      <text x="0" y="16" class="title" font-size="13">Primaire Rouge (Teinte)</text>
+      <text x="326" y="16" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">+10</text>
+      <rect x="0" y="28" width="326" height="6" rx="3" fill="#21262D" /><rect x="163" y="28" width="30" height="6" rx="3" fill="#EF4444" /><circle cx="193" cy="31" r="10" fill="#FFFFFF" stroke="#EF4444" stroke-width="3" />
+
+      <text x="0" y="66" class="title" font-size="13">Primaire Verte (Teinte)</text>
+      <text x="326" y="66" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">-5</text>
+      <rect x="0" y="78" width="326" height="6" rx="3" fill="#21262D" /><rect x="145" y="78" width="18" height="6" rx="3" fill="#10B981" /><circle cx="145" cy="81" r="10" fill="#FFFFFF" stroke="#10B981" stroke-width="3" />
+
+      <text x="0" y="116" class="title" font-size="13">Primaire Bleue (Saturation)</text>
+      <text x="326" y="116" text-anchor="end" class="mono" font-size="12" fill="#E5A93C">+25</text>
+      <rect x="0" y="128" width="326" height="6" rx="3" fill="#21262D" /><rect x="163" y="128" width="60" height="6" rx="3" fill="#38BDF8" /><circle cx="223" cy="131" r="10" fill="#FFFFFF" stroke="#38BDF8" stroke-width="3" />
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Détail</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#94A3B8" /><circle cx="23" cy="10" r="1.5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Effets</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="8" stroke="#E5A93C" stroke-width="1.5" fill="none" stroke-dasharray="3 3" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">Calibr.</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+        <g transform="translate(231, 0)">
+          
+          <g transform="translate(15, 4)"><rect x="10" y="8" width="18" height="12" rx="2" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Géom.</text>
+          
+        </g>
+        
+        <g transform="translate(304, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7.5" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Optique</text>
+          
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Outil 8 Géométrie -->
+        <g id="Éditeur_-_Outil_8_Géométrie" transform="translate(1760, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 8 Géométrie (FE-009)</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="350" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <g transform="translate(16, 490)">
+    <rect width="358" height="270" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 20)">
+      <text x="0" y="16" class="title" font-size="13">Perspective verticale</text>
+      <text x="326" y="16" text-anchor="end" class="mono" font-size="12" fill="#10B981">-8°</text>
+      <rect x="0" y="28" width="326" height="6" rx="3" fill="#21262D" /><rect x="135" y="28" width="28" height="6" rx="3" fill="#10B981" /><circle cx="135" cy="31" r="10" fill="#FFFFFF" stroke="#10B981" stroke-width="3" />
+
+      <text x="0" y="66" class="title" font-size="13">Perspective horizontale</text>
+      <text x="326" y="66" text-anchor="end" class="mono" font-size="12" fill="#10B981">0°</text>
+      <rect x="0" y="78" width="326" height="6" rx="3" fill="#21262D" /><circle cx="163" cy="81" r="10" fill="#FFFFFF" stroke="#10B981" stroke-width="3" />
+
+      <text x="0" y="116" class="title" font-size="13">Rotation géométrique</text>
+      <text x="326" y="116" text-anchor="end" class="mono" font-size="12" fill="#10B981">+2.5°</text>
+      <rect x="0" y="128" width="326" height="6" rx="3" fill="#21262D" /><rect x="163" y="128" width="25" height="6" rx="3" fill="#10B981" /><circle cx="188" cy="131" r="10" fill="#FFFFFF" stroke="#10B981" stroke-width="3" />
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Détail</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#94A3B8" /><circle cx="23" cy="10" r="1.5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Effets</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="8" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="3 3" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Calibr.</text>
+          
+        </g>
+        
+        <g transform="translate(231, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><rect x="10" y="8" width="18" height="12" rx="2" fill="none" stroke="#E5A93C" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">Géom.</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+        <g transform="translate(304, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7.5" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Optique</text>
+          
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Outil 9 Optique -->
+        <g id="Éditeur_-_Outil_9_Optique" transform="translate(2190, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Outil 9 Optique (FE-009)</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="350" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <g transform="translate(16, 490)">
+    <rect width="358" height="270" rx="20" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(16, 20)">
+      <!-- Toggle profile -->
+      <g transform="translate(0, 0)">
+        <rect width="326" height="56" rx="14" fill="#0D1117" stroke="#262C36" />
+        <text x="16" y="24" class="title" font-size="13">Correction du profil d'objectif</text>
+        <text x="16" y="42" class="subtitle" font-size="11">Sony FE 24-70mm F2.8 GM II détecté</text>
+        <rect x="265" y="14" width="46" height="28" rx="14" fill="#10B981" />
+        <circle cx="297" cy="28" r="10" fill="#000000" />
+      </g>
+      <!-- Distortion -->
+      <g transform="translate(0, 75)">
+        <text x="0" y="16" class="title" font-size="13">Correction de distorsion manuelle</text>
+        <text x="326" y="16" text-anchor="end" class="mono" font-size="12" fill="#10B981">+5</text>
+        <rect x="0" y="28" width="326" height="6" rx="3" fill="#21262D" /><rect x="163" y="28" width="20" height="6" rx="3" fill="#10B981" /><circle cx="183" cy="31" r="10" fill="#FFFFFF" stroke="#10B981" stroke-width="3" />
+      </g>
+      <!-- Chromatic Aberration -->
+      <g transform="translate(0, 135)">
+        <rect width="326" height="56" rx="14" fill="#0D1117" stroke="#262C36" />
+        <text x="16" y="24" class="title" font-size="13">Supprimer l'aberration chromatique</text>
+        <text x="16" y="42" class="subtitle" font-size="11">Suppression des franges pourpres/vertes</text>
+        <rect x="265" y="14" width="46" height="28" rx="14" fill="#10B981" />
+        <circle cx="297" cy="28" r="10" fill="#000000" />
+      </g>
+    </g>
+  </g>
+
+    <!-- Editor Single Toolbar (Fixed FE-002, FE-009, FE-023) -->
+    <g id="editorToolbar" transform="translate(0, 772)">
+      <rect width="390" height="72" fill="#12161E" stroke="#21262D" stroke-width="1" />
+      
+        <g transform="translate(12, 0)">
+          
+          <g transform="translate(15, 4)"><polygon points="19,7 26,20 12,20" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Détail</text>
+          
+        </g>
+        
+        <g transform="translate(85, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="17" cy="13" r="3" fill="#94A3B8" /><circle cx="23" cy="10" r="1.5" fill="#94A3B8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Effets</text>
+          
+        </g>
+        
+        <g transform="translate(158, 0)">
+          
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="8" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="3 3" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Calibr.</text>
+          
+        </g>
+        
+        <g transform="translate(231, 0)">
+          
+          <g transform="translate(15, 4)"><rect x="10" y="8" width="18" height="12" rx="2" fill="none" stroke="#94A3B8" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="#94A3B8">Géom.</text>
+          
+        </g>
+        
+        <g transform="translate(304, 0)">
+          <rect x="0" y="2" width="68" height="48" rx="12" fill="#E5A93C" fill-opacity="0.15" stroke="#E5A93C" stroke-width="1" />
+          <g transform="translate(15, 4)"><circle cx="19" cy="14" r="7.5" fill="none" stroke="#E5A93C" stroke-width="1.8" /></g>
+          <text x="34" y="38" text-anchor="middle" font-size="12" font-weight="700" fill="#E5A93C">Optique</text>
+          <circle cx="34" cy="48" r="2.5" fill="#E5A93C" />
+        </g>
+        
+    </g>
+    
+
+        </g>
+        
+        <!-- Frame: Éditeur - Presets Modal -->
+        <g id="Éditeur_-_Presets_Modal" transform="translate(2620, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Presets Modal</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+
+  <!-- Top Action Bar -->
+  <g transform="translate(16, 74)">
+    <rect width="358" height="44" rx="14" fill="#161B22" stroke="#262C36" />
+    <g transform="translate(8, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M12 18 A6 6 0 1 1 18 24 M10 20 L12 18 L16 18" stroke="#E5A93C" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(48, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <path d="M20 18 A6 6 0 1 0 14 24 M22 20 L20 18 L16 18" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" />
+    </g>
+    <g transform="translate(135, 6)">
+      <rect width="88" height="32" rx="10" fill="#21262D" stroke="#30363D" />
+      <text x="44" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0">Comparer</text>
+    </g>
+    <g transform="translate(268, 6)">
+      <rect width="32" height="32" rx="8" fill="#21262D" />
+      <circle cx="16" cy="11" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="16" r="1.5" fill="#CBD5E1" />
+      <circle cx="16" cy="21" r="1.5" fill="#CBD5E1" />
+    </g>
+    <g transform="translate(306, 6)">
+      <rect width="44" height="32" rx="10" fill="#E5A93C" />
+      <path d="M22 10 L22 22 M16 16 L22 10 L28 16" stroke="#000000" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <g transform="translate(16, 126)">
+    <rect width="358" height="634" rx="20" fill="url(#warmSunset)" stroke="#30363D" />
+  </g>
+  <!-- Modal Overlay Backdrop -->
+  <rect width="390" height="844" fill="#000000" fill-opacity="0.65" />
+  <!-- Bottom Sheet Presets -->
+  <g transform="translate(0, 320)">
+    <rect width="390" height="524" rx="28" fill="#161B22" stroke="#30363D" />
+    <rect x="175" y="12" width="40" height="4" rx="2" fill="#4B5563" />
+    <text x="24" y="45" class="serif title" font-size="20">Bibliothèque de Presets</text>
+    <text x="366" y="45" text-anchor="end" class="subtitle" font-size="13" fill="#E5A93C">+ Créer</text>
+    <!-- Preset Grid -->
+    <g transform="translate(24, 70)">
+      <!-- Card 1 -->
+      <g transform="translate(0, 0)">
+        <rect width="162" height="150" rx="16" fill="#21262D" stroke="#E5A93C" stroke-width="1.5" />
+        <rect x="6" y="6" width="150" height="90" rx="12" fill="url(#warmSunset)" />
+        <text x="12" y="118" class="title" font-size="13">Cinéma Sunset</text>
+        <text x="12" y="136" class="subtitle" font-size="11">Teal &amp; Orange vif</text>
+      </g>
+      <!-- Card 2 -->
+      <g transform="translate(180, 0)">
+        <rect width="162" height="150" rx="16" fill="#21262D" stroke="#30363D" />
+        <rect x="6" y="6" width="150" height="90" rx="12" fill="url(#photoGrad)" />
+        <text x="12" y="118" class="title" font-size="13">Moody Noir 400</text>
+        <text x="12" y="136" class="subtitle" font-size="11">Contraste argentique</text>
+      </g>
+      <!-- Card 3 -->
+      <g transform="translate(0, 170)">
+        <rect width="162" height="150" rx="16" fill="#21262D" stroke="#30363D" />
+        <rect x="6" y="6" width="150" height="90" rx="12" fill="#1E293B" />
+        <text x="12" y="118" class="title" font-size="13">Pastel Wes</text>
+        <text x="12" y="136" class="subtitle" font-size="11">Tons roses &amp; crème</text>
+      </g>
+      <!-- Card 4 -->
+      <g transform="translate(180, 170)">
+        <rect width="162" height="150" rx="16" fill="#21262D" stroke="#30363D" />
+        <rect x="6" y="6" width="150" height="90" rx="12" fill="#0F172A" />
+        <text x="12" y="118" class="title" font-size="13">Cyan Pro Studio</text>
+        <text x="12" y="136" class="subtitle" font-size="11">Étalonnage clinique</text>
+      </g>
+    </g>
+  </g>
+
+        </g>
+        
+        <!-- Frame: Éditeur - Dialogue Export HD -->
+        <g id="Éditeur_-_Dialogue_Export_HD" transform="translate(3050, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Dialogue Export HD (FE-013)</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <rect width="390" height="844" fill="#000000" fill-opacity="0.75" />
+  <!-- Export Modal Dialog (FE-013) -->
+  <g transform="translate(24, 170)">
+    <rect width="342" height="504" rx="24" fill="#161B22" stroke="#E5A93C" stroke-width="1.5" />
+    <g transform="translate(24, 28)">
+      <text x="0" y="20" class="serif title" font-size="22">Exporter la Photo</text>
+      <text x="0" y="42" class="subtitle" font-size="13">Rendu master haute résolution sans perte</text>
+
+      <!-- Format selector -->
+      <g transform="translate(0, 68)">
+        <text x="0" y="14" class="subtitle" font-size="12">Format de fichier</text>
+        <g transform="translate(0, 24)">
+          <rect x="0" y="0" width="140" height="42" rx="12" fill="#E5A93C" />
+          <text x="70" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#000000">JPEG (Chic)</text>
+          <rect x="150" y="0" width="144" height="42" rx="12" fill="#21262D" stroke="#30363D" />
+          <text x="222" y="26" text-anchor="middle" font-size="13" font-weight="600" fill="#CBD5E1">PNG (Lossless)</text>
+        </g>
+      </g>
+
+      <!-- Quality Slider -->
+      <g transform="translate(0, 160)">
+        <text x="0" y="16" class="title" font-size="13">Qualité de compression</text>
+        <text x="294" y="16" text-anchor="end" class="mono" font-size="13" font-weight="700" fill="#E5A93C">95 %</text>
+        <rect x="0" y="28" width="294" height="6" rx="3" fill="#21262D" />
+        <rect x="0" y="28" width="279" height="6" rx="3" fill="#E5A93C" />
+        <circle cx="279" cy="31" r="10" fill="#FFFFFF" stroke="#E5A93C" stroke-width="3" />
+      </g>
+
+      <!-- Resolution & Weight Info Card -->
+      <g transform="translate(0, 226)">
+        <rect width="294" height="74" rx="14" fill="#0D1117" stroke="#262C36" />
+        <g transform="translate(16, 20)">
+          <text x="0" y="14" class="subtitle" font-size="12">Dimensions</text>
+          <text x="0" y="36" class="mono title" font-size="14">3840 × 2160 (4K)</text>
+
+          <text x="180" y="14" class="subtitle" font-size="12">Poids estimé</text>
+          <text x="180" y="36" class="mono" font-size="14" font-weight="700" fill="#10B981">~ 4.2 Mo</text>
+        </g>
+      </g>
+
+      <!-- CTA Export Buttons -->
+      <g transform="translate(0, 330)">
+        <rect width="294" height="54" rx="16" fill="url(#goldAccent)" />
+        <text x="147" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#000000">Exporter maintenant (SAF)</text>
+
+        <rect y="64" width="294" height="46" rx="14" fill="#21262D" stroke="#30363D" />
+        <text x="147" y="93" text-anchor="middle" font-size="14" font-weight="600" fill="#94A3B8">Annuler</text>
+      </g>
+    </g>
+  </g>
+
+        </g>
+        
+        <!-- Frame: Éditeur - Confirmation Quitter -->
+        <g id="Éditeur_-_Confirmation_Quitter" transform="translate(3480, 90)">
+          <!-- Screen Border Container -->
+          <rect width="390" height="844" rx="20" fill="none" stroke="#30363D" stroke-width="2" />
+          
+  
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0D0F12" />
+
+  <!-- Status Bar (34px) -->
+  <g id="statusBar">
+    <text x="32" y="23" font-size="14" font-weight="600" fill="#FFFFFF">09:41</text>
+    <g transform="translate(322, 12)">
+      <path d="M0 12 A6 6 0 0 1 12 12" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <path d="M2 9 A4 4 0 0 1 10 9" stroke="#FFFFFF" stroke-width="1.5" fill="none" />
+      <circle cx="6" cy="13" r="1" fill="#FFFFFF" />
+      <rect x="20" y="2" width="22" height="12" rx="3" stroke="#FFFFFF" stroke-width="1" fill="none" />
+      <rect x="22" y="4" width="14" height="8" rx="1.5" fill="#FFFFFF" />
+      <path d="M43 6 L44 6 L44 10 L43 10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- Mode Tag -->
+  <g transform="translate(16, 40)">
+    <rect width="358" height="26" rx="7" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-width="1" />
+    <circle cx="14" cy="13" r="4" fill="#10B981" />
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#10B981">[APRÈS] Éditeur / Quitter sans enregistrer</text>
+    <text x="345" y="17" text-anchor="end" class="mono" font-size="10" fill="#10B981">CHIC &amp; MODULAIRE</text>
+  </g>
+
+  <rect width="390" height="844" fill="#000000" fill-opacity="0.75" />
+  <g transform="translate(24, 260)">
+    <rect width="342" height="324" rx="24" fill="#161B22" stroke="#30363D" />
+    <g transform="translate(24, 28)">
+      <circle cx="24" cy="24" r="24" fill="#EF4444" fill-opacity="0.15" />
+      <text x="24" y="32" text-anchor="middle" font-size="20" fill="#EF4444">!</text>
+      <g transform="translate(60, 10)">
+        <text x="0" y="18" class="title" font-size="17">Quitter l'éditeur ?</text>
+        <text x="0" y="36" class="subtitle" font-size="12">Vos modifications non sauvegardées</text>
+        <text x="0" y="52" class="subtitle" font-size="12">seront conservées dans la session (FE-015).</text>
+      </g>
+      <g transform="translate(0, 100)">
+        <rect width="294" height="50" rx="14" fill="url(#goldAccent)" />
+        <text x="147" y="31" text-anchor="middle" font-size="14" font-weight="700" fill="#000000">Enregistrer &amp; Quitter</text>
+
+        <rect y="60" width="294" height="46" rx="14" fill="#21262D" stroke="#30363D" />
+        <text x="147" y="89" text-anchor="middle" font-size="14" font-weight="600" fill="#CBD5E1">Continuer l'édition</text>
+
+        <rect y="116" width="294" height="42" rx="14" fill="none" />
+        <text x="147" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#EF4444">Ignorer et fermer</text>
+      </g>
+    </g>
+  </g>
+
+        </g>
+        
+</svg>

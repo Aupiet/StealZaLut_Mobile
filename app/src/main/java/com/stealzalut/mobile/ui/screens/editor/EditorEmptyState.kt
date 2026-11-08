@@ -1,22 +1,27 @@
 package com.stealzalut.mobile.ui.screens.editor
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +31,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 
+/**
+ * Editorial "Chambre Noire" Editor Empty State matching Figma Section 2 Frame 1.
+ */
 @Composable
 fun EditorEmptyState(
     onSelectImage: () -> Unit,
@@ -40,46 +49,134 @@ fun EditorEmptyState(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppDimens.SpacingLarge)
-                .clickable { onSelectImage() },
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                .padding(AppDimens.SpacingLarge),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusEditorSheet),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(AppDimens.SpacingExtraLarge),
+                    .padding(AppDimens.SpacingHuge),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
+                // Large Signature Camera Badge with subtle golden glow
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(AppDimens.EmptyStateIconSize)
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(AppDimens.BorderMedium, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                    modifier = Modifier.size(AppDimens.IconJumbo + AppDimens.SpacingLarge)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
+                            imageVector = MaterialTheme.icons.actionCamera,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(AppDimens.CurtainHandleSize)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(AppDimens.IconLarge)
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
+
                 Text(
-                    text = stringResource(R.string.editor_select_image),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.editor_empty_headline),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
                 )
+
                 Text(
-                    text = stringResource(R.string.editor_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(R.string.editor_empty_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+
+                // Lab Advice Card matching Figma
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(AppDimens.SpacingNormal),
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                        ) {
+                            Icon(
+                                imageVector = MaterialTheme.icons.actionPalette,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(AppDimens.IconSmall)
+                            )
+                            Text(
+                                text = stringResource(R.string.editor_empty_advice_title),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.editor_empty_advice_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+
+                // Primary Amber Action Button
+                Button(
+                    onClick = onSelectImage,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AppDimens.ButtonHeightStandard),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.actionCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconNormal)
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                    Text(
+                        text = stringResource(R.string.editor_empty_btn),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+
+                // Supported Formats Pill
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ) {
+                    Text(
+                        text = "RAW • DNG • JPEG • PNG", // GUARD_ALLOW
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall)
+                    )
+                }
             }
         }
     }

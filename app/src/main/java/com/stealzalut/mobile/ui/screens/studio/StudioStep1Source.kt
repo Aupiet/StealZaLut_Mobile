@@ -2,6 +2,9 @@ package com.stealzalut.mobile.ui.screens.studio
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,13 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.stealzalut.mobile.ui.theme.icons
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,55 +42,122 @@ fun StudioStep1Source(
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) onImageSelected(uri)
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
-        SectionTitleBanner(
-            title = stringResource(R.string.wizard_step_1_title),
-            subtitle = stringResource(R.string.wizard_step_1_subtitle)
-        )
+
 
         ImagePickerCard(
-            title = stringResource(R.string.wizard_step_1_title),
-            subtitle = stringResource(R.string.wizard_step_1_empty),
+            title = if (sourceBitmap != null) stringResource(R.string.wizard_step_1_ready) else stringResource(R.string.wizard_step_1_title),
+            subtitle = if (sourceBitmap != null) stringResource(R.string.wizard_step_1_badge) else stringResource(R.string.wizard_step_1_empty),
             badgeText = stringResource(R.string.wizard_step_1_badge),
             bitmap = sourceBitmap,
             onImageSelected = onImageSelected
         )
 
-        Surface(
-            shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            border = BorderStroke(
-                AppDimens.BorderThin,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        if (sourceBitmap != null) {
             Row(
-                modifier = Modifier.padding(AppDimens.SpacingNormal),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "ISO 100", // GUARD_ALLOW
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "f/1.8", // GUARD_ALLOW
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "1/250s", // GUARD_ALLOW
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            OutlinedButton(
+                onClick = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
             ) {
                 Icon(
-                    imageVector = Icons.Default.AutoAwesome,
+                    imageVector = MaterialTheme.icons.actionRefresh,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(AppDimens.IconSmall)
+                    modifier = Modifier.size(AppDimens.IconNormal)
                 )
-                Column {
-                    Text(
-                        text = stringResource(R.string.studio_quick_tip),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.wizard_step_1_change),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        } else {
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
+                border = BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(AppDimens.SpacingNormal),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.toolEffects,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconSmall)
                     )
-                    Text(
-                        text = stringResource(R.string.studio_quick_tip_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.studio_quick_tip),
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.studio_quick_tip_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -107,11 +175,13 @@ fun StudioStep1Source(
             Text(
                 text = stringResource(R.string.wizard_step_1_btn_next),
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                imageVector = MaterialTheme.icons.statusArrowForward,
                 contentDescription = null,
                 modifier = Modifier.size(AppDimens.IconNormal)
             )

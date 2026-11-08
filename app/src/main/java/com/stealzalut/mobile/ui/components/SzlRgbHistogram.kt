@@ -202,6 +202,29 @@ fun SzlRgbHistogram(
                     drawChannel(data.redBins, ColorCardReference.HistogramRed)
                     drawChannel(data.greenBins, ColorCardReference.HistogramGreen)
                     drawChannel(data.blueBins, ColorCardReference.HistogramBlue)
+
+                    // Clipping Alerts (FE-017)
+                    val hasShadowClipping = (data.redBins.firstOrNull() ?: 0f) > 0.85f ||
+                            (data.greenBins.firstOrNull() ?: 0f) > 0.85f ||
+                            (data.blueBins.firstOrNull() ?: 0f) > 0.85f
+                    val hasHighlightClipping = (data.redBins.lastOrNull() ?: 0f) > 0.85f ||
+                            (data.greenBins.lastOrNull() ?: 0f) > 0.85f ||
+                            (data.blueBins.lastOrNull() ?: 0f) > 0.85f
+
+                    if (hasShadowClipping) {
+                        drawCircle(
+                            color = ColorCardReference.HistogramBlue,
+                            radius = AppDimens.SpacingMicro.toPx(),
+                            center = Offset(AppDimens.SpacingSmall.toPx(), AppDimens.SpacingSmall.toPx())
+                        )
+                    }
+                    if (hasHighlightClipping) {
+                        drawCircle(
+                            color = ColorCardReference.HistogramRed,
+                            radius = AppDimens.SpacingMicro.toPx(),
+                            center = Offset(width - AppDimens.SpacingSmall.toPx(), AppDimens.SpacingSmall.toPx())
+                        )
+                    }
                 }
             }
         }

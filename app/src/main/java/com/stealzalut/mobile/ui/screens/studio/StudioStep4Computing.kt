@@ -6,188 +6,157 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
-import com.stealzalut.mobile.ui.theme.ColorCardReference
+import com.stealzalut.mobile.ui.theme.LocalFontSpec
+import kotlin.math.roundToInt
 
 /**
- * High-end Chromatic AI Processing Screen (Studio Step 4).
- * Features:
- * - Fluid infinite chromatic aura rotation representing multi-dimensional LUT matrix synthesis.
- * - Stage indicator with localized description and acceleration badge.
+ * Step 4: Studio Computation Progress (Figma Node 12:329).
+ * Strictly conforms to Figma [APRÈS] Studio / Étape 4 Calcul:
+ * - Card with centered circular progress ring
+ * - Centered percentage display in JetBrains Mono Bold (32sp)
+ * - Stage title (e.g. "Interpolation Tetrahedral LUT 33x33x33")
+ * - Stage subtitle (e.g. "Étape 3 sur 4 : Conservation des luminances")
+ * - Fine amber linear progress bar
  */
 @Composable
 fun StudioStep4Computing(
     stageIndex: Int,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "computeTransition") // GUARD_ALLOW
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation" // GUARD_ALLOW
-    )
+    val monoFont = LocalFontSpec.current.mono
+    val progressPercent = when (stageIndex) {
+        1 -> 25
+        2 -> 50
+        3 -> 74
+        else -> 92
+    }
+    val progressFloat = progressPercent / 100f
 
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1.05f,
+    val infiniteTransition = rememberInfiniteTransition(label = "computeTransition") // GUARD_ALLOW
+    val animatedProgress by infiniteTransition.animateFloat(
+        initialValue = progressFloat - 0.05f,
+        targetValue = progressFloat + 0.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "pulse" // GUARD_ALLOW
-    )
-
-    val chromaticSpectrum = listOf(
-        ColorCardReference.HslRed,
-        ColorCardReference.HslYellow,
-        ColorCardReference.HslGreen,
-        ColorCardReference.HslAqua,
-        ColorCardReference.HslBlue,
-        ColorCardReference.HslMagenta,
-        ColorCardReference.HslRed
+        label = "progressPulse" // GUARD_ALLOW
     )
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = CardDefaults.outlinedCardBorder()
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+        ),
+        border = BorderStroke(
+            AppDimens.BorderThin,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppDimens.SpacingMassive),
+                .padding(vertical = AppDimens.SpacingHuge, horizontal = AppDimens.SpacingLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Elegant Chromatic Pulsing Aura
+            // Large Circular Progress Ring with Center Percentage (Figma node 12:351)
             Box(
-                modifier = Modifier.size(AppDimens.ComputeLoaderSize),
+                modifier = Modifier.size(140.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.size(AppDimens.ComputeLoaderSize)) {
-                    val radius = (size.width / 2f) * pulseScale
-                    val center = Offset(size.width / 2f, size.height / 2f)
-
-                    drawCircle(
-                        brush = Brush.sweepGradient(
-                            colors = chromaticSpectrum,
-                            center = center
-                        ),
-                        radius = radius,
-                        center = center,
-                        style = Stroke(width = AppDimens.BorderThick.toPx())
-                    )
-                }
-
+                // Background Track
                 CircularProgressIndicator(
-                    modifier = Modifier.size(AppDimens.AvatarSize),
-                    strokeWidth = AppDimens.BorderMedium,
+                    progress = { 1.0f },
+                    modifier = Modifier.size(140.dp),
+                    strokeWidth = 6.dp,
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                )
+                // Active Amber Arc
+                CircularProgressIndicator(
+                    progress = { animatedProgress.coerceIn(0.1f, 0.98f) },
+                    modifier = Modifier.size(140.dp),
+                    strokeWidth = 6.dp,
                     color = MaterialTheme.colorScheme.primary
                 )
-            }
-
-            Spacer(modifier = Modifier.height(AppDimens.SpacingExtraLarge))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconSmall),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                // Center Percentage in JetBrains Mono Bold (32sp)
                 Text(
-                    text = stringResource(R.string.wizard_step_4_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "$progressPercent %",
+                    style = MaterialTheme.typography.headlineLarge.copy(fontFamily = monoFont),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+            Spacer(modifier = Modifier.height(AppDimens.SpacingLarge))
 
-            val stageText = when (stageIndex) {
-                1 -> stringResource(R.string.wizard_step_4_stage_1)
-                2 -> stringResource(R.string.wizard_step_4_stage_2)
-                else -> stringResource(R.string.wizard_step_4_stage_3)
-            }
-
+            // Stage Title
             Text(
-                text = stageText,
-                style = MaterialTheme.typography.bodyMedium,
+                text = stringResource(R.string.wizard_step_4_title_stage),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(AppDimens.SpacingLarge))
+            Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
 
-            Surface(
-                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
-                color = MaterialTheme.colorScheme.tertiaryContainer,
-                border = androidx.compose.foundation.BorderStroke(
-                    AppDimens.BorderThin,
-                    MaterialTheme.colorScheme.tertiary.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Speed,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconSmall),
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = stringResource(R.string.wizard_step_4_tech_badge),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
+            // Stage Subtitle
+            val stageSubtitle = when (stageIndex) {
+                1 -> stringResource(R.string.wizard_step_4_stage_1)
+                2 -> stringResource(R.string.wizard_step_4_stage_2)
+                else -> stringResource(R.string.wizard_step_4_stage_3)
             }
+            Text(
+                text = stageSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(AppDimens.SpacingMedium))
+
+            // Horizontal Linear Progress Bar
+            LinearProgressIndicator(
+                progress = { animatedProgress.coerceIn(0.1f, 0.98f) },
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(AppDimens.EditorSliderTrackHeight)
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusPill)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
         }
     }
 }

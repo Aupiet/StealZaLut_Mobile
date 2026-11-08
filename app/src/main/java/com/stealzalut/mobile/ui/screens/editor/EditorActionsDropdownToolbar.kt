@@ -3,20 +3,12 @@ package com.stealzalut.mobile.ui.screens.editor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material.icons.filled.Collections
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.ui.theme.icons
 
 /**
  * Vertical dropdown actions toolbar located in the top-left of StandaloneEditorScreen.
@@ -36,7 +29,7 @@ import com.stealzalut.mobile.core.AppDimens
  * - Auto-Edit (AI)
  * - Presets & LUTs Library
  * - Save Preset
- * - Export HD Photo
+ * - Export HD Photo (modal options FE-013)
  * - Export .CUBE LUT
  * - Reset All adjustments
  */
@@ -53,6 +46,7 @@ fun EditorActionsDropdownToolbar(
     onOpenPresets: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    val icons = MaterialTheme.icons
 
     Box(modifier = modifier) {
         IconButton(
@@ -67,7 +61,7 @@ fun EditorActionsDropdownToolbar(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Default.Menu,
+                    imageVector = icons.actionMenu,
                     contentDescription = stringResource(R.string.editor_actions_menu),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(AppDimens.IconSmall)
@@ -91,7 +85,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.AutoFixHigh,
+                        imageVector = icons.actionAutoEdit,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(AppDimens.IconSmall)
@@ -114,7 +108,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Collections,
+                        imageVector = icons.actionPalette,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(AppDimens.IconSmall)
@@ -139,7 +133,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Save,
+                        imageVector = icons.actionSave,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(AppDimens.IconSmall)
@@ -153,7 +147,7 @@ fun EditorActionsDropdownToolbar(
 
             HorizontalDivider()
 
-            // 2. Exporter Photo HD
+            // 4. Exporter Photo HD
             DropdownMenuItem(
                 text = {
                     Text(
@@ -164,7 +158,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.FileDownload,
+                        imageVector = icons.actionExport,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(AppDimens.IconSmall)
@@ -177,7 +171,7 @@ fun EditorActionsDropdownToolbar(
                 }
             )
 
-            // 3. Exporter .CUBE LUT
+            // 5. Partager / Exporter .CUBE LUT
             DropdownMenuItem(
                 text = {
                     Text(
@@ -188,7 +182,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Tune,
+                        imageVector = icons.actionShare,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(AppDimens.IconSmall)
@@ -203,7 +197,7 @@ fun EditorActionsDropdownToolbar(
 
             HorizontalDivider()
 
-            // 4. Réinitialiser tout
+            // 6. Réinitialiser tout
             DropdownMenuItem(
                 text = {
                     Text(
@@ -215,7 +209,7 @@ fun EditorActionsDropdownToolbar(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.RestartAlt,
+                        imageVector = icons.actionReset,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(AppDimens.IconSmall)

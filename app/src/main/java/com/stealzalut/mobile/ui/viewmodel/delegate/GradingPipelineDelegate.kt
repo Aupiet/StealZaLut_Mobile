@@ -147,7 +147,7 @@ class GradingPipelineDelegate(
         stateFlow.update {
             it.copy(
                 selectedTheme = preset,
-                styleBSourceMode = 1,
+                styleBSourceMode = 0,
                 customReferencePath = null,
                 customReferenceBitmap = null,
                 customReferenceUri = null,
@@ -187,7 +187,7 @@ class GradingPipelineDelegate(
                     }
                     stateFlow.update {
                         it.copy(
-                            styleBSourceMode = 0,
+                            styleBSourceMode = 1,
                             customReferenceUri = uri,
                             customReferencePath = file.absolutePath,
                             customReferenceBitmap = thumbnail,
@@ -630,9 +630,29 @@ class GradingPipelineDelegate(
 
         return scope.launch {
             try {
+                // Verify source file integrity BEFORE writing to SAF document.
+                // Reading sourceFile directly from local app cache avoids Android SAF SecurityException
+                // (ACTION_CREATE_DOCUMENT provides WRITE-ONLY permission, openInputStream fails on destinationUri).
+                val verifyResult = verifySourceDocument(sourceFile, expectedBytes, pending.exportType)
+                if (verifyResult.isFailure) {
+                    cleanupEmptyUri(destinationUri)
+                    val errorDetail = verifyResult.exceptionOrNull()?.localizedMessage ?: "Vérification document échouée"
+                    stateFlow.update {
+                        it.copy(
+                            pendingExport = null,
+                            errorMessage = UiText.Resource(R.string.err_export_io, listOf(errorDetail))
+                        )
+                    }
+                    return@launch
+                }
+
                 val bytesCopied = withContext(ioDispatcher) {
                     val outStream = (try {
                         context.contentResolver.openOutputStream(destinationUri, "wt")
+                    } catch (_: Exception) {
+                        null
+                    }) ?: (try {
+                        context.contentResolver.openOutputStream(destinationUri, "w")
                     } catch (_: Exception) {
                         null
                     }) ?: context.contentResolver.openOutputStream(destinationUri)
@@ -652,20 +672,6 @@ class GradingPipelineDelegate(
                         it.copy(
                             pendingExport = null,
                             errorMessage = UiText.Resource(R.string.err_export_io, listOf("Corrupted copy ($bytesCopied / $expectedBytes bytes)"))
-                        )
-                    }
-                    return@launch
-                }
-
-                // Streaming post-write verification directly from destination document
-                val verifyResult = verifyDestinationDocument(destinationUri, expectedBytes, pending.exportType)
-                if (verifyResult.isFailure) {
-                    cleanupEmptyUri(destinationUri)
-                    val errorDetail = verifyResult.exceptionOrNull()?.localizedMessage ?: "Vérification document échouée"
-                    stateFlow.update {
-                        it.copy(
-                            pendingExport = null,
-                            errorMessage = UiText.Resource(R.string.err_export_io, listOf(errorDetail))
                         )
                     }
                     return@launch
@@ -713,17 +719,21 @@ class GradingPipelineDelegate(
         }
     }
 
-    private suspend fun verifyDestinationDocument(
-        uri: Uri,
+    private suspend fun verifySourceDocument(
+        file: File,
         expectedBytes: Long,
         exportType: ExportType
     ): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
-            val inStream = context.contentResolver.openInputStream(uri)
-                ?: throw IOException("Impossible d'ouvrir le flux de lecture pour l'URI: $uri")
+            if (!file.exists() || file.length() <= 0L) {
+                throw IOException("Fichier source vide ou introuvable.")
+            }
+            if (file.length() != expectedBytes) {
+                throw IOException("Taille incohérente (${file.length()} / $expectedBytes octets)")
+            }
 
-            inStream.use { stream ->
-                if (exportType == ExportType.CUBE_LUT) {
+            if (exportType == ExportType.CUBE_LUT) {
+                file.inputStream().use { stream ->
                     val reader = stream.bufferedReader()
                     var lutSize: Int? = null
                     var dataCount = 0
@@ -756,16 +766,6 @@ class GradingPipelineDelegate(
                     val expectedTriplets = lutSize * lutSize * lutSize
                     if (dataCount != expectedTriplets) {
                         throw IOException("Fichier .cube incomplet : $dataCount triplets trouvés sur $expectedTriplets attendus.")
-                    }
-                } else {
-                    var totalRead = 0L
-                    val buffer = ByteArray(8192)
-                    var read: Int
-                    while (stream.read(buffer).also { read = it } != -1) {
-                        totalRead += read
-                    }
-                    if (totalRead <= 0L || totalRead != expectedBytes) {
-                        throw IOException("Vérification des octets échouée ($totalRead / $expectedBytes octets)")
                     }
                 }
             }

@@ -41,13 +41,17 @@ object AppDimens {
     val CornerRadiusNormal: Dp = 10.dp
     val CornerRadiusCard: Dp = 12.dp
     val CornerRadiusLarge: Dp = 16.dp
+    val CornerRadiusModal: Dp = 20.dp
+    val CornerRadiusDialog: Dp = 24.dp
     val CornerRadiusEditorSheet: Dp = 24.dp
     val CornerRadiusPill: Dp = 999.dp
+    val CornerRadiusFull: Dp = CornerRadiusPill
 
     // --- Touch Targets (WCAG 2.1 AA Compliance >= 48dp) ---
     val MinTouchTarget: Dp = 48.dp
-    val MinInteractiveTarget: Dp = 44.dp
+    val MinInteractiveTarget: Dp = 48.dp
     val ButtonHeightStandard: Dp = 52.dp
+    val SegmentedButtonMinWidth: Dp = 64.dp
 
     // --- Border & Stroke Widths ---
     val BorderThin: Dp = 1.dp
@@ -91,6 +95,7 @@ object AppDimens {
     val ProgressIndicatorSize: Dp = 20.dp
     val PhotoDetailImageMaxHeight: Dp = 320.dp
     val TabHeightCompact: Dp = 48.dp
+    val TopAppBarHeight: Dp = 56.dp
     val CalibrationCardHeight: Dp = 110.dp
     val CalibrationCardLargeHeight: Dp = 140.dp
     val CalibrationRowHeightLarge: Dp = 22.dp
@@ -115,10 +120,11 @@ object AppDimens {
     val ColorWheelThumbSize: Dp = 18.dp
     val PointColorPipetteSize: Dp = 36.dp
     val ToolIconSize: Dp = 22.dp
+    val EditorToolItemWidth: Dp = 68.dp
     val EditorPanelMaxHeight: Dp = 300.dp
     val EditorPanelMinHeight: Dp = 200.dp
-    val EditorSliderTrackHeight: Dp = 6.dp
-    val EditorSliderThumbSize: Dp = 18.dp
+    val EditorSliderTrackHeight: Dp = 4.dp
+    val EditorSliderThumbSize: Dp = 20.dp
     val CinemaSwatchCardWidth: Dp = 96.dp
     val CinemaSwatchCardHeight: Dp = 132.dp
     val CinemaSwatchColorHeight: Dp = 76.dp
@@ -147,13 +153,13 @@ object AppDimens {
     val FontDisplayLarge: TextUnit = 32.sp
     val FontDisplayMedium: TextUnit = 28.sp
     val FontDisplaySmall: TextUnit = 24.sp
-    val FontTitleLarge: TextUnit = 20.sp
-    val FontTitleMedium: TextUnit = 16.sp
+    val FontTitleLarge: TextUnit = 22.sp
+    val FontTitleMedium: TextUnit = 18.sp
     val FontTitleSmall: TextUnit = 14.sp
     val FontBodyLarge: TextUnit = 16.sp
     val FontBodyMedium: TextUnit = 14.sp
     val FontBodySmall: TextUnit = 12.sp
-    val FontLabelLarge: TextUnit = 13.sp
-    val FontLabelMedium: TextUnit = 11.sp
-    val FontLabelSmall: TextUnit = 10.sp
+    val FontLabelLarge: TextUnit = 14.sp
+    val FontLabelMedium: TextUnit = 13.sp
+    val FontLabelSmall: TextUnit = 12.sp
 }

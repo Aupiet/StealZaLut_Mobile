@@ -2,8 +2,8 @@ package com.stealzalut.mobile.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,17 +54,29 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.ui.components.SzlSlider
+import com.stealzalut.mobile.ui.screens.studio.SectionTitleBanner
 import com.stealzalut.mobile.ui.theme.AppThemes
-import com.stealzalut.mobile.ui.theme.ThemeSpec
+import com.stealzalut.mobile.ui.theme.LocalFontSpec
+import com.stealzalut.mobile.ui.theme.icons
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import kotlin.math.roundToInt
 
+/**
+ * Comprehensive Settings & Preferences Screen.
+ * Conforms to Figma [APRÈS] Paramètres / Thèmes & Système:
+ * - Playfair Display Header: "Préférences & Thèmes"
+ * - Card 1: App Theme & Icon Set
+ * - Card 2: Resolution & Export Settings (Export resolution, proxy resolution, format, JPEG quality)
+ * - Card 3: Color Engine & 3D LUT (Default method, default lattice size)
+ * - Card 4: Language, Cache Storage & Developer Mode
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
@@ -75,187 +87,257 @@ fun SettingsScreen(
     val settings = uiState.settings
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
+    val monoFont = LocalFontSpec.current.mono
+
+    val themesList = listOf(
+        AppThemes.THEME_SYSTEM_DEFAULT to "Système par défaut (Auto Jour/Nuit)",
+        AppThemes.DEFAULT_THEME_ID to "AmberNoir (Signature)",
+        AppThemes.THEME_CYAN_STUDIO to "CyanStudio (Pro Lab)",
+        AppThemes.THEME_OLED_BLACK to "OledBlack (Contraste Pur)",
+        AppThemes.THEME_DAYLIGHT to "Daylight (Clair Chaud)"
+    )
+
+    val iconSetsList = listOf(
+        "rounded" to "Rounded Icons (Chic & Doux)",
+        "outlined" to "Outlined Icons (Précision Studio)"
+    )
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical),
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSpacious)
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingLarge)
     ) {
-        // Quick Guide & Metrics Card Banner
+        // En-tête Playfair Display
+        SectionTitleBanner(
+            title = stringResource(R.string.settings_title),
+            subtitle = stringResource(R.string.settings_subtitle)
+        )
+
+        // --- Card 1: Thème d'application & Jeu d'icônes ---
         Card(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                viewModel.openMetricsInfo()
-            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
             ),
-            border = CardDefaults.outlinedCardBorder()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(AppDimens.SpacingStandard),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(AppDimens.AvatarSize)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(AppDimens.IconMedium)
-                    )
-                }
-                Column(modifier = Modifier.weight(1.0f)) {
-                    Text(
-                        text = stringResource(R.string.settings_guide_card_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.settings_guide_card_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        // Section 1: Appearance & Visual Themes
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder()
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+            )
         ) {
             Column(
-                modifier = Modifier.padding(AppDimens.SpacingStandard),
-                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingLarge),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Palette,
                         contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
                     )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_section_appearance),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_theme_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.settings_theme_header),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
-                // Visual Theme Palette Cards Grid
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    AppThemes.allThemes.forEach { themeSpec ->
-                        val isSelected = settings.selectedThemeId == themeSpec.id
-                        ThemePreviewCard(
-                            theme = themeSpec,
-                            isSelected = isSelected,
-                            onSelect = {
+                themesList.forEach { (themeId, label) ->
+                    val isSelected = settings.selectedThemeId == themeId
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
+                            .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
+                            .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.updateSettings(settings.copy(selectedThemeId = themeSpec.id))
-                            }
+                                viewModel.updateSettings(settings.copy(selectedThemeId = themeId))
+                            },
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                        border = BorderStroke(
+                            if (isSelected) AppDimens.BorderMedium else AppDimens.BorderThin,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
                         )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingSmall),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isSelected) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-                // Developer Mode Switch
+                Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+
+                // Jeu d'icônes
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = AppDimens.SpacingSmall),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.settings_developer_mode_title),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_developer_mode_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = settings.developerMode,
-                        onCheckedChange = { isChecked ->
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            viewModel.updateSettings(settings.copy(developerMode = isChecked))
-                        }
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
                     )
+                    Text(
+                        text = stringResource(R.string.settings_icons_header),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                iconSetsList.forEach { (iconSetId, label) ->
+                    val isSelected = settings.selectedIconSetId == iconSetId
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
+                            .clip(RoundedCornerShape(AppDimens.CornerRadiusNormal))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.updateSettings(settings.copy(selectedIconSetId = iconSetId))
+                            },
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                        border = BorderStroke(
+                            if (isSelected) AppDimens.BorderMedium else AppDimens.BorderThin,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingSmall),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isSelected) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Section 2: Colorimetric Engine & Default Parameters
+        // --- Card 2: Résolution & Paramètres d'Exportation ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder()
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+            ),
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+            )
         ) {
             Column(
-                modifier = Modifier.padding(AppDimens.SpacingStandard),
-                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingLarge),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Tune,
+                        imageVector = Icons.Default.FileDownload,
                         contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
                     )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                     Text(
-                        text = stringResource(R.string.settings_default_lut_size),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        text = "Résolution & Paramètres d'Export",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
+                // 1. Direct Image Export Resolution
+                Text(
+                    text = stringResource(R.string.settings_export_dim),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                val exportResolutions = listOf(
+                    1920 to "1080p FHD",
+                    2560 to "1440p QHD",
+                    3840 to "4K UHD",
+                    0 to stringResource(R.string.settings_max_export_native)
+                )
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
                 ) {
-                    LutSize.entries.forEach { size ->
-                        val isSelected = settings.defaultLutSize == size
+                    exportResolutions.forEach { (dim, label) ->
+                        val isSelected = settings.maxExportDim == dim
                         FilterChip(
                             selected = isSelected,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.updateSettings(settings.copy(defaultLutSize = size))
+                                viewModel.updateSettings(settings.copy(maxExportDim = dim))
                             },
-                            modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                             shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -263,7 +345,7 @@ fun SettingsScreen(
                             ),
                             label = {
                                 Text(
-                                    text = stringResource(size.labelRes),
+                                    text = label,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -272,15 +354,144 @@ fun SettingsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
+                // 2. Statistical Analysis Proxy Resolution
+                Text(
+                    text = stringResource(R.string.settings_proxy_dim),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                val proxyResolutions = listOf(
+                    1280 to "720p (Rapide)",
+                    1920 to "1080p (Équilibré)",
+                    2560 to "1440p (Précis)",
+                    0 to "Natif"
+                )
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
+                ) {
+                    proxyResolutions.forEach { (dim, label) ->
+                        val isSelected = settings.analysisProxyDim == dim
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.updateSettings(settings.copy(analysisProxyDim = dim))
+                            },
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            label = {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
 
+                // 3. Export Format (JPEG vs PNG)
+                Text(
+                    text = stringResource(R.string.settings_export_format),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
+                    listOf("JPEG", "PNG").forEach { format ->
+                        val isSelected = settings.exportFormat.equals(format, ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.updateSettings(settings.copy(exportFormat = format))
+                            },
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            label = {
+                                Text(
+                                    text = format,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // 4. JPEG Quality Slider
+                if (settings.exportFormat.equals("JPEG", ignoreCase = true)) {
+                    SzlSlider(
+                        title = stringResource(R.string.settings_export_quality, settings.exportQuality),
+                        value = settings.exportQuality / 100f,
+                        onValueChange = {
+                            viewModel.updateSettings(settings.copy(exportQuality = (it * 100).roundToInt().coerceIn(10, 100)))
+                        },
+                        min = 0.1f,
+                        max = 1.0f,
+                        step = 0.05f,
+                        defaultValue = 0.95f
+                    )
+                }
+            }
+        }
+
+        // --- Card 3: Paramètres Moteur & Algorithme 3D LUT ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+            ),
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingLarge),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
+                    )
+                    Text(
+                        text = "Moteur & Algorithme 3D LUT",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Default Algorithm
                 Text(
                     text = stringResource(R.string.settings_default_method),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
                     ColorTransferMethod.entries.forEach { method ->
                         val isSelected = settings.defaultMethod == method
                         FilterChip(
@@ -289,82 +500,6 @@ fun SettingsScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 viewModel.updateSettings(settings.copy(defaultMethod = method))
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            label = {
-                                Column(modifier = Modifier.padding(vertical = AppDimens.SpacingExtraSmall)) {
-                                    Text(
-                                        text = stringResource(method.displayNameRes),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                    Text(
-                                        text = stringResource(method.technicalSubtitleRes),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (isSelected)
-                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = AppConstants.OPACITY_CONTAINER_HEAVY)
-                                        else
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
-        // Section 3: Direct Image Export Settings
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder()
-        ) {
-            Column(
-                modifier = Modifier.padding(AppDimens.SpacingStandard),
-                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingNormal)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.FileDownload,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = stringResource(R.string.settings_export_dim),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    listOf(
-                        AppConstants.EXPORT_DIM_1080P to stringResource(R.string.export_dim_1080p),
-                        AppConstants.EXPORT_DIM_2K to stringResource(R.string.export_dim_2k),
-                        AppConstants.EXPORT_DIM_4K to stringResource(R.string.export_dim_4k),
-                        AppConstants.EXPORT_DIM_NATIVE to stringResource(R.string.export_dim_native)
-                    ).forEach { (dim, label) ->
-                        val isSelected = settings.maxExportDim == dim
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.updateSettings(settings.copy(maxExportDim = dim))
-                            },
-                            modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                             shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -372,7 +507,7 @@ fun SettingsScreen(
                             ),
                             label = {
                                 Text(
-                                    text = label,
+                                    text = stringResource(method.displayNameRes),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -381,28 +516,22 @@ fun SettingsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
-
+                // Default LUT Lattice Size
                 Text(
-                    text = stringResource(R.string.settings_export_format),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.settings_default_lut_size),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    listOf(AppConstants.EXPORT_FORMAT_JPEG, AppConstants.EXPORT_FORMAT_PNG).forEach { fmt ->
-                        val isSelected = settings.exportFormat == fmt
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
+                    LutSize.entries.forEach { size ->
+                        val isSelected = settings.defaultLutSize == size
                         FilterChip(
                             selected = isSelected,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.updateSettings(settings.copy(exportFormat = fmt))
+                                viewModel.updateSettings(settings.copy(defaultLutSize = size))
                             },
-                            modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinTouchTarget),
                             shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -410,80 +539,74 @@ fun SettingsScreen(
                             ),
                             label = {
                                 Text(
-                                    text = fmt,
-                                    style = MaterialTheme.typography.labelSmall,
+                                    text = stringResource(size.labelRes),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = monoFont),
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         )
                     }
                 }
-
-                if (settings.exportFormat == AppConstants.EXPORT_FORMAT_JPEG) {
-                    Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
-                    SzlSlider(
-                        title = stringResource(R.string.settings_quality_slider_desc),
-                        value = settings.exportQuality / 100.0f,
-                        onValueChange = { frac ->
-                            viewModel.updateSettings(settings.copy(exportQuality = (frac * 100.0f).roundToInt().coerceIn(AppConstants.QUALITY_MIN.toInt(), AppConstants.QUALITY_MAX.toInt())))
-                        },
-                        min = AppConstants.QUALITY_MIN / 100.0f,
-                        max = AppConstants.QUALITY_MAX / 100.0f,
-                        step = 0.05f,
-                        presets = listOf(0.70f, 0.85f, 0.95f, 1.0f)
-                    )
-                }
             }
         }
 
-        // Section 4: Storage, Cache & In-App Language
+        // --- Card 4: Langue, Stockage Cache & Mode Développeur ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = CardDefaults.outlinedCardBorder()
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+            ),
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+            )
         ) {
             Column(
-                modifier = Modifier.padding(AppDimens.SpacingStandard),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingLarge),
                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
             ) {
-                // Language Selector
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Language,
                         contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconNormal),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
                     )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                     Text(
-                        text = stringResource(R.string.settings_language_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        text = "Langue & Stockage",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    val currentLang = uiState.currentLanguageTag.lowercase()
-                    listOf(
-                        AppConstants.LANG_TAG_FR to stringResource(R.string.settings_lang_fr),
-                        AppConstants.LANG_TAG_EN to stringResource(R.string.settings_lang_en),
-                        AppConstants.LANG_TAG_ES to stringResource(R.string.settings_lang_es)
-                    ).forEach { (tag, label) ->
-                        val isSelected = currentLang.startsWith(tag)
+                // In-App Language
+                Text(
+                    text = stringResource(R.string.settings_language_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                val languages = listOf(
+                    "fr" to stringResource(R.string.settings_lang_fr),
+                    "en" to stringResource(R.string.settings_lang_en),
+                    "es" to stringResource(R.string.settings_lang_es)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
+                    languages.forEach { (code, label) ->
+                        val isSelected = (uiState.currentLanguageTag ?: "fr") == code
                         FilterChip(
                             selected = isSelected,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.setLanguage(tag)
+                                viewModel.setLanguage(code)
                             },
-                            modifier = Modifier
-                                .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
-                                .semantics { contentDescription = label },
                             shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -499,18 +622,17 @@ fun SettingsScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(AppDimens.SpacingExtraSmall))
 
                 // Cache Cleanup
                 Text(
                     text = stringResource(R.string.settings_cache_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = stringResource(R.string.settings_cache_size, uiState.cacheSizeMb),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = monoFont),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
@@ -521,7 +643,7 @@ fun SettingsScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = AppDimens.MinTouchTarget),
+                        .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget),
                     shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
                 ) {
                     Icon(
@@ -536,66 +658,50 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                // Developer Mode Toggle
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingSmall),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_developer_mode_title),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_developer_mode_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Switch(
+                            checked = settings.developerMode,
+                            onCheckedChange = { checked ->
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.updateSettings(settings.copy(developerMode = checked))
+                            }
+                        )
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(AppDimens.ListBottomPadding))
-    }
-}
-
-@Composable
-private fun ThemePreviewCard(
-    theme: ThemeSpec,
-    isSelected: Boolean,
-    onSelect: () -> Unit
-) {
-    val themeName = stringResource(theme.nameRes)
-    val animatedBorderColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-        animationSpec = tween(durationMillis = 200),
-        label = "themeBorder" // GUARD_ALLOW
-    )
-
-    Surface(
-        shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-        color = theme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(
-            if (isSelected) AppDimens.BorderThick else AppDimens.BorderThin,
-            animatedBorderColor
-        ),
-        modifier = Modifier
-            .defaultMinSize(minHeight = AppDimens.MinTouchTarget)
-            .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
-            .clickable(
-                role = Role.RadioButton,
-                onClick = onSelect
-            )
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(AppDimens.IconSmall)
-                    .clip(CircleShape)
-                    .background(theme.colorScheme.primary)
-            )
-            Text(
-                text = themeName,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = theme.colorScheme.onSurface
-            )
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = theme.colorScheme.primary,
-                    modifier = Modifier.size(AppDimens.IconMicro)
-                )
-            }
-        }
     }
 }

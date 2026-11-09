@@ -36,10 +36,29 @@ class PresetRepositoryTest {
     }
 
     @Test
-    fun `getAllPresets returns empty list initially as built-in themes are disabled`() = runTest {
+    fun `getAllPresets returns empty list initially`() = runTest {
         val presets = repository.getAllPresets()
         assertTrue(presets.isEmpty())
-        assertTrue(repository.builtInPresets.isEmpty())
+    }
+
+    @Test
+    fun `legacy preset with builtin prefix is safely loaded and preserved`() = runTest {
+        val legacyPreset = ColorimetryPreset(
+            id = "builtin_blade_runner",
+            name = "Blade Runner Legacy",
+            method = ColorTransferMethod.HM_MKL_HM,
+            intensity = 1.0f,
+            lutSize = LutSize.STANDARD,
+            paletteHexes = listOf("#1E3A5F", "#F6AD55")
+        )
+        val saveResult = repository.savePreset(legacyPreset)
+        assertTrue(saveResult.isSuccess)
+
+        val reloaded = repository.getAllPresets()
+        val found = reloaded.firstOrNull { it.id == "builtin_blade_runner" }
+        assertNotNull(found)
+        assertEquals("Blade Runner Legacy", found?.name)
+        assertEquals("builtin_blade_runner", found?.id)
     }
 
     @Test

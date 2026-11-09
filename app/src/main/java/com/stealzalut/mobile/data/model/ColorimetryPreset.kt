@@ -16,7 +16,6 @@ import java.util.UUID
  * @property paletteHexes Dominant color hex codes (e.g. ["#E67E22", "#2C3E50"])
  * @property thumbnailPath Compressed WebP thumbnail path (max 256x256, 85% quality)
  * @property cubeFilePath Path to generated .cube file if already exported
- * @property isBuiltIn True if this is a factory-provided preset
  * @property notes Optional user notes/description
  */
 @Immutable
@@ -31,6 +30,5 @@ data class ColorimetryPreset(
     val paletteHexes: List<String> = emptyList(),
     val thumbnailPath: String? = null,
     val cubeFilePath: String? = null,
-    val isBuiltIn: Boolean = false,
     val notes: String? = null
 )

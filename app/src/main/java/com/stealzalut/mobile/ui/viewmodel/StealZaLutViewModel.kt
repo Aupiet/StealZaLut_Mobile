@@ -120,13 +120,6 @@ class StealZaLutViewModel(
         loadEditingPresets()
         refreshCacheSize()
 
-        viewModelScope.launch {
-            val presets = presetRepository.getAllPresets()
-            if (presets.isNotEmpty()) {
-                _uiState.update { it.copy(selectedTheme = presets.first()) }
-            }
-        }
-
         // FE-015: Restore session from SavedStateHandle
         val savedDestName = savedStateHandle.get<String>(KEY_SESSION_DESTINATION)
         if (savedDestName != null) {

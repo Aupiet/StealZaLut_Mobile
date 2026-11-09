@@ -34,8 +34,6 @@ class PresetRepository(private val context: Context) {
 
     private val mutex = Mutex()
 
-    val builtInPresets: List<ColorimetryPreset> = emptyList()
-
     suspend fun getAllPresets(): List<ColorimetryPreset> = withContext(Dispatchers.IO) {
         mutex.withLock {
             loadUserPresets()
@@ -209,7 +207,6 @@ class PresetRepository(private val context: Context) {
                         paletteHexes = paletteList,
                         thumbnailPath = obj.optString("thumbnailPath").takeIf { it.isNotBlank() },
                         cubeFilePath = obj.optString("cubeFilePath").takeIf { it.isNotBlank() },
-                        isBuiltIn = false,
                         notes = obj.optString("notes").takeIf { it.isNotBlank() }
                     )
                 )

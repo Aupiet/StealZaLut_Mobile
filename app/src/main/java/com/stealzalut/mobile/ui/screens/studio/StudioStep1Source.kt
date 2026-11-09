@@ -124,42 +124,6 @@ fun StudioStep1Source(
                     style = MaterialTheme.typography.labelMedium
                 )
             }
-        } else {
-            Surface(
-                shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-                border = BorderStroke(
-                    AppDimens.BorderThin,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(AppDimens.SpacingNormal),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                ) {
-                    Icon(
-                        imageVector = MaterialTheme.icons.toolEffects,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(AppDimens.IconSmall)
-                    )
-                    Column {
-                        Text(
-                            text = stringResource(R.string.studio_quick_tip),
-                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.studio_quick_tip_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
         }
 
         Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))

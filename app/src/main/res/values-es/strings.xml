@@ -416,8 +416,6 @@
     <string name="tone_curve_zone_highlights">Altas Luces</string>
     <string name="profile_spectrum_title">Espectro y Calibración de Color</string>
     <string name="editor_collapse_panel">Contraer herramientas</string>
-    <string name="studio_quick_tip">Consejo Pro</string>
-    <string name="studio_quick_tip_desc">Elige una foto de referencia con tonos cinematográficos ricos para una transferencia óptima.</string>
     <string name="tone_curve_mode_curve">Curva</string>
     <string name="tone_curve_mode_zones">Zonas</string>
     <string name="editor_exit_dialog_title">¿Salir del editor?</string>
@@ -449,8 +447,6 @@
     <!-- Clipping Indicators (FE-017) -->
     <string name="editor_empty_headline">Sublima tus Fotografías</string>
     <string name="editor_empty_subtitle">Revela tus archivos RAW o JPEG con la potencia de la emulación analógica.</string>
-    <string name="editor_empty_advice_title">CONSEJO DE FOTO DE LABORATORIO</string>
-    <string name="editor_empty_advice_desc">Para un aspecto de cine cálido, combine bajar las altas luces con un ligero tono sepia en el panel 3-Way.</string>
     <string name="editor_empty_btn">Elegir una foto</string>
     <string name="editor_compare">Comparar</string>
     <string name="tool_label_crop">Recortar</string>

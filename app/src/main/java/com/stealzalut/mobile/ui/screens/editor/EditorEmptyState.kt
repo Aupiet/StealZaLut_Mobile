@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -94,46 +93,6 @@ fun EditorEmptyState(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
-
-                // Lab Advice Card matching Figma
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(AppDimens.SpacingNormal),
-                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-                        ) {
-                            Icon(
-                                imageVector = MaterialTheme.icons.actionPalette,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(AppDimens.IconSmall)
-                            )
-                            Text(
-                                text = stringResource(R.string.editor_empty_advice_title),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.editor_empty_advice_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
 
                 // Primary Amber Action Button
                 Button(

@@ -416,8 +416,6 @@
     <string name="tone_curve_zone_highlights">Highlights</string>
     <string name="profile_spectrum_title">Color Spectrum &amp; Calibration</string>
     <string name="editor_collapse_panel">Collapse tools</string>
-    <string name="studio_quick_tip">Pro Tip</string>
-    <string name="studio_quick_tip_desc">Select a reference photo with rich cinematic tones for optimal color transfer.</string>
     <string name="tone_curve_mode_curve">Curve</string>
     <string name="tone_curve_mode_zones">Zones</string>
     <string name="editor_exit_dialog_title">Exit Photo Editor?</string>
@@ -449,8 +447,6 @@
     <!-- Clipping Indicators (FE-017) -->
     <string name="editor_empty_headline">Sublime Your Photographs</string>
     <string name="editor_empty_subtitle">Develop your RAW or JPEG files with the power of analog emulation.</string>
-    <string name="editor_empty_advice_title">LAB PHOTO TIP</string>
-    <string name="editor_empty_advice_desc">For a warm cinema look, combine lowering highlights with subtle sepia split-toning in the 3-Way panel.</string>
     <string name="editor_empty_btn">Choose a Photo</string>
     <string name="editor_compare">Compare</string>
     <string name="tool_label_crop">Crop</string>

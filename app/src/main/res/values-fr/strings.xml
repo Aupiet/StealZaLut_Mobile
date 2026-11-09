@@ -416,8 +416,6 @@
     <string name="tone_curve_zone_highlights">Hautes Lumières</string>
     <string name="profile_spectrum_title">Spectre &amp; Étalonnage des Couleurs</string>
     <string name="editor_collapse_panel">Réduire les outils</string>
-    <string name="studio_quick_tip">Astuce Pro</string>
-    <string name="studio_quick_tip_desc">Choisissez une photo de référence aux tons riches pour un transfert colorimétrique idéal.</string>
     <string name="tone_curve_mode_curve">Courbe</string>
     <string name="tone_curve_mode_zones">Zones</string>
     <string name="editor_exit_dialog_title">Quitter l\'éditeur photo ?</string>
@@ -449,8 +447,6 @@
     <!-- Clipping Indicators (FE-017) -->
     <string name="editor_empty_headline">Sublimez vos photographies</string>
     <string name="editor_empty_subtitle">Développez vos fichiers RAW ou JPEG avec la puissance de l\'émulation argentique.</string>
-    <string name="editor_empty_advice_title">CONSEIL PHOTO DU LABO</string>
-    <string name="editor_empty_advice_desc">Pour un rendu cinéma chaleureux, combinez l\'abaissement des hautes lumières et un léger virage sépia dans le panneau 3-Way.</string>
     <string name="editor_empty_btn">Choisir une photo</string>
     <string name="editor_compare">Comparer</string>
     <string name="tool_label_crop">Rogner</string>

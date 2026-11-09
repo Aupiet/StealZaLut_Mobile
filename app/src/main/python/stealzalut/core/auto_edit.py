@@ -108,11 +108,7 @@ def calculate_auto_exposure(
     lin = srgb_to_linear(img_f)
 
     # Rec. 2020 luminance
-    y = (
-        REC2020_R * lin[..., 0]
-        + REC2020_G * lin[..., 1]
-        + REC2020_B * lin[..., 2]
-    )
+    y = REC2020_R * lin[..., 0] + REC2020_G * lin[..., 1] + REC2020_B * lin[..., 2]
 
     # Epsilon clamp and log2 deviation from 18% middle gray
     y_clamped = np.maximum(y, EPSILON_LUM)
@@ -191,7 +187,9 @@ def _apply_tone_curve(
         c_factor = 1.0 + (contrast / 100.0) * 0.65
         centered = out - 0.5
         # Soft sigmoid contrast expansion
-        out = 0.5 + np.tanh(centered * c_factor * 1.5) / (2.0 * np.tanh(0.75 * c_factor))
+        out = 0.5 + np.tanh(centered * c_factor * 1.5) / (
+            2.0 * np.tanh(0.75 * c_factor)
+        )
         out = np.clip(out, 0.0, 1.0)
 
     # 4. Whites and Blacks fine-tuning
@@ -241,7 +239,9 @@ def _apply_vibrance(
     out_g = lum + (g - lum) * total_boost
     out_b = lum + (b - lum) * total_boost
 
-    return np.clip(np.stack([out_r, out_g, out_b], axis=-1), 0.0, 1.0).astype(np.float32)
+    return np.clip(np.stack([out_r, out_g, out_b], axis=-1), 0.0, 1.0).astype(
+        np.float32
+    )
 
 
 def apply_auto_edit(
@@ -277,7 +277,7 @@ def apply_auto_edit(
 
     # 1. Linear Exposure Compensation
     lin = srgb_to_linear(img_f)
-    lin_exp = lin * (2.0 ** exp_val)
+    lin_exp = lin * (2.0**exp_val)
     srgb_exp = linear_to_srgb(lin_exp)
 
     # 2. Tone Curve

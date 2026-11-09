@@ -132,6 +132,7 @@ def test_bridge_compute_and_export_auto_edit(tmp_path):
 
     # 3. Test apply_image_edits and compute_auto_settings
     from stealzalut.bridge import apply_image_edits, compute_auto_settings
+
     auto_res = compute_auto_settings(src_file)
     assert auto_res["status"] == "success"
     assert "exposure" in auto_res

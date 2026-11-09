@@ -43,7 +43,7 @@ def export_cube(
     Raises:
         ValueError: If *lut_data* dimension does not match size^3 entries.
     """
-    expected_rows: int = size ** 3
+    expected_rows: int = size**3
 
     if lut_data.ndim == 4:
         if lut_data.shape != (size, size, size, 3):
@@ -162,12 +162,16 @@ def load_cube_file(cube_path: str) -> Tuple[int, NDArray[np.float32]]:
         # Infer size from row count
         total = len(data_lines)
         if total == 0:
-            raise ValueError(f"Empty or header-only .cube file with no data: {cube_path}")
+            raise ValueError(
+                f"Empty or header-only .cube file with no data: {cube_path}"
+            )
         inferred = int(round(total ** (1.0 / 3.0)))
         if inferred > 1 and inferred**3 == total:
             lut_size = inferred
         else:
-            raise ValueError(f"Could not determine valid LUT_3D_SIZE from file: {cube_path}")
+            raise ValueError(
+                f"Could not determine valid LUT_3D_SIZE from file: {cube_path}"
+            )
 
     expected = lut_size**3
     if expected == 0 or len(data_lines) != expected:

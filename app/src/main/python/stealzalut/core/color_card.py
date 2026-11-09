@@ -25,7 +25,9 @@ from stealzalut.utils.image_io import (
 )
 
 
-def generate_neutral_calibration_card(width: int = 540, height: int = 360) -> NDArray[np.uint8]:
+def generate_neutral_calibration_card(
+    width: int = 540, height: int = 360
+) -> NDArray[np.uint8]:
     """Generate a neutral calibration test card.
 
     Includes:
@@ -50,8 +52,12 @@ def generate_neutral_calibration_card(width: int = 540, height: int = 360) -> ND
     # 1. Highlights / Pure White & Off-White
     w_block_h = 44
     mid_x = width // 2
-    draw.rectangle([margin, margin, mid_x - 8, margin + w_block_h], fill=(255, 255, 255))
-    draw.rectangle([mid_x + 8, margin, width - margin, margin + w_block_h], fill=(240, 240, 240))
+    draw.rectangle(
+        [margin, margin, mid_x - 8, margin + w_block_h], fill=(255, 255, 255)
+    )
+    draw.rectangle(
+        [mid_x + 8, margin, width - margin, margin + w_block_h], fill=(240, 240, 240)
+    )
 
     # 2. Continuous 0-255 grayscale gradient ramp
     ramp_y0 = margin + w_block_h + 12
@@ -59,32 +65,37 @@ def generate_neutral_calibration_card(width: int = 540, height: int = 360) -> ND
     ramp_w = width - (2 * margin)
     for x in range(ramp_w):
         val = int(round(255.0 * x / max(1, ramp_w - 1)))
-        draw.line([(margin + x, ramp_y0), (margin + x, ramp_y0 + ramp_h)], fill=(val, val, val))
+        draw.line(
+            [(margin + x, ramp_y0), (margin + x, ramp_y0 + ramp_h)],
+            fill=(val, val, val),
+        )
 
     # 3. 18% photographic gray & 50% neutral gray
     gray_y0 = ramp_y0 + ramp_h + 12
     gray_h = 34
     draw.rectangle([margin, gray_y0, mid_x - 8, gray_y0 + gray_h], fill=(118, 118, 118))
-    draw.rectangle([mid_x + 8, gray_y0, width - margin, gray_y0 + gray_h], fill=(128, 128, 128))
+    draw.rectangle(
+        [mid_x + 8, gray_y0, width - margin, gray_y0 + gray_h], fill=(128, 128, 128)
+    )
 
     # 4. 12 Gamut Reference patches (Skin tones + Primaries + Secondaries)
     patches: List[Tuple[int, int, int]] = [
         # Skin tones
         (205, 155, 132),  # Light skin
-        (155, 110, 85),   # Olive skin
-        (95, 62, 45),     # Deep skin
+        (155, 110, 85),  # Olive skin
+        (95, 62, 45),  # Deep skin
         # Primaries
-        (225, 45, 45),    # Red
-        (45, 185, 55),    # Green
-        (45, 85, 225),    # Blue
+        (225, 45, 45),  # Red
+        (45, 185, 55),  # Green
+        (45, 85, 225),  # Blue
         # Secondaries
-        (45, 215, 225),   # Cyan
-        (215, 45, 215),   # Magenta
-        (235, 215, 35),   # Yellow
+        (45, 215, 225),  # Cyan
+        (215, 45, 215),  # Magenta
+        (235, 215, 35),  # Yellow
         # Atmosphere & foliage
-        (75, 125, 185),   # Sky blue
-        (85, 155, 85),    # Foliage green
-        (215, 125, 45),   # Sunset orange
+        (75, 125, 185),  # Sky blue
+        (85, 155, 85),  # Foliage green
+        (215, 125, 45),  # Sunset orange
     ]
 
     cols = 6
@@ -126,10 +137,14 @@ def run_color_card_pipeline(
     """
     start: float = time.monotonic()
     try:
-        ref_proxy: NDArray[np.uint8] = load_proxy_image(ref_path, max_dim=MAX_ANALYSIS_DIMENSION)
+        ref_proxy: NDArray[np.uint8] = load_proxy_image(
+            ref_path, max_dim=MAX_ANALYSIS_DIMENSION
+        )
         ref_palette: List[str] = extract_dominant_palette(ref_proxy, num_colors=6)
 
-        neutral_card: NDArray[np.uint8] = generate_neutral_calibration_card(width, height)
+        neutral_card: NDArray[np.uint8] = generate_neutral_calibration_card(
+            width, height
+        )
 
         transferred: NDArray[np.uint8] = compute_color_transfer(
             src_img=neutral_card,
@@ -142,7 +157,11 @@ def run_color_card_pipeline(
         if clamped_intensity < 0.999:
             neutral_f = to_float32(neutral_card)
             trans_f = to_float32(transferred)
-            blended = np.clip((1.0 - clamped_intensity) * neutral_f + clamped_intensity * trans_f, 0.0, 1.0)
+            blended = np.clip(
+                (1.0 - clamped_intensity) * neutral_f + clamped_intensity * trans_f,
+                0.0,
+                1.0,
+            )
             transferred = to_uint8(blended)
             del neutral_f, trans_f, blended
 

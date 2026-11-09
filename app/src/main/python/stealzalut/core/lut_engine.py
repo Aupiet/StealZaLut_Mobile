@@ -50,9 +50,7 @@ def generate_identity_lattice(size: int = DEFAULT_LUT_SIZE) -> NDArray[np.float3
     # With indexing='ij' and (b, g, r) order, C-order flattening yields R-fastest.
     b, g, r = np.meshgrid(axis, axis, axis, indexing="ij")
 
-    lattice: NDArray[np.float32] = np.stack(
-        [r.ravel(), g.ravel(), b.ravel()], axis=-1
-    )
+    lattice: NDArray[np.float32] = np.stack([r.ravel(), g.ravel(), b.ravel()], axis=-1)
     return lattice
 
 
@@ -190,9 +188,7 @@ def refine_and_blend_lut(
         total_points = raw_lut.shape[0]
         size = int(round(total_points ** (1.0 / 3.0)))
         if size**3 != total_points:
-            raise ValueError(
-                f"raw_lut row count {total_points} is not a cubic number."
-            )
+            raise ValueError(f"raw_lut row count {total_points} is not a cubic number.")
         lut_3d = raw_lut.reshape((size, size, size, 3)).copy().astype(np.float32)
     elif raw_lut.ndim == 4:
         size = raw_lut.shape[0]
@@ -229,18 +225,16 @@ def refine_and_blend_lut(
         d_black = np.sqrt(r_coords**2 + g_coords**2 + b_coords**2) / sqrt_3
         d_white = (
             np.sqrt(
-                (1.0 - r_coords) ** 2
-                + (1.0 - g_coords) ** 2
-                + (1.0 - b_coords) ** 2
+                (1.0 - r_coords) ** 2 + (1.0 - g_coords) ** 2 + (1.0 - b_coords) ** 2
             )
             / sqrt_3
         )
 
         w_black = np.exp(-0.5 * (d_black / NEUTRAL_LOCK_SIGMA) ** 2)
         w_white = np.exp(-0.5 * (d_white / NEUTRAL_LOCK_SIGMA) ** 2)
-        w_neutral = np.clip(
-            clamped_lock * np.maximum(w_black, w_white), 0.0, 1.0
-        )[..., np.newaxis]
+        w_neutral = np.clip(clamped_lock * np.maximum(w_black, w_white), 0.0, 1.0)[
+            ..., np.newaxis
+        ]
 
         lut_3d = (1.0 - w_neutral) * lut_3d + w_neutral * identity_3d
 
@@ -249,9 +243,7 @@ def refine_and_blend_lut(
         lut_3d = _gaussian_smooth_3d(lut_3d, sigma=smooth_sigma)
 
     # 5. Direct Intensity Integration
-    final_3d = (
-        1.0 - clamped_intensity
-    ) * identity_3d + clamped_intensity * lut_3d
+    final_3d = (1.0 - clamped_intensity) * identity_3d + clamped_intensity * lut_3d
     final_3d = np.clip(final_3d, 0.0, 1.0).astype(np.float32)
 
     return final_3d.reshape(-1, 3) if is_2d else final_3d
@@ -277,9 +269,7 @@ def apply_lut_trilinear(
         size = int(round(lut.shape[0] ** (1.0 / 3.0)))
         lut_flat = lut.astype(np.float32)
     else:
-        raise ValueError(
-            f"Expected 2-D or 4-D LUT, got shape {lut.shape}"
-        )
+        raise ValueError(f"Expected 2-D or 4-D LUT, got shape {lut.shape}")
 
     scale = float(size - 1)
     img_f = np.clip(image.astype(np.float32), 0.0, 1.0)
@@ -449,5 +439,3 @@ def compute_lut(
         preserve_luminance=preserve_luminance,
         soft_clip=soft_clip,
     )
-
-

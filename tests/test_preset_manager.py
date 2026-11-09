@@ -124,7 +124,9 @@ class TestPresetManager:
         assert dup["step3_params"]["contrast"] == 0.4
 
         # Duplicate with custom name
-        dup2 = duplicate_preset(orig["id"], new_name="Custom Copy", directory=str(tmp_path))
+        dup2 = duplicate_preset(
+            orig["id"], new_name="Custom Copy", directory=str(tmp_path)
+        )
         assert dup2["name"] == "Custom Copy"
 
     def test_rename_preset(self, tmp_path: Path) -> None:
@@ -160,7 +162,9 @@ class TestPresetManager:
         # Create a mock .cube file on "device A"
         cube_file = tmp_path / "device_a_storage" / "cinematic.cube"
         cube_file.parent.mkdir(parents=True, exist_ok=True)
-        cube_file.write_text('TITLE "Cinematic"\nLUT_3D_SIZE 2\n0.0 0.0 0.0\n0.0 0.0 1.0\n')
+        cube_file.write_text(
+            'TITLE "Cinematic"\nLUT_3D_SIZE 2\n0.0 0.0 0.0\n0.0 0.0 1.0\n'
+        )
 
         orig = create_preset("WithLUT", lut_reference=str(cube_file))
         save_preset(orig, directory=source_dir)
@@ -195,13 +199,17 @@ class TestPresetBridge:
         assert len(preset_id) > 0
 
         # 2. Duplicate
-        res_dup = duplicate_preset_bridge(path_or_id=preset_id, new_name="Vintage 70s B", directory=target_dir)
+        res_dup = duplicate_preset_bridge(
+            path_or_id=preset_id, new_name="Vintage 70s B", directory=target_dir
+        )
         assert res_dup["status"] == "success"
         assert res_dup["preset"]["name"] == "Vintage 70s B"
         dup_id = res_dup["preset_id"]
 
         # 3. Rename
-        res_ren = rename_preset_bridge(path_or_id=dup_id, new_name="Vintage Golden", directory=target_dir)
+        res_ren = rename_preset_bridge(
+            path_or_id=dup_id, new_name="Vintage Golden", directory=target_dir
+        )
         assert res_ren["status"] == "success"
         assert res_ren["preset"]["name"] == "Vintage Golden"
 
@@ -212,7 +220,9 @@ class TestPresetBridge:
 
         # 5. Export
         export_target = str(tmp_path / "standalone.szlpreset")
-        res_exp = export_preset_bridge(path_or_id=preset_id, export_path=export_target, directory=target_dir)
+        res_exp = export_preset_bridge(
+            path_or_id=preset_id, export_path=export_target, directory=target_dir
+        )
         assert res_exp["status"] == "success"
         assert Path(export_target).is_file()
 

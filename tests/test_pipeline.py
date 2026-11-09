@@ -47,8 +47,8 @@ class TestColorSpace:
                 [0.0, 0.0, 1.0],
                 [0.85, 0.65, 0.55],  # Caucasian / fair skin tone
                 [0.45, 0.30, 0.20],  # Deep skin tone
-                [0.2, 0.8, 0.7],    # Teal
-                [0.9, 0.4, 0.1],    # Orange
+                [0.2, 0.8, 0.7],  # Teal
+                [0.9, 0.4, 0.1],  # Orange
             ],
             dtype=np.float32,
         )
@@ -68,8 +68,12 @@ class TestStage2FilterRefinement:
     """Validate Stage 2 filter refinement masks and invariants."""
 
     def test_zero_intensity_returns_original(self) -> None:
-        orig = np.random.RandomState(1).uniform(0.0, 1.0, (32, 32, 3)).astype(np.float32)
-        pure = np.random.RandomState(2).uniform(0.0, 1.0, (32, 32, 3)).astype(np.float32)
+        orig = (
+            np.random.RandomState(1).uniform(0.0, 1.0, (32, 32, 3)).astype(np.float32)
+        )
+        pure = (
+            np.random.RandomState(2).uniform(0.0, 1.0, (32, 32, 3)).astype(np.float32)
+        )
 
         params = Step2Params(global_intensity=0.0)
         res = apply_step2_filter_refinement(orig, pure, params)
@@ -105,7 +109,9 @@ class TestStage2FilterRefinement:
         # Typical skin color (RGB: 218, 165, 130)
         skin_rgb = np.array([218 / 255.0, 165 / 255.0, 130 / 255.0], dtype=np.float32)
         orig = np.full((16, 16, 3), skin_rgb)
-        pure = np.full((16, 16, 3), [0.1, 0.9, 0.2], dtype=np.float32)  # Vivid matrix green
+        pure = np.full(
+            (16, 16, 3), [0.1, 0.9, 0.2], dtype=np.float32
+        )  # Vivid matrix green
 
         params = Step2Params(global_intensity=1.0, skin_tone_lock=1.0)
         res = apply_step2_filter_refinement(orig, pure, params)
@@ -156,7 +162,9 @@ class TestLutBaking:
     """Validate baking of full 3-Stage pipeline into 3D LUT."""
 
     def test_bake_full_pipeline_lut_shape_and_bounds(self) -> None:
-        raw_lut = np.random.RandomState(42).uniform(0.0, 1.0, (17**3, 3)).astype(np.float32)
+        raw_lut = (
+            np.random.RandomState(42).uniform(0.0, 1.0, (17**3, 3)).astype(np.float32)
+        )
         step2 = Step2Params(global_intensity=0.8, luma_lock=0.3, skin_tone_lock=0.5)
         step3 = Step3Params(exposure=0.5, contrast=0.2, vibrance=0.3)
 
@@ -191,7 +199,9 @@ class TestStudioToEditorRelayParity:
         # Generate a smooth non-trivial grading LUT (e.g. warm tint + contrast)
         size = 33
         lattice = generate_identity_lattice(size)
-        grading_lut = np.clip(lattice * np.array([1.1, 1.0, 0.9], dtype=np.float32), 0.0, 1.0)
+        grading_lut = np.clip(
+            lattice * np.array([1.1, 1.0, 0.9], dtype=np.float32), 0.0, 1.0
+        )
 
         # 1. Studio preview rendering: directly applies final 3D LUT
         studio_rendered = apply_lut(img, grading_lut)
@@ -206,16 +216,23 @@ class TestStudioToEditorRelayParity:
         editor_rendered = apply_lut(img, loaded_lut)
 
         # 4. Strict WYSIWYG rule: delta <= 1 8-bit level
-        diff = np.abs(studio_rendered.astype(np.int16) - editor_rendered.astype(np.int16))
+        diff = np.abs(
+            studio_rendered.astype(np.int16) - editor_rendered.astype(np.int16)
+        )
         max_diff = np.max(diff)
-        assert max_diff <= 1, f"Studio to Editor relay exceeded WYSIWYG tolerance: max diff = {max_diff}"
+        assert max_diff <= 1, (
+            f"Studio to Editor relay exceeded WYSIWYG tolerance: max diff = {max_diff}"
+        )
 
 
 class TestLightroomPanelsPipeline:
     """Validate reproduction of Adobe Lightroom Classic develop panels."""
 
     def test_basic_adjustments_and_bypass(self) -> None:
-        from stealzalut.core.lightroom_models import LightroomDevelopSettings, BasicSettings
+        from stealzalut.core.lightroom_models import (
+            LightroomDevelopSettings,
+            BasicSettings,
+        )
         from stealzalut.core.pipeline import apply_step3_color_grading
 
         img = np.full((32, 32, 3), 0.5, dtype=np.float32)
@@ -242,7 +259,9 @@ class TestLightroomPanelsPipeline:
         rgb = np.repeat(img, 3, axis=-1)
 
         # Parametric S-curve: highlights up, shadows down
-        param_settings = ToneCurveSettings(mode="parametric", highlights=50.0, shadows=-50.0)
+        param_settings = ToneCurveSettings(
+            mode="parametric", highlights=50.0, shadows=-50.0
+        )
         res_param = apply_tone_curve(rgb, param_settings)
         assert res_param[80, 0] > rgb[80, 0]  # highlights boosted
         assert res_param[20, 0] < rgb[20, 0]  # shadows depressed
@@ -264,7 +283,9 @@ class TestLightroomPanelsPipeline:
         # Shift green hue and saturation
         hsl_settings = ColorMixerSettings(mode="hsl", hue_green=-50.0, sat_green=-30.0)
         res_green = apply_color_mixer(green_img, hsl_settings)
-        assert res_green[0, 0, 0] > 0.0 or res_green[0, 0, 2] > 0.0  # Hue shifted away from pure green
+        assert (
+            res_green[0, 0, 0] > 0.0 or res_green[0, 0, 2] > 0.0
+        )  # Hue shifted away from pure green
 
         # Point Color
         pt_settings = ColorMixerSettings(
@@ -330,32 +351,48 @@ class TestLightroomPanelsPipeline:
             apply_transform_spatial,
         )
 
-        img = np.random.RandomState(42).uniform(0.1, 0.9, (64, 64, 3)).astype(np.float32)
+        img = (
+            np.random.RandomState(42).uniform(0.1, 0.9, (64, 64, 3)).astype(np.float32)
+        )
 
         # Detail
-        res_detail = apply_detail_spatial(img, DetailSettings(sharpen_amount=60.0, sharpen_masking=20.0))
+        res_detail = apply_detail_spatial(
+            img, DetailSettings(sharpen_amount=60.0, sharpen_masking=20.0)
+        )
         assert res_detail.shape == img.shape
         assert not np.isnan(res_detail).any()
 
         # Lens Corrections
-        res_lens = apply_lens_corrections_spatial(img, LensCorrectionsSettings(distortion=15.0, vignette_amount=-30.0))
+        res_lens = apply_lens_corrections_spatial(
+            img, LensCorrectionsSettings(distortion=15.0, vignette_amount=-30.0)
+        )
         assert res_lens.shape == img.shape
 
         # Transform
-        res_trans = apply_transform_spatial(img, TransformSettings(rotate=5.0, scale=105.0))
+        res_trans = apply_transform_spatial(
+            img, TransformSettings(rotate=5.0, scale=105.0)
+        )
         assert res_trans.shape == img.shape
 
         # Lens Blur
-        res_blur = apply_lens_blur_spatial(img, LensBlurSettings(enabled=True, blur_amount=25.0, bokeh_style="bubble"))
+        res_blur = apply_lens_blur_spatial(
+            img, LensBlurSettings(enabled=True, blur_amount=25.0, bokeh_style="bubble")
+        )
         assert res_blur.shape == img.shape
 
         # Effects
-        res_fx = apply_effects_spatial(img, EffectsSettings(vignette_amount=-40.0, grain_amount=20.0))
+        res_fx = apply_effects_spatial(
+            img, EffectsSettings(vignette_amount=-40.0, grain_amount=20.0)
+        )
         assert res_fx.shape == img.shape
         assert np.min(res_fx) >= 0.0 and np.max(res_fx) <= 1.0
 
     def test_full_baking_with_lightroom_develop_settings(self) -> None:
-        from stealzalut.core.lightroom_models import LightroomDevelopSettings, BasicSettings, ColorGradingSettings
+        from stealzalut.core.lightroom_models import (
+            LightroomDevelopSettings,
+            BasicSettings,
+            ColorGradingSettings,
+        )
         from stealzalut.core.pipeline import bake_full_pipeline_lut
 
         settings = LightroomDevelopSettings(
@@ -363,11 +400,11 @@ class TestLightroomPanelsPipeline:
             color_grading=ColorGradingSettings(shadow_hue=210.0, shadow_sat=30.0),
         )
 
-        baked = bake_full_pipeline_lut(None, Step2Params(), Step3Params(), size=17, lr_settings=settings)
+        baked = bake_full_pipeline_lut(
+            None, Step2Params(), Step3Params(), size=17, lr_settings=settings
+        )
         assert baked.shape == (17**3, 3)
         assert np.min(baked) >= 0.0
         assert np.max(baked) <= 1.0
         assert not np.isnan(baked).any()
         assert not np.isinf(baked).any()
-
-

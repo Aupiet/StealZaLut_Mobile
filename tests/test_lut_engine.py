@@ -127,9 +127,7 @@ class TestRefineAndBlendLut:
             f"Expected identity LUT at intensity 0.0, got max diff = {max_diff:.2e}"
         )
 
-    def test_intensity_half_linear_midpoint(
-        self, sample_raw_lut: np.ndarray
-    ) -> None:
+    def test_intensity_half_linear_midpoint(self, sample_raw_lut: np.ndarray) -> None:
         """With intensity = 0.5 and no non-linear modifiers, result must be exact midpoint."""
         identity = generate_identity_lattice(17)
         result = refine_and_blend_lut(
@@ -212,7 +210,9 @@ class TestRefineAndBlendLut:
         """3D Gaussian smoothing must reduce localized high-frequency grid noise."""
         identity = generate_identity_lattice(17)
         rng = np.random.RandomState(42)
-        noisy = np.clip(identity + rng.normal(0, 0.1, identity.shape).astype(np.float32), 0.0, 1.0)
+        noisy = np.clip(
+            identity + rng.normal(0, 0.1, identity.shape).astype(np.float32), 0.0, 1.0
+        )
 
         smoothed = refine_and_blend_lut(
             raw_lut=noisy,
@@ -247,7 +247,9 @@ class TestApplyLutTrilinear:
         assert graded.dtype == np.uint8
 
         # Max pixel difference must be <= 1 uint8 level (due to float rounding)
-        max_diff = int(np.max(np.abs(sample_src_image.astype(int) - graded.astype(int))))
+        max_diff = int(
+            np.max(np.abs(sample_src_image.astype(int) - graded.astype(int)))
+        )
         assert max_diff <= 1, f"Identity LUT shifted pixels: max diff = {max_diff}"
 
     def test_apply_lut_float_image(self) -> None:
@@ -356,7 +358,9 @@ class TestChunkedApplyLut:
         res_full = apply_lut(img, lut_perturbed, chunk_limit=h * w + 1000)
         res_chunked = apply_lut(img, lut_perturbed, chunk_limit=1500)
 
-        assert np.array_equal(res_full, res_chunked), "Chunked apply_lut must be bit-exact with unchunked"
+        assert np.array_equal(res_full, res_chunked), (
+            "Chunked apply_lut must be bit-exact with unchunked"
+        )
 
     def test_chunked_float_parity(self) -> None:
         lut = generate_identity_lattice(17)
@@ -366,5 +370,3 @@ class TestChunkedApplyLut:
         res_chunked = apply_lut(img_f, lut, chunk_limit=500)
 
         np.testing.assert_allclose(res_full, res_chunked, atol=1e-6)
-
-

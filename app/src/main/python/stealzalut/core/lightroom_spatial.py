@@ -41,7 +41,10 @@ EPSILON: float = 1e-6
 # 1. Presence (Texture, Clarity, Dehaze)
 # ---------------------------------------------------------------------------
 
-def apply_presence_spatial(rgb: NDArray[np.float32], s: BasicSettings) -> NDArray[np.float32]:
+
+def apply_presence_spatial(
+    rgb: NDArray[np.float32], s: BasicSettings
+) -> NDArray[np.float32]:
     """Applique les filtres spatiaux de Présence : Texture, Clarté, Dehaze."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, w = out.shape[:2]
@@ -76,7 +79,9 @@ def apply_presence_spatial(rgb: NDArray[np.float32], s: BasicSettings) -> NDArra
         atm_light = np.percentile(out, 99.5, axis=(0, 1))
 
         if d_val > 0.0:
-            out = (out - atm_light) / np.maximum(trans ** (d_val * 0.8), 0.15) + atm_light
+            out = (out - atm_light) / np.maximum(
+                trans ** (d_val * 0.8), 0.15
+            ) + atm_light
         else:
             fog = np.abs(d_val) * (1.0 - trans) * 0.6
             out = out * (1.0 - fog) + atm_light * fog
@@ -89,7 +94,10 @@ def apply_presence_spatial(rgb: NDArray[np.float32], s: BasicSettings) -> NDArra
 # 2. Detail (Netteté & Réduction du Bruit)
 # ---------------------------------------------------------------------------
 
-def apply_detail_spatial(rgb: NDArray[np.float32], s: DetailSettings) -> NDArray[np.float32]:
+
+def apply_detail_spatial(
+    rgb: NDArray[np.float32], s: DetailSettings
+) -> NDArray[np.float32]:
     """Applique la netteté avec masquage de contours et le débruitage via OKLab."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, w = out.shape[:2]
@@ -110,7 +118,9 @@ def apply_detail_spatial(rgb: NDArray[np.float32], s: DetailSettings) -> NDArray
             threshold = 0.04 + 0.12 * (1.0 - s.nr_lum_detail / 100.0)
             edge_weight = smoothstep(threshold * 0.5, threshold * 1.5, diff)
             alpha_l = (s.nr_luminance / 100.0) * 0.85
-            oklab[..., 0] = (1.0 - alpha_l * (1.0 - edge_weight)) * l_ch + alpha_l * (1.0 - edge_weight) * l_blur
+            oklab[..., 0] = (1.0 - alpha_l * (1.0 - edge_weight)) * l_ch + alpha_l * (
+                1.0 - edge_weight
+            ) * l_blur
 
         if s.nr_color > 1e-4:
             sigma_c = 1.0 + (s.nr_color / 100.0) * 4.0
@@ -145,7 +155,10 @@ def apply_detail_spatial(rgb: NDArray[np.float32], s: DetailSettings) -> NDArray
 # 3. Lens Corrections
 # ---------------------------------------------------------------------------
 
-def apply_lens_corrections_spatial(rgb: NDArray[np.float32], s: LensCorrectionsSettings) -> NDArray[np.float32]:
+
+def apply_lens_corrections_spatial(
+    rgb: NDArray[np.float32], s: LensCorrectionsSettings
+) -> NDArray[np.float32]:
     """Applique les corrections de distorsion, aberrations chromatiques et vignettage."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, w = out.shape[:2]
@@ -187,9 +200,15 @@ def apply_lens_corrections_spatial(rgb: NDArray[np.float32], s: LensCorrectionsS
     if abs(s.vignette_amount) > 1e-4:
         cx, cy = w / 2.0, h / 2.0
         grid_y, grid_x = np.indices((h, w), dtype=np.float32)
-        norm_r = np.sqrt(((grid_x - cx) / cx) ** 2 + ((grid_y - cy) / cy) ** 2) / np.sqrt(2.0)
+        norm_r = np.sqrt(
+            ((grid_x - cx) / cx) ** 2 + ((grid_y - cy) / cy) ** 2
+        ) / np.sqrt(2.0)
         mid = np.clip(s.vignette_midpoint / 100.0, 0.1, 0.9)
-        vig_factor = 1.0 + (s.vignette_amount / 100.0) * smoothstep(mid * 0.5, 1.0, norm_r)[..., np.newaxis]
+        vig_factor = (
+            1.0
+            + (s.vignette_amount / 100.0)
+            * smoothstep(mid * 0.5, 1.0, norm_r)[..., np.newaxis]
+        )
         out = np.clip(out * vig_factor, 0.0, 1.0)
 
     return out.astype(np.float32)
@@ -199,7 +218,10 @@ def apply_lens_corrections_spatial(rgb: NDArray[np.float32], s: LensCorrectionsS
 # 4. Transform (Homographie / Perspective géométrique)
 # ---------------------------------------------------------------------------
 
-def apply_transform_spatial(rgb: NDArray[np.float32], s: TransformSettings) -> NDArray[np.float32]:
+
+def apply_transform_spatial(
+    rgb: NDArray[np.float32], s: TransformSettings
+) -> NDArray[np.float32]:
     """Applique les redressements de perspective, rotation, échelle et translation."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, w = out.shape[:2]
@@ -246,7 +268,10 @@ def apply_transform_spatial(rgb: NDArray[np.float32], s: TransformSettings) -> N
 # 5. Lens Blur (Flou de l'objectif & Styles de Bokeh)
 # ---------------------------------------------------------------------------
 
-def apply_lens_blur_spatial(rgb: NDArray[np.float32], s: LensBlurSettings) -> NDArray[np.float32]:
+
+def apply_lens_blur_spatial(
+    rgb: NDArray[np.float32], s: LensBlurSettings
+) -> NDArray[np.float32]:
     """Applique le flou synthétique de profondeur avec style de bokeh et boost spéculaire."""
     if not s.enabled or s.blur_amount < 1e-4:
         return rgb.copy()
@@ -270,7 +295,11 @@ def apply_lens_blur_spatial(rgb: NDArray[np.float32], s: LensBlurSettings) -> ND
     elif s.bokeh_style in ("blade5", "blade7"):
         n_blades = 5 if s.bokeh_style == "blade5" else 7
         angle = np.arctan2(ky, kx)
-        r_poly = k_radius * np.cos(np.pi / n_blades) / np.cos((angle % (2.0 * np.pi / n_blades)) - np.pi / n_blades)
+        r_poly = (
+            k_radius
+            * np.cos(np.pi / n_blades)
+            / np.cos((angle % (2.0 * np.pi / n_blades)) - np.pi / n_blades)
+        )
         kernel = np.where(kr <= r_poly, 1.0, 0.0)
     else:
         kernel = np.where(kr <= k_radius, 1.0, 0.0)
@@ -282,7 +311,9 @@ def apply_lens_blur_spatial(rgb: NDArray[np.float32], s: LensBlurSettings) -> ND
         kernel = np.ones((k_size, k_size), dtype=np.float32) / (k_size * k_size)
 
     if s.bokeh_boost > 1e-4:
-        boost_mask = smoothstep(0.7, 1.0, 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2])
+        boost_mask = smoothstep(
+            0.7, 1.0, 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
+        )
         out += (s.bokeh_boost / 100.0) * 0.35 * boost_mask[..., np.newaxis]
 
     blurred = filter_2d(out, kernel)
@@ -295,7 +326,10 @@ def apply_lens_blur_spatial(rgb: NDArray[np.float32], s: LensBlurSettings) -> ND
 # 6. Effects (Vignette Post-Recadrage & Grain)
 # ---------------------------------------------------------------------------
 
-def apply_effects_spatial(rgb: NDArray[np.float32], s: EffectsSettings) -> NDArray[np.float32]:
+
+def apply_effects_spatial(
+    rgb: NDArray[np.float32], s: EffectsSettings
+) -> NDArray[np.float32]:
     """Applique la vignette après recadrage et le grain photographique réaliste."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, w = out.shape[:2]
@@ -313,14 +347,18 @@ def apply_effects_spatial(rgb: NDArray[np.float32], s: EffectsSettings) -> NDArr
 
         mid = np.clip(s.vignette_midpoint / 100.0, 0.05, 0.95)
         feather = np.clip(s.vignette_feather / 100.0, 0.05, 0.95)
-        vig_falloff = smoothstep(mid * (1.0 - 0.5 * feather), mid + 0.5 * feather, norm_r)[..., np.newaxis]
+        vig_falloff = smoothstep(
+            mid * (1.0 - 0.5 * feather), mid + 0.5 * feather, norm_r
+        )[..., np.newaxis]
 
         lum = 0.2126 * out[..., 0] + 0.7152 * out[..., 1] + 0.0722 * out[..., 2]
-        hl_protection = (s.vignette_highlights / 100.0) * smoothstep(0.6, 1.0, lum)[..., np.newaxis]
+        hl_protection = (s.vignette_highlights / 100.0) * smoothstep(0.6, 1.0, lum)[
+            ..., np.newaxis
+        ]
 
         vig_mask = vig_falloff * (1.0 - hl_protection)
         if s.vignette_amount < 0.0:
-            out *= (1.0 + (s.vignette_amount / 100.0) * vig_mask)
+            out *= 1.0 + (s.vignette_amount / 100.0) * vig_mask
         else:
             out = out + (s.vignette_amount / 100.0) * (1.0 - out) * vig_mask
         out = np.clip(out, 0.0, 1.0)
@@ -335,7 +373,9 @@ def apply_effects_spatial(rgb: NDArray[np.float32], s: EffectsSettings) -> NDArr
         small_w = max(4, w // scale_size)
 
         rng = np.random.RandomState(42)
-        raw_noise = rng.normal(0.0, 0.10 * (s.grain_amount / 100.0), size=(small_h, small_w, 3)).astype(np.float32)
+        raw_noise = rng.normal(
+            0.0, 0.10 * (s.grain_amount / 100.0), size=(small_h, small_w, 3)
+        ).astype(np.float32)
 
         if s.grain_roughness > 50.0:
             k = laplacian_2d(raw_noise)
@@ -350,6 +390,7 @@ def apply_effects_spatial(rgb: NDArray[np.float32], s: EffectsSettings) -> NDArr
 # ---------------------------------------------------------------------------
 # Pipeline Spatial Intégré (Bypass toggles inclus)
 # ---------------------------------------------------------------------------
+
 
 def apply_full_lightroom_spatial_pipeline(
     rgb: NDArray[np.float32],

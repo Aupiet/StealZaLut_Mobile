@@ -63,13 +63,13 @@ def load_image(path: str) -> NDArray[np.uint8]:
     arr: NDArray[np.uint8] = np.asarray(img, dtype=np.uint8)
 
     if arr.ndim != 3 or arr.shape[2] != 3:
-        raise ValueError(
-            f"Expected HxWx3 image, got shape {arr.shape} for {path}"
-        )
+        raise ValueError(f"Expected HxWx3 image, got shape {arr.shape} for {path}")
     return arr
 
 
-def load_proxy_image(path: str, max_dim: int = MAX_ANALYSIS_DIMENSION) -> NDArray[np.uint8]:
+def load_proxy_image(
+    path: str, max_dim: int = MAX_ANALYSIS_DIMENSION
+) -> NDArray[np.uint8]:
     """Load an image file directly as a downscaled proxy, bounding memory consumption.
 
     Uses Pillow's native JPEG draft downsampling and thumbnail reduction before
@@ -193,8 +193,6 @@ def to_float32(image: NDArray[np.uint8]) -> NDArray[np.float32]:
         Array with dtype ``float32`` and values in ``[0.0, 1.0]``.
     """
     return image.astype(np.float32) / np.float32(255.0)
-
-
 
 
 def to_uint8(image: NDArray[Union[np.float32, np.float64]]) -> NDArray[np.uint8]:
@@ -339,7 +337,9 @@ def extract_dominant_palette(
     pil_img.thumbnail((128, 128), _RESAMPLING_BILINEAR)
 
     # Median cut quantization (native C implementation in libimaging)
-    quantize_method = getattr(getattr(Image, "Quantize", None), "MEDIANCUT", getattr(Image, "MEDIANCUT", 0))
+    quantize_method = getattr(
+        getattr(Image, "Quantize", None), "MEDIANCUT", getattr(Image, "MEDIANCUT", 0)
+    )
     quantized = pil_img.quantize(colors=num_colors, method=quantize_method)
     raw_palette = quantized.getpalette() or []
     palette_slice = raw_palette[: num_colors * 3]

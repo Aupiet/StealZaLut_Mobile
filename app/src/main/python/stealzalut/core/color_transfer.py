@@ -140,9 +140,7 @@ def apply_soft_clip(
     m_hi = 1.0 - highlight_th
     mask_hi = x > highlight_th
     if np.any(mask_hi):
-        out[mask_hi] = highlight_th + m_hi * np.tanh(
-            (x[mask_hi] - highlight_th) / m_hi
-        )
+        out[mask_hi] = highlight_th + m_hi * np.tanh((x[mask_hi] - highlight_th) / m_hi)
 
     # Soft compression on shadows (x < shadow_th)
     m_lo = shadow_th
@@ -153,13 +151,10 @@ def apply_soft_clip(
     return np.clip(out, 0.0, 1.0)
 
 
-
-
-
-
 # ---------------------------------------------------------------------------
 # Core Color Transfer Algorithms (Desktop Parity)
 # ---------------------------------------------------------------------------
+
 
 def _histogram_match_1d(
     src: NDArray[np.float32],
@@ -264,7 +259,9 @@ def _reinhard_lab_transfer(
 
     clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
     if clamped_preserve > 0.0:
-        out_lab[:, 0] = clamped_preserve * t_flat[:, 0] + (1.0 - clamped_preserve) * out_lab[:, 0]
+        out_lab[:, 0] = (
+            clamped_preserve * t_flat[:, 0] + (1.0 - clamped_preserve) * out_lab[:, 0]
+        )
 
     out_lab[:, 0] = np.clip(out_lab[:, 0], 0.0, 100.0)
     out_rgb = lab_to_rgb(out_lab.reshape(t_shape))
@@ -285,13 +282,25 @@ def fit_and_apply_transfer(
     If *target_img* is a 3D identity lattice (N^3, 3), evaluates the transfer across
     the entire RGB cube to produce an Adobe-compliant 3D LUT.
     """
-    src_f = (src_img.astype(np.float32) / 255.0) if src_img.dtype == np.uint8 else src_img.astype(np.float32)
-    ref_f = (ref_img.astype(np.float32) / 255.0) if ref_img.dtype == np.uint8 else ref_img.astype(np.float32)
+    src_f = (
+        (src_img.astype(np.float32) / 255.0)
+        if src_img.dtype == np.uint8
+        else src_img.astype(np.float32)
+    )
+    ref_f = (
+        (ref_img.astype(np.float32) / 255.0)
+        if ref_img.dtype == np.uint8
+        else ref_img.astype(np.float32)
+    )
 
     if target_img is None:
         t_f = src_f.copy()
     else:
-        t_f = (target_img.astype(np.float32) / 255.0) if target_img.dtype == np.uint8 else target_img.astype(np.float32)
+        t_f = (
+            (target_img.astype(np.float32) / 255.0)
+            if target_img.dtype == np.uint8
+            else target_img.astype(np.float32)
+        )
 
     meth = method.lower()
 
@@ -316,8 +325,14 @@ def fit_and_apply_transfer(
         cov_s = np.cov(s_flat, rowvar=False)
         cov_r = np.cov(r_flat, rowvar=False)
 
-        t_mat = _compute_mkl_matrix(cov_s, cov_r) if meth == "mkl" else _compute_mvgd_matrix(cov_s, cov_r)
-        res_flat = (t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)
+        t_mat = (
+            _compute_mkl_matrix(cov_s, cov_r)
+            if meth == "mkl"
+            else _compute_mvgd_matrix(cov_s, cov_r)
+        )
+        res_flat = (t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(
+            np.float32
+        )
         result = res_flat.reshape(t_f.shape)
 
     elif meth in ("hm-mkl-hm", "hm-mvgd-hm"):
@@ -335,9 +350,17 @@ def fit_and_apply_transfer(
         cov_s = np.cov(s_flat, rowvar=False)
         cov_r = np.cov(r_flat, rowvar=False)
 
-        t_mat = _compute_mkl_matrix(cov_s, cov_r) if meth == "hm-mkl-hm" else _compute_mvgd_matrix(cov_s, cov_r)
-        s_mkl = ((s_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)).reshape(s_hm1.shape)
-        t_mkl = ((t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)).reshape(t_hm1.shape)
+        t_mat = (
+            _compute_mkl_matrix(cov_s, cov_r)
+            if meth == "hm-mkl-hm"
+            else _compute_mvgd_matrix(cov_s, cov_r)
+        )
+        s_mkl = (
+            (s_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)
+        ).reshape(s_hm1.shape)
+        t_mkl = (
+            (t_flat - mu_s.astype(np.float32)) @ t_mat.T + mu_r.astype(np.float32)
+        ).reshape(t_hm1.shape)
 
         # 3. Post-HM: Re-match histogram to reference
         result = _histogram_match_1d(src=s_mkl, ref=ref_f, target=t_mkl)
@@ -356,7 +379,10 @@ def fit_and_apply_transfer(
     if clamped_preserve > 0.0 and meth != "reinhard":
         t_lab = rgb_to_lab(t_f)
         res_lab = rgb_to_lab(np.clip(result, 0.0, 1.0))
-        final_l = clamped_preserve * t_lab[..., 0] + (1.0 - clamped_preserve) * res_lab[..., 0]
+        final_l = (
+            clamped_preserve * t_lab[..., 0]
+            + (1.0 - clamped_preserve) * res_lab[..., 0]
+        )
         blended_lab = np.stack([final_l, res_lab[..., 1], res_lab[..., 2]], axis=-1)
         result = lab_to_rgb(blended_lab)
 

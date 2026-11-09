@@ -33,7 +33,9 @@ def test_palette_extraction_counts_and_format():
         palette = extract_dominant_palette(img, num_colors=k)
         assert len(palette) == k, f"Expected {k} colors, got {len(palette)}"
         for hex_code in palette:
-            assert HEX_REGEX.match(hex_code) is not None, f"Invalid hex color: {hex_code}"
+            assert HEX_REGEX.match(hex_code) is not None, (
+                f"Invalid hex color: {hex_code}"
+            )
 
 
 def test_palette_extraction_degenerate_uniform_black():
@@ -41,9 +43,13 @@ def test_palette_extraction_degenerate_uniform_black():
     uniform_black = np.zeros((120, 120, 3), dtype=np.uint8)
     for k in [4, 6]:
         palette = extract_dominant_palette(uniform_black, num_colors=k)
-        assert len(palette) == k, f"Expected {k} colors on black image, got {len(palette)}"
+        assert len(palette) == k, (
+            f"Expected {k} colors on black image, got {len(palette)}"
+        )
         for hex_code in palette:
-            assert HEX_REGEX.match(hex_code) is not None, f"Invalid hex color: {hex_code}"
+            assert HEX_REGEX.match(hex_code) is not None, (
+                f"Invalid hex color: {hex_code}"
+            )
             assert hex_code.upper() == "#000000"
 
 
@@ -52,9 +58,13 @@ def test_palette_extraction_degenerate_uniform_white():
     uniform_white = np.full((120, 120, 3), 255, dtype=np.uint8)
     for k in [4, 6]:
         palette = extract_dominant_palette(uniform_white, num_colors=k)
-        assert len(palette) == k, f"Expected {k} colors on white image, got {len(palette)}"
+        assert len(palette) == k, (
+            f"Expected {k} colors on white image, got {len(palette)}"
+        )
         for hex_code in palette:
-            assert HEX_REGEX.match(hex_code) is not None, f"Invalid hex color: {hex_code}"
+            assert HEX_REGEX.match(hex_code) is not None, (
+                f"Invalid hex color: {hex_code}"
+            )
             assert hex_code.upper() == "#FFFFFF"
 
 
@@ -89,7 +99,9 @@ def test_palette_extraction_night_scene_captures_vibrant_neons():
         return max(r, g, b) > 100
 
     vivid_count = sum(1 for c in palette if is_bright_or_vivid(c))
-    assert vivid_count >= 1, f"Expected vibrant colors in night scene palette, got: {palette}"
+    assert vivid_count >= 1, (
+        f"Expected vibrant colors in night scene palette, got: {palette}"
+    )
 
 
 def test_bridge_extract_palette_large_image(tmp_path):

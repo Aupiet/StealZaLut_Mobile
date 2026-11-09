@@ -8,8 +8,12 @@ from typing import Tuple
 
 from stealzalut.core.color_space import linear_to_srgb, srgb_to_linear, smoothstep
 from stealzalut.core.lightroom_models import (
-    BasicSettings, CalibrationSettings, ColorGradingSettings,
-    ColorMixerSettings, LightroomDevelopSettings, ToneCurveSettings,
+    BasicSettings,
+    CalibrationSettings,
+    ColorGradingSettings,
+    ColorMixerSettings,
+    LightroomDevelopSettings,
+    ToneCurveSettings,
 )
 from stealzalut.core.spline_interpolator import evaluate_monotone_cubic_spline
 
@@ -20,14 +24,17 @@ EPSILON: float = 1e-6
 # 1. Basic Adjustments
 # ---------------------------------------------------------------------------
 
-def apply_basic_adjustments(rgb: NDArray[np.float32], s: BasicSettings) -> NDArray[np.float32]:
+
+def apply_basic_adjustments(
+    rgb: NDArray[np.float32], s: BasicSettings
+) -> NDArray[np.float32]:
     """Applique les réglages de base du panneau 1."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
 
     # A. Exposition en espace linéaire EV
     if abs(s.exposure) > 1e-4:
         lin = srgb_to_linear(out)
-        lin *= (2.0 ** s.exposure)
+        lin *= 2.0**s.exposure
         out = linear_to_srgb(lin)
 
     # B. Balance des blancs (Température & Teinte)
@@ -91,11 +98,14 @@ def apply_basic_adjustments(rgb: NDArray[np.float32], s: BasicSettings) -> NDArr
         s_boost = (s.saturation / 100.0) * 0.55
         total_boost = 1.0 + v_boost + s_boost
 
-        out = np.stack([
-            lum + (r - lum) * total_boost,
-            lum + (g - lum) * total_boost,
-            lum + (b - lum) * total_boost,
-        ], axis=-1)
+        out = np.stack(
+            [
+                lum + (r - lum) * total_boost,
+                lum + (g - lum) * total_boost,
+                lum + (b - lum) * total_boost,
+            ],
+            axis=-1,
+        )
         out = np.clip(out, 0.0, 1.0)
 
     return out.astype(np.float32)
@@ -105,7 +115,10 @@ def apply_basic_adjustments(rgb: NDArray[np.float32], s: BasicSettings) -> NDArr
 # 2. Tone Curve
 # ---------------------------------------------------------------------------
 
-def apply_tone_curve(rgb: NDArray[np.float32], s: ToneCurveSettings) -> NDArray[np.float32]:
+
+def apply_tone_curve(
+    rgb: NDArray[np.float32], s: ToneCurveSettings
+) -> NDArray[np.float32]:
     """Applique la courbe des tonalités du panneau 2."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
 
@@ -122,13 +135,16 @@ def apply_tone_curve(rgb: NDArray[np.float32], s: ToneCurveSettings) -> NDArray[
         d_highlights = (s.highlights / 100.0) * 0.15
 
         x_nodes = np.array([0.0, s_split, m_split, h_split, 1.0], dtype=np.float32)
-        y_nodes = np.array([
-            0.0,
-            np.clip(s_split + d_shadows + 0.5 * d_darks, 0.01, 0.90),
-            np.clip(m_split + 0.5 * d_darks + 0.5 * d_lights, 0.05, 0.95),
-            np.clip(h_split + 0.5 * d_lights + d_highlights, 0.10, 0.99),
-            1.0,
-        ], dtype=np.float32)
+        y_nodes = np.array(
+            [
+                0.0,
+                np.clip(s_split + d_shadows + 0.5 * d_darks, 0.01, 0.90),
+                np.clip(m_split + 0.5 * d_darks + 0.5 * d_lights, 0.05, 0.95),
+                np.clip(h_split + 0.5 * d_lights + d_highlights, 0.10, 0.99),
+                1.0,
+            ],
+            dtype=np.float32,
+        )
 
         out = evaluate_monotone_cubic_spline(x_nodes, y_nodes, out)
 
@@ -146,7 +162,9 @@ def apply_tone_curve(rgb: NDArray[np.float32], s: ToneCurveSettings) -> NDArray[
                 pts = sorted(pts_list, key=lambda p: p[0])
                 x_pts = np.array([p[0] for p in pts], dtype=np.float32)
                 y_pts = np.array([p[1] for p in pts], dtype=np.float32)
-                out[..., ch] = evaluate_monotone_cubic_spline(x_pts, y_pts, out[..., ch])
+                out[..., ch] = evaluate_monotone_cubic_spline(
+                    x_pts, y_pts, out[..., ch]
+                )
 
     return np.clip(out, 0.0, 1.0).astype(np.float32)
 
@@ -155,7 +173,10 @@ def apply_tone_curve(rgb: NDArray[np.float32], s: ToneCurveSettings) -> NDArray[
 # 3. Color Mixer (TSL / HSL & Point Color)
 # ---------------------------------------------------------------------------
 
-def _rgb_to_hsl(rgb: NDArray[np.float32]) -> Tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
+
+def _rgb_to_hsl(
+    rgb: NDArray[np.float32],
+) -> Tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
     """Convertit RGB [0, 1] vers H [0, 360], S [0, 1], L [0, 1]."""
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     cmax = np.maximum(np.maximum(r, g), b)
@@ -181,7 +202,9 @@ def _rgb_to_hsl(rgb: NDArray[np.float32]) -> Tuple[NDArray[np.float32], NDArray[
     return hue, sat, lum
 
 
-def _hsl_to_rgb(h: NDArray[np.float32], s: NDArray[np.float32], l: NDArray[np.float32]) -> NDArray[np.float32]:
+def _hsl_to_rgb(
+    h: NDArray[np.float32], s: NDArray[np.float32], l: NDArray[np.float32]
+) -> NDArray[np.float32]:
     """Convertit H [0, 360], S [0, 1], L [0, 1] vers RGB [0, 1]."""
     c = (1.0 - np.abs(2.0 * l - 1.0)) * s
     h_prime = h / 60.0
@@ -189,8 +212,16 @@ def _hsl_to_rgb(h: NDArray[np.float32], s: NDArray[np.float32], l: NDArray[np.fl
     m = l - c / 2.0
 
     r, g, b = np.zeros_like(h), np.zeros_like(h), np.zeros_like(h)
-    m0, m1, m2 = (h_prime < 1.0), (h_prime >= 1.0) & (h_prime < 2.0), (h_prime >= 2.0) & (h_prime < 3.0)
-    m3, m4, m5 = (h_prime >= 3.0) & (h_prime < 4.0), (h_prime >= 4.0) & (h_prime < 5.0), (h_prime >= 5.0)
+    m0, m1, m2 = (
+        (h_prime < 1.0),
+        (h_prime >= 1.0) & (h_prime < 2.0),
+        (h_prime >= 2.0) & (h_prime < 3.0),
+    )
+    m3, m4, m5 = (
+        (h_prime >= 3.0) & (h_prime < 4.0),
+        (h_prime >= 4.0) & (h_prime < 5.0),
+        (h_prime >= 5.0),
+    )
 
     r[m0], g[m0], b[m0] = c[m0], x[m0], 0.0
     r[m1], g[m1], b[m1] = x[m1], c[m1], 0.0
@@ -199,10 +230,14 @@ def _hsl_to_rgb(h: NDArray[np.float32], s: NDArray[np.float32], l: NDArray[np.fl
     r[m4], g[m4], b[m4] = x[m4], 0.0, c[m4]
     r[m5], g[m5], b[m5] = c[m5], 0.0, x[m5]
 
-    return np.clip(np.stack([r + m, g + m, b + m], axis=-1), 0.0, 1.0).astype(np.float32)
+    return np.clip(np.stack([r + m, g + m, b + m], axis=-1), 0.0, 1.0).astype(
+        np.float32
+    )
 
 
-def apply_color_mixer(rgb: NDArray[np.float32], s: ColorMixerSettings) -> NDArray[np.float32]:
+def apply_color_mixer(
+    rgb: NDArray[np.float32], s: ColorMixerSettings
+) -> NDArray[np.float32]:
     """Applique le mélangeur de couleurs TSL / HSL et Point Color."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     h, sat, lum = _rgb_to_hsl(out)
@@ -210,9 +245,36 @@ def apply_color_mixer(rgb: NDArray[np.float32], s: ColorMixerSettings) -> NDArra
     if s.mode == "hsl":
         # 8 centres angulaires HSL
         centers = [0.0, 30.0, 60.0, 120.0, 180.0, 240.0, 280.0, 320.0]
-        hues = [s.hue_red, s.hue_orange, s.hue_yellow, s.hue_green, s.hue_aqua, s.hue_blue, s.hue_purple, s.hue_magenta]
-        sats = [s.sat_red, s.sat_orange, s.sat_yellow, s.sat_green, s.sat_aqua, s.sat_blue, s.sat_purple, s.sat_magenta]
-        lums = [s.lum_red, s.lum_orange, s.lum_yellow, s.lum_green, s.lum_aqua, s.lum_blue, s.lum_purple, s.lum_magenta]
+        hues = [
+            s.hue_red,
+            s.hue_orange,
+            s.hue_yellow,
+            s.hue_green,
+            s.hue_aqua,
+            s.hue_blue,
+            s.hue_purple,
+            s.hue_magenta,
+        ]
+        sats = [
+            s.sat_red,
+            s.sat_orange,
+            s.sat_yellow,
+            s.sat_green,
+            s.sat_aqua,
+            s.sat_blue,
+            s.sat_purple,
+            s.sat_magenta,
+        ]
+        lums = [
+            s.lum_red,
+            s.lum_orange,
+            s.lum_yellow,
+            s.lum_green,
+            s.lum_aqua,
+            s.lum_blue,
+            s.lum_purple,
+            s.lum_magenta,
+        ]
 
         total_dh = np.zeros_like(h)
         total_ds = np.zeros_like(sat)
@@ -239,7 +301,9 @@ def apply_color_mixer(rgb: NDArray[np.float32], s: ColorMixerSettings) -> NDArra
 
     elif s.mode == "point_color" and s.point_active:
         # Distance dans l'espace HSL vers la cible
-        target_rgb = np.array([s.point_target_r, s.point_target_g, s.point_target_b], dtype=np.float32)
+        target_rgb = np.array(
+            [s.point_target_r, s.point_target_g, s.point_target_b], dtype=np.float32
+        )
         th, ts, tl = _rgb_to_hsl(target_rgb.reshape((1, 1, 3)))
         th, ts, tl = float(th[0, 0]), float(ts[0, 0]), float(tl[0, 0])
 
@@ -264,7 +328,10 @@ def apply_color_mixer(rgb: NDArray[np.float32], s: ColorMixerSettings) -> NDArra
 # 4. Color Grading
 # ---------------------------------------------------------------------------
 
-def apply_color_grading(rgb: NDArray[np.float32], s: ColorGradingSettings) -> NDArray[np.float32]:
+
+def apply_color_grading(
+    rgb: NDArray[np.float32], s: ColorGradingSettings
+) -> NDArray[np.float32]:
     """Applique les 3 roues chromatiques (Ombres, Moyens, Hautes) + Global."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
     lum = 0.2126 * out[..., 0] + 0.7152 * out[..., 1] + 0.0722 * out[..., 2]
@@ -314,7 +381,10 @@ def apply_color_grading(rgb: NDArray[np.float32], s: ColorGradingSettings) -> ND
 # 5. Calibration
 # ---------------------------------------------------------------------------
 
-def apply_calibration(rgb: NDArray[np.float32], s: CalibrationSettings) -> NDArray[np.float32]:
+
+def apply_calibration(
+    rgb: NDArray[np.float32], s: CalibrationSettings
+) -> NDArray[np.float32]:
     """Applique l'étalonnage des primaires et la teinte des ombres (Panneau 10)."""
     out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
 
@@ -324,9 +394,13 @@ def apply_calibration(rgb: NDArray[np.float32], s: CalibrationSettings) -> NDArr
         shadow_mask = (1.0 - smoothstep(0.0, 0.25, lum))[..., np.newaxis]
         tint_val = (s.shadow_tint / 100.0) * 0.12
         # Magenta = +R +B, -G ; Vert = +G, -R -B
-        out[..., 0] = np.clip(out[..., 0] + tint_val * shadow_mask[..., 0] * 0.5, 0.0, 1.0)
+        out[..., 0] = np.clip(
+            out[..., 0] + tint_val * shadow_mask[..., 0] * 0.5, 0.0, 1.0
+        )
         out[..., 1] = np.clip(out[..., 1] - tint_val * shadow_mask[..., 0], 0.0, 1.0)
-        out[..., 2] = np.clip(out[..., 2] + tint_val * shadow_mask[..., 0] * 0.5, 0.0, 1.0)
+        out[..., 2] = np.clip(
+            out[..., 2] + tint_val * shadow_mask[..., 0] * 0.5, 0.0, 1.0
+        )
 
     # Rotation et saturation des primaires RVB en espace linéaire
     lin = srgb_to_linear(out)
@@ -364,6 +438,7 @@ def apply_calibration(rgb: NDArray[np.float32], s: CalibrationSettings) -> NDArr
 # ---------------------------------------------------------------------------
 # Pipeline Colorimétrique Intégré (Bypass toggles inclus)
 # ---------------------------------------------------------------------------
+
 
 def apply_full_lightroom_color_pipeline(
     rgb: NDArray[np.float32],

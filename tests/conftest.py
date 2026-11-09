@@ -26,14 +26,19 @@ from PIL import Image
 # Image fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def sample_src_image() -> np.ndarray:
     """100×100 blue-ish uint8 image (reproducible via fixed seed)."""
     rng = np.random.RandomState(42)
     img = rng.randint(0, 256, (100, 100, 3), dtype=np.uint8)
     # Push towards blue: boost B channel, dampen R channel
-    img[:, :, 0] = np.clip(img[:, :, 0].astype(np.int16) - 80, 0, 255).astype(np.uint8)  # R down
-    img[:, :, 2] = np.clip(img[:, :, 2].astype(np.int16) + 80, 0, 255).astype(np.uint8)  # B up
+    img[:, :, 0] = np.clip(img[:, :, 0].astype(np.int16) - 80, 0, 255).astype(
+        np.uint8
+    )  # R down
+    img[:, :, 2] = np.clip(img[:, :, 2].astype(np.int16) + 80, 0, 255).astype(
+        np.uint8
+    )  # B up
     return img
 
 
@@ -43,9 +48,15 @@ def sample_ref_image() -> np.ndarray:
     rng = np.random.RandomState(99)
     img = rng.randint(0, 256, (100, 100, 3), dtype=np.uint8)
     # Push towards orange: boost R, dampen B
-    img[:, :, 0] = np.clip(img[:, :, 0].astype(np.int16) + 80, 0, 255).astype(np.uint8)  # R up
-    img[:, :, 1] = np.clip(img[:, :, 1].astype(np.int16) + 30, 0, 255).astype(np.uint8)  # G slight up
-    img[:, :, 2] = np.clip(img[:, :, 2].astype(np.int16) - 80, 0, 255).astype(np.uint8)  # B down
+    img[:, :, 0] = np.clip(img[:, :, 0].astype(np.int16) + 80, 0, 255).astype(
+        np.uint8
+    )  # R up
+    img[:, :, 1] = np.clip(img[:, :, 1].astype(np.int16) + 30, 0, 255).astype(
+        np.uint8
+    )  # G slight up
+    img[:, :, 2] = np.clip(img[:, :, 2].astype(np.int16) - 80, 0, 255).astype(
+        np.uint8
+    )  # B down
     return img
 
 
@@ -62,10 +73,10 @@ def identical_images() -> tuple[np.ndarray, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 
-
 # ---------------------------------------------------------------------------
 # On-disk JPEG paths
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_src_path(sample_src_image: np.ndarray, tmp_path: Path) -> Path:

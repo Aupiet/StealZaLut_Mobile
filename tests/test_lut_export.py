@@ -42,9 +42,7 @@ pytestmark = pytest.mark.skipif(
 # ------------------------------------------------------------------
 
 
-def _export_identity_cube(
-    tmp_path: Path, size: int = 17, title: str = "Test"
-) -> Path:
+def _export_identity_cube(tmp_path: Path, size: int = 17, title: str = "Test") -> Path:
     """Generate an identity LUT and export it as a .cube file."""
     lut = generate_identity_lattice(size)
     out_path = tmp_path / f"identity_{size}.cube"
@@ -158,12 +156,8 @@ class TestCubeFileValues:
         _, data_rows = _parse_cube(cube_path)
 
         all_values = np.array(data_rows)
-        assert all_values.min() >= 0.0, (
-            f"Value below 0.0 found: {all_values.min()}"
-        )
-        assert all_values.max() <= 1.0, (
-            f"Value above 1.0 found: {all_values.max()}"
-        )
+        assert all_values.min() >= 0.0, f"Value below 0.0 found: {all_values.min()}"
+        assert all_values.max() <= 1.0, f"Value above 1.0 found: {all_values.max()}"
 
 
 # ------------------------------------------------------------------
@@ -191,9 +185,7 @@ class TestCubeExportSizes:
     """Export must work for various standard LUT sizes."""
 
     @pytest.mark.parametrize("size", [17, 33])
-    def test_export_with_different_sizes(
-        self, tmp_path: Path, size: int
-    ) -> None:
+    def test_export_with_different_sizes(self, tmp_path: Path, size: int) -> None:
         cube_path = _export_identity_cube(tmp_path, size=size)
         _, data_rows = _parse_cube(cube_path)
 
@@ -477,4 +469,3 @@ class TestCubeBakingAndParser:
             assert out_exif is not None
             assert out_exif.get(0x010F) == "StealZaLutCamera"
             assert out_exif.get(0x0112) == 1
-

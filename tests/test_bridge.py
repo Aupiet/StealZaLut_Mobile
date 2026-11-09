@@ -52,21 +52,29 @@ def test_missing_files_error_codes():
 
         # 2. export_cube_file
         out_cube = os.path.join(tmp_dir, "test.cube")
-        r3 = export_cube_file(src_path=nonexistent_src, ref_path=valid_src, output_cube_path=out_cube)
+        r3 = export_cube_file(
+            src_path=nonexistent_src, ref_path=valid_src, output_cube_path=out_cube
+        )
         assert r3["status"] == "error"
         assert r3["error_code"] == "SOURCE_NOT_FOUND"
 
-        r4 = export_cube_file(src_path=valid_src, ref_path=nonexistent_ref, output_cube_path=out_cube)
+        r4 = export_cube_file(
+            src_path=valid_src, ref_path=nonexistent_ref, output_cube_path=out_cube
+        )
         assert r4["status"] == "error"
         assert r4["error_code"] == "REFERENCE_NOT_FOUND"
 
         # 3. export_graded_image
         out_img = os.path.join(tmp_dir, "graded.jpg")
-        r5 = export_graded_image(src_path=nonexistent_src, ref_path=valid_src, output_image_path=out_img)
+        r5 = export_graded_image(
+            src_path=nonexistent_src, ref_path=valid_src, output_image_path=out_img
+        )
         assert r5["status"] == "error"
         assert r5["error_code"] == "SOURCE_NOT_FOUND"
 
-        r6 = export_graded_image(src_path=valid_src, ref_path=nonexistent_ref, output_image_path=out_img)
+        r6 = export_graded_image(
+            src_path=valid_src, ref_path=nonexistent_ref, output_image_path=out_img
+        )
         assert r6["status"] == "error"
         assert r6["error_code"] == "REFERENCE_NOT_FOUND"
 
@@ -110,13 +118,17 @@ def test_nominal_bridge_calls():
 
         # 1. process_preview
         out_preview = os.path.join(tmp_dir, "preview.jpg")
-        r_prev = process_preview(src_path=src_path, ref_path=ref_path, output_preview_path=out_preview)
+        r_prev = process_preview(
+            src_path=src_path, ref_path=ref_path, output_preview_path=out_preview
+        )
         assert r_prev["status"] == "success"
         assert os.path.isfile(r_prev["preview_path"])
 
         # 2. export_cube_file (17^3)
         out_cube = os.path.join(tmp_dir, "lut.cube")
-        r_cube = export_cube_file(src_path=src_path, ref_path=ref_path, output_cube_path=out_cube, lut_size=17)
+        r_cube = export_cube_file(
+            src_path=src_path, ref_path=ref_path, output_cube_path=out_cube, lut_size=17
+        )
         assert r_cube["status"] == "success"
         assert os.path.isfile(r_cube["cube_path"])
         with open(r_cube["cube_path"], "r", encoding="utf-8") as f:
@@ -125,7 +137,9 @@ def test_nominal_bridge_calls():
 
         # 3. export_graded_image
         out_img = os.path.join(tmp_dir, "graded.jpg")
-        r_img = export_graded_image(src_path=src_path, ref_path=ref_path, output_image_path=out_img)
+        r_img = export_graded_image(
+            src_path=src_path, ref_path=ref_path, output_image_path=out_img
+        )
         assert r_img["status"] == "success"
         assert os.path.isfile(r_img["image_path"])
 
@@ -143,7 +157,9 @@ def test_nominal_bridge_calls():
 
         # 6. export_cube_file from reference image alone (no source photo)
         out_ref_cube = os.path.join(tmp_dir, "ref_alone.cube")
-        r_ref_cube = export_cube_file(src_path="", ref_path=ref_path, output_cube_path=out_ref_cube, lut_size=17)
+        r_ref_cube = export_cube_file(
+            src_path="", ref_path=ref_path, output_cube_path=out_ref_cube, lut_size=17
+        )
         assert r_ref_cube["status"] == "success"
         assert os.path.isfile(r_ref_cube["cube_path"])
         assert os.path.getsize(r_ref_cube["cube_path"]) > 0

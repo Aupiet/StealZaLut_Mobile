@@ -46,7 +46,9 @@ def get_default_presets_dir() -> str:
     """Return default directory path for presets storage."""
     base_dir = os.environ.get("SZL_PRESETS_DIR", "")
     if not base_dir:
-        base_dir = os.path.join(os.path.expanduser("~"), ".stealzalut", DEFAULT_PRESETS_DIR_NAME)
+        base_dir = os.path.join(
+            os.path.expanduser("~"), ".stealzalut", DEFAULT_PRESETS_DIR_NAME
+        )
     os.makedirs(base_dir, exist_ok=True)
     return os.path.abspath(base_dir)
 
@@ -111,7 +113,9 @@ def create_preset(
             except Exception:
                 res["lightroom_params"] = lightroom_params
         else:
-            res["lightroom_params"] = _to_params_dict(lightroom_params) or lightroom_params
+            res["lightroom_params"] = (
+                _to_params_dict(lightroom_params) or lightroom_params
+            )
 
     return res
 
@@ -128,9 +132,15 @@ def save_preset(
     if filepath:
         out_path = os.path.abspath(filepath)
     else:
-        target_dir = os.path.abspath(directory) if directory else get_default_presets_dir()
+        target_dir = (
+            os.path.abspath(directory) if directory else get_default_presets_dir()
+        )
         os.makedirs(target_dir, exist_ok=True)
-        safe_name = "".join(c for c in preset_data.get("name", "preset") if c.isalnum() or c in ("-", "_")).strip()
+        safe_name = "".join(
+            c
+            for c in preset_data.get("name", "preset")
+            if c.isalnum() or c in ("-", "_")
+        ).strip()
         filename = f"{safe_name}_{p_id}.szlpreset"
         out_path = os.path.join(target_dir, filename)
 
@@ -239,7 +249,9 @@ def duplicate_preset(
     """Duplicate an existing preset with a new ID and name."""
     source = load_preset(preset_id_or_path, directory=directory)
     base_name = source.get("name", "Preset")
-    copy_name = new_name.strip() if new_name and new_name.strip() else f"{base_name} (Copie)"
+    copy_name = (
+        new_name.strip() if new_name and new_name.strip() else f"{base_name} (Copie)"
+    )
 
     new_preset = create_preset(
         name=copy_name,
@@ -271,7 +283,11 @@ def rename_preset(
     new_path = save_preset(existing, directory=directory)
     existing["_file_path"] = new_path
 
-    if old_file_path and os.path.isfile(old_file_path) and os.path.abspath(old_file_path) != os.path.abspath(new_path):
+    if (
+        old_file_path
+        and os.path.isfile(old_file_path)
+        and os.path.abspath(old_file_path) != os.path.abspath(new_path)
+    ):
         try:
             os.remove(old_file_path)
         except OSError:
@@ -317,7 +333,10 @@ def import_preset(
     target_dir = target_directory or get_default_presets_dir()
 
     embedded_cube = clean_data.get("lut_embedded_cube")
-    lut_filename = clean_data.get("lut_filename") or f"preset_{clean_data.get('id', 'imported')}.cube"
+    lut_filename = (
+        clean_data.get("lut_filename")
+        or f"preset_{clean_data.get('id', 'imported')}.cube"
+    )
     if embedded_cube:
         luts_dir = os.path.join(target_dir, "imported_luts")
         os.makedirs(luts_dir, exist_ok=True)
@@ -328,7 +347,9 @@ def import_preset(
     else:
         old_ref = clean_data.get("lut_reference")
         if old_ref and not os.path.isfile(old_ref):
-            candidate = os.path.join(target_dir, "imported_luts", os.path.basename(old_ref))
+            candidate = os.path.join(
+                target_dir, "imported_luts", os.path.basename(old_ref)
+            )
             if os.path.isfile(candidate):
                 clean_data["lut_reference"] = os.path.abspath(candidate)
             else:

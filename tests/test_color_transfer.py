@@ -46,9 +46,7 @@ class TestColorTransferContract:
         self, sample_src_image: np.ndarray, sample_ref_image: np.ndarray
     ) -> None:
         result = color_transfer(sample_src_image, sample_ref_image)
-        assert result.dtype == np.uint8, (
-            f"Expected dtype uint8, got {result.dtype}"
-        )
+        assert result.dtype == np.uint8, f"Expected dtype uint8, got {result.dtype}"
 
     def test_output_values_in_range(
         self, sample_src_image: np.ndarray, sample_ref_image: np.ndarray
@@ -258,10 +256,11 @@ class TestReinhardResilience:
 
     def test_reinhard_identity_lattice_input(self) -> None:
         # Simulate pseudo_img used in compute_lut
-        identity_lattice = np.linspace(0, 255, 33 * 33 * 33, dtype=np.uint8).reshape(-1, 1, 3)
+        identity_lattice = np.linspace(0, 255, 33 * 33 * 33, dtype=np.uint8).reshape(
+            -1, 1, 3
+        )
         ref = (np.random.rand(64, 64, 3) * 255).astype(np.uint8)
         out = color_transfer(identity_lattice, ref, method="reinhard")
         assert out.shape == identity_lattice.shape
         assert out.dtype == np.uint8
         assert not np.isnan(out).any()
-

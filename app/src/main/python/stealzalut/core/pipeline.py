@@ -47,6 +47,7 @@ NEUTRAL_CHROMA_THRESHOLD: float = 0.08  # OKLab chroma boundary for pure neutral
 # Parameter Data Classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Step2Params:
     """Filter Refinement Parameters (Stage 2).
@@ -59,6 +60,7 @@ class Step2Params:
         extremes_rolloff: Highlight & shadow protection factor [0.0, 1.0].
         spatial_3d: 3D Gaussian lattice smoothing strength [0.0, 1.0].
     """
+
     global_intensity: float = 1.0
     luma_lock: float = 0.0
     neutral_axis_lock: float = 0.0
@@ -71,11 +73,17 @@ class Step2Params:
         if not data:
             return cls()
         return cls(
-            global_intensity=float(np.clip(data.get("global_intensity", 1.0), 0.0, 1.0)),
+            global_intensity=float(
+                np.clip(data.get("global_intensity", 1.0), 0.0, 1.0)
+            ),
             luma_lock=float(np.clip(data.get("luma_lock", 0.0), 0.0, 1.0)),
-            neutral_axis_lock=float(np.clip(data.get("neutral_axis_lock", 0.0), 0.0, 1.0)),
+            neutral_axis_lock=float(
+                np.clip(data.get("neutral_axis_lock", 0.0), 0.0, 1.0)
+            ),
             skin_tone_lock=float(np.clip(data.get("skin_tone_lock", 0.0), 0.0, 1.0)),
-            extremes_rolloff=float(np.clip(data.get("extremes_rolloff", 0.0), 0.0, 1.0)),
+            extremes_rolloff=float(
+                np.clip(data.get("extremes_rolloff", 0.0), 0.0, 1.0)
+            ),
             spatial_3d=float(np.clip(data.get("spatial_3d", 0.0), 0.0, 1.0)),
         )
 
@@ -90,17 +98,18 @@ class Step3Params:
     Colorimetric 1D/3D adjustments are baked into exported .cube LUTs,
     while 2D spatial effects (clarity, sharpen, grain) apply to images only.
     """
-    exposure: float = 0.0       # [-2.0, +2.0] EV
-    contrast: float = 0.0       # [-1.0, +1.0]
-    highlights: float = 0.0     # [-1.0, +1.0]
-    shadows: float = 0.0        # [-1.0, +1.0]
-    temperature: float = 0.0    # [-1.0, +1.0] (Cool / Warm)
-    tint: float = 0.0           # [-1.0, +1.0] (Green / Magenta)
-    vibrance: float = 0.0       # [-1.0, +1.0] (Skin-safe saturation)
-    saturation: float = 0.0     # [-1.0, +1.0] (Global saturation)
-    clarity: float = 0.0        # [0.0, 1.0] (Local midtone contrast)
-    sharpen: float = 0.0        # [0.0, 1.0] (Edge sharpness)
-    grain: float = 0.0          # [0.0, 1.0] (Photographic film grain)
+
+    exposure: float = 0.0  # [-2.0, +2.0] EV
+    contrast: float = 0.0  # [-1.0, +1.0]
+    highlights: float = 0.0  # [-1.0, +1.0]
+    shadows: float = 0.0  # [-1.0, +1.0]
+    temperature: float = 0.0  # [-1.0, +1.0] (Cool / Warm)
+    tint: float = 0.0  # [-1.0, +1.0] (Green / Magenta)
+    vibrance: float = 0.0  # [-1.0, +1.0] (Skin-safe saturation)
+    saturation: float = 0.0  # [-1.0, +1.0] (Global saturation)
+    clarity: float = 0.0  # [0.0, 1.0] (Local midtone contrast)
+    sharpen: float = 0.0  # [0.0, 1.0] (Edge sharpness)
+    grain: float = 0.0  # [0.0, 1.0] (Photographic film grain)
 
     @classmethod
     def from_dict(cls, data: Optional[Dict[str, Any]]) -> Step3Params:
@@ -128,6 +137,7 @@ class Step3Params:
 # STAGE 2: FILTER REFINEMENT (OKLab Masks & Blending)
 # ---------------------------------------------------------------------------
 
+
 def apply_step2_filter_refinement(
     orig_rgb: NDArray[np.float32],
     pure_rgb: NDArray[np.float32],
@@ -150,7 +160,10 @@ def apply_step2_filter_refinement(
     pure_f = np.clip(pure_rgb.astype(np.float32), 0.0, 1.0)
 
     # 1. Spatial 3D Smoothing (only if input is a 3D LUT volume or cubic lattice)
-    if params.spatial_3d > 1e-4 and (pure_f.ndim == 4 or (pure_f.ndim == 2 and pure_f.shape[0] in (17**3, 33**3, 64**3, 65**3))):
+    if params.spatial_3d > 1e-4 and (
+        pure_f.ndim == 4
+        or (pure_f.ndim == 2 and pure_f.shape[0] in (17**3, 33**3, 64**3, 65**3))
+    ):
         is_2d = pure_f.ndim == 2
         orig_shape = pure_f.shape
         if is_2d:
@@ -203,7 +216,9 @@ def apply_step2_filter_refinement(
         h_orig = np.arctan2(b_orig, a_orig)
         # Circular angular difference wrapped to [-pi, pi]
         dh = (h_orig - SKIN_H_CENTER + np.pi) % (2.0 * np.pi) - np.pi
-        d_skin_sq = (dh / SKIN_H_SIGMA) ** 2 + ((c_orig - SKIN_C_CENTER) / SKIN_C_SIGMA) ** 2
+        d_skin_sq = (dh / SKIN_H_SIGMA) ** 2 + (
+            (c_orig - SKIN_C_CENTER) / SKIN_C_SIGMA
+        ) ** 2
         m_skin = np.exp(-0.5 * d_skin_sq)
         w_skin = params.skin_tone_lock * m_skin
     else:
@@ -239,7 +254,10 @@ def apply_step2_filter_refinement(
 # STAGE 3: POST-GRADING (Colorimetric & 2D Spatial)
 # ---------------------------------------------------------------------------
 
-def _apply_simple_box_blur(img: NDArray[np.float32], radius: int = 2) -> NDArray[np.float32]:
+
+def _apply_simple_box_blur(
+    img: NDArray[np.float32], radius: int = 2
+) -> NDArray[np.float32]:
     """Lightweight 2D spatial box blur in pure NumPy."""
     if radius <= 0:
         return img.copy()
@@ -300,7 +318,7 @@ def apply_step3_color_grading(
     # 1. Linear Exposure Compensation (EV)
     if abs(params.exposure) > 1e-4:
         lin = srgb_to_linear(out)
-        lin_exp = lin * (2.0 ** params.exposure)
+        lin_exp = lin * (2.0**params.exposure)
         out = linear_to_srgb(lin_exp)
 
     # 2. Contrast Adjustment
@@ -370,15 +388,26 @@ def apply_step3_color_grading(
         out = np.clip(np.stack([out_r, out_g, out_b], axis=-1), 0.0, 1.0)
 
     # 7. 2D Spatial Effects (Bypassed during LUT Baking)
-    if not is_lut_baking and out.ndim >= 2 and out.shape[0] >= 16 and out.shape[1] >= 16:
+    if (
+        not is_lut_baking
+        and out.ndim >= 2
+        and out.shape[0] >= 16
+        and out.shape[1] >= 16
+    ):
         # Clarity: Local midtone contrast boost using unsharp high-pass
         if params.clarity > 1e-4:
-            blur_clarity = _apply_simple_box_blur(out, radius=max(2, min(out.shape[:2]) // 64))
+            blur_clarity = _apply_simple_box_blur(
+                out, radius=max(2, min(out.shape[:2]) // 64)
+            )
             high_pass = out - blur_clarity
             # Weight towards midtones (bell curve centered at 0.5)
             lum = 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
-            midtone_weight = np.clip(1.0 - 4.0 * (lum - 0.5) ** 2, 0.0, 1.0)[..., np.newaxis]
-            out = np.clip(out + params.clarity * 0.35 * high_pass * midtone_weight, 0.0, 1.0)
+            midtone_weight = np.clip(1.0 - 4.0 * (lum - 0.5) ** 2, 0.0, 1.0)[
+                ..., np.newaxis
+            ]
+            out = np.clip(
+                out + params.clarity * 0.35 * high_pass * midtone_weight, 0.0, 1.0
+            )
 
         # Sharpen: Unsharp masking
         if params.sharpen > 1e-4:
@@ -392,7 +421,9 @@ def apply_step3_color_grading(
             # Grain is most apparent in midtones and suppressed in pure crushed blacks and clipped whites
             grain_weight = np.clip(4.0 * lum * (1.0 - lum), 0.0, 1.0)[..., np.newaxis]
             rng = np.random.RandomState(42)  # Deterministic seed for preview stability
-            noise = rng.normal(0.0, 0.08 * params.grain, size=out.shape).astype(np.float32)
+            noise = rng.normal(0.0, 0.08 * params.grain, size=out.shape).astype(
+                np.float32
+            )
             out = np.clip(out + noise * grain_weight, 0.0, 1.0)
 
     return np.clip(out, 0.0, 1.0).astype(np.float32)
@@ -401,6 +432,7 @@ def apply_step3_color_grading(
 # ---------------------------------------------------------------------------
 # UNIFIED 3D LUT BAKING
 # ---------------------------------------------------------------------------
+
 
 def bake_full_pipeline_lut(
     raw_lut: NDArray[np.float32],

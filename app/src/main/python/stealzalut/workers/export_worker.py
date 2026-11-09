@@ -80,6 +80,7 @@ def run_export_pipeline(
 
     if isinstance(lr_settings, str) and lr_settings.strip():
         import json
+
         try:
             lr_settings = json.loads(lr_settings)
         except Exception:
@@ -209,6 +210,7 @@ def run_image_export_pipeline(
 
     if isinstance(lr_settings, str) and lr_settings.strip():
         import json
+
         try:
             lr_settings = json.loads(lr_settings)
         except Exception:
@@ -292,6 +294,7 @@ def run_image_export_pipeline(
         # 6. Apply 2D spatial effects (clarity, sharpen, grain) on the graded image
         if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             from stealzalut.utils.image_io import to_float32, to_uint8
+
             graded_f = to_float32(graded)
             graded_f = apply_step3_color_grading(
                 graded_f,

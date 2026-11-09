@@ -15,6 +15,7 @@ from numpy.typing import NDArray
 # sRGB <-> Linear Conversions
 # ---------------------------------------------------------------------------
 
+
 def srgb_to_linear(rgb: NDArray[np.float32]) -> NDArray[np.float32]:
     """Convert sRGB array in [0.0, 1.0] to linear RGB."""
     clamped = np.clip(rgb, 0.0, 1.0).astype(np.float32)
@@ -108,7 +109,7 @@ def oklab_to_rgb(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
         Float32 array of shape (..., 3) with values clamped to [0.0, 1.0].
     """
     lms_cbrt = oklab.astype(np.float32) @ _M_OKLAB_TO_LMS.T
-    lms = lms_cbrt ** 3
+    lms = lms_cbrt**3
     lin = lms @ _M_LMS_TO_SRGB.T
     rgb = linear_to_srgb(lin)
     return np.clip(rgb, 0.0, 1.0).astype(np.float32)
@@ -117,6 +118,7 @@ def oklab_to_rgb(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
 # ---------------------------------------------------------------------------
 # Interpolation & Smoothing Primitives
 # ---------------------------------------------------------------------------
+
 
 def smoothstep(
     edge0: float | NDArray[np.float32],

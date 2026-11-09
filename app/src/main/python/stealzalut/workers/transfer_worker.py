@@ -49,9 +49,9 @@ from stealzalut.utils.image_io import (
 _RAW_LUT_CACHE: OrderedDict[
     Tuple[str, str, str, int, float, bool], NDArray[np.float32]
 ] = OrderedDict()
-_SRC_PROXY_CACHE: OrderedDict[
-    Tuple[str, Optional[int]], NDArray[np.uint8]
-] = OrderedDict()
+_SRC_PROXY_CACHE: OrderedDict[Tuple[str, Optional[int]], NDArray[np.uint8]] = (
+    OrderedDict()
+)
 
 
 def clear_lut_cache() -> None:
@@ -126,10 +126,7 @@ def get_or_load_source_proxy(
         _SRC_PROXY_CACHE.move_to_end(cache_key)
         return _SRC_PROXY_CACHE[cache_key].copy()
 
-    if (
-        max_dimension is not None
-        and max_dimension > 0
-    ):
+    if max_dimension is not None and max_dimension > 0:
         src_work = load_proxy_image(src_path, max_dim=max_dimension)
     else:
         src_work = load_image(src_path)
@@ -179,6 +176,7 @@ def run_transfer_pipeline(
 
     if isinstance(lr_settings, str) and lr_settings.strip():
         import json
+
         try:
             lr_settings = json.loads(lr_settings)
         except Exception:

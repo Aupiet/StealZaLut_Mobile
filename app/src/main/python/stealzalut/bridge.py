@@ -171,9 +171,9 @@ def process_preview(
             lr_settings=develop_settings_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
-            res["error_code"] = _make_error_response(
-                message=res.get("message", "")
-            )["error_code"]
+            res["error_code"] = _make_error_response(message=res.get("message", ""))[
+                "error_code"
+            ]
         return res
 
     except Exception as exc:  # noqa: BLE001
@@ -324,9 +324,9 @@ def export_cube_file(
             res["cube_path"] = path
             res["lut_path"] = path
         elif res.get("status") == "error" and "error_code" not in res:
-            res["error_code"] = _make_error_response(
-                message=res.get("message", "")
-            )["error_code"]
+            res["error_code"] = _make_error_response(message=res.get("message", ""))[
+                "error_code"
+            ]
         return res
 
     except Exception as exc:  # noqa: BLE001
@@ -415,9 +415,9 @@ def export_graded_image(
             lr_settings=develop_settings_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
-            res["error_code"] = _make_error_response(
-                message=res.get("message", "")
-            )["error_code"]
+            res["error_code"] = _make_error_response(message=res.get("message", ""))[
+                "error_code"
+            ]
         return res
 
     except Exception as exc:  # noqa: BLE001
@@ -427,6 +427,7 @@ def export_graded_image(
 # ---------------------------------------------------------------------------
 # Presets Bridge API
 # ---------------------------------------------------------------------------
+
 
 def save_preset_bridge(
     name: str,
@@ -458,7 +459,9 @@ def save_preset_bridge(
         return _make_error_response(exc=exc)
 
 
-def load_preset_bridge(path_or_id: str, directory: Optional[str] = None) -> Dict[str, Any]:
+def load_preset_bridge(
+    path_or_id: str, directory: Optional[str] = None
+) -> Dict[str, Any]:
     """Load an existing editing preset."""
     try:
         p = load_preset(path_or_id, directory=directory)
@@ -483,7 +486,9 @@ def list_presets_bridge(directory: Optional[str] = None) -> Dict[str, Any]:
         return _make_error_response(exc=exc)
 
 
-def delete_preset_bridge(path_or_id: str, directory: Optional[str] = None) -> Dict[str, Any]:
+def delete_preset_bridge(
+    path_or_id: str, directory: Optional[str] = None
+) -> Dict[str, Any]:
     """Delete a saved preset."""
     try:
         ok = delete_preset(path_or_id, directory=directory)
@@ -538,7 +543,9 @@ def export_preset_bridge(
 ) -> Dict[str, Any]:
     """Export an editing preset to a file."""
     try:
-        final_path = export_preset(path_or_id, export_path=export_path, directory=directory)
+        final_path = export_preset(
+            path_or_id, export_path=export_path, directory=directory
+        )
         return {
             "status": "success",
             "export_path": final_path,
@@ -567,6 +574,7 @@ def import_preset_bridge(
 # ---------------------------------------------------------------------------
 # LightCraft Auto Edit & Palette Utilities
 # ---------------------------------------------------------------------------
+
 
 def compute_auto_edit(
     src_path: str,
@@ -605,7 +613,10 @@ def export_auto_edit_cube(
             )
 
         from stealzalut.config import PROXY_DECODE_MAX_DIM
-        from stealzalut.core.auto_edit import generate_auto_edit_lut, get_auto_edit_settings
+        from stealzalut.core.auto_edit import (
+            generate_auto_edit_lut,
+            get_auto_edit_settings,
+        )
         from stealzalut.core.lut_export import export_cube
         from stealzalut.utils.image_io import load_proxy_image
 
@@ -674,6 +685,7 @@ def apply_image_edits(
 
         if not output_path:
             import tempfile
+
             base, ext = os.path.splitext(image_path)
             output_path = os.path.join(
                 tempfile.gettempdir(),

@@ -51,7 +51,8 @@ data class StandaloneEditorDebounceRequest(
     val sharpen: Float,
     val grain: Float,
     val customLutPath: String?,
-    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel()
+    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
+    val cropRegion: CropRegion = CropRegion()
 )
 
 data class EditorParamsSnapshot(
@@ -623,7 +624,8 @@ class EditorSessionDelegate(
             sharpen = stateFlow.value.step3Sharpen,
             grain = stateFlow.value.step3Grain,
             customLutPath = stateFlow.value.editorCustomLutPath,
-            lightroomParams = stateFlow.value.editorLightroomParams
+            lightroomParams = stateFlow.value.editorLightroomParams,
+            cropRegion = stateFlow.value.editorCropRegion
         )
         editorDebounceFlow.tryEmit(req)
     }
@@ -653,7 +655,8 @@ class EditorSessionDelegate(
                 sharpen = req.sharpen,
                 grain = req.grain,
                 customLutPath = req.customLutPath,
-                lightroomParams = req.lightroomParams
+                lightroomParams = req.lightroomParams,
+                cropRegion = req.cropRegion
             )
 
             when (res) {
@@ -774,7 +777,8 @@ class EditorSessionDelegate(
                 sharpen = stateFlow.value.step3Sharpen,
                 grain = stateFlow.value.step3Grain,
                 customLutPath = stateFlow.value.editorCustomLutPath,
-                lightroomParams = stateFlow.value.editorLightroomParams
+                lightroomParams = stateFlow.value.editorLightroomParams,
+                cropRegion = stateFlow.value.editorCropRegion
             )
 
             when (res) {

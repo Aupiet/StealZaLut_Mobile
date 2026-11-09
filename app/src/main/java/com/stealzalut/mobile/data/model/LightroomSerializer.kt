@@ -8,7 +8,7 @@ import org.json.JSONObject
  */
 object LightroomSerializer {
 
-    fun toJson(model: LightroomDevelopModel): String {
+    fun toJson(model: LightroomDevelopModel, cropRegion: CropRegion? = null): String {
         val root = JSONObject()
 
         // Section bypass flags
@@ -199,6 +199,17 @@ object LightroomSerializer {
             put("blue_sat", model.calibration.blueSat.toDouble())
         }
         root.put("calibration", calib)
+
+        if (cropRegion != null && cropRegion.hasCrop) {
+            val cropObj = JSONObject().apply {
+                put("left", cropRegion.left.toDouble())
+                put("top", cropRegion.top.toDouble())
+                put("right", cropRegion.right.toDouble())
+                put("bottom", cropRegion.bottom.toDouble())
+                put("angle", cropRegion.angle.toDouble())
+            }
+            root.put("crop", cropObj)
+        }
 
         return root.toString()
     }

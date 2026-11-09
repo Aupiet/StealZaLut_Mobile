@@ -195,3 +195,19 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   2. **Coalescence par Geste Utilisateur :** Capture du snapshot initial au premier contact (eginEditGesture()), regroupement de toutes les modifications continues pendant le drag, et enregistrement unique du snapshot de départ lors du relâchement (endEditGesture() ou temporisation d'inactivité de 500 ms).
   3. **Couverture Totale du Modèle d'Édition :** EditorParamsSnapshot intègre l'ensemble des réglages Étape 2/3, la LUT personnalisée, LightroomDevelopModel au complet et CropRegion.
   4. **Plafond FIFO et Purge Propre :** Plafond strict à 50 états avec éviction FIFO du plus ancien, purge immédiate de la pile Rétablir à toute nouvelle manipulation, et remise à zéro systématique des piles lors du changement ou de la fermeture de photo.
+
+---
+
+## ADR-14 : Moteur de Recadrage & Redressement Non-Destructif Fonctionnel (Spécification Adobe ACR / Lightroom)
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. EditorCropOverlay.kt et EditorCropPanel.kt existaient dans l'interface Compose, mais le pipeline Python ignorait totalement les coordonnées de recadrage.
+  2. Ni la prévisualisation dans le viewport ni l'export d'image haute résolution n'appliquaient de rognage.
+- **Décision :**
+  1. **Modélisation Adobe ACR (crs:Crop*) :** Utilisation des coordonnées normalisées [0.0, 1.0] (crs:CropLeft, crs:CropTop, crs:CropRight, crs:CropBottom) et de l'angle de redressement crs:CropAngle [-45°, +45°].
+  2. **Pipeline Géométrique Python :** Intégration de pply_crop_spatial dans lightroom_spatial.py exécutant la rotation de redressement puis la découpe rectangulaire normalisée.
+  3. **Isolation Stricte du LUT 3D vs Export Image :** Conformément à l'ADR-06, la table .cube est une bijection colorimétrique 3D pure et ne contient aucun recadrage spatial. En revanche, l'export Image (JPEG/PNG) et l'aperçu dynamique de l'éditeur appliquent rigoureusement le cadre de recadrage.
+  4. **Ordre d'Évaluation :** Le recadrage s'exécute avant les effets finaux, garantissant que le vignettage post-recadrage (« Post-crop Vignetting ») reste centré sur le cadrage effectif.
+  5. **Ergonomie Compose :** Support des poignées aux 4 coins, des crans médians sur les 4 arêtes, du déplacement par le centre du cadre, du verrouillage de ratio (Original, 1:1, 4:5, 3:2, 16:9, Libre) et d'un bouton de réinitialisation avec traductions FR/EN/ES.

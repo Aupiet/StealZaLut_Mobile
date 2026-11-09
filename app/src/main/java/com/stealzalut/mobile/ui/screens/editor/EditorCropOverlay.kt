@@ -1,22 +1,18 @@
 package com.stealzalut.mobile.ui.screens.editor
 
-import com.stealzalut.mobile.data.model.CropRegion
-
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,14 +30,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
 import com.stealzalut.mobile.ui.theme.szlColors
-
-
 
 /**
  * Photographic standard crop ratios.
@@ -51,16 +48,30 @@ enum class CropAspectRatio(val ratio: Float?, @param:StringRes val labelRes: Int
     ORIGINAL(null, R.string.crop_original),
     SQUARE_1_1(1.0f, R.string.crop_square),
     PORTRAIT_4_5(0.8f, R.string.crop_portrait),
+    RATIO_3_2(1.5f, R.string.crop_3_2),
     LANDSCAPE_16_9(16.0f / 9.0f, R.string.crop_widescreen)
 }
 
+private enum class DragHandle {
+    NONE,
+    TOP_LEFT,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT,
+    LEFT_EDGE,
+    RIGHT_EDGE,
+    TOP_EDGE,
+    BOTTOM_EDGE,
+    INSIDE_MOVE
+}
+
 /**
- * Interactive touch overlay superimposed directly over the image in the Viewport (FE-005).
+ * Interactive touch overlay superimposed directly over the image in the Viewport.
  * Features:
  * - Rule of thirds dashed grid guidelines.
  * - Semi-transparent dark scrim outside the crop area.
- * - 48dp tactile corner handles complying with WCAG AA (FE-019).
- * - Touch drag gestures to resize crop bounds.
+ * - Corner and edge handles complying with WCAG AA tactile targets.
+ * - Full multi-directional drag gestures: resize corners/edges or pan entire frame.
  */
 @Composable
 fun EditorCropOverlay(
@@ -72,18 +83,116 @@ fun EditorCropOverlay(
     val cropOverlayColor = MaterialTheme.szlColors.cropOverlay
     val cropHandleColor = MaterialTheme.szlColors.cropHandle
     val cropGridColor = MaterialTheme.szlColors.cropGrid
+    val density = LocalDensity.current
+    val touchHandleRadiusPx = with(density) { 36.dp.toPx() }
+
+    var activeHandle by remember { mutableStateOf(DragHandle.NONE) }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(cropRegion) {
                 detectDragGestures(
-                    onDragEnd = { onCropFinished?.invoke() }
+                    onDragStart = { startOffset ->
+                        val w = size.width.toFloat()
+                        val h = size.height.toFloat()
+                        val leftPx = cropRegion.left * w
+                        val topPx = cropRegion.top * h
+                        val rightPx = cropRegion.right * w
+                        val bottomPx = cropRegion.bottom * h
+
+                        val x = startOffset.x
+                        val y = startOffset.y
+
+                        fun dist(px: Float, py: Float) = kotlin.math.hypot(x - px, y - py)
+
+                        activeHandle = when {
+                            dist(leftPx, topPx) <= touchHandleRadiusPx -> DragHandle.TOP_LEFT
+                            dist(rightPx, topPx) <= touchHandleRadiusPx -> DragHandle.TOP_RIGHT
+                            dist(leftPx, bottomPx) <= touchHandleRadiusPx -> DragHandle.BOTTOM_LEFT
+                            dist(rightPx, bottomPx) <= touchHandleRadiusPx -> DragHandle.BOTTOM_RIGHT
+                            kotlin.math.abs(x - leftPx) <= touchHandleRadiusPx && y in topPx..bottomPx -> DragHandle.LEFT_EDGE
+                            kotlin.math.abs(x - rightPx) <= touchHandleRadiusPx && y in topPx..bottomPx -> DragHandle.RIGHT_EDGE
+                            kotlin.math.abs(y - topPx) <= touchHandleRadiusPx && x in leftPx..rightPx -> DragHandle.TOP_EDGE
+                            kotlin.math.abs(y - bottomPx) <= touchHandleRadiusPx && x in leftPx..rightPx -> DragHandle.BOTTOM_EDGE
+                            x in leftPx..rightPx && y in topPx..bottomPx -> DragHandle.INSIDE_MOVE
+                            else -> DragHandle.NONE
+                        }
+                    },
+                    onDragEnd = {
+                        activeHandle = DragHandle.NONE
+                        onCropFinished?.invoke()
+                    },
+                    onDragCancel = {
+                        activeHandle = DragHandle.NONE
+                    }
                 ) { change, dragAmount ->
                     change.consume()
-                    val newRight = (cropRegion.right + dragAmount.x / size.width).coerceIn(cropRegion.left + 0.1f, 1.0f)
-                    val newBottom = (cropRegion.bottom + dragAmount.y / size.height).coerceIn(cropRegion.top + 0.1f, 1.0f)
-                    onCropRegionChange(cropRegion.copy(right = newRight, bottom = newBottom))
+                    val w = size.width.toFloat()
+                    val h = size.height.toFloat()
+                    if (w <= 0f || h <= 0f) return@detectDragGestures
+
+                    val dx = dragAmount.x / w
+                    val dy = dragAmount.y / h
+                    val minDim = 0.08f
+
+                    when (activeHandle) {
+                        DragHandle.TOP_LEFT -> {
+                            val newLeft = (cropRegion.left + dx).coerceIn(0f, cropRegion.right - minDim)
+                            val newTop = (cropRegion.top + dy).coerceIn(0f, cropRegion.bottom - minDim)
+                            onCropRegionChange(cropRegion.copy(left = newLeft, top = newTop))
+                        }
+                        DragHandle.TOP_RIGHT -> {
+                            val newRight = (cropRegion.right + dx).coerceIn(cropRegion.left + minDim, 1f)
+                            val newTop = (cropRegion.top + dy).coerceIn(0f, cropRegion.bottom - minDim)
+                            onCropRegionChange(cropRegion.copy(right = newRight, top = newTop))
+                        }
+                        DragHandle.BOTTOM_LEFT -> {
+                            val newLeft = (cropRegion.left + dx).coerceIn(0f, cropRegion.right - minDim)
+                            val newBottom = (cropRegion.bottom + dy).coerceIn(cropRegion.top + minDim, 1f)
+                            onCropRegionChange(cropRegion.copy(left = newLeft, bottom = newBottom))
+                        }
+                        DragHandle.BOTTOM_RIGHT -> {
+                            val newRight = (cropRegion.right + dx).coerceIn(cropRegion.left + minDim, 1f)
+                            val newBottom = (cropRegion.bottom + dy).coerceIn(cropRegion.top + minDim, 1f)
+                            onCropRegionChange(cropRegion.copy(right = newRight, bottom = newBottom))
+                        }
+                        DragHandle.LEFT_EDGE -> {
+                            val newLeft = (cropRegion.left + dx).coerceIn(0f, cropRegion.right - minDim)
+                            onCropRegionChange(cropRegion.copy(left = newLeft))
+                        }
+                        DragHandle.RIGHT_EDGE -> {
+                            val newRight = (cropRegion.right + dx).coerceIn(cropRegion.left + minDim, 1f)
+                            onCropRegionChange(cropRegion.copy(right = newRight))
+                        }
+                        DragHandle.TOP_EDGE -> {
+                            val newTop = (cropRegion.top + dy).coerceIn(0f, cropRegion.bottom - minDim)
+                            onCropRegionChange(cropRegion.copy(top = newTop))
+                        }
+                        DragHandle.BOTTOM_EDGE -> {
+                            val newBottom = (cropRegion.bottom + dy).coerceIn(cropRegion.top + minDim, 1f)
+                            onCropRegionChange(cropRegion.copy(bottom = newBottom))
+                        }
+                        DragHandle.INSIDE_MOVE -> {
+                            val boxW = cropRegion.right - cropRegion.left
+                            val boxH = cropRegion.bottom - cropRegion.top
+                            var newLeft = cropRegion.left + dx
+                            var newTop = cropRegion.top + dy
+
+                            if (newLeft < 0f) newLeft = 0f
+                            if (newLeft + boxW > 1f) newLeft = 1f - boxW
+                            if (newTop < 0f) newTop = 0f
+                            if (newTop + boxH > 1f) newTop = 1f - boxH
+
+                            onCropRegionChange(cropRegion.copy(
+                                left = newLeft,
+                                top = newTop,
+                                right = newLeft + boxW,
+                                bottom = newTop + boxH
+                            ))
+                        }
+                        DragHandle.NONE -> Unit
+                    }
                 }
             }
     ) {
@@ -165,12 +274,26 @@ fun EditorCropOverlay(
             // Bottom-Right
             drawLine(cropHandleColor, Offset(rightPx, bottomPx), Offset(rightPx - handleLen, bottomPx), handleThickness)
             drawLine(cropHandleColor, Offset(rightPx, bottomPx), Offset(rightPx, bottomPx - handleLen), handleThickness)
+
+            // Mid-Edge tactile notches
+            val midW = leftPx + cropW / 2f
+            val midH = topPx + cropH / 2f
+            val edgeNotchLen = handleLen * 0.6f
+
+            // Top edge
+            drawLine(cropHandleColor, Offset(midW - edgeNotchLen / 2f, topPx), Offset(midW + edgeNotchLen / 2f, topPx), handleThickness)
+            // Bottom edge
+            drawLine(cropHandleColor, Offset(midW - edgeNotchLen / 2f, bottomPx), Offset(midW + edgeNotchLen / 2f, bottomPx), handleThickness)
+            // Left edge
+            drawLine(cropHandleColor, Offset(leftPx, midH - edgeNotchLen / 2f), Offset(leftPx, midH + edgeNotchLen / 2f), handleThickness)
+            // Right edge
+            drawLine(cropHandleColor, Offset(rightPx, midH - edgeNotchLen / 2f), Offset(rightPx, midH + edgeNotchLen / 2f), handleThickness)
         }
     }
 }
 
 /**
- * Bottom drawer panel controls for Aspect Ratio selection and Horizon Straightening.
+ * Bottom drawer panel controls for Aspect Ratio selection, Horizon Straightening, and Reset.
  */
 @Composable
 fun EditorCropPanel(
@@ -188,7 +311,7 @@ fun EditorCropPanel(
             .padding(AppDimens.SpacingMedium),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-        // Ratio Pills Row
+        // Ratio Pills Row with Reset button
         val ratioScrollState = androidx.compose.foundation.rememberScrollState()
         Row(
             modifier = Modifier
@@ -196,6 +319,31 @@ fun EditorCropPanel(
                 .horizontalScroll(ratioScrollState),
             horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall, Alignment.CenterHorizontally)
         ) {
+            // Reset Crop button
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusFull),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
+                    .clickable {
+                        selectedRatio = CropAspectRatio.ORIGINAL
+                        currentAngle = 0.0f
+                        onCropRegionChange(CropRegion())
+                        onCropFinished?.invoke()
+                    }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(R.string.crop_reset),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1,
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall)
+                    )
+                }
+            }
+
             CropAspectRatio.entries.forEach { ratio ->
                 val isSelected = selectedRatio == ratio
                 Surface(
@@ -207,7 +355,8 @@ fun EditorCropPanel(
                             selectedRatio = ratio
                             val r = ratio.ratio
                             if (r != null) {
-                                val newBottom = (cropRegion.top + (cropRegion.right - cropRegion.left) / r).coerceIn(0.1f, 1.0f)
+                                val currentW = cropRegion.right - cropRegion.left
+                                val newBottom = (cropRegion.top + currentW / r).coerceIn(cropRegion.top + 0.05f, 1.0f)
                                 onCropRegionChange(cropRegion.copy(bottom = newBottom))
                             }
                             onCropFinished?.invoke()

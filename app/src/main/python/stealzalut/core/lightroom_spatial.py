@@ -17,6 +17,7 @@ from numpy.typing import NDArray
 from stealzalut.core.color_space import oklab_to_rgb, rgb_to_oklab, smoothstep
 from stealzalut.core.lightroom_models import (
     BasicSettings,
+    CropSettings,
     DetailSettings,
     EffectsSettings,
     LensBlurSettings,
@@ -388,6 +389,60 @@ def apply_effects_spatial(
 
 
 # ---------------------------------------------------------------------------
+# 6. Crop & Straighten (Adobe Camera Raw crs:Crop*)
+# ---------------------------------------------------------------------------
+
+
+def apply_crop_spatial(
+    rgb: NDArray[np.float32], s: CropSettings
+) -> NDArray[np.float32]:
+    """Applique le recadrage normalisé et l'angle de redressement (Adobe Camera Raw crs:Crop*).
+
+    La rotation de redressement est effectuée autour du centre optique de l'image,
+    suivie de l'extraction des limites rectangulaires normalisées [0.0, 1.0].
+    """
+    if not s.has_crop:
+        return rgb
+
+    out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
+    h, w = out.shape[:2]
+    if min(h, w) < 4:
+        return out
+
+    # A. Rotation de redressement (CropAngle)
+    if abs(s.angle) > 1e-4:
+        cx, cy = w / 2.0, h / 2.0
+        theta = np.radians(-s.angle)
+        grid_y, grid_x = np.indices((h, w), dtype=np.float32)
+        x1 = grid_x - cx
+        y1 = grid_y - cy
+        x2 = x1 * np.cos(-theta) - y1 * np.sin(-theta)
+        y2 = x1 * np.sin(-theta) + y1 * np.cos(-theta)
+        map_x = np.clip(cx + x2, 0, w - 1)
+        map_y = np.clip(cy + y2, 0, h - 1)
+        out = remap_2d(out, map_x, map_y)
+
+    # B. Découpe rectangulaire normalisée
+    cl = float(np.clip(min(s.left, s.right), 0.0, 1.0))
+    cr = float(np.clip(max(s.left, s.right), 0.0, 1.0))
+    ct = float(np.clip(min(s.top, s.bottom), 0.0, 1.0))
+    cb = float(np.clip(max(s.top, s.bottom), 0.0, 1.0))
+
+    x0 = int(round(cl * w))
+    x1 = int(round(cr * w))
+    y0 = int(round(ct * h))
+    y1 = int(round(cb * h))
+
+    # Sécurité : dimensions non nulles
+    x0 = max(0, min(x0, w - 2))
+    x1 = max(x0 + 2, min(x1, w))
+    y0 = max(0, min(y0, h - 2))
+    y1 = max(y0 + 2, min(y1, h))
+
+    return np.ascontiguousarray(out[y0:y1, x0:x1])
+
+
+# ---------------------------------------------------------------------------
 # Pipeline Spatial Intégré (Bypass toggles inclus)
 # ---------------------------------------------------------------------------
 
@@ -416,6 +471,10 @@ def apply_full_lightroom_spatial_pipeline(
 
     if settings.is_lens_blur_enabled:
         out = apply_lens_blur_spatial(out, settings.lens_blur)
+
+    # Recadrage non destructif appliqué avant les effets post-crop (vignettage/grain)
+    if settings.crop.has_crop:
+        out = apply_crop_spatial(out, settings.crop)
 
     if settings.is_effects_enabled:
         out = apply_effects_spatial(out, settings.effects)

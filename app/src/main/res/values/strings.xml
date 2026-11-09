@@ -406,6 +406,8 @@
     <string name="crop_square">1:1</string>
     <string name="crop_portrait">4:5</string>
     <string name="crop_widescreen">16:9</string>
+    <string name="crop_3_2">3:2</string>
+    <string name="crop_reset">Reset crop</string>
 
     <!-- Professional Studio & Editor Tokens -->
     <string name="palette_shot_cinema">Cinema Color Swatches</string>

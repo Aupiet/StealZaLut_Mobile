@@ -207,6 +207,27 @@ class EffectsSettings:
 
 
 @dataclass
+class CropSettings:
+    """Adobe Camera Raw Crop & Straighten specification (crs:Crop*)."""
+
+    left: float = 0.0  # [0.0, 1.0]
+    top: float = 0.0  # [0.0, 1.0]
+    right: float = 1.0  # [0.0, 1.0]
+    bottom: float = 1.0  # [0.0, 1.0]
+    angle: float = 0.0  # Straighten angle in degrees [-45.0, +45.0]
+
+    @property
+    def has_crop(self) -> bool:
+        return (
+            self.left > 1e-4
+            or self.top > 1e-4
+            or (1.0 - self.right) > 1e-4
+            or (1.0 - self.bottom) > 1e-4
+            or abs(self.angle) > 1e-4
+        )
+
+
+@dataclass
 class CalibrationSettings:
     """Panneau 10 : Étalonnage (Calibration)."""
 
@@ -248,6 +269,7 @@ class LightroomDevelopSettings:
     lens_blur: LensBlurSettings = field(default_factory=LensBlurSettings)
     effects: EffectsSettings = field(default_factory=EffectsSettings)
     calibration: CalibrationSettings = field(default_factory=CalibrationSettings)
+    crop: CropSettings = field(default_factory=CropSettings)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -289,4 +311,5 @@ class LightroomDevelopSettings:
             lens_blur=parse_sub(LensBlurSettings, "lens_blur"),
             effects=parse_sub(EffectsSettings, "effects"),
             calibration=parse_sub(CalibrationSettings, "calibration"),
+            crop=parse_sub(CropSettings, "crop"),
         )

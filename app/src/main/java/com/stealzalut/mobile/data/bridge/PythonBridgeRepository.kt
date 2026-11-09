@@ -473,7 +473,8 @@ class PythonBridgeRepository(private val context: Context) {
         sharpen: Float = 0.0f,
         grain: Float = 0.0f,
         customLutPath: String? = null,
-        lightroomParams: LightroomDevelopModel? = null
+        lightroomParams: LightroomDevelopModel? = null,
+        cropRegion: com.stealzalut.mobile.data.model.CropRegion? = null
     ): PreviewResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -504,7 +505,9 @@ class PythonBridgeRepository(private val context: Context) {
                 sharpen.toDouble(),
                 grain.toDouble(),
                 customLutPath,
-                lightroomParams?.let { LightroomSerializer.toJson(it) }
+                if (lightroomParams != null || (cropRegion != null && cropRegion.hasCrop)) {
+                    LightroomSerializer.toJson(lightroomParams ?: LightroomDevelopModel(), cropRegion)
+                } else null
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -644,7 +647,8 @@ class PythonBridgeRepository(private val context: Context) {
         sharpen: Float = 0.0f,
         grain: Float = 0.0f,
         customLutPath: String? = null,
-        lightroomParams: LightroomDevelopModel? = null
+        lightroomParams: LightroomDevelopModel? = null,
+        cropRegion: com.stealzalut.mobile.data.model.CropRegion? = null
     ): ImageExportResult = withContext(pythonDispatcher) {
         runCatching {
             val py = Python.getInstance()
@@ -687,7 +691,9 @@ class PythonBridgeRepository(private val context: Context) {
                 extremesRolloff.toDouble(),
                 spatial3d.toDouble(),
                 customLutPath,
-                lightroomParams?.let { LightroomSerializer.toJson(it) }
+                if (lightroomParams != null || (cropRegion != null && cropRegion.hasCrop)) {
+                    LightroomSerializer.toJson(lightroomParams ?: LightroomDevelopModel(), cropRegion)
+                } else null
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()

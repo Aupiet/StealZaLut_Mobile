@@ -222,4 +222,20 @@ object LightroomDeserializer {
             LightroomDevelopModel()
         }
     }
+
+    fun extractCropRegion(jsonStr: String): CropRegion {
+        return try {
+            val root = JSONObject(jsonStr)
+            val cropObj = root.optJSONObject("crop") ?: return CropRegion()
+            CropRegion(
+                left = cropObj.optDouble("left", 0.0).toFloat(),
+                top = cropObj.optDouble("top", 0.0).toFloat(),
+                right = cropObj.optDouble("right", 1.0).toFloat(),
+                bottom = cropObj.optDouble("bottom", 1.0).toFloat(),
+                angle = cropObj.optDouble("angle", 0.0).toFloat()
+            )
+        } catch (_: Exception) {
+            CropRegion()
+        }
+    }
 }

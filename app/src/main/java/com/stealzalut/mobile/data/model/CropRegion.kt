@@ -15,6 +15,9 @@ data class CropRegion(
     val bottom: Float = 1.0f,
     val angle: Float = 0.0f
 ) {
-    fun isDefault(): Boolean =
-        left == 0.0f && top == 0.0f && right == 1.0f && bottom == 1.0f && angle == 0.0f
+    val isDefault: Boolean
+        get() = left == 0.0f && top == 0.0f && right == 1.0f && bottom == 1.0f && angle == 0.0f
+
+    val hasCrop: Boolean
+        get() = !isDefault
 }

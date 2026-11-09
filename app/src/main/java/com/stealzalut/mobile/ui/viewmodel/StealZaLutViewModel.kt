@@ -23,6 +23,7 @@ import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
+import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
@@ -309,9 +310,11 @@ class StealZaLutViewModel(
     // Phase 4: Undo / Redo for Editor
     fun undoEditor() = editorSessionDelegate.undo()
     fun redoEditor() = editorSessionDelegate.redo()
-    fun canUndoEditor(): Boolean = editorSessionDelegate.canUndo()
-    fun canRedoEditor(): Boolean = editorSessionDelegate.canRedo()
+    fun canUndoEditor(): Boolean = _uiState.value.canUndo
+    fun canRedoEditor(): Boolean = _uiState.value.canRedo
     fun pushUndoSnapshot() = editorSessionDelegate.pushUndoSnapshot()
+    fun updateCropRegion(region: CropRegion) = editorSessionDelegate.updateCropRegion(region)
+    fun onCropFinished() = editorSessionDelegate.onCropFinished()
     fun openExportDialog() { _uiState.update { it.copy(isExportDialogOpen = true) } }
     fun dismissExportDialog() { _uiState.update { it.copy(isExportDialogOpen = false) } }
     val lightroomDelegate get() = editorSessionDelegate.lightroomDelegate

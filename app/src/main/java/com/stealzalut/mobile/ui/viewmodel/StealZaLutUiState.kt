@@ -8,6 +8,7 @@ import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
+import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
@@ -145,6 +146,9 @@ data class StealZaLutUiState(
 
     // Adobe Lightroom Classic Develop Engine state
     val editorLightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
+    val canUndo: Boolean = false,
+    val canRedo: Boolean = false,
+    val editorCropRegion: CropRegion = CropRegion(),
     val editorActiveTool: Int = 0, // 0 = Global Panels, 1 = Crop, 2 = Healing, 3 = Red Eye, 4 = Masking, 5 = Presets / Auto-edit
     val isHistogramExpanded: Boolean = true,
     val isBasicExpanded: Boolean = true,

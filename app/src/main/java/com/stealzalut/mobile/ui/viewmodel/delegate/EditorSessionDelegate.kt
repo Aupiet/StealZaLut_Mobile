@@ -6,6 +6,8 @@ import android.net.Uri
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
+import com.stealzalut.mobile.data.model.CropRegion
+import kotlinx.coroutines.delay
 import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.ImageExportResult
@@ -72,7 +74,8 @@ data class EditorParamsSnapshot(
     val grain: Float,
     val customLutPath: String?,
     val customLutName: String?,
-    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel()
+    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
+    val cropRegion: CropRegion = CropRegion()
 )
 
 @OptIn(FlowPreview::class)
@@ -92,11 +95,25 @@ class EditorSessionDelegate(
     // Undo / Redo Stacks (Phase 4 UX Pro)
     private val undoStack = ArrayDeque<EditorParamsSnapshot>()
     private val redoStack = ArrayDeque<EditorParamsSnapshot>()
+    private var gestureStartSnapshot: EditorParamsSnapshot? = null
+    private var gestureDebounceJob: Job? = null
 
     val lightroomDelegate: EditorLightroomDelegate = EditorLightroomDelegate(
         stateFlow = stateFlow,
-        onScheduleUpdate = { scheduleEditorPreviewUpdate() }
+        onScheduleUpdate = { scheduleEditorPreviewUpdate() },
+        onBeginGesture = { beginEditGesture() },
+        onEndGesture = { endEditGesture() },
+        onCommitUndo = { commitCurrentStateToUndo() }
     )
+
+    private fun updateUndoRedoState() {
+        stateFlow.update {
+            it.copy(
+                canUndo = undoStack.isNotEmpty(),
+                canRedo = redoStack.isNotEmpty()
+            )
+        }
+    }
 
     init {
         scope.launch {
@@ -131,33 +148,91 @@ class EditorSessionDelegate(
             grain = s.step3Grain,
             customLutPath = s.editorCustomLutPath,
             customLutName = s.editorCustomLutName,
-            lightroomParams = s.editorLightroomParams
+            lightroomParams = s.editorLightroomParams,
+            cropRegion = s.editorCropRegion
         )
     }
 
-    fun pushUndoSnapshot() {
-        undoStack.push(currentSnapshot())
-        if (undoStack.size > 50) {
-            undoStack.removeLast()
+    fun beginEditGesture() {
+        if (gestureStartSnapshot == null) {
+            gestureStartSnapshot = currentSnapshot()
         }
-        redoStack.clear()
+        gestureDebounceJob?.cancel()
+        gestureDebounceJob = scope.launch {
+            delay(500L)
+            endEditGesture()
+        }
+    }
+
+    fun endEditGesture() {
+        gestureDebounceJob?.cancel()
+        gestureDebounceJob = null
+        val start = gestureStartSnapshot ?: return
+        gestureStartSnapshot = null
+        val current = currentSnapshot()
+        if (start != current) {
+            if (undoStack.peek() != start) {
+                undoStack.push(start)
+                if (undoStack.size > 50) {
+                    undoStack.removeLast()
+                }
+                redoStack.clear()
+                updateUndoRedoState()
+            }
+        }
+    }
+
+    fun commitCurrentStateToUndo() {
+        endEditGesture()
+        val current = currentSnapshot()
+        if (undoStack.peek() != current) {
+            undoStack.push(current)
+            if (undoStack.size > 50) {
+                undoStack.removeLast()
+            }
+            redoStack.clear()
+            updateUndoRedoState()
+        }
+    }
+
+    fun pushUndoSnapshot() {
+        commitCurrentStateToUndo()
     }
 
     fun canUndo(): Boolean = undoStack.isNotEmpty()
     fun canRedo(): Boolean = redoStack.isNotEmpty()
 
     fun undo() {
+        endEditGesture()
         if (undoStack.isEmpty()) return
-        redoStack.push(currentSnapshot())
+        val current = currentSnapshot()
+        redoStack.push(current)
         val previous = undoStack.pop()
         applySnapshot(previous)
+        updateUndoRedoState()
     }
 
     fun redo() {
+        endEditGesture()
         if (redoStack.isEmpty()) return
-        undoStack.push(currentSnapshot())
+        val current = currentSnapshot()
+        undoStack.push(current)
+        if (undoStack.size > 50) {
+            undoStack.removeLast()
+        }
         val next = redoStack.pop()
         applySnapshot(next)
+        updateUndoRedoState()
+    }
+
+    fun updateCropRegion(region: CropRegion) {
+        beginEditGesture()
+        stateFlow.update { it.copy(editorCropRegion = region) }
+        scheduleEditorPreviewUpdate()
+    }
+
+    fun onCropFinished() {
+        endEditGesture()
     }
 
     private fun applySnapshot(snapshot: EditorParamsSnapshot) {
@@ -182,7 +257,8 @@ class EditorSessionDelegate(
                 step3Grain = snapshot.grain,
                 editorCustomLutPath = snapshot.customLutPath,
                 editorCustomLutName = snapshot.customLutName,
-                editorLightroomParams = snapshot.lightroomParams
+                editorLightroomParams = snapshot.lightroomParams,
+                editorCropRegion = snapshot.cropRegion
             )
         }
         scheduleEditorPreviewUpdate()
@@ -191,6 +267,12 @@ class EditorSessionDelegate(
     fun setEditorSourceImage(uri: Uri) {
         activeEditorSourceJob?.cancel()
         activeStandaloneJob?.cancel()
+        undoStack.clear()
+        redoStack.clear()
+        gestureStartSnapshot = null
+        gestureDebounceJob?.cancel()
+        gestureDebounceJob = null
+        updateUndoRedoState()
         activeEditorSourceJob = scope.launch {
             stateFlow.update { it.copy(isEditorProcessing = true, errorMessage = null) }
             val filename = "editor_source_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
@@ -210,6 +292,10 @@ class EditorSessionDelegate(
                     }
                     undoStack.clear()
                     redoStack.clear()
+                    gestureStartSnapshot = null
+                    gestureDebounceJob?.cancel()
+                    gestureDebounceJob = null
+                    updateUndoRedoState()
                     stateFlow.update {
                         it.copy(
                             editorSourceUri = uri,
@@ -274,87 +360,104 @@ class EditorSessionDelegate(
 
     // --- Stage 2 Setters (Filter Refinement) ---
     fun setStep2Intensity(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2Intensity = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep2LumaLock(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2LumaLock = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep2NeutralAxisLock(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2NeutralAxisLock = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep2SkinToneLock(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2SkinToneLock = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep2ExtremesRolloff(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2ExtremesRolloff = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep2Spatial3d(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step2Spatial3d = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     // --- Stage 3 Setters (Post-Grading) ---
     fun setStep3Exposure(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Exposure = v.coerceIn(-2.0f, 2.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Contrast(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Contrast = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Highlights(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Highlights = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Shadows(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Shadows = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Temperature(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Temperature = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Tint(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Tint = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Vibrance(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Vibrance = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Saturation(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Saturation = v.coerceIn(-1.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Clarity(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Clarity = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Sharpen(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Sharpen = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
 
     fun setStep3Grain(v: Float) {
+        beginEditGesture()
         stateFlow.update { it.copy(step3Grain = v.coerceIn(0.0f, 1.0f)) }
         scheduleEditorPreviewUpdate()
     }
@@ -468,7 +571,7 @@ class EditorSessionDelegate(
     }
 
     fun resetAllEditorParams() {
-        pushUndoSnapshot()
+        commitCurrentStateToUndo()
         stateFlow.update {
             it.copy(
                 editorCustomLutPath = null,
@@ -490,7 +593,9 @@ class EditorSessionDelegate(
                 step3Saturation = 0.0f,
                 step3Clarity = 0.0f,
                 step3Sharpen = 0.0f,
-                step3Grain = 0.0f
+                step3Grain = 0.0f,
+                editorLightroomParams = LightroomDevelopModel(),
+                editorCropRegion = CropRegion()
             )
         }
         scheduleEditorPreviewUpdate()
@@ -726,6 +831,10 @@ class EditorSessionDelegate(
     fun closeEditorPhoto() {
         undoStack.clear()
         redoStack.clear()
+        gestureStartSnapshot = null
+        gestureDebounceJob?.cancel()
+        gestureDebounceJob = null
+        updateUndoRedoState()
         stateFlow.update {
             it.copy(
                 editorSourceUri = null,

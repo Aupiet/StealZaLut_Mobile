@@ -178,3 +178,20 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   4. **Synchronisation stricte des ressources Android (Phase 4) :** Élimination synchronisée de 217 clés de chaînes dans les 3 fichiers XML de langues (maintenus à 478 lignes identiques), correction des avertissements lint (`LocalContextGetResourceValueCall`).
   5. **Qualité, formatage et audit de documentation (Phases 5 & 6) :** Reformatage via `ruff`, mise à jour de la documentation (`README.md`, `ARCHITECTURE.md`, `docs/AUDIT.md`, `docs/DECISIONS.md`, `docs/design-system.md`) pour refléter la réalité exacte du code (99 tests Python, 28 tests Kotlin, 0 régression).
 
+
+---
+
+## ADR-13 : Moteur Réactif Annuler / Rétablir avec Coalescence de Gestes et Couverture Totale des Paramètres
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. EditorSessionDelegate utilisait des méthodes de vérification non observables (canUndo(), canRedo()) qui ne déclenchaient pas la recomposition Compose des boutons Annuler / Rétablir.
+  2. Chaque micro-tick de curseur empilait un snapshot distinct, saturant la pile de 50 éléments lors d'un unique glissement de doigt.
+  3. Les réglages des 10 sous-panneaux Lightroom (LightroomDevelopModel) ainsi que le recadrage (CropRegion) n'étaient pas intégrés dans la pile d'annulation.
+  4. L'action « Réinitialiser tout » ne réinitialisait ni le modèle Lightroom ni le recadrage.
+- **Décision :**
+  1. **Exposition Réactive d'État :** Ajout de canUndo: Boolean et canRedo: Boolean directement dans StealZaLutUiState, alimenté à chaque mutation de pile pour actualiser instantanément l'état activé/désactivé et la couleur des boutons d'interface.
+  2. **Coalescence par Geste Utilisateur :** Capture du snapshot initial au premier contact (eginEditGesture()), regroupement de toutes les modifications continues pendant le drag, et enregistrement unique du snapshot de départ lors du relâchement (endEditGesture() ou temporisation d'inactivité de 500 ms).
+  3. **Couverture Totale du Modèle d'Édition :** EditorParamsSnapshot intègre l'ensemble des réglages Étape 2/3, la LUT personnalisée, LightroomDevelopModel au complet et CropRegion.
+  4. **Plafond FIFO et Purge Propre :** Plafond strict à 50 états avec éviction FIFO du plus ancien, purge immédiate de la pile Rétablir à toute nouvelle manipulation, et remise à zéro systématique des piles lors du changement ou de la fermeture de photo.

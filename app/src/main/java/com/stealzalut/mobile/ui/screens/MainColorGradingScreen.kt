@@ -197,25 +197,25 @@ fun MainColorGradingScreen(
                         ) {
                             IconButton(
                                 onClick = { viewModel.undoEditor() },
-                                enabled = viewModel.canUndoEditor(),
+                                enabled = uiState.canUndo,
                                 modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                             ) {
                                 Icon(
                                     imageVector = MaterialTheme.icons.actionUndo,
                                     contentDescription = stringResource(R.string.common_undo),
-                                    tint = if (viewModel.canUndoEditor()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                    tint = if (uiState.canUndo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                     modifier = Modifier.size(AppDimens.IconNormal)
                                 )
                             }
                             IconButton(
                                 onClick = { viewModel.redoEditor() },
-                                enabled = viewModel.canRedoEditor(),
+                                enabled = uiState.canRedo,
                                 modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                             ) {
                                 Icon(
                                     imageVector = MaterialTheme.icons.actionRedo,
                                     contentDescription = stringResource(R.string.common_redo),
-                                    tint = if (viewModel.canRedoEditor()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                    tint = if (uiState.canRedo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                     modifier = Modifier.size(AppDimens.IconNormal)
                                 )
                             }

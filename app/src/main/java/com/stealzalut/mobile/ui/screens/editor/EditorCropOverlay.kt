@@ -1,5 +1,7 @@
 package com.stealzalut.mobile.ui.screens.editor
 
+import com.stealzalut.mobile.data.model.CropRegion
+
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -39,22 +41,12 @@ import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
 import com.stealzalut.mobile.ui.theme.szlColors
 
-/**
- * Normalized crop bounding box coordinates [0.0f .. 1.0f] and rotation angle in degrees.
- * Decoupled contract for backend image rendering pipeline.
- */
-data class CropRegion(
-    val left: Float = 0.08f,
-    val top: Float = 0.08f,
-    val right: Float = 0.92f,
-    val bottom: Float = 0.92f,
-    val angle: Float = 0.0f
-)
+
 
 /**
  * Photographic standard crop ratios.
  */
-enum class CropAspectRatio(val ratio: Float?, @StringRes val labelRes: Int) {
+enum class CropAspectRatio(val ratio: Float?, @param:StringRes val labelRes: Int) {
     FREE(null, R.string.crop_free),
     ORIGINAL(null, R.string.crop_original),
     SQUARE_1_1(1.0f, R.string.crop_square),

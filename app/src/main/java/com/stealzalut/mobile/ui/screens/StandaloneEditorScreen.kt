@@ -27,7 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.unit.dp
 import androidx.activity.result.PickVisualMediaRequest
-import com.stealzalut.mobile.ui.screens.editor.CropRegion
+import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.ui.screens.editor.EditorCropOverlay
 import com.stealzalut.mobile.ui.screens.editor.EditorCropPanel
 import com.stealzalut.mobile.ui.screens.editor.EditorExportDialog
@@ -228,9 +228,9 @@ fun StandaloneEditorScreen(
                     // Superimpose interactive Crop & Straighten overlay directly over photo
                     if (uiState.editorActiveTool == 0) {
                         EditorCropOverlay(
-                            cropRegion = CropRegion(),
-                            onCropRegionChange = { /* Crop region updated */ },
-                            onCropFinished = { viewModel.pushUndoSnapshot() },
+                            cropRegion = uiState.editorCropRegion,
+                            onCropRegionChange = { viewModel.updateCropRegion(it) },
+                            onCropFinished = { viewModel.onCropFinished() },
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -366,9 +366,9 @@ fun StandaloneEditorScreen(
                                 ) { activeTool ->
                                     when (activeTool) {
                                         0 -> EditorCropPanel(
-                                            cropRegion = CropRegion(),
-                                            onCropRegionChange = { /* Crop region updated */ },
-                                            onCropFinished = { viewModel.pushUndoSnapshot() }
+                                            cropRegion = uiState.editorCropRegion,
+                                            onCropRegionChange = { viewModel.updateCropRegion(it) },
+                                            onCropFinished = { viewModel.onCropFinished() }
                                         )
                                         1 -> EditorBasicPanel(
                                             basic = lrParams.basic,

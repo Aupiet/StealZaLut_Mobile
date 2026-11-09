@@ -20,7 +20,10 @@ import kotlinx.coroutines.flow.update
  */
 class EditorLightroomDelegate(
     private val stateFlow: MutableStateFlow<StealZaLutUiState>,
-    private val onScheduleUpdate: () -> Unit
+    private val onScheduleUpdate: () -> Unit,
+    private val onBeginGesture: () -> Unit = {},
+    private val onEndGesture: () -> Unit = {},
+    private val onCommitUndo: () -> Unit = {}
 ) {
 
     // --- Toolbar & Viewport Controls ---
@@ -46,6 +49,7 @@ class EditorLightroomDelegate(
 
     // --- Section Bypass Toggles (Eye Icon) ---
     fun toggleBasicEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isBasicEnabled = !curr.isBasicEnabled))
@@ -54,6 +58,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleToneCurveEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isToneCurveEnabled = !curr.isToneCurveEnabled))
@@ -62,6 +67,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleColorMixerEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isColorMixerEnabled = !curr.isColorMixerEnabled))
@@ -70,6 +76,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleColorGradingEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isColorGradingEnabled = !curr.isColorGradingEnabled))
@@ -78,6 +85,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleDetailEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isDetailEnabled = !curr.isDetailEnabled))
@@ -86,6 +94,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleLensCorrectionsEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isLensCorrectionsEnabled = !curr.isLensCorrectionsEnabled))
@@ -94,6 +103,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleTransformEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isTransformEnabled = !curr.isTransformEnabled))
@@ -102,6 +112,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleLensBlurEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isLensBlurEnabled = !curr.isLensBlurEnabled))
@@ -110,6 +121,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleEffectsEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isEffectsEnabled = !curr.isEffectsEnabled))
@@ -118,6 +130,7 @@ class EditorLightroomDelegate(
     }
 
     fun toggleCalibrationEnabled() {
+        onCommitUndo()
         stateFlow.update {
             val curr = it.editorLightroomParams
             it.copy(editorLightroomParams = curr.copy(isCalibrationEnabled = !curr.isCalibrationEnabled))
@@ -128,6 +141,7 @@ class EditorLightroomDelegate(
     // --- Parameter Mutators ---
 
     fun updateBasic(transform: (BasicAdjustmentsModel) -> BasicAdjustmentsModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             val updated = transform(p.basic)
@@ -147,6 +161,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateToneCurve(transform: (ToneCurveModel) -> ToneCurveModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(toneCurve = transform(p.toneCurve)))
@@ -155,6 +170,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateColorMixer(transform: (ColorMixerModel) -> ColorMixerModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(colorMixer = transform(p.colorMixer)))
@@ -163,6 +179,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateColorGrading(transform: (ColorGradingModel) -> ColorGradingModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(colorGrading = transform(p.colorGrading)))
@@ -171,6 +188,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateDetail(transform: (DetailModel) -> DetailModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             val updated = transform(p.detail)
@@ -183,6 +201,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateLensCorrections(transform: (LensCorrectionsModel) -> LensCorrectionsModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(lensCorrections = transform(p.lensCorrections)))
@@ -191,6 +210,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateTransform(transform: (TransformModel) -> TransformModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(transform = transform(p.transform)))
@@ -199,6 +219,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateLensBlur(transform: (LensBlurModel) -> LensBlurModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(lensBlur = transform(p.lensBlur)))
@@ -207,6 +228,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateEffects(transform: (EffectsModel) -> EffectsModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             val updated = transform(p.effects)
@@ -219,6 +241,7 @@ class EditorLightroomDelegate(
     }
 
     fun updateCalibration(transform: (CalibrationModel) -> CalibrationModel) {
+        onBeginGesture()
         stateFlow.update {
             val p = it.editorLightroomParams
             it.copy(editorLightroomParams = p.copy(calibration = transform(p.calibration)))
@@ -227,14 +250,18 @@ class EditorLightroomDelegate(
     }
 
     // --- Reset Actions per Panel ---
-    fun resetBasic() = updateBasic { BasicAdjustmentsModel() }
-    fun resetToneCurve() = updateToneCurve { ToneCurveModel() }
-    fun resetColorMixer() = updateColorMixer { ColorMixerModel() }
-    fun resetColorGrading() = updateColorGrading { ColorGradingModel() }
-    fun resetDetail() = updateDetail { DetailModel() }
-    fun resetLensCorrections() = updateLensCorrections { LensCorrectionsModel() }
-    fun resetTransform() = updateTransform { TransformModel() }
-    fun resetLensBlur() = updateLensBlur { LensBlurModel() }
-    fun resetEffects() = updateEffects { EffectsModel() }
-    fun resetCalibration() = updateCalibration { CalibrationModel() }
+    fun resetBasic() { onCommitUndo(); updateBasic { BasicAdjustmentsModel() }; onEndGesture() }
+    fun resetToneCurve() { onCommitUndo(); updateToneCurve { ToneCurveModel() }; onEndGesture() }
+    fun resetColorMixer() { onCommitUndo(); updateColorMixer { ColorMixerModel() }; onEndGesture() }
+    fun resetColorGrading() { onCommitUndo(); updateColorGrading { ColorGradingModel() }; onEndGesture() }
+    fun resetDetail() { onCommitUndo(); updateDetail { DetailModel() }; onEndGesture() }
+    fun resetLensCorrections() { onCommitUndo(); updateLensCorrections { LensCorrectionsModel() }; onEndGesture() }
+    fun resetTransform() { onCommitUndo(); updateTransform { TransformModel() }; onEndGesture() }
+    fun resetLensBlur() { onCommitUndo(); updateLensBlur { LensBlurModel() }; onEndGesture() }
+    fun resetEffects() { onCommitUndo(); updateEffects { EffectsModel() }; onEndGesture() }
+    fun resetCalibration() { onCommitUndo(); updateCalibration { CalibrationModel() }; onEndGesture() }
+
+    fun onGestureFinished() {
+        onEndGesture()
+    }
 }

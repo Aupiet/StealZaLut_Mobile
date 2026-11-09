@@ -121,6 +121,4 @@ fun buildTypography(fontSpec: FontSpec = FontSpec()): Typography {
     )
 }
 
-fun createSzlTypography(fontSpec: FontSpec = FontSpec()): Typography = buildTypography(fontSpec)
-
 val Typography = buildTypography(FontSpec())

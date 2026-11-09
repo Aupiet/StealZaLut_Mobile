@@ -9,8 +9,6 @@ import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.ui.theme.AppThemes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -27,7 +25,6 @@ class SettingsRepository(private val context: Context) {
     )
 
     private val _settingsFlow = MutableStateFlow(loadSettings())
-    val settingsFlow: StateFlow<AppSettings> = _settingsFlow.asStateFlow()
 
     companion object {
         private const val KEY_DEFAULT_LUT_SIZE = "key_default_lut_size"

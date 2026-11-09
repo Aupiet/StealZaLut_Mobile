@@ -12,8 +12,6 @@ import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
-import com.stealzalut.mobile.data.model.Step2Model
-import com.stealzalut.mobile.data.model.Step3Model
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -72,7 +70,6 @@ data class StealZaLutUiState(
     val isExportingCube: Boolean = false,
     val isExportingImage: Boolean = false,
     val isSavingPreset: Boolean = false,
-    val isInfoScreenVisible: Boolean = false,
 
     // Editor Auto Edit state
     val isAutoEditActive: Boolean = false,
@@ -213,6 +210,5 @@ data class StealZaLutUiState(
     val effectivePreviewBitmap: Bitmap?
         get() = if (isEditActive && editedPreviewBitmap != null) editedPreviewBitmap else basePreviewBitmap
 
-    val effectivePreviewPath: String?
-        get() = if (isEditActive && editedPreviewPath != null) editedPreviewPath else previewPath
+
 }

@@ -55,7 +55,6 @@ import com.stealzalut.mobile.ui.navigation.AppDestination
 import com.stealzalut.mobile.ui.screens.editor.EditorActionsDropdownToolbar
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import kotlinx.coroutines.launch
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +65,8 @@ fun MainColorGradingScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val msgEditsReset = stringResource(R.string.msg_edits_reset)
+    val commonUndo = stringResource(R.string.common_undo)
     val snackbarHostState = remember { SnackbarHostState() }
     var showExitEditorConfirmDialog by remember { mutableStateOf(false) }
 
@@ -170,9 +171,7 @@ fun MainColorGradingScreen(
         }
     }
 
-    if (uiState.isInfoScreenVisible) {
-        MetricsInfoBottomSheet(onDismiss = { viewModel.dismissMetricsInfo() })
-    }
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -279,8 +278,8 @@ fun MainColorGradingScreen(
                                     scope.launch {
                                         snackbarHostState.currentSnackbarData?.dismiss()
                                         val result = snackbarHostState.showSnackbar(
-                                            message = context.getString(R.string.msg_edits_reset),
-                                            actionLabel = context.getString(R.string.common_undo),
+                                            message = msgEditsReset,
+                                            actionLabel = commonUndo,
                                             duration = SnackbarDuration.Short
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {

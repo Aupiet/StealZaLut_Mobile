@@ -42,16 +42,12 @@ data class SzlColors(
     val toneCurveGreen: Color,
     val toneCurveBlue: Color,
     val toneCurveRgb: Color,
-    val clippingShadows: Color = Color(0xFF2979FF),
-    val clippingHighlights: Color = Color(0xFFFF1744),
     val cropOverlay: Color = Color(0x99000000),
     val cropHandle: Color = Color(0xFFFFFFFF),
     val cropGrid: Color = Color(0x4DFFFFFF),
     val toolActiveDot: Color = Color(0xFFE5A93C),
     val exportTrack: Color = Color(0xFF21262D),
-    val exportProgress: Color = Color(0xFF10B981),
-    val exportProgressTrack: Color = exportTrack,
-    val exportProgressIndicator: Color = exportProgress
+    val exportProgress: Color = Color(0xFF10B981)
 )
 
 val LocalSzlColors = staticCompositionLocalOf<SzlColors> {

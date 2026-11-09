@@ -32,7 +32,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,7 +59,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
@@ -88,16 +86,8 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context: Context = LocalContext.current
+    val shareChooserTitle = stringResource(R.string.detail_btn_share)
 
-    val createCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { destinationUri ->
-        if (destinationUri != null) {
-            viewModel.savePendingExportToUri(destinationUri)
-        } else {
-            viewModel.cancelPendingExport()
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.loadSavedImages()
@@ -110,7 +100,7 @@ fun ProfileScreen(
             onDismiss = { viewModel.dismissImageDetail() },
             onShare = {
                 val intent = viewModel.createShareImageIntent(it.filePath)
-                context.startActivity(Intent.createChooser(intent, context.getString(R.string.detail_btn_share)))
+                context.startActivity(Intent.createChooser(intent, shareChooserTitle))
             },
             onDelete = {
                 viewModel.deleteSavedImage(it.id)
@@ -245,37 +235,6 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-private fun StatPill(
-    count: Int,
-    label: String
-) {
-    Surface(
-        shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        border = androidx.compose.foundation.BorderStroke(
-            AppDimens.BorderThin,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "$count",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = label.trim(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
 
 @Composable
 private fun InstagramGridThumbnail(

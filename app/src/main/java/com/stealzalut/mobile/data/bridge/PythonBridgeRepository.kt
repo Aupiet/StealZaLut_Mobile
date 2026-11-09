@@ -5,11 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -18,12 +15,10 @@ import androidx.core.content.FileProvider
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.stealzalut.mobile.data.cache.LruCacheManager
-import com.stealzalut.mobile.data.model.AutoEditResult
 import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.EditPreset
-import com.stealzalut.mobile.data.model.EditResult
 import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.LutDomainError
 import com.stealzalut.mobile.data.model.LutSize
@@ -304,162 +299,9 @@ class PythonBridgeRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Executes the reverse-engineered LightCraft Auto Edit feature on a source image.
-     * Computes exposure, tone curves, and vibrance, and writes a WYSIWYG preview file.
-     */
-    suspend fun generateAutoEditPreview(srcPath: String): AutoEditResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
-            val bridge = py.getModule("stealzalut.bridge")
-
-            val previewOutputFile = lruCacheManager.createPreviewFile("auto_edit_preview_")
-            val pyResult: PyObject = bridge.callAttr(
-                "compute_auto_edit",
-                srcPath,
-                previewOutputFile.absolutePath,
-                1024,
-                33
-            )
-
-            val status = pyResult.callAttr("get", "status")?.toString()
-            if (status == "success") {
-                val path = pyResult.callAttr("get", "preview_path")?.toString() ?: previewOutputFile.absolutePath
-                val exposure = pyResult.callAttr("get", "exposure")?.toDouble()?.toFloat() ?: 0.0f
-                val contrast = pyResult.callAttr("get", "contrast")?.toDouble()?.toFloat() ?: 68.0f
-                val highlights = pyResult.callAttr("get", "highlights")?.toDouble()?.toFloat() ?: -66.0f
-                val shadows = pyResult.callAttr("get", "shadows")?.toDouble()?.toFloat() ?: 52.0f
-                val whites = pyResult.callAttr("get", "whites")?.toDouble()?.toFloat() ?: 0.0f
-                val blacks = pyResult.callAttr("get", "blacks")?.toDouble()?.toFloat() ?: 0.0f
-                val vibrance = pyResult.callAttr("get", "vibrance")?.toDouble()?.toFloat() ?: 30.0f
-                val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-
-                AutoEditResult.Success(
-                    previewPath = path,
-                    exposure = exposure,
-                    contrast = contrast,
-                    highlights = highlights,
-                    shadows = shadows,
-                    whites = whites,
-                    blacks = blacks,
-                    vibrance = vibrance,
-                    executionTimeMs = timeMs
-                )
-            } else {
-                val errorCode = pyResult.callAttr("get", "error_code")?.toString()
-                val message = pyResult.callAttr("get", "message")?.toString()
-                val domainError = LutDomainError.fromPythonResponse(errorCode, message)
-                AutoEditResult.Error(error = domainError, customMessage = message)
-            }
-        }.getOrElse { error ->
-            val domainError = LutDomainError.fromPythonResponse(null, error.localizedMessage ?: error.toString())
-            AutoEditResult.Error(error = domainError, customMessage = error.localizedMessage)
-        }
-    }
-
-    /**
-     * Exports the LightCraft Auto Edit grade as an Adobe .cube 3D LUT file.
-     */
-    suspend fun exportAutoEditCube(
-        srcPath: String,
-        lutSize: LutSize = LutSize.STANDARD
-    ): CubeExportResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
-            val bridge = py.getModule("stealzalut.bridge")
-
-            val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
-            val timestamp = System.currentTimeMillis()
-            val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
-            val cubeFile = File(outputDir, "StealZaLUT_Auto_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
-
-            val pyResult: PyObject = bridge.callAttr(
-                "export_auto_edit_cube",
-                srcPath,
-                cubeFile.absolutePath,
-                lutSize.size
-            )
-
-            val status = pyResult.callAttr("get", "status")?.toString()
-            if (status == "success") {
-                val path = pyResult.callAttr("get", "cube_path")?.toString()
-                    ?: pyResult.callAttr("get", "lut_path")?.toString()
-                    ?: cubeFile.absolutePath
-                val target = File(path)
-                if (!target.exists() || !target.isFile || target.length() <= 0L) {
-                    android.util.Log.e("PythonBridgeRepository", "Python reported success but generated auto cube file is missing or empty: $path")
-                    val domainError = LutDomainError.ExportIoError("Fichier .cube généré introuvable ou vide sur le stockage interne")
-                    CubeExportResult.Error(error = domainError, customMessage = "Fichier .cube généré introuvable ou vide sur le stockage interne")
-                } else {
-                    val size = pyResult.callAttr("get", "lut_size")?.toInt() ?: lutSize.size
-                    val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                    CubeExportResult.Success(cubePath = target.canonicalPath, lutSize = size, executionTimeMs = timeMs)
-                }
-            } else {
-                val errorCode = pyResult.callAttr("get", "error_code")?.toString()
-                val message = pyResult.callAttr("get", "message")?.toString()
-                val domainError = LutDomainError.fromPythonResponse(errorCode, message)
-                CubeExportResult.Error(error = domainError, customMessage = message)
-            }
-        }.getOrElse { error ->
-            val domainError = LutDomainError.fromPythonResponse(null, error.localizedMessage ?: error.toString())
-            CubeExportResult.Error(error = domainError, customMessage = error.localizedMessage)
-        }
-    }
-
-    /**
-     * Applies LightCraft edit adjustments (Light & Color) to an image file.
-     */
-    suspend fun applyImageEdits(
-        imagePath: String,
-        exposure: Float = 0.0f,
-        contrast: Float = 0.0f,
-        highlights: Float = 0.0f,
-        shadows: Float = 0.0f,
-        whites: Float = 0.0f,
-        blacks: Float = 0.0f,
-        vibrance: Float = 0.0f,
-        saturation: Float = 0.0f
-    ): EditResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
-            val bridge = py.getModule("stealzalut.bridge")
-
-            val outputDir = File(context.cacheDir, "edits").apply { mkdirs() }
-            val timestamp = System.currentTimeMillis()
-            val outputFile = File(outputDir, "edit_${timestamp}.jpg")
-
-            val pyResult: PyObject = bridge.callAttr(
-                "apply_image_edits",
-                imagePath,
-                outputFile.absolutePath,
-                exposure.toDouble(),
-                contrast.toDouble(),
-                highlights.toDouble(),
-                shadows.toDouble(),
-                whites.toDouble(),
-                blacks.toDouble(),
-                vibrance.toDouble(),
-                saturation.toDouble()
-            )
-
-            val status = pyResult.callAttr("get", "status")?.toString()
-            if (status == "success") {
-                val path = pyResult.callAttr("get", "edited_path")?.toString() ?: outputFile.absolutePath
-                val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                EditResult.Success(editedPath = path, executionTimeMs = timeMs)
-            } else {
-                val errorCode = pyResult.callAttr("get", "error_code")?.toString()
-                val message = pyResult.callAttr("get", "message")?.toString()
-                val domainError = LutDomainError.fromPythonResponse(errorCode, message)
-                EditResult.Error(error = domainError, customMessage = message)
-            }
-        }.getOrElse { error ->
-            val domainError = LutDomainError.fromPythonResponse(null, error.localizedMessage ?: error.toString())
-            EditResult.Error(error = domainError, customMessage = error.localizedMessage)
-        }
-    }
-
+    
+    
+    
     /**
      * Computes LightCraft auto exposure and tone settings for an image.
      */
@@ -603,136 +445,9 @@ class PythonBridgeRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Saves a generated .cube LUT file into the user's public Downloads directory
-     * via MediaStore on Android 10+ (API 29+) with resilient fallback to public storage.
-     */
-    suspend fun saveCubeToDownloads(
-        cubePath: String,
-        displayName: String = File(cubePath).name
-    ): Result<Uri> = withContext(Dispatchers.IO) {
-        runCatching {
-            val sourceFile = File(cubePath)
-            if (!sourceFile.exists()) {
-                throw IllegalStateException("Fichier LUT introuvable: $cubePath")
-            }
-
-            // Adobe .cube is an ASCII text format; text/plain prevents Android from appending .bin
-            val mimeType = "text/plain"
-            val resolver = context.contentResolver
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                try {
-                    val values = ContentValues().apply {
-                        put(MediaStore.Downloads.DISPLAY_NAME, displayName)
-                        put(MediaStore.Downloads.MIME_TYPE, mimeType)
-                        put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/StealZaLUT")
-                        put(MediaStore.Downloads.IS_PENDING, 1)
-                    }
-
-                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                    if (uri != null) {
-                        resolver.openOutputStream(uri)?.use { output ->
-                            FileInputStream(sourceFile).use { input ->
-                                input.copyTo(output)
-                            }
-                        } ?: throw IllegalStateException("Impossible d'écrire dans MediaStore URI: $uri")
-
-                        values.clear()
-                        values.put(MediaStore.Downloads.IS_PENDING, 0)
-                        resolver.update(uri, values, null, null)
-                        return@runCatching uri
-                    }
-                } catch (_: Exception) {
-                    // Fallback to legacy downloads directory if MediaStore insert fails on specific OEM ROMs
-                }
-            }
-
-            @Suppress("DEPRECATION")
-            val downloadsDir = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "StealZaLUT"
-            ).apply { mkdirs() }
-            val targetFile = File(downloadsDir, displayName)
-            sourceFile.copyTo(targetFile, overwrite = true)
-            Uri.fromFile(targetFile)
-        }
-    }
-
-    /**
-     * Generates a synthetic reference sample image (e.g. Cinematic Teal & Orange, Moody, Sunset).
-     */
-    suspend fun createSampleImage(style: String): File = withContext(Dispatchers.IO) {
-        val fileName = "sample_${style.lowercase().replace(" ", "_")}.jpg"
-        val sampleFile = File(lruCacheManager.previewDir, fileName)
-        if (sampleFile.exists()) return@withContext sampleFile
-
-        val width = 720
-        val height = 480
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-        when (style) {
-            "Teal & Orange" -> {
-                val gradient = LinearGradient(
-                    0f, 0f, 0f, height.toFloat(),
-                    intArrayOf(Color.rgb(18, 85, 110), Color.rgb(220, 110, 45), Color.rgb(70, 30, 20)),
-                    floatArrayOf(0.0f, 0.65f, 1.0f),
-                    Shader.TileMode.CLAMP
-                )
-                paint.shader = gradient
-                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-            }
-            "Moody Forest" -> {
-                val gradient = LinearGradient(
-                    0f, 0f, width.toFloat(), height.toFloat(),
-                    intArrayOf(Color.rgb(20, 35, 30), Color.rgb(40, 75, 55), Color.rgb(15, 20, 25)),
-                    null,
-                    Shader.TileMode.CLAMP
-                )
-                paint.shader = gradient
-                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-            }
-            else -> {
-                val gradient = LinearGradient(
-                    0f, 0f, width.toFloat(), height.toFloat(),
-                    intArrayOf(Color.rgb(240, 20, 120), Color.rgb(30, 10, 60), Color.rgb(0, 230, 240)),
-                    null,
-                    Shader.TileMode.CLAMP
-                )
-                paint.shader = gradient
-                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-            }
-        }
-
-        FileOutputStream(sampleFile).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
-        }
-        bitmap.recycle()
-        sampleFile
-    }
-
-    /**
-     * Copies a generated file to a user-selected destination URI via SAF.
-     */
-    suspend fun copyFileToDestinationUri(sourceFilePath: String, destinationUri: Uri): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val sourceFile = File(sourceFilePath)
-                if (!sourceFile.exists()) {
-                    throw IllegalStateException("Le fichier source n'existe pas : $sourceFilePath")
-                }
-                context.contentResolver.openOutputStream(destinationUri)?.use { output ->
-                    sourceFile.inputStream().use { input ->
-                        input.copyTo(output)
-                    }
-                    output.flush()
-                } ?: throw IllegalStateException("Impossible d'écrire dans la destination choisie.")
-                Unit
-            }
-        }
-
+    
+    
+    
     /**
      * Generates a preview for the Standalone Photo Editor (Single photo, no reference image).
      */

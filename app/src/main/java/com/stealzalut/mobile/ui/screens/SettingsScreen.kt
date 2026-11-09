@@ -1,9 +1,6 @@
 package com.stealzalut.mobile.ui.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Tune
@@ -50,9 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
@@ -64,7 +58,6 @@ import com.stealzalut.mobile.ui.components.SzlSlider
 import com.stealzalut.mobile.ui.screens.studio.SectionTitleBanner
 import com.stealzalut.mobile.ui.theme.AppThemes
 import com.stealzalut.mobile.ui.theme.LocalFontSpec
-import com.stealzalut.mobile.ui.theme.icons
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import kotlin.math.roundToInt
 

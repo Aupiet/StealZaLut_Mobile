@@ -13,7 +13,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -49,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
-import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.components.SzlImageBadge
 import com.stealzalut.mobile.ui.components.SzlRgbHistogram

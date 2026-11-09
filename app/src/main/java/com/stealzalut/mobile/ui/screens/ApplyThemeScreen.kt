@@ -1,6 +1,5 @@
 package com.stealzalut.mobile.ui.screens
 
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent

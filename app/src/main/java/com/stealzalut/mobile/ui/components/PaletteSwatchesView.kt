@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -149,7 +148,6 @@ fun PaletteSwatchesView(
                 val composeColor = parseHexColor(hex)
                 val hexUpper = hex.uppercase()
                 val weight = (baseWeights.getOrElse(index) { 5 } * 100) / totalWeight
-                val dominanceText = stringResource(R.string.palette_dominance_format, weight)
                 val a11yDesc = stringResource(R.string.swatch_a11y_format, index + 1, colors.size, hexUpper)
 
                 Card(

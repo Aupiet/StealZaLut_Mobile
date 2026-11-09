@@ -46,7 +46,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MovieFilter
 import androidx.compose.material.icons.outlined.Palette
@@ -97,7 +96,6 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.MovieFilter
 import androidx.compose.material.icons.rounded.Palette
@@ -137,10 +135,8 @@ interface SzlIconSet {
     // Semantic Roles (Figma 1:1)
     val toolCrop: ImageVector
     val toolBasic: ImageVector
-    val toolCurve: ImageVector get() = toolToneCurve
     val toolToneCurve: ImageVector
     val toolColorMixer: ImageVector
-    val toolGrading: ImageVector get() = toolColorGrading
     val toolColorGrading: ImageVector
     val toolDetail: ImageVector
     val toolEffects: ImageVector
@@ -166,7 +162,6 @@ interface SzlIconSet {
     val actionHelp: ImageVector
     val delete: ImageVector get() = actionDelete
     val actionDelete: ImageVector
-    val share: ImageVector get() = actionShare
     val actionShare: ImageVector
     val actionVisibilityOn: ImageVector
     val actionVisibilityOff: ImageVector
@@ -174,7 +169,6 @@ interface SzlIconSet {
     val gallery: ImageVector get() = actionAddPhoto
     val actionAddPhoto: ImageVector
     val actionDuplicate: ImageVector
-    val camera: ImageVector get() = actionCamera
     val actionCamera: ImageVector
     val actionGrid: ImageVector
     val palette: ImageVector get() = actionPalette
@@ -204,7 +198,6 @@ interface SzlIconSet {
     val statusInfo: ImageVector
     val statusChevronDown: ImageVector
     val statusChevronRight: ImageVector
-    val back: ImageVector get() = statusArrowBack
     val statusArrowBack: ImageVector
     val next: ImageVector get() = statusArrowForward
     val statusArrowForward: ImageVector
@@ -372,20 +365,3 @@ val MaterialTheme.icons: SzlIconSet
     @ReadOnlyComposable
     get() = LocalSzlIcons.current
 
-/**
- * Convenience Composable for rendering a semantic icon token.
- */
-@Composable
-fun SzlIcon(
-    icon: ImageVector,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    tint: Color = LocalContentColor.current
-) {
-    Icon(
-        imageVector = icon,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        tint = tint
-    )
-}

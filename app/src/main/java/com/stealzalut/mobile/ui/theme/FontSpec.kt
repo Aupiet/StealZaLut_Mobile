@@ -40,8 +40,6 @@ data class FontSpec(
     val title: FontFamily = PlayfairFontFamily,
     val body: FontFamily = PlusJakartaSansFontFamily,
     val mono: FontFamily = JetBrainsMonoFontFamily,
-    val titleFont: FontFamily = title,
-    val bodyFont: FontFamily = body,
     val monoFont: FontFamily = mono
 )
 

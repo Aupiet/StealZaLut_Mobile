@@ -24,11 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
-import com.stealzalut.mobile.ui.theme.ColorCardReference
 
 /**
  * Highly visual and tactile 5-step studio stepper.

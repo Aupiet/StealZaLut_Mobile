@@ -9,7 +9,6 @@ import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
-import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CubeExportResult
 import com.stealzalut.mobile.data.model.EditPreset

@@ -1,7 +1,6 @@
 package com.stealzalut.mobile.ui.screens.editor
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.stealzalut.mobile.R
-import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 
 /**

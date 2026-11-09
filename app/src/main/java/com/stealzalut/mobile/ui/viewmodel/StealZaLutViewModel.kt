@@ -34,7 +34,6 @@ import com.stealzalut.mobile.ui.viewmodel.delegate.EditorSessionDelegate
 import com.stealzalut.mobile.ui.viewmodel.delegate.GradingPipelineDelegate
 import com.stealzalut.mobile.ui.viewmodel.delegate.PresetLibraryDelegate
 import com.stealzalut.mobile.ui.viewmodel.delegate.StudioFlowDelegate
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -364,17 +363,7 @@ class StealZaLutViewModel(
         }
     }
 
-    fun setDefaultLutSize(size: LutSize) {
-        val updated = _uiState.value.settings.copy(defaultLutSize = size)
-        settingsRepository.saveSettings(updated)
-        _uiState.update { it.copy(settings = updated, lutSize = size) }
-    }
 
-    fun setDefaultMethod(method: ColorTransferMethod) {
-        val updated = _uiState.value.settings.copy(defaultMethod = method)
-        settingsRepository.saveSettings(updated)
-        _uiState.update { it.copy(settings = updated, method = method) }
-    }
 
     fun setLanguage(languageTag: String) {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag))
@@ -400,13 +389,7 @@ class StealZaLutViewModel(
         _uiState.update { it.copy(userMessage = null, errorMessage = null) }
     }
 
-    fun openMetricsInfo() {
-        _uiState.update { it.copy(isInfoScreenVisible = true) }
-    }
 
-    fun dismissMetricsInfo() {
-        _uiState.update { it.copy(isInfoScreenVisible = false) }
-    }
 
     private fun decodeSampledBitmap(path: String, maxDim: Int = 1080): Bitmap? {
         return try {

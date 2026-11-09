@@ -57,7 +57,6 @@ object ColorCardReference {
     val HistogramRed = Color(0xCCEF5350)
     val HistogramGreen = Color(0xCC66BB6A)
     val HistogramBlue = Color(0xCC42A5F5)
-    val HistogramLuma = Color(0xCCE0E0E0)
 
     // Lightroom Color Mixer 8-Zone Spectrum References
     val HslRed = Color(0xFFEF5350)

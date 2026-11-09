@@ -420,6 +420,7 @@
     <string name="editor_collapse_panel">Collapse tools</string>
     <string name="tone_curve_mode_curve">Curve</string>
     <string name="tone_curve_mode_zones">Zones</string>
+    <string name="tone_curve_coordinates">In: %1$d | Out: %2$d</string>
     <string name="editor_exit_dialog_title">Exit Photo Editor?</string>
     <string name="editor_exit_dialog_message">Your adjustments are saved in session. What would you like to do?</string>
     <string name="editor_btn_save_draft">Save as Preset</string>

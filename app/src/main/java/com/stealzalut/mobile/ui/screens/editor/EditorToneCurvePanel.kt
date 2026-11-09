@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,29 +43,34 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.core.MonotoneCubicSpline
 import com.stealzalut.mobile.data.model.ToneCurveModel
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
 import com.stealzalut.mobile.ui.theme.ColorCardReference
+import com.stealzalut.mobile.ui.theme.icons
 import com.stealzalut.mobile.ui.theme.szlColors
-import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 /**
  * Professional Zero-Scroll Tone Curve Develop Panel inspired by Lightroom.
  * Features:
- * - Two ultra-clean modes: Point Curve (spline canvas) and Zonal Sliders (Highlights/Shadows).
- * - Smooth cubic spline curve rendering with large tactile grab points (>= 48dp touch targets).
- * - Soft watermark histogram distribution in background.
- * - Fine dashed 45° reference diagonal and 4x4 zone grid.
- * - Explicit 4-zone tonal labels (Shadows, Darks, Lights, Highlights).
- * - Styled channel tabs with dedicated color swatches (White, Red #FF5252, Green #69F0AE, Blue #448AFF).
- * - Guaranteed zero vertical scrolling inside the editor drawer.
+ * - Mathematical Fritsch-Carlson monotone cubic spline interpolation identical to Python backend.
+ * - Relative delta-based dragging preventing abrupt teleportation.
+ * - Strict X-monotonicity constraint: neighbor order is strictly preserved.
+ * - Tactile capture radius (32dp) for point selection.
+ * - Double-tap deletion & drag-off-canvas deletion of intermediate points.
+ * - Real-time In/Out coordinate readout (0-255).
+ * - Light haptic feedback on touch, selection, and mutation.
  */
 @Composable
 fun EditorToneCurvePanel(
@@ -75,9 +79,13 @@ fun EditorToneCurvePanel(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val captureRadiusPx = with(density) { 32.dp.toPx() }
+    val offCanvasMarginPx = with(density) { 36.dp.toPx() }
+
     var curveSubMode by remember { mutableIntStateOf(0) } // 0 = Point Curve Canvas, 1 = Zonal Sliders
     var selectedChannel by remember { mutableIntStateOf(0) } // 0 = RGB, 1 = Red, 2 = Green, 3 = Blue
-    var isEditMode by remember { mutableStateOf(false) }
+    var selectedPointIndex by remember { mutableStateOf<Int?>(null) }
     var draggingIndex by remember { mutableStateOf<Int?>(null) }
 
     val activePoints = when (selectedChannel) {
@@ -107,41 +115,28 @@ fun EditorToneCurvePanel(
 
     fun addPoint(xNorm: Float, yNorm: Float) {
         val updated = activePoints.toMutableList()
-        val isTooClose = updated.any { abs(it.first - xNorm) < 0.05f }
+        val minNeighborDist = 0.04f
+        val isTooClose = updated.any { kotlin.math.abs(it.first - xNorm) < minNeighborDist }
         if (!isTooClose) {
-            updated.add(xNorm to yNorm)
+            val newPt = xNorm.coerceIn(0.02f, 0.98f) to yNorm.coerceIn(0f, 1f)
+            updated.add(newPt)
+            val sorted = updated.sortedBy { it.first }
+            selectedPointIndex = sorted.indexOf(newPt)
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            updatePoints(updated.sortedBy { it.first })
+            updatePoints(sorted)
         }
     }
 
-    fun removeClosestIntermediatePoint(xNorm: Float, yNorm: Float) {
+    fun removePointAtIndex(index: Int) {
         val updated = activePoints.toMutableList()
         if (updated.size <= 2) return
-        val closestIndex = updated.indices.minByOrNull { i ->
-            abs(updated[i].first - xNorm) + abs(updated[i].second - yNorm)
-        } ?: return
-        if (closestIndex > 0 && closestIndex < updated.size - 1) {
-            updated.removeAt(closestIndex)
+        if (index > 0 && index < updated.size - 1) {
+            updated.removeAt(index)
+            selectedPointIndex = null
+            draggingIndex = null
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             updatePoints(updated.sortedBy { it.first })
         }
-    }
-
-    fun moveClosestPoint(xNorm: Float, yNorm: Float, targetIndex: Int? = null) {
-        val updated = activePoints.toMutableList()
-        val indexToMove = targetIndex ?: updated.indices.minByOrNull { i ->
-            abs(updated[i].first - xNorm) + abs(updated[i].second - yNorm)
-        } ?: return
-
-        val newX = when (indexToMove) {
-            0 -> 0f
-            updated.size - 1 -> 1f
-            else -> xNorm.coerceIn(0.01f, 0.99f)
-        }
-        updated[indexToMove] = newX to yNorm.coerceIn(0f, 1f)
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        updatePoints(updated.sortedBy { it.first })
     }
 
     Column(
@@ -219,34 +214,36 @@ fun EditorToneCurvePanel(
                 }
             }
 
-            // Quick Reset & Edit Lock in Curve Mode
-            if (curveSubMode == 0) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(
-                        onClick = { isEditMode = !isEditMode },
-                        modifier = Modifier.size(AppDimens.MinInteractiveTarget)
-                    ) {
-                        Icon(
-                            imageVector = if (isEditMode) MaterialTheme.icons.actionEdit else MaterialTheme.icons.statusLock,
-                            contentDescription = null,
-                            tint = if (isEditMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                            modifier = Modifier.size(AppDimens.IconSmall)
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            updatePoints(listOf(0.0f to 0.0f, 1.0f to 1.0f))
-                        },
-                        modifier = Modifier.size(AppDimens.MinInteractiveTarget)
-                    ) {
-                        Icon(
-                            imageVector = MaterialTheme.icons.actionReset,
-                            contentDescription = stringResource(R.string.btn_reset_section),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(AppDimens.IconSmall)
-                        )
-                    }
+            // Real-Time Coordinates Readout or Reset
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val currentSelected = selectedPointIndex?.let { activePoints.getOrNull(it) }
+                if (currentSelected != null && curveSubMode == 0) {
+                    val inVal = (currentSelected.first * 255f).roundToInt().coerceIn(0, 255)
+                    val outVal = (currentSelected.second * 255f).roundToInt().coerceIn(0, 255)
+                    Text(
+                        text = stringResource(R.string.tone_curve_coordinates, inVal, outVal),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall)
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        selectedPointIndex = null
+                        draggingIndex = null
+                        updatePoints(listOf(0.0f to 0.0f, 1.0f to 1.0f))
+                    },
+                    modifier = Modifier.size(AppDimens.MinInteractiveTarget)
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.actionReset,
+                        contentDescription = stringResource(R.string.btn_reset_section),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
                 }
             }
         }
@@ -283,7 +280,11 @@ fun EditorToneCurvePanel(
                                 border = if (isSelected) androidx.compose.foundation.BorderStroke(AppDimens.BorderThin, dotColor) else null,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clickable { selectedChannel = index }
+                                    .clickable {
+                                        selectedChannel = index
+                                        selectedPointIndex = null
+                                        draggingIndex = null
+                                    }
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro),
@@ -316,59 +317,131 @@ fun EditorToneCurvePanel(
                             .clip(RoundedCornerShape(AppDimens.CornerRadiusSmall))
                             .background(ColorCardReference.NeutralDarkBackground)
                             .border(
-                                width = if (isEditMode) AppDimens.BorderThick else AppDimens.BorderThin,
-                                color = if (isEditMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE),
+                                width = AppDimens.BorderThin,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE),
                                 shape = RoundedCornerShape(AppDimens.CornerRadiusSmall)
                             )
                     ) {
                         Canvas(
                             modifier = Modifier
                                 .matchParentSize()
-                                .then(
-                                    if (isEditMode) {
-                                        Modifier
-                                            .pointerInput(selectedChannel, activePoints) {
-                                                detectTapGestures(
-                                                    onLongPress = { offset ->
-                                                        val xNorm = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                                                        val yNorm = (1f - (offset.y / size.height.toFloat())).coerceIn(0f, 1f)
-                                                        addPoint(xNorm, yNorm)
-                                                    },
-                                                    onDoubleTap = { offset ->
-                                                        val xNorm = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                                                        val yNorm = (1f - (offset.y / size.height.toFloat())).coerceIn(0f, 1f)
-                                                        removeClosestIntermediatePoint(xNorm, yNorm)
-                                                    },
-                                                    onTap = { offset ->
-                                                        val xNorm = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                                                        val yNorm = (1f - (offset.y / size.height.toFloat())).coerceIn(0f, 1f)
-                                                        moveClosestPoint(xNorm, yNorm)
-                                                    }
-                                                )
+                                .pointerInput(selectedChannel, activePoints) {
+                                    detectTapGestures(
+                                        onDoubleTap = { offset ->
+                                            val w = size.width.toFloat()
+                                            val h = size.height.toFloat()
+                                            val closestIdx = activePoints.indices.minByOrNull { i ->
+                                                val ptPxX = activePoints[i].first * w
+                                                val ptPxY = h - (activePoints[i].second * h)
+                                                hypot(offset.x - ptPxX, offset.y - ptPxY)
                                             }
-                                            .pointerInput(selectedChannel, activePoints) {
-                                                detectDragGestures(
-                                                    onDragStart = { offset ->
-                                                        val xNorm = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                                                        val yNorm = (1f - (offset.y / size.height.toFloat())).coerceIn(0f, 1f)
-                                                        draggingIndex = activePoints.indices.minByOrNull { i ->
-                                                            abs(activePoints[i].first - xNorm) + abs(activePoints[i].second - yNorm)
-                                                        }
-                                                    },
-                                                    onDragEnd = { draggingIndex = null },
-                                                    onDragCancel = { draggingIndex = null },
-                                                    onDrag = { change, _ ->
-                                                        change.consume()
-                                                        val xNorm = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
-                                                        val yNorm = (1f - (change.position.y / size.height.toFloat())).coerceIn(0f, 1f)
-                                                        moveClosestPoint(xNorm, yNorm, draggingIndex)
-                                                    }
-                                                )
+                                            if (closestIdx != null) {
+                                                val ptPxX = activePoints[closestIdx].first * w
+                                                val ptPxY = h - (activePoints[closestIdx].second * h)
+                                                if (hypot(offset.x - ptPxX, offset.y - ptPxY) <= captureRadiusPx) {
+                                                    removePointAtIndex(closestIdx)
+                                                }
                                             }
-                                    } else {
-                                        Modifier
-                                    }
-                                )
+                                        },
+                                        onTap = { offset ->
+                                            val w = size.width.toFloat()
+                                            val h = size.height.toFloat()
+                                            if (w <= 0f || h <= 0f) return@detectTapGestures
+
+                                            val closestIdx = activePoints.indices.minByOrNull { i ->
+                                                val ptPxX = activePoints[i].first * w
+                                                val ptPxY = h - (activePoints[i].second * h)
+                                                hypot(offset.x - ptPxX, offset.y - ptPxY)
+                                            }
+
+                                            if (closestIdx != null) {
+                                                val ptPxX = activePoints[closestIdx].first * w
+                                                val ptPxY = h - (activePoints[closestIdx].second * h)
+                                                if (hypot(offset.x - ptPxX, offset.y - ptPxY) <= captureRadiusPx) {
+                                                    selectedPointIndex = closestIdx
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                    return@detectTapGestures
+                                                }
+                                            }
+
+                                            // If not near any existing point, create new point on tap
+                                            val xNorm = (offset.x / w).coerceIn(0f, 1f)
+                                            val yNorm = (1f - (offset.y / h)).coerceIn(0f, 1f)
+                                            addPoint(xNorm, yNorm)
+                                        }
+                                    )
+                                }
+                                .pointerInput(selectedChannel, activePoints) {
+                                    detectDragGestures(
+                                        onDragStart = { startOffset ->
+                                            val w = size.width.toFloat()
+                                            val h = size.height.toFloat()
+                                            if (w <= 0f || h <= 0f) return@detectDragGestures
+
+                                            val closestIdx = activePoints.indices.minByOrNull { i ->
+                                                val ptPxX = activePoints[i].first * w
+                                                val ptPxY = h - (activePoints[i].second * h)
+                                                hypot(startOffset.x - ptPxX, startOffset.y - ptPxY)
+                                            }
+
+                                            if (closestIdx != null) {
+                                                val ptPxX = activePoints[closestIdx].first * w
+                                                val ptPxY = h - (activePoints[closestIdx].second * h)
+                                                if (hypot(startOffset.x - ptPxX, startOffset.y - ptPxY) <= captureRadiusPx) {
+                                                    draggingIndex = closestIdx
+                                                    selectedPointIndex = closestIdx
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                } else {
+                                                    draggingIndex = null
+                                                }
+                                            } else {
+                                                draggingIndex = null
+                                            }
+                                        },
+                                        onDragEnd = {
+                                            draggingIndex = null
+                                        },
+                                        onDragCancel = {
+                                            draggingIndex = null
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            val idx = draggingIndex ?: return@detectDragGestures
+                                            val w = size.width.toFloat()
+                                            val h = size.height.toFloat()
+                                            if (w <= 0f || h <= 0f) return@detectDragGestures
+
+                                            // Check off-canvas deletion for intermediate points
+                                            val pos = change.position
+                                            if (idx > 0 && idx < activePoints.size - 1) {
+                                                if (pos.y < -offCanvasMarginPx || pos.y > h + offCanvasMarginPx ||
+                                                    pos.x < -offCanvasMarginPx || pos.x > w + offCanvasMarginPx) {
+                                                    removePointAtIndex(idx)
+                                                    return@detectDragGestures
+                                                }
+                                            }
+
+                                            val currentPoint = activePoints[idx]
+                                            val dx = dragAmount.x / w
+                                            val dy = -dragAmount.y / h // Invert Y because canvas Y is top-down
+
+                                            val eps = 0.02f
+                                            val minX = if (idx == 0) 0f else activePoints[idx - 1].first + eps
+                                            val maxX = if (idx == activePoints.size - 1) 1f else activePoints[idx + 1].first - eps
+
+                                            val newX = when (idx) {
+                                                0 -> 0f
+                                                activePoints.size - 1 -> 1f
+                                                else -> (currentPoint.first + dx).coerceIn(minX, maxX)
+                                            }
+                                            val newY = (currentPoint.second + dy).coerceIn(0f, 1f)
+
+                                            val updated = activePoints.toMutableList()
+                                            updated[idx] = newX to newY
+                                            updatePoints(updated)
+                                        }
+                                    )
+                                }
                         ) {
                             val w = size.width
                             val h = size.height
@@ -378,8 +451,8 @@ fun EditorToneCurvePanel(
                             histoPath.moveTo(0f, h)
                             val simulatedHisto = floatArrayOf(0.05f, 0.12f, 0.35f, 0.58f, 0.72f, 0.65f, 0.42f, 0.22f, 0.08f)
                             val stepH = w / (simulatedHisto.size - 1)
-                            simulatedHisto.forEachIndexed { idx, v ->
-                                val hx = idx * stepH
+                            simulatedHisto.forEachIndexed { sIdx, v ->
+                                val hx = sIdx * stepH
                                 val hy = h - (v * h * 0.45f)
                                 histoPath.lineTo(hx, hy)
                             }
@@ -409,43 +482,30 @@ fun EditorToneCurvePanel(
                                 style = Stroke(width = 1.5f, pathEffect = dashEffect)
                             )
 
-                            // Smooth Spline Tone Curve
+                            // Evaluated Fritsch-Carlson Monotone Cubic Spline (exact parity with Python backend)
                             val sorted = activePoints.sortedBy { it.first }
                             if (sorted.isNotEmpty()) {
-                                val curvePath = Path()
-                                val p0 = sorted.first()
-                                curvePath.moveTo(p0.first * w, h - (p0.second * h))
-
-                                if (sorted.size == 2) {
-                                    val p1 = sorted.last()
-                                    curvePath.lineTo(p1.first * w, h - (p1.second * h))
-                                } else {
-                                    for (i in 0 until sorted.size - 1) {
-                                        val cur = sorted[i]
-                                        val next = sorted[i + 1]
-                                        val prev = if (i > 0) sorted[i - 1] else cur
-                                        val nextNext = if (i + 2 < sorted.size) sorted[i + 2] else next
-
-                                        val curX = cur.first * w
-                                        val curY = h - (cur.second * h)
-                                        val nextX = next.first * w
-                                        val nextY = h - (next.second * h)
-
-                                        val cp1x = curX + (nextX - (prev.first * w)) / 5f
-                                        val cp1y = curY + (nextY - (h - (prev.second * h))) / 5f
-                                        val cp2x = nextX - ((nextNext.first * w) - curX) / 5f
-                                        val cp2y = nextY - ((h - (nextNext.second * h)) - curY) / 5f
-
-                                        curvePath.cubicTo(cp1x, cp1y, cp2x, cp2y, nextX, nextY)
+                                val splineSamples = MonotoneCubicSpline.evaluateCurve(sorted, steps = 120)
+                                if (splineSamples.isNotEmpty()) {
+                                    val curvePath = Path()
+                                    val firstPt = splineSamples.first()
+                                    curvePath.moveTo(firstPt.first * w, h - (firstPt.second * h))
+                                    for (i in 1 until splineSamples.size) {
+                                        val sample = splineSamples[i]
+                                        curvePath.lineTo(sample.first * w, h - (sample.second * h))
                                     }
+                                    drawPath(path = curvePath, color = channelColor, style = Stroke(width = 3.5f))
                                 }
-
-                                drawPath(path = curvePath, color = channelColor, style = Stroke(width = 3.5f))
                             }
 
-                            // Tactile Control Point Handles
-                            for (pt in activePoints) {
+                            // Tactile Control Point Handles with active halo
+                            for ((idx, pt) in activePoints.withIndex()) {
                                 val center = Offset(pt.first * w, h - (pt.second * h))
+                                val isSelected = idx == selectedPointIndex || idx == draggingIndex
+
+                                if (isSelected) {
+                                    drawCircle(channelColor.copy(alpha = 0.35f), radius = 14f, center = center)
+                                }
                                 drawCircle(ColorCardReference.NeutralDarkBackground, radius = 9f, center = center)
                                 drawCircle(channelColor, radius = 7f, center = center)
                                 drawCircle(ColorCardReference.WhiteStep, radius = 4f, center = center)
@@ -489,6 +549,7 @@ fun EditorToneCurvePanel(
                             border = androidx.compose.foundation.BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)),
                             modifier = Modifier.clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedPointIndex = null
                                 updatePoints(listOf(0.0f to 0.0f, 0.25f to 0.20f, 0.75f to 0.80f, 1.0f to 1.0f))
                             }
                         ) {

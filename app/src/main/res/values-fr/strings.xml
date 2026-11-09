@@ -420,6 +420,7 @@
     <string name="editor_collapse_panel">Réduire les outils</string>
     <string name="tone_curve_mode_curve">Courbe</string>
     <string name="tone_curve_mode_zones">Zones</string>
+    <string name="tone_curve_coordinates">Entrée : %1$d | Sortie : %2$d</string>
     <string name="editor_exit_dialog_title">Quitter l\'éditeur photo ?</string>
     <string name="editor_exit_dialog_message">Vos retouches sont conservées en session. Que souhaitez-vous faire ?</string>
     <string name="editor_btn_save_draft">Enregistrer le Preset</string>

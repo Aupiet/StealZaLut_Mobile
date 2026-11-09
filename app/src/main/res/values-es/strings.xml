@@ -420,6 +420,7 @@
     <string name="editor_collapse_panel">Contraer herramientas</string>
     <string name="tone_curve_mode_curve">Curva</string>
     <string name="tone_curve_mode_zones">Zonas</string>
+    <string name="tone_curve_coordinates">Entrada: %1$d | Salida: %2$d</string>
     <string name="editor_exit_dialog_title">¿Salir del editor?</string>
     <string name="editor_exit_dialog_message">Tus ajustes se guardan en la sesión. ¿Qué deseas hacer?</string>
     <string name="editor_btn_save_draft">Guardar como Preset</string>

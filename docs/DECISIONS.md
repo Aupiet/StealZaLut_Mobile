@@ -211,3 +211,19 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   3. **Isolation Stricte du LUT 3D vs Export Image :** Conformément à l'ADR-06, la table .cube est une bijection colorimétrique 3D pure et ne contient aucun recadrage spatial. En revanche, l'export Image (JPEG/PNG) et l'aperçu dynamique de l'éditeur appliquent rigoureusement le cadre de recadrage.
   4. **Ordre d'Évaluation :** Le recadrage s'exécute avant les effets finaux, garantissant que le vignettage post-recadrage (« Post-crop Vignetting ») reste centré sur le cadrage effectif.
   5. **Ergonomie Compose :** Support des poignées aux 4 coins, des crans médians sur les 4 arêtes, du déplacement par le centre du cadre, du verrouillage de ratio (Original, 1:1, 4:5, 3:2, 16:9, Libre) et d'un bouton de réinitialisation avec traductions FR/EN/ES.
+
+---
+
+## ADR-15 : Physique Tactile et Interpolation Spline Cubique Monotone (Fritsch-Carlson) des Courbes de Tonalité
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. Le panneau EditorToneCurvePanel.kt souffrait d'instabilités au toucher : téléportation brutale du point le plus proche sous le doigt lors d'un toucher, création involontaire de points, et oscillations/dépassements visuels.
+  2. Le rendu de la courbe dans le canevas Compose utilisait une approximation Catmull-Rom divergente de l'interpolation Fritsch-Carlson exécutée côté moteur Python (spline_interpolator.py).
+- **Décision :**
+  1. **Parité Mathématique Stricte UI ↔ Moteur (Fritsch-Carlson) :** Création du composant MonotoneCubicSpline.kt en Kotlin implémentant l'algorithme d'interpolation Hermite monotone de Fritsch & Carlson (1980), garantissant 100% d'équivalence numérique avec le code Python sans dépassement de plage ni artefacts de solarisation.
+  2. **Déplacement Relatif par Delta :** Le déplacement d'un point sélectionné s'effectue par accumulation du delta de mouvement du doigt, éliminant tout saut visuel direct.
+  3. **Contrainte de Monotonie Stricte en X :** Aucun point intermédiaire ne peut franchir ses voisins ({i-1} + 0{,}02 \le x_i \le x_{i+1} - 0{,}02$). Les points extrêmes sont fixés de manière immuable à =0{,}0$ et =1{,}0$ et ne peuvent être supprimés.
+  4. **Seuil Tactile & Gestuelle Lightroom :** Rayon d'accroche généreux de 32 dp. Clic sur un point = sélection ; clic hors point = création ; double-tap ou glissement hors du canevas = suppression du point intermédiaire.
+  5. **Affichage Temps Réel & Retour Haptique :** Affichage dynamique des coordonnées RVB [0, 255] (Entrée : X | Sortie : Y) et retour haptique léger lors de chaque prise, sélection et suppression.

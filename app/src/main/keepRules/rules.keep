@@ -1,12 +1,11 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# R8 Keep Rules for StealZaLut Mobile
+# AGP combines all keep rule files in src/main/keepRules to pass to R8.
+# Minification is enabled in release builds with resource shrinking.
+# Chaquopy runtime AAR includes its own internal consumer rules for python-bridge.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Domain models & serialized presets/settings
+-keep class com.stealzalut.mobile.data.model.** { *; }
+
+# Android application entry points declared in AndroidManifest.xml
+-keep public class com.stealzalut.mobile.MainActivity
+-keep public class com.stealzalut.mobile.StealZaLutApplication

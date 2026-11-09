@@ -227,3 +227,22 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   3. **Contrainte de Monotonie Stricte en X :** Aucun point intermédiaire ne peut franchir ses voisins ({i-1} + 0{,}02 \le x_i \le x_{i+1} - 0{,}02$). Les points extrêmes sont fixés de manière immuable à =0{,}0$ et =1{,}0$ et ne peuvent être supprimés.
   4. **Seuil Tactile & Gestuelle Lightroom :** Rayon d'accroche généreux de 32 dp. Clic sur un point = sélection ; clic hors point = création ; double-tap ou glissement hors du canevas = suppression du point intermédiaire.
   5. **Affichage Temps Réel & Retour Haptique :** Affichage dynamique des coordonnées RVB [0, 255] (Entrée : X | Sortie : Y) et retour haptique léger lors de chaque prise, sélection et suppression.
+
+
+---
+
+## ADR-16 : Architecture des Projets d'Édition Non-Destructifs et Persistance Sidecar Atomique
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. L'écran d'accueil de l'éditeur affichait un état vide rudimentaire sans historique des travaux précédents.
+  2. La fermeture de l'application ou le retour au menu entraînait la perte irréversible de l'état d'édition si l'utilisateur n'avait pas exporté d'image ou partagé de LUT.
+  3. Les utilisateurs avaient besoin de retrouver leurs sessions précédentes, de les renommer, de les dupliquer ou de les supprimer facilement.
+- **Décision :**
+  1. **Modèle de Projet Non-Destructif (`EditorProject`) :** Chaque projet encapsule l'identifiant unique UUID, le nom personnalisé, les horodatages de création et modification, les chemins vers la copie locale permanente de la photo source et la vignette d'aperçu, ainsi que l'intégralité du snapshot d'édition (`EditorParamsSnapshot`).
+  2. **Persistance en Dossier Isolé :** Chaque projet est stocké dans un répertoire dédié `filesDir/projects/<id>/` contenant la photo source (`source.<ext>`), la vignette d'aperçu (`preview.jpg`), et le fichier manifeste d'état `project.json`.
+  3. **Écriture Atomique & Résilience aux Pannes :** Utilisation d'un fichier temporaire avec remplacement atomique (`Files.move` avec `REPLACE_EXISTING` et fallback POSIX/Windows) pour éviter toute corruption de données en cas d'extinction brutale ou de crash.
+  4. **Auto-Sauvegarde Débouncée :** Enregistrement automatique en arrière-plan avec debounce de 2 secondes lors de toute manipulation de curseurs ou de réglages.
+  5. **UI Accueil Éditeur Pro :** Liste des projets récents affichant la vignette de prévisualisation, le titre, l'horodatage relatif ("Il y a 5 min", "Hier", etc.), un menu contextuel (Renommer, Dupliquer, Supprimer) et un bouton héro "Nouvelle édition".
+  6. **Gestion d'Erreurs :** En cas de fichier JSON corrompu ou manquant, le projet défaillant est ignoré gracieusement sans bloquer le chargement des autres projets.

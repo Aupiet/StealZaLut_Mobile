@@ -196,6 +196,11 @@ fun StandaloneEditorScreen(
         if (uiState.editorSourceBitmap == null) {
             EditorEmptyState(
                 onSelectImage = { imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, // GUARD_ALLOW
+                projects = uiState.editorProjects,
+                onOpenProject = { viewModel.openProject(it) },
+                onRenameProject = { id, newName -> viewModel.renameProject(id, newName) },
+                onDuplicateProject = { viewModel.duplicateProject(it) },
+                onDeleteProject = { viewModel.deleteProject(it) },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(AppDimens.SpacingSpacious)

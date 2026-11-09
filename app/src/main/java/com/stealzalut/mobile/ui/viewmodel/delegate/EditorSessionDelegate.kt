@@ -7,6 +7,8 @@ import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 import com.stealzalut.mobile.data.model.CropRegion
+import com.stealzalut.mobile.data.model.EditorParamsSnapshot
+import com.stealzalut.mobile.data.model.EditorProject
 import kotlinx.coroutines.delay
 import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.CubeExportResult
@@ -14,6 +16,8 @@ import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.repository.SavedImageRepository
+import com.stealzalut.mobile.data.repository.ProjectRepository
+import kotlinx.collections.immutable.toPersistentList
 import com.stealzalut.mobile.ui.viewmodel.ExportType
 import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
@@ -55,35 +59,14 @@ data class StandaloneEditorDebounceRequest(
     val cropRegion: CropRegion = CropRegion()
 )
 
-data class EditorParamsSnapshot(
-    val intensity: Float,
-    val lumaLock: Float,
-    val neutralAxisLock: Float,
-    val skinToneLock: Float,
-    val extremesRolloff: Float,
-    val spatial3d: Float,
-    val exposure: Float,
-    val contrast: Float,
-    val highlights: Float,
-    val shadows: Float,
-    val temperature: Float,
-    val tint: Float,
-    val vibrance: Float,
-    val saturation: Float,
-    val clarity: Float,
-    val sharpen: Float,
-    val grain: Float,
-    val customLutPath: String?,
-    val customLutName: String?,
-    val lightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
-    val cropRegion: CropRegion = CropRegion()
-)
+// EditorParamsSnapshot and EditorProject are imported from com.stealzalut.mobile.data.model
 
 @OptIn(FlowPreview::class)
 class EditorSessionDelegate(
     private val context: Context,
     private val bridgeRepository: PythonBridgeRepository,
     private val savedImageRepository: SavedImageRepository,
+    private val projectRepository: ProjectRepository,
     private val stateFlow: MutableStateFlow<StealZaLutUiState>,
     private val scope: CoroutineScope,
     private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?
@@ -116,7 +99,10 @@ class EditorSessionDelegate(
         }
     }
 
+    private var autoSaveJob: Job? = null
+
     init {
+        loadProjects()
         scope.launch {
             editorDebounceFlow
                 .debounce(150L)
@@ -125,6 +111,121 @@ class EditorSessionDelegate(
                     computeStandaloneEditorPreview(req)
                 }
         }
+    }
+
+    fun loadProjects() {
+        scope.launch {
+            val list = projectRepository.getAllProjects()
+            stateFlow.update { it.copy(editorProjects = list.toPersistentList()) }
+        }
+    }
+
+    fun openProject(project: EditorProject) {
+        scope.launch {
+            activeEditorSourceJob?.cancel()
+            activeStandaloneJob?.cancel()
+            autoSaveJob?.cancel()
+            undoStack.clear()
+            redoStack.clear()
+            gestureStartSnapshot = null
+            gestureDebounceJob?.cancel()
+            gestureDebounceJob = null
+            updateUndoRedoState()
+
+            val sourceFile = File(project.sourceImagePath)
+            if (!sourceFile.exists()) {
+                stateFlow.update { it.copy(errorMessage = UiText.Resource(R.string.err_image_load_failed, listOf("Fichier source introuvable"))) }
+                return@launch
+            }
+
+            currentEditorSourceFile = sourceFile
+            val thumbnail = withContext(Dispatchers.IO) {
+                decodeSampledBitmap(sourceFile.absolutePath, 1080)
+            }
+
+            stateFlow.update {
+                it.copy(
+                    currentProjectId = project.id,
+                    editorSourceUri = Uri.fromFile(sourceFile),
+                    editorSourcePath = sourceFile.absolutePath,
+                    editorSourceBitmap = thumbnail,
+                    editorPreviewBitmap = thumbnail,
+                    editorPreviewPath = sourceFile.absolutePath,
+                    isEditorProcessing = false
+                )
+            }
+
+            applySnapshot(project.snapshot)
+        }
+    }
+
+    fun deleteProject(id: String) {
+        scope.launch {
+            projectRepository.deleteProject(id)
+            if (stateFlow.value.currentProjectId == id) {
+                closeEditorPhoto()
+            }
+            loadProjects()
+        }
+    }
+
+    fun renameProject(id: String, newName: String) {
+        scope.launch {
+            projectRepository.renameProject(id, newName)
+            loadProjects()
+        }
+    }
+
+    fun duplicateProject(id: String) {
+        scope.launch {
+            projectRepository.duplicateProject(id)
+            loadProjects()
+        }
+    }
+
+    fun triggerAutoSave() {
+        autoSaveJob?.cancel()
+        autoSaveJob = scope.launch {
+            delay(2000L) // Debounce >= 2 seconds
+            performSaveCurrentProject()
+        }
+    }
+
+    fun saveCurrentProjectNow() {
+        autoSaveJob?.cancel()
+        scope.launch {
+            performSaveCurrentProject()
+        }
+    }
+
+    private suspend fun performSaveCurrentProject() {
+        val srcPath = stateFlow.value.editorSourcePath ?: return
+        val srcFile = File(srcPath)
+        if (!srcFile.exists()) return
+
+        val curProjId = stateFlow.value.currentProjectId
+        val previewPath = stateFlow.value.editorPreviewPath
+        val previewFile = previewPath?.let { File(it) }?.takeIf { it.exists() }
+
+        if (curProjId == null) {
+            val newProj = projectRepository.createProject(
+                sourceFile = srcFile,
+                snapshot = currentSnapshot(),
+                previewFile = previewFile
+            )
+            stateFlow.update { it.copy(currentProjectId = newProj.id) }
+        } else {
+            val existing = projectRepository.getProject(curProjId)
+            if (existing != null) {
+                val updated = existing.copy(
+                    updatedAt = System.currentTimeMillis(),
+                    snapshot = currentSnapshot(),
+                    previewImagePath = previewFile?.absolutePath ?: existing.previewImagePath
+                )
+                projectRepository.saveProject(updated)
+            }
+        }
+        loadProjects()
     }
 
     private fun currentSnapshot(): EditorParamsSnapshot {
@@ -672,6 +773,7 @@ class EditorSessionDelegate(
                             isEditorProcessing = false
                         )
                     }
+                    triggerAutoSave()
                 }
                 is PreviewResult.Error -> {
                     stateFlow.update {
@@ -833,6 +935,7 @@ class EditorSessionDelegate(
     }
 
     fun closeEditorPhoto() {
+        saveCurrentProjectNow()
         undoStack.clear()
         redoStack.clear()
         gestureStartSnapshot = null
@@ -841,6 +944,7 @@ class EditorSessionDelegate(
         updateUndoRedoState()
         stateFlow.update {
             it.copy(
+                currentProjectId = null,
                 editorSourceUri = null,
                 editorSourcePath = null,
                 editorSourceBitmap = null,
@@ -848,8 +952,11 @@ class EditorSessionDelegate(
                 editorPreviewPath = null,
                 editorCustomLutPath = null,
                 editorCustomLutName = null,
-                selectedEditingPreset = null
+                selectedEditingPreset = null,
+                editorLightroomParams = LightroomDevelopModel(),
+                editorCropRegion = CropRegion()
             )
         }
+        loadProjects()
     }
 }

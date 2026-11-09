@@ -10,6 +10,7 @@ import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditPreset
+import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
@@ -149,6 +150,8 @@ data class StealZaLutUiState(
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
     val editorCropRegion: CropRegion = CropRegion(),
+    val editorProjects: ImmutableList<EditorProject> = persistentListOf(),
+    val currentProjectId: String? = null,
     val editorActiveTool: Int = 0, // 0 = Global Panels, 1 = Crop, 2 = Healing, 3 = Red Eye, 4 = Masking, 5 = Presets / Auto-edit
     val isHistogramExpanded: Boolean = true,
     val isBasicExpanded: Boolean = true,

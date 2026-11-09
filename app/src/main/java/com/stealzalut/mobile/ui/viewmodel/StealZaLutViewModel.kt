@@ -29,6 +29,8 @@ import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.data.repository.PresetRepository
 import com.stealzalut.mobile.data.repository.SavedImageRepository
+import com.stealzalut.mobile.data.repository.ProjectRepository
+import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.repository.SettingsRepository
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import com.stealzalut.mobile.ui.viewmodel.delegate.EditorSessionDelegate
@@ -65,6 +67,7 @@ class StealZaLutViewModel(
     private val presetRepository = PresetRepository(application.applicationContext)
     private val savedImageRepository = SavedImageRepository(application.applicationContext)
     private val settingsRepository = SettingsRepository(application.applicationContext)
+    val projectRepository = ProjectRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(StealZaLutUiState())
     val uiState: StateFlow<StealZaLutUiState> = _uiState.asStateFlow()
@@ -85,6 +88,7 @@ class StealZaLutViewModel(
         context = application.applicationContext,
         bridgeRepository = bridgeRepository,
         savedImageRepository = savedImageRepository,
+        projectRepository = projectRepository,
         stateFlow = _uiState,
         scope = viewModelScope,
         decodeSampledBitmap = ::decodeSampledBitmap
@@ -315,6 +319,13 @@ class StealZaLutViewModel(
     fun pushUndoSnapshot() = editorSessionDelegate.pushUndoSnapshot()
     fun updateCropRegion(region: CropRegion) = editorSessionDelegate.updateCropRegion(region)
     fun onCropFinished() = editorSessionDelegate.onCropFinished()
+
+    // Projects (F7)
+    fun loadProjects() = editorSessionDelegate.loadProjects()
+    fun openProject(project: EditorProject) = editorSessionDelegate.openProject(project)
+    fun deleteProject(id: String) = editorSessionDelegate.deleteProject(id)
+    fun renameProject(id: String, newName: String) = editorSessionDelegate.renameProject(id, newName)
+    fun duplicateProject(id: String) = editorSessionDelegate.duplicateProject(id)
     fun openExportDialog() { _uiState.update { it.copy(isExportDialogOpen = true) } }
     fun dismissExportDialog() { _uiState.update { it.copy(isExportDialogOpen = false) } }
     val lightroomDelegate get() = editorSessionDelegate.lightroomDelegate

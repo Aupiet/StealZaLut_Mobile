@@ -476,4 +476,13 @@
     <string name="settings_icons_header">Icon Set</string>
     <string name="err_no_sharing_app">No application found to share the 3D LUT file.</string>
     <string name="err_share_failed">Failed to share 3D LUT: %1$s</string>
+    <!-- Projects (F7) -->
+    <string name="projects_header_title">Recent Projects</string>
+    <string name="project_action_rename">Rename</string>
+    <string name="project_action_duplicate">Duplicate</string>
+    <string name="project_action_delete">Delete</string>
+    <string name="project_rename_dialog_title">Rename project</string>
+    <string name="project_new_edition">New edit</string>
+    <string name="project_no_projects">No saved projects yet</string>
+    <string name="project_delete_confirm">Delete this project?</string>
 </resources>

@@ -26,6 +26,7 @@ class EditorUndoRedoStackTest {
     private val context: Context = mockk(relaxed = true)
     private val bridgeRepository: PythonBridgeRepository = mockk(relaxed = true)
     private val savedImageRepository: SavedImageRepository = mockk(relaxed = true)
+    private val projectRepository: com.stealzalut.mobile.data.repository.ProjectRepository = mockk(relaxed = true)
     private val stateFlow = MutableStateFlow(StealZaLutUiState())
     private val testDispatcher = UnconfinedTestDispatcher()
     private val testScope = TestScope(testDispatcher)
@@ -39,6 +40,7 @@ class EditorUndoRedoStackTest {
             context = context,
             bridgeRepository = bridgeRepository,
             savedImageRepository = savedImageRepository,
+            projectRepository = projectRepository,
             stateFlow = stateFlow,
             scope = testScope,
             decodeSampledBitmap = { _, _ -> null }

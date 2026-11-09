@@ -144,7 +144,7 @@ fun StudioStep5Result(
         ) {
             // Button 1: "Exporter .cube"
             OutlinedButton(
-                onClick = onExportCube,
+                onClick = onShareCube,
                 enabled = !isExportingImage && !isExportingCube,
                 modifier = Modifier
                     .weight(1f)
@@ -166,13 +166,13 @@ fun StudioStep5Result(
                     )
                 } else {
                     Icon(
-                        imageVector = MaterialTheme.icons.actionExport,
+                        imageVector = MaterialTheme.icons.actionShare,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
                     Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                     Text(
-                        text = "Exporter .cube",
+                        text = stringResource(R.string.wizard_step_5_btn_export_cube),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -204,7 +204,7 @@ fun StudioStep5Result(
                 )
                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                 Text(
-                    text = "Enregistrer Preset",
+                    text = stringResource(R.string.wizard_step_5_btn_save_theme),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,

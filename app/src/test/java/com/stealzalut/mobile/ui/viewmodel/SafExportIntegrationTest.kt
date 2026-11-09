@@ -313,4 +313,12 @@ class SafExportIntegrationTest {
         val shareIntent = delegate.createShareCubeIntent(tempCubeFile.canonicalPath)
         assertNotNull(shareIntent)
     }
+
+    @Test
+    fun `createShareCubeIntent returns null when file is missing or empty`() {
+        val nonExistentPath = File(tempCubeFile.parentFile, "does_not_exist.cube").canonicalPath
+        assertNull(delegate.createShareCubeIntent(nonExistentPath))
+
+        assertNull(delegate.createShareCubeIntent(tempEmptyCubeFile.canonicalPath))
+    }
 }

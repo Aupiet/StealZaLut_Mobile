@@ -215,12 +215,25 @@ class StealZaLutViewModel(
     fun openInEditorFromStudio() = gradingPipelineDelegate.openInEditorFromStudio()
 
     fun shareCube(context: Context, cubePath: String? = null) {
-        val intent = createShareCubeIntent(cubePath) ?: return
+        val intent = createShareCubeIntent(cubePath)
+        if (intent == null) {
+            _uiState.update { it.copy(errorMessage = UiText.Resource(R.string.err_lut_path_not_found)) }
+            return
+        }
         val chooser = Intent.createChooser(intent, context.getString(R.string.share_cube_title)).apply {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        context.startActivity(chooser)
+        try {
+            if (context.packageManager.queryIntentActivities(chooser, 0).isNotEmpty() ||
+                intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(chooser)
+            } else {
+                _uiState.update { it.copy(errorMessage = UiText.Resource(R.string.err_no_sharing_app)) }
+            }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(errorMessage = UiText.Resource(R.string.err_share_failed, listOf(e.localizedMessage ?: ""))) }
+        }
     }
 
     fun exportAndShareCube(context: Context) {

@@ -70,12 +70,6 @@ fun MainColorGradingScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showExitEditorConfirmDialog by remember { mutableStateOf(false) }
 
-    val exportCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { uri ->
-        if (uri != null) viewModel.savePendingExportToUri(uri) else viewModel.cancelPendingExport()
-    }
-
     // Intercept hardware/gesture Back to preserve unsaved drafts and prevent accidental exits
     val isEditorWithPhoto = uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null
     val isStudioWizardOngoing = uiState.currentDestination == AppDestination.STUDIO && uiState.wizardStep > 1

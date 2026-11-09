@@ -81,16 +81,6 @@ fun PalettesScreen(
     var presetName by remember { mutableStateOf("") }
     var presetNotes by remember { mutableStateOf("") }
 
-    val exportCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { destinationUri ->
-        if (destinationUri != null) {
-            viewModel.savePendingExportToUri(destinationUri)
-        } else {
-            viewModel.cancelPendingExport()
-        }
-    }
-
     LaunchedEffect(Unit) {
         viewModel.loadSavedPresets()
     }
@@ -449,7 +439,7 @@ private fun PresetItemCard(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
             ) {
                 Icon(
-                    imageVector = MaterialTheme.icons.actionExport,
+                    imageVector = MaterialTheme.icons.actionShare,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )

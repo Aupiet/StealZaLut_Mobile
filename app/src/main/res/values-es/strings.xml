@@ -82,7 +82,7 @@
     <string name="wizard_step_5_subtitle">Firma Blade Runner 2049 aplicada</string>
     <string name="wizard_step_5_btn_save_gallery">Guardar Foto en la Galería</string>
     <string name="wizard_step_5_btn_save_theme">Guardar Estilo como Preset</string>
-    <string name="wizard_step_5_btn_export_cube">Guardar archivo (.CUBE)</string>
+    <string name="wizard_step_5_btn_export_cube">Compartir 3D LUT (.CUBE)</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_decrease_desc">Disminuir intensidad en 5 por ciento</string>
@@ -120,7 +120,7 @@
     <string name="profile_no_themes_title">No hay temas guardados</string>
     <string name="profile_no_themes_desc">Guarda estilos de color desde el Studio o extrae paletas para reutilizarlos en cualquier momento.</string>
     <string name="profile_btn_delete">Eliminar</string>
-    <string name="profile_btn_export_cube">Exportar .CUBE</string>
+    <string name="profile_btn_export_cube">Compartir .CUBE</string>
 
     <!-- Settings Screen -->
     <string name="settings_header_title">Preferencias de la Aplicación</string>
@@ -471,4 +471,6 @@
     <string name="settings_subtitle">Personalización del sistema de diseño modular</string>
     <string name="settings_theme_header">Tema de la aplicación</string>
     <string name="settings_icons_header">Conjunto de iconos</string>
+    <string name="err_no_sharing_app">No se encontró ninguna aplicación para compartir el archivo 3D LUT.</string>
+    <string name="err_share_failed">Error al compartir la 3D LUT: %1$s</string>
 </resources>

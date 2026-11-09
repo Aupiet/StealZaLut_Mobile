@@ -626,7 +626,7 @@ class EditorSessionDelegate(
                                 )
                             )
                         }
-                        onSuccess(fileName)
+                        onSuccess(target.canonicalPath)
                     }
                 }
                 is CubeExportResult.Error -> {

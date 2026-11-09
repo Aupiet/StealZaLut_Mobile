@@ -157,7 +157,7 @@ fun ExportActionBar(
                     )
                 } else {
                     Icon(
-                        imageVector = MaterialTheme.icons.actionExport,
+                        imageVector = MaterialTheme.icons.actionShare,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )

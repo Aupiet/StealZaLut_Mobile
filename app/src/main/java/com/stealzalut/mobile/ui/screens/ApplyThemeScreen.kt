@@ -47,16 +47,6 @@ fun ApplyThemeScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
-    val exportCubeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { destinationUri ->
-        if (destinationUri != null) {
-            viewModel.savePendingExportToUri(destinationUri)
-        } else {
-            viewModel.cancelPendingExport()
-        }
-    }
-
     if (uiState.isSavingThemeDialogVisible) {
         val paletteToSave = if (uiState.customReferencePalette.isNotEmpty()) {
             uiState.customReferencePalette
@@ -207,9 +197,7 @@ fun ApplyThemeScreen(
                         onSaveGradedImage = { viewModel.saveGradedImageToGallery() },
                         onSaveStyleToProfile = { viewModel.openSaveThemeDialog() },
                         onExportCube = {
-                            viewModel.exportCube { cubePath ->
-                                exportCubeLauncher.launch(File(cubePath).name)
-                            }
+                            viewModel.exportAndShareCube(context)
                         },
                         onShareCube = {
                             viewModel.exportAndShareCube(context)

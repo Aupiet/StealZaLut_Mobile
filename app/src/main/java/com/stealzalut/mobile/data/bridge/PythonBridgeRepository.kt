@@ -167,7 +167,8 @@ class PythonBridgeRepository(private val context: Context) {
             val py = Python.getInstance()
             val bridge = py.getModule("stealzalut.bridge")
 
-            val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
+            val outputDir = File(context.cacheDir, "shared_luts").apply { mkdirs() }
+            outputDir.listFiles()?.forEach { if (System.currentTimeMillis() - it.lastModified() > 3600_000L) it.delete() }
             val timestamp = System.currentTimeMillis()
             val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
             val cubeFile = File(outputDir, "StealZaLUT_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
@@ -550,7 +551,8 @@ class PythonBridgeRepository(private val context: Context) {
             val py = Python.getInstance()
             val bridge = py.getModule("stealzalut.bridge")
 
-            val outputDir = File(context.filesDir, "luts").apply { mkdirs() }
+            val outputDir = File(context.cacheDir, "shared_luts").apply { mkdirs() }
+            outputDir.listFiles()?.forEach { if (System.currentTimeMillis() - it.lastModified() > 3600_000L) it.delete() }
             val timestamp = System.currentTimeMillis()
             val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
             val cubeFile = File(outputDir, "StealZaLUT_Editor_${timestamp}_${uniqueTag}_${lutSize.size}.cube")

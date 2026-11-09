@@ -1,5 +1,6 @@
 package com.stealzalut.mobile.ui.viewmodel.delegate
 
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -784,9 +785,9 @@ class GradingPipelineDelegate(
                 file
             )
             Intent(Intent.ACTION_SEND).apply {
-                type = "*/*"
+                type = "application/octet-stream"
                 putExtra(Intent.EXTRA_STREAM, fileUri)
-                putExtra(Intent.EXTRA_SUBJECT, "LUT 3D StealZaLUT (.cube)")
+                clipData = ClipData.newRawUri(file.name, fileUri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         } catch (_: Exception) {

@@ -38,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -397,7 +398,7 @@ fun StudioStep3Parameters(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Default.FileDownload,
+                            imageVector = MaterialTheme.icons.actionShare,
                             contentDescription = stringResource(R.string.wizard_step_5_btn_export_cube),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(AppDimens.IconNormal)

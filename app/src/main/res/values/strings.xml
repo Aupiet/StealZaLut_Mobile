@@ -82,7 +82,7 @@
     <string name="wizard_step_5_subtitle">Blade Runner 2049 signature applied</string>
     <string name="wizard_step_5_btn_save_gallery">Save Photo to Gallery</string>
     <string name="wizard_step_5_btn_save_theme">Save Style as Preset</string>
-    <string name="wizard_step_5_btn_export_cube">Save file (.CUBE)</string>
+    <string name="wizard_step_5_btn_export_cube">Share 3D LUT (.CUBE)</string>
 
     <!-- Intensity Slider -->
     <string name="intensity_decrease_desc">Decrease intensity by 5 percent</string>
@@ -120,7 +120,7 @@
     <string name="profile_no_themes_title">No saved themes yet</string>
     <string name="profile_no_themes_desc">Save color styles in the Studio or extract palettes to reuse them anytime.</string>
     <string name="profile_btn_delete">Delete</string>
-    <string name="profile_btn_export_cube">Export .CUBE</string>
+    <string name="profile_btn_export_cube">Share .CUBE</string>
 
     <!-- Settings Screen -->
     <string name="settings_header_title">Application Preferences</string>
@@ -471,4 +471,6 @@
     <string name="settings_subtitle">Modular design system personalization</string>
     <string name="settings_theme_header">Application Theme</string>
     <string name="settings_icons_header">Icon Set</string>
+    <string name="err_no_sharing_app">No application found to share the 3D LUT file.</string>
+    <string name="err_share_failed">Failed to share 3D LUT: %1$s</string>
 </resources>

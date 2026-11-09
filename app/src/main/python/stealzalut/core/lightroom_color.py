@@ -35,7 +35,7 @@ def apply_basic_adjustments(
     if abs(s.exposure) > 1e-4:
         lin = srgb_to_linear(out)
         lin *= 2.0**s.exposure
-        out = linear_to_srgb(lin)
+        out = np.clip(linear_to_srgb(lin), 0.0, 1.0)
 
     # B. Balance des blancs (Température & Teinte)
     if abs(s.temp) > 1e-4 or abs(s.tint) > 1e-4:
@@ -108,7 +108,7 @@ def apply_basic_adjustments(
         )
         out = np.clip(out, 0.0, 1.0)
 
-    return out.astype(np.float32)
+    return np.clip(out, 0.0, 1.0).astype(np.float32)
 
 
 # ---------------------------------------------------------------------------
@@ -374,7 +374,7 @@ def apply_color_grading(
     )
     out = np.clip(out + lum_delta * out * (1.0 - out) * 2.5, 0.0, 1.0)
 
-    return out.astype(np.float32)
+    return np.clip(out, 0.0, 1.0).astype(np.float32)
 
 
 # ---------------------------------------------------------------------------

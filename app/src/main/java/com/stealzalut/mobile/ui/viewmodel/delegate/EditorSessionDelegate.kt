@@ -105,7 +105,7 @@ class EditorSessionDelegate(
         loadProjects()
         scope.launch {
             editorDebounceFlow
-                .debounce(150L)
+                .debounce(200L)
                 .distinctUntilChanged()
                 .collect { req ->
                     computeStandaloneEditorPreview(req)
@@ -156,6 +156,7 @@ class EditorSessionDelegate(
             }
 
             applySnapshot(project.snapshot)
+            stateFlow.update { it.copy(editorCommittedSnapshot = project.snapshot) }
         }
     }
 
@@ -405,7 +406,8 @@ class EditorSessionDelegate(
                             editorSourceBitmap = thumbnail,
                             editorPreviewBitmap = thumbnail,
                             editorPreviewPath = file.absolutePath,
-                            isEditorProcessing = false
+                            isEditorProcessing = false,
+                            editorCommittedSnapshot = currentSnapshot()
                         )
                     }
                     scheduleEditorPreviewUpdate()
@@ -770,7 +772,8 @@ class EditorSessionDelegate(
                             editorPreviewBitmap = bitmap,
                             editorPreviewPath = res.previewPath,
                             editorExecutionTimeMs = res.executionTimeMs,
-                            isEditorProcessing = false
+                            isEditorProcessing = false,
+                            editorCommittedSnapshot = currentSnapshot()
                         )
                     }
                     triggerAutoSave()

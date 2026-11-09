@@ -227,6 +227,7 @@ fun StandaloneEditorScreen(
                         onToggleHistogram = { delegate.toggleHistogramExpanded() },
                         isComputingAutoEdit = uiState.isComputingEdit,
                         onApplyAutoEdit = { viewModel.applyEditorAutoEdit() },
+                        gpuDeltas = uiState.editorGpuDeltas,
                         modifier = Modifier.fillMaxSize()
                     )
 

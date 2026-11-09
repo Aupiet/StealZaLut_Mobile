@@ -10,6 +10,8 @@ import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditPreset
+import com.stealzalut.mobile.data.model.EditorParamsSnapshot
+import com.stealzalut.mobile.ui.preview.GpuPreviewDeltas
 import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
@@ -152,6 +154,7 @@ data class StealZaLutUiState(
     val editorCropRegion: CropRegion = CropRegion(),
     val editorProjects: ImmutableList<EditorProject> = persistentListOf(),
     val currentProjectId: String? = null,
+    val editorCommittedSnapshot: EditorParamsSnapshot = EditorParamsSnapshot(),
     val editorActiveTool: Int = 0, // 0 = Global Panels, 1 = Crop, 2 = Healing, 3 = Red Eye, 4 = Masking, 5 = Presets / Auto-edit
     val isHistogramExpanded: Boolean = true,
     val isBasicExpanded: Boolean = true,
@@ -216,6 +219,28 @@ data class StealZaLutUiState(
 
     val effectivePreviewBitmap: Bitmap?
         get() = if (isEditActive && editedPreviewBitmap != null) editedPreviewBitmap else basePreviewBitmap
+
+    val editorGpuDeltas: GpuPreviewDeltas
+        get() {
+            val currBasic = editorLightroomParams.basic
+            val commBasic = editorCommittedSnapshot.lightroomParams.basic
+            val currEffects = editorLightroomParams.effects
+            val commEffects = editorCommittedSnapshot.lightroomParams.effects
+
+            return GpuPreviewDeltas(
+                exposure = (currBasic.exposure + step3Exposure) - (commBasic.exposure + editorCommittedSnapshot.exposure),
+                contrast = (currBasic.contrast + step3Contrast) - (commBasic.contrast + editorCommittedSnapshot.contrast),
+                temp = (currBasic.temp + step3Temperature) - (commBasic.temp + editorCommittedSnapshot.temperature),
+                tint = (currBasic.tint + step3Tint) - (commBasic.tint + editorCommittedSnapshot.tint),
+                highlights = (currBasic.highlights + step3Highlights) - (commBasic.highlights + editorCommittedSnapshot.highlights),
+                shadows = (currBasic.shadows + step3Shadows) - (commBasic.shadows + editorCommittedSnapshot.shadows),
+                whites = currBasic.whites - commBasic.whites,
+                blacks = currBasic.blacks - commBasic.blacks,
+                vibrance = (currBasic.vibrance + step3Vibrance) - (commBasic.vibrance + editorCommittedSnapshot.vibrance),
+                saturation = (currBasic.saturation + step3Saturation) - (commBasic.saturation + editorCommittedSnapshot.saturation),
+                vignette = currEffects.vignetteAmount - commEffects.vignetteAmount
+            )
+        }
 
 
 }

@@ -49,6 +49,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.ui.preview.GpuPreviewDeltas
+import com.stealzalut.mobile.ui.preview.rememberGpuPreviewState
 import com.stealzalut.mobile.ui.components.SzlImageBadge
 import com.stealzalut.mobile.ui.components.SzlRgbHistogram
 import com.stealzalut.mobile.ui.theme.ColorCardReference
@@ -73,6 +75,7 @@ fun EditorViewport(
     lutName: String?,
     onChangePhoto: () -> Unit,
     modifier: Modifier = Modifier,
+    gpuDeltas: GpuPreviewDeltas = GpuPreviewDeltas(),
     isHistogramExpanded: Boolean = false,
     onToggleHistogram: () -> Unit = {},
     isComputingAutoEdit: Boolean = false,
@@ -85,6 +88,8 @@ fun EditorViewport(
     var isHistogramEnlarged by remember { mutableStateOf(false) }
 
     val displayBitmap = if (isHoldingCompare && sourceBitmap != null) sourceBitmap else (previewBitmap ?: sourceBitmap)
+    val activeDeltas = if (isHoldingCompare) GpuPreviewDeltas() else gpuDeltas
+    val gpuPreviewState = rememberGpuPreviewState(activeDeltas)
 
     Box(
         modifier = modifier
@@ -163,6 +168,7 @@ fun EditorViewport(
                     bitmap = bmp.asImageBitmap(),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
+                    colorFilter = gpuPreviewState.colorFilter,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
@@ -171,6 +177,9 @@ fun EditorViewport(
                             scaleY = scale
                             translationX = offsetX
                             translationY = offsetY
+                            if (gpuPreviewState.renderEffect != null) {
+                                renderEffect = gpuPreviewState.renderEffect
+                            }
                         }
                 )
             }

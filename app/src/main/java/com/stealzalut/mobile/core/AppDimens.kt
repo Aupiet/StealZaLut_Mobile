@@ -98,6 +98,14 @@ object AppDimens {
     val DrawerHandleWidth: Dp = 36.dp
     val DrawerHandleHeight: Dp = 4.dp
     val ButtonHeightCompact: Dp = 40.dp
+    val FeatureDemoHeight: Dp = 200.dp
+    val FeatureDemoDividerWidth: Dp = 2.dp
+    val FeatureDemoThumbSize: Dp = 32.dp
+    val FeatureDemoThumbTouchTarget: Dp = 44.dp
+    val FeatureCategoryBadgeSize: Dp = 44.dp
+    val FeatureParamSpacing: Dp = 3.dp
+    val FeatureParamHeight: Dp = 12.dp
+    val ElevationMedium: Dp = 4.dp
 
     // --- Elevations ---
     val DialogElevation: Dp = 6.dp

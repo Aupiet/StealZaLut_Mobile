@@ -485,4 +485,120 @@
     <string name="project_new_edition">Nueva edición</string>
     <string name="project_no_projects">Aún no hay proyectos guardados</string>
     <string name="project_delete_confirm">¿Eliminar este proyecto?</string>
+
+    <!-- Feature Guide (F9) -->
+    <string name="guide_title">Guía de funciones</string>
+    <string name="dest_subtitle_guide">Guía y documentación de herramientas de edición</string>
+    <string name="guide_search_placeholder">Buscar una herramienta...</string>
+    <string name="guide_cat_all">Todos</string>
+    <string name="guide_cat_light">Luz</string>
+    <string name="guide_cat_color">Color</string>
+    <string name="guide_cat_geometry">Geometría</string>
+    <string name="guide_cat_effects">Efectos</string>
+    <string name="guide_cat_luts">LUTs e IA</string>
+    <string name="guide_section_explanation">Por qué y cómo usarlo</string>
+    <string name="guide_section_parameters">Parámetros clave</string>
+    <string name="guide_section_interactive_demo">Demostración interactiva</string>
+    <string name="guide_demo_before">ANTES</string>
+    <string name="guide_demo_after">DESPUÉS</string>
+    <string name="guide_back">Volver a las herramientas</string>
+    <string name="settings_guide_card_title">Guía de funciones</string>
+    <string name="settings_guide_card_subtitle">Explora las 12 herramientas pro: curvas, color grading, recorte, LUTs...</string>
+
+    <string name="guide_crop_title">Recorte y Enderezado</string>
+    <string name="guide_crop_desc">Encuadre espacial normalizado y alineación del horizonte</string>
+    <string name="guide_crop_detail">Centra la atención en el sujeto según las reglas de composición (regla de los tercios, proporción áurea). La rotación angular endereza horizontes inclinados sin perder nitidez.</string>
+    <string name="guide_crop_p1_name">Límites normalizados</string>
+    <string name="guide_crop_p1_desc">Coordenadas [0, 1] compatibles con la especificación Adobe ACR crs:Crop.</string>
+    <string name="guide_crop_p2_name">Ángulo de enderezado</string>
+    <string name="guide_crop_p2_desc">Corrección de inclinación [-45°, +45°] con rotación interpolada.</string>
+
+    <string name="guide_curves_title">Curvas de tono</string>
+    <string name="guide_curves_desc">Control no lineal preciso de contrastes y rango dinámico</string>
+    <string name="guide_curves_detail">Ajusta la luminosidad global o canales RGB independientes mediante spline cúbica monótona (Fritsch-Carlson), garantizando ausencia total de artefactos o solarización.</string>
+    <string name="guide_curves_p1_name">Canal RGB combinado</string>
+    <string name="guide_curves_p1_desc">Ajusta el contraste general (curva en S para contrastar, pendiente suave para abrir sombras).</string>
+    <string name="guide_curves_p2_name">Canales R, G, B separados</string>
+    <string name="guide_curves_p2_desc">Equilibra dominantes o diseña estéticas de película analógica (verdes suaves, sombras frías).</string>
+
+    <string name="guide_mixer_title">Mezclador de color HSL</string>
+    <string name="guide_mixer_desc">Ajuste selectivo en 8 canales de color independientes</string>
+    <string name="guide_mixer_detail">Aísla con precisión una familia cromática (Rojo, Naranja, Amarillo, Verde, Cian, Azul, Púrpura, Magenta) para modificar tono, saturación o luminosidad sin alterar el resto.</string>
+    <string name="guide_mixer_p1_name">Tono y Saturación</string>
+    <string name="guide_mixer_p1_desc">Calienta o enfría un tono específico (ej. intensificar el cielo o follaje).</string>
+    <string name="guide_mixer_p2_name">Luminosidad selectiva</string>
+    <string name="guide_mixer_p2_desc">Aclara u oscurece un color específico, ideal para favorecer los tonos de piel (Naranja).</string>
+
+    <string name="guide_grading_title">Gradación de color (Color Grading)</string>
+    <string name="guide_grading_desc">Coloración cinematográfica de 3 vías (Sombras, Medios tonos, Luces)</string>
+    <string name="guide_grading_detail">Inspirado en la postproducción de Hollywood. Aplica tintes diferenciados en sombras, medios tonos y altas luces, con ajuste preciso de fusión y equilibrio.</string>
+    <string name="guide_grading_p1_name">Ruedas de color de 3 vías</string>
+    <string name="guide_grading_p1_desc">Ángulo de tono e intensidad vectorial aplicados a las 3 zonas de luminosidad.</string>
+    <string name="guide_grading_p2_name">Fusión y Equilibrio</string>
+    <string name="guide_grading_p2_desc">Define la superposición tonal y desplaza el punto de equilibrio entre sombras y luces.</string>
+
+    <string name="guide_calibration_title">Calibración de cámara</string>
+    <string name="guide_calibration_desc">Ajuste fundamental de tonos y saturaciones primarias RGB</string>
+    <string name="guide_calibration_detail">Actúa en la raíz del espacio de color modificando las coordenadas espectrales de los primarios Rojo, Verde y Azul y el tinte de sombras. Secreto de coloristas para tonos de piel radiantes.</string>
+    <string name="guide_calibration_p1_name">Primarios Rojo, Verde, Azul</string>
+    <string name="guide_calibration_p1_desc">Modifica las coordenadas base de todo el flujo de procesamiento.</string>
+    <string name="guide_calibration_p2_name">Tinte de sombras</string>
+    <string name="guide_calibration_p2_desc">Ajusta la neutralidad de las sombras profundas hacia magenta o verde.</string>
+
+    <string name="guide_detail_title">Detalle y Enfoque</string>
+    <string name="guide_detail_desc">Mejora de microcontraste y reducción de ruido</string>
+    <string name="guide_detail_detail">Mejora la nitidez percibida de texturas y bordes mediante filtrado paso alto con máscara de bordes, suavizando el ruido no deseado en áreas uniformes.</string>
+    <string name="guide_detail_p1_name">Ganancia y Máscara</string>
+    <string name="guide_detail_p1_desc">Enfoca estrictamente sobre bordes definidos sin amplificar el ruido de fondo.</string>
+    <string name="guide_detail_p2_name">Reducción de ruido</string>
+    <string name="guide_detail_p2_desc">Suaviza el grano de luminosidad y manchas de color en tomas con poca luz.</string>
+
+    <string name="guide_lens_title">Correcciones de lente</string>
+    <string name="guide_lens_desc">Corrección de distorsión, aberraciones y viñeteo óptico</string>
+    <string name="guide_lens_detail">Compensa los defectos físicos de las lentes: deformación en barril o cojín, bordes coloreados en zonas contrastadas y caída de luz en las esquinas.</string>
+    <string name="guide_lens_p1_name">Distorsión geométrica</string>
+    <string name="guide_lens_p1_desc">Endereza líneas curvas provocadas por lentes gran angular.</string>
+    <string name="guide_lens_p2_name">Aberraciones cromáticas</string>
+    <string name="guide_lens_p2_desc">Elimina halos parásitos rojo-cian y azul-amarillo en bordes contrastados.</string>
+
+    <string name="guide_transform_title">Transformación geométrica</string>
+    <string name="guide_transform_desc">Corrección de perspectiva, rotación y escala</string>
+    <string name="guide_transform_detail">Corrige líneas verticales convergentes en arquitectura y paisajes urbanos mediante homografía proyectiva 2D precisa.</string>
+    <string name="guide_transform_p1_name">Perspectiva vertical y horizontal</string>
+    <string name="guide_transform_p1_desc">Hace que fachadas y muros queden rigurosamente verticales y paralelos.</string>
+    <string name="guide_transform_p2_name">Escala y Desplazamientos</string>
+    <string name="guide_transform_p2_desc">Reencuadra y evita bordes blancos tras corregir la perspectiva.</string>
+
+    <string name="guide_blur_title">Desenfoque de lente (Bokeh)</string>
+    <string name="guide_blur_desc">Simulación de profundidad de campo y estética de bokeh</string>
+    <string name="guide_blur_detail">Aísla al sujeto creando un desenfoque de fondo suave y progresivo. Simula la apertura de lentes luminosas (f/1.4, f/2.8) con realce especular de reflejos.</string>
+    <string name="guide_blur_p1_name">Cantidad de desenfoque</string>
+    <string name="guide_blur_p1_desc">Ajusta el radio de difusión óptica del plano de fondo.</string>
+    <string name="guide_blur_p2_name">Realce de altas luces</string>
+    <string name="guide_blur_p2_desc">Convierte fuentes de luz desenfocadas en luminosas esferas de bokeh.</string>
+
+    <string name="guide_effects_title">Efectos creativos y Grano</string>
+    <string name="guide_effects_desc">Viñeteado estilizado y grano fotográfico analógico</string>
+    <string name="guide_effects_detail">Aporta carácter y emoción a tus fotos. El viñeteado guía la mirada al centro, mientras que el grano analógico elimina la frialdad digital.</string>
+    <string name="guide_effects_p1_name">Viñeteado post-recorte</string>
+    <string name="guide_effects_p1_desc">Oscurece o aclara suavemente los bordes del encuadre efectivo.</string>
+    <string name="guide_effects_p2_name">Grano fotográfico</string>
+    <string name="guide_effects_p2_desc">Simula la estructura física de cristales de haluro de plata (Tamaño y Rugosidad).</string>
+
+    <string name="guide_lut_title">Importación y Compartir LUT 3D</string>
+    <string name="guide_lut_desc">Tablas de conversión de color estándar Adobe .cube</string>
+    <string name="guide_lut_detail">La tabla de consulta 3D (Look-Up Table) es el estándar mundial en cine y fotografía para exportar y reutilizar estilos complejos en Premiere Pro, DaVinci Resolve o Photoshop.</string>
+    <string name="guide_lut_p1_name">Precisión 3D cube</string>
+    <string name="guide_lut_p1_desc">Mallas de interpolación volumétrica en resoluciones 17×17×17, 33×33×33 o 65×65×65.</string>
+    <string name="guide_lut_p2_name">Hoja de compartir del sistema</string>
+    <string name="guide_lut_p2_desc">Comparte tu LUT por mensajería, correo, Drive o AirDrop al instante.</string>
+
+    <string name="guide_transfer_title">Transferencia de estilo IA</string>
+    <string name="guide_transfer_desc">Extracción de firma visual y armonización automática</string>
+    <string name="guide_transfer_detail">Analiza la distribución estadística de una imagen de referencia en espacio perceptual OKLab para transferir su paleta cromática preservando los tonos de piel naturales.</string>
+    <string name="guide_transfer_p1_name">Motor de transferencia</string>
+    <string name="guide_transfer_p1_desc">Algoritmos optimizados de transporte óptimo (Wasserstein) y Reinhard.</string>
+    <string name="guide_transfer_p2_name">Bloqueo de tonos de piel</string>
+    <string name="guide_transfer_p2_desc">Mantiene la autenticidad natural de los rostros incluso bajo gradaciones intensas.</string>
+
 </resources>

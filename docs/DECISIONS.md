@@ -272,3 +272,42 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
      - Étage 1 (GPU) : temps de rendu $< 0{,}2$ ms (équivalent $> 120$ fps).
      - Étage 2 (Python Chaquopy) : temps de traitement $\approx 180$ ms en tâche de fond asynchrone sans gel de l'UI.
      - Ratio d'accélération interactive perçue : $> 100\times$.
+
+
+---
+
+## ADR-18 : Centre d'Aide & Guide Découverte Modulaire des 12 Fonctionnalités Photographiques
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. Suite à la suppression des astuces et conseils encombrants de l'interface d'édition (F1), les utilisateurs ont besoin d'un espace dédié pour comprendre en profondeur le fonctionnement de chaque outil photographique sans polluer le flux de travail de l'éditeur.
+  2. Les outils avancés de l'application (Courbes de tonalité, Recadrage & Redressement, Mixeur de couleurs HSL, Étalonnage de profil, Flou d'objectif optique, Corrections optiques, Déformation géométrique, Masques 3D LUT, Transfert de style, etc.) comportent des paramètres techniques que les photographes et coloristes doivent pouvoir explorer de manière interactive.
+- **Décision :**
+  1. **Architecture Modulaire et Extensible (`FeatureGuideRegistry`) :**
+     - Modélisation typée en Kotlin pur (`FeatureGuideModel.kt`) : `FeatureCategory` (CROP_GEOMETRY, LIGHT_TONE, COLOR, DETAIL_OPTICS, CREATIVE_EFFECTS), `FeatureParam`, `FeatureDemoType`, `FeatureGuideItem`.
+     - Registre complet de 12 outils photographiques couvrant 100% de la surface fonctionnelle de l'éditeur :
+       1. Recadrage & Redressement
+       2. Courbes de tonalité RVB & Paramétriques
+       3. Mixeur de couleurs TSL (HSL)
+       4. Color Grading (Étalonnage à 3 roues)
+       5. Étalonnage de l'appareil (Profils capteur)
+       6. Détails & Netteté (Masque de netteté & réduction du bruit)
+       7. Corrections de l'objectif (Distorsion & vignetage)
+       8. Géométrie & Transformation (Perspective Upright)
+       9. Flou d'objectif & Profondeur (Bokeh optique simulé)
+       10. Effets & Grain Argentique
+       11. LUTs 3D & Profils Créatifs (.CUBE)
+       12. Transfert de Style & Color Match IA
+  2. **Composant de Comparaison Tactile Interactif (`InteractiveBeforeAfterSlider`) :**
+     - Rendu split-screen Avant / Après avec séparateur vertical draggable au toucher.
+     - Démos vectorielles dynamiques et canevas graphiques démontrant visuellement l'action de chaque outil (courbe interactive, cercle chromatique HSL, simulation de bokeh, grille de recadrage, etc.).
+  3. **Navigation & Découvrabilité :**
+     - Écran dédié `FeatureGuideScreen` avec barre de recherche en temps réel et chips de filtrage par catégorie.
+     - Vue détaillée avec fiche technique de chaque paramètre (nom, rôle, échelle de valeurs et conseils d'utilisation).
+     - Points d'entrée multiples : depuis les paramètres de l'application (`SettingsScreen`), depuis la barre d'actions supérieure de l'éditeur (`EditorActionsDropdownToolbar` via l'icône d'aide / découverte), et via la navigation globale `AppDestination.GUIDE`.
+  4. **Internationalisation Complète :**
+     - 100% des chaînes (titres, résumés, descriptions détaillées, noms de paramètres et descriptions) traduites et synchronisées dans `values/strings.xml`, `values-fr/strings.xml` et `values-es/strings.xml`.
+  5. **Conformité Design System :**
+     - Zéro couleur, dimension ou icône en dur ; conformité totale vérifiée par `DesignSystemGuardTest`.
+

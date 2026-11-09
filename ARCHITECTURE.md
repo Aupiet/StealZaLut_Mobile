@@ -312,6 +312,11 @@ StealZaLut_Mobile/
 │       │           │   │   ├── EditorToolbar.kt     Barre d'outils tactile inférieure
 │       │           │   │   ├── EditorTransformPanel.kt Redressement géométrique et perspective
 │       │           │   │   └── EditorViewport.kt    Zone d'aperçu dynamique avec gestes tactiles
+│       │           │   ├── guide/               Centre d'aide & découverte modulaire (12 outils)
+│       │           │   │   ├── FeatureGuideModel.kt Modèle typé (catégories, paramètres, démos)
+│       │           │   │   ├── FeatureGuideRegistry.kt Registre des 12 guides photographiques
+│       │           │   │   ├── FeatureGuideScreen.kt Écran avec recherche, filtres et fiche détaillée
+│       │           │   │   └── InteractiveBeforeAfterSlider.kt Comparateur tactile interactif
 │       │           │   └── studio/              Studio de gradation par étapes
 │       │           │       ├── StudioComponents.kt  Composants d'étape partagés
 │       │           │       ├── StudioStep1Source.kt Étape 1 : Sélection photo source

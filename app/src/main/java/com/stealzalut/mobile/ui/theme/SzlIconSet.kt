@@ -54,6 +54,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.ShutterSpeed
@@ -104,6 +105,8 @@ import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Save
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ShutterSpeed
@@ -160,6 +163,9 @@ interface SzlIconSet {
     val menu: ImageVector get() = actionMenu
     val actionMenu: ImageVector
     val actionHelp: ImageVector
+    val actionBack: ImageVector
+    val actionSearch: ImageVector
+    val actionChevronRight: ImageVector
     val delete: ImageVector get() = actionDelete
     val actionDelete: ImageVector
     val actionShare: ImageVector
@@ -241,6 +247,9 @@ object RoundedSzlIconSet : SzlIconSet {
     override val actionRefresh: ImageVector = Icons.Rounded.Refresh
     override val actionMenu: ImageVector = Icons.Rounded.MoreVert
     override val actionHelp: ImageVector = Icons.AutoMirrored.Rounded.HelpOutline
+    override val actionBack: ImageVector = Icons.AutoMirrored.Rounded.ArrowBack
+    override val actionSearch: ImageVector = Icons.Rounded.Search
+    override val actionChevronRight: ImageVector = Icons.Rounded.ChevronRight
     override val actionDelete: ImageVector = Icons.Rounded.DeleteOutline
     override val actionShare: ImageVector = Icons.Rounded.Share
     override val actionVisibilityOn: ImageVector = Icons.Rounded.Visibility
@@ -310,6 +319,9 @@ object OutlinedSzlIconSet : SzlIconSet {
     override val actionRefresh: ImageVector = Icons.Outlined.Refresh
     override val actionMenu: ImageVector = Icons.Outlined.MoreVert
     override val actionHelp: ImageVector = Icons.AutoMirrored.Outlined.HelpOutline
+    override val actionBack: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
+    override val actionSearch: ImageVector = Icons.Outlined.Search
+    override val actionChevronRight: ImageVector = Icons.Outlined.ChevronRight
     override val actionDelete: ImageVector = Icons.Outlined.DeleteOutline
     override val actionShare: ImageVector = Icons.Outlined.Share
     override val actionVisibilityOn: ImageVector = Icons.Outlined.Visibility

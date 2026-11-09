@@ -55,7 +55,16 @@ enum class AppDestination(
         titleRes = R.string.settings_header_title,
         subtitleRes = R.string.dest_subtitle_settings,
         iconProvider = { it.navSettings }
+    ),
+    GUIDE(
+        route = "guide",
+        labelRes = R.string.guide_title,
+        titleRes = R.string.guide_title,
+        subtitleRes = R.string.dest_subtitle_guide,
+        iconProvider = { it.actionHelp }
     );
+
+    val isBottomBarItem: Boolean get() = this != GUIDE
 
     val icon: ImageVector
         get() = iconProvider(RoundedSzlIconSet)

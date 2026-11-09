@@ -1,5 +1,7 @@
 package com.stealzalut.mobile.ui.screens
 
+import com.stealzalut.mobile.ui.screens.guide.FeatureGuideScreen
+
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -79,6 +81,9 @@ fun MainColorGradingScreen(
         when {
             isEditorWithPhoto -> {
                 showExitEditorConfirmDialog = true
+            }
+            uiState.currentDestination == AppDestination.GUIDE -> {
+                viewModel.navigateTo(AppDestination.SETTINGS)
             }
             isStudioWizardOngoing -> {
                 viewModel.setWizardStep(uiState.wizardStep - 1)
@@ -267,6 +272,7 @@ fun MainColorGradingScreen(
                                 onSavePreset = { viewModel.openSaveEditingPresetDialog() },
                                 onAutoEditAi = { viewModel.applyEditorAutoEdit() },
                                 onOpenPresets = { viewModel.openEditorPresetsSheet() },
+                                onOpenGuide = { viewModel.navigateTo(AppDestination.GUIDE) },
                                 onResetAll = {
                                     viewModel.resetAllEditorParams()
                                     scope.launch {
@@ -305,7 +311,7 @@ fun MainColorGradingScreen(
             }
         },
         bottomBar = {
-            if (!(uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null)) {
+            if (!(uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null) && uiState.currentDestination != AppDestination.GUIDE) {
                 androidx.compose.foundation.layout.Column {
                     androidx.compose.material3.HorizontalDivider(
                         thickness = AppDimens.DividerThickness,
@@ -317,7 +323,7 @@ fun MainColorGradingScreen(
                         tonalElevation = AppDimens.SpacingNone
                     ) {
                         val iconSet = MaterialTheme.icons
-                        AppDestination.entries.forEach { destination ->
+                        AppDestination.entries.filter { it.isBottomBarItem }.forEach { destination ->
                             val isSelected = uiState.currentDestination == destination
                             val label = stringResource(destination.labelRes)
                             NavigationBarItem(
@@ -382,6 +388,12 @@ fun MainColorGradingScreen(
                 SettingsScreen(
                     viewModel = viewModel,
                     modifier = Modifier.padding(innerPadding)
+                )
+            }
+            AppDestination.GUIDE -> {
+                FeatureGuideScreen(
+                    onNavigateBack = { viewModel.navigateTo(AppDestination.SETTINGS) },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }

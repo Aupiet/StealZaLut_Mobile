@@ -1,7 +1,9 @@
 package com.stealzalut.mobile.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +53,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
+import com.stealzalut.mobile.ui.navigation.AppDestination
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import com.stealzalut.mobile.ui.theme.icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
@@ -107,6 +116,64 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_title),
             subtitle = stringResource(R.string.settings_subtitle)
         )
+
+        // --- Card 0: Feature Guide Discovery ---
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { viewModel.navigateTo(AppDestination.GUIDE) },
+            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+            ),
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.SpacingLarge),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(AppDimens.FeatureCategoryBadgeSize)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.actionHelp,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconNormal)
+                    )
+                }
+                Spacer(modifier = Modifier.width(AppDimens.SpacingMedium))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.settings_guide_card_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(AppDimens.SpacingMicro))
+                    Text(
+                        text = stringResource(R.string.settings_guide_card_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = MaterialTheme.icons.actionChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+            }
+        }
 
         // --- Card 1: Thème d'application & Jeu d'icônes ---
         Card(

@@ -43,7 +43,8 @@ fun EditorActionsDropdownToolbar(
     onResetAll: () -> Unit,
     modifier: Modifier = Modifier,
     onAutoEditAi: () -> Unit = {},
-    onOpenPresets: () -> Unit = {}
+    onOpenPresets: () -> Unit = {},
+    onOpenGuide: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val icons = MaterialTheme.icons
@@ -195,9 +196,32 @@ fun EditorActionsDropdownToolbar(
                 }
             )
 
+            // 6. Guide des fonctionnalités
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.guide_title),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = icons.actionHelp,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                },
+                onClick = {
+                    isExpanded = false
+                    onOpenGuide()
+                }
+            )
+
             HorizontalDivider()
 
-            // 6. Réinitialiser tout
+            // 7. Réinitialiser tout
             DropdownMenuItem(
                 text = {
                     Text(

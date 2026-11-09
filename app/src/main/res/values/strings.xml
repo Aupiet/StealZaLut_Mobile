@@ -485,4 +485,120 @@
     <string name="project_new_edition">New edit</string>
     <string name="project_no_projects">No saved projects yet</string>
     <string name="project_delete_confirm">Delete this project?</string>
+
+    <!-- Feature Guide (F9) -->
+    <string name="guide_title">Feature Guide</string>
+    <string name="dest_subtitle_guide">Guide and documentation for photo editing tools</string>
+    <string name="guide_search_placeholder">Search a tool...</string>
+    <string name="guide_cat_all">All</string>
+    <string name="guide_cat_light">Light</string>
+    <string name="guide_cat_color">Color</string>
+    <string name="guide_cat_geometry">Geometry</string>
+    <string name="guide_cat_effects">Effects</string>
+    <string name="guide_cat_luts">LUTs &amp; AI</string>
+    <string name="guide_section_explanation">Why and how to use it</string>
+    <string name="guide_section_parameters">Key parameters</string>
+    <string name="guide_section_interactive_demo">Interactive demonstration</string>
+    <string name="guide_demo_before">BEFORE</string>
+    <string name="guide_demo_after">AFTER</string>
+    <string name="guide_back">Back to tools</string>
+    <string name="settings_guide_card_title">Feature Guide</string>
+    <string name="settings_guide_card_subtitle">Explore all 12 pro editing tools: curves, color grading, crop, LUTs...</string>
+
+    <string name="guide_crop_title">Crop &amp; Straighten</string>
+    <string name="guide_crop_desc">Normalized spatial framing and horizon alignment</string>
+    <string name="guide_crop_detail">Centers focus on the main subject following compositional guidelines (rule of thirds, golden ratio). Angular rotation straightens tilted horizon lines without softness.</string>
+    <string name="guide_crop_p1_name">Normalized boundaries</string>
+    <string name="guide_crop_p1_desc">Coordinates [0, 1] compliant with Adobe ACR crs:Crop specification.</string>
+    <string name="guide_crop_p2_name">Straighten angle</string>
+    <string name="guide_crop_p2_desc">Roll correction [-45°, +45°] with interpolated rotation.</string>
+
+    <string name="guide_curves_title">Tone Curves</string>
+    <string name="guide_curves_desc">Non-linear control of contrast and dynamic range</string>
+    <string name="guide_curves_detail">Adjusts global luminance or independent RGB channels via Fritsch-Carlson monotone cubic spline, ensuring zero solarization or overshoot artifacts.</string>
+    <string name="guide_curves_p1_name">Combined RGB channel</string>
+    <string name="guide_curves_p1_desc">Controls overall contrast (S-curve to boost contrast, gentle slope to lift shadows).</string>
+    <string name="guide_curves_p2_name">Separate R, G, B channels</string>
+    <string name="guide_curves_p2_desc">Balances color casts or designs film looks (faded greens, cool shadows).</string>
+
+    <string name="guide_mixer_title">HSL Color Mixer</string>
+    <string name="guide_mixer_desc">Selective adjustment across 8 independent color channels</string>
+    <string name="guide_mixer_detail">Isolates specific color hues (Red, Orange, Yellow, Green, Cyan, Blue, Purple, Magenta) to adjust hue, saturation, or luminance without altering the rest of the image.</string>
+    <string name="guide_mixer_p1_name">Hue &amp; Saturation</string>
+    <string name="guide_mixer_p1_desc">Warms or cools a specific hue (e.g. boosting the sky or foliage).</string>
+    <string name="guide_mixer_p2_name">Selective luminance</string>
+    <string name="guide_mixer_p2_desc">Brightens or darkens a specific color, ideal for flattering skin tones (Orange).</string>
+
+    <string name="guide_grading_title">Color Grading</string>
+    <string name="guide_grading_desc">Cinematic 3-way color grading (Shadows, Midtones, Highlights)</string>
+    <string name="guide_grading_detail">Inspired by Hollywood film post-production. Casts distinct hues across shadows, midtones, and highlights with fine-grained blending and balance control.</string>
+    <string name="guide_grading_p1_name">3-Way color wheels</string>
+    <string name="guide_grading_p1_desc">Hue angle and saturation vector applied to the three luminance zones.</string>
+    <string name="guide_grading_p2_name">Blending &amp; Balance</string>
+    <string name="guide_grading_p2_desc">Defines tonal overlap and shifts the midpoint balance between darks and lights.</string>
+
+    <string name="guide_calibration_title">Camera Calibration</string>
+    <string name="guide_calibration_desc">Fundamental tuning of RGB primary hues and saturations</string>
+    <string name="guide_calibration_detail">Operates at the root of the color space by adjusting the spectral coordinates of Red, Green, and Blue primaries and shadow tint. A favorite colorist secret for luminous skin tones.</string>
+    <string name="guide_calibration_p1_name">Red, Green, Blue primaries</string>
+    <string name="guide_calibration_p1_desc">Modifies the baseline color coordinates of the entire processing pipeline.</string>
+    <string name="guide_calibration_p2_name">Shadow tint</string>
+    <string name="guide_calibration_p2_desc">Fine-tunes pure shadow neutrality towards magenta or green.</string>
+
+    <string name="guide_detail_title">Detail &amp; Sharpening</string>
+    <string name="guide_detail_desc">Micro-contrast enhancement and noise reduction</string>
+    <string name="guide_detail_detail">Improves perceived texture sharpness using high-pass filtering with edge masking, while smoothing unwanted noise in flat areas.</string>
+    <string name="guide_detail_p1_name">Amount &amp; Masking</string>
+    <string name="guide_detail_p1_desc">Targets sharpening strictly onto strong edges without amplifying background noise.</string>
+    <string name="guide_detail_p2_name">Noise reduction</string>
+    <string name="guide_detail_p2_desc">Smooths luminance grain and color speckles in low-light captures.</string>
+
+    <string name="guide_lens_title">Lens Corrections</string>
+    <string name="guide_lens_desc">Fixes distortion, chromatic aberrations, and optical vignetting</string>
+    <string name="guide_lens_detail">Compensates for physical lens imperfections: barrel or pincushion distortion, color fringing along high-contrast borders, and corner light falloff.</string>
+    <string name="guide_lens_p1_name">Geometric distortion</string>
+    <string name="guide_lens_p1_desc">Straightens bent lines caused by wide-angle focal lengths.</string>
+    <string name="guide_lens_p2_name">Chromatic aberrations</string>
+    <string name="guide_lens_p2_desc">Eliminates red-cyan and blue-yellow color fringing on high-contrast contours.</string>
+
+    <string name="guide_transform_title">Geometric Transform</string>
+    <string name="guide_transform_desc">Perspective correction, rotation, and scaling</string>
+    <string name="guide_transform_detail">Corrects converging vertical lines in architecture and urban landscape photos using accurate 2D projective homography.</string>
+    <string name="guide_transform_p1_name">Vertical &amp; horizontal perspective</string>
+    <string name="guide_transform_p1_desc">Makes building facades and upright structures strictly parallel.</string>
+    <string name="guide_transform_p2_name">Scale &amp; offsets</string>
+    <string name="guide_transform_p2_desc">Recenters framing and eliminates white borders after perspective shifts.</string>
+
+    <string name="guide_blur_title">Lens Blur (Bokeh)</string>
+    <string name="guide_blur_desc">Shallow depth of field simulation and bokeh aesthetics</string>
+    <string name="guide_blur_detail">Isolates the subject by producing a creamy, progressive background blur. Simulates wide-aperture lenses (f/1.4, f/2.8) with specular highlight boosting.</string>
+    <string name="guide_blur_p1_name">Blur amount</string>
+    <string name="guide_blur_p1_desc">Sets the optical diffusion radius of the background plane.</string>
+    <string name="guide_blur_p2_name">Highlight boost</string>
+    <string name="guide_blur_p2_desc">Turns out-of-focus highlights into luminous bokeh discs.</string>
+
+    <string name="guide_effects_title">Creative Effects &amp; Grain</string>
+    <string name="guide_effects_desc">Stylized vignetting and analog photographic film grain</string>
+    <string name="guide_effects_detail">Adds mood and tactile warmth. Vignetting guides the eye to the center, while organic film grain breaks up digital sterility.</string>
+    <string name="guide_effects_p1_name">Post-crop vignette</string>
+    <string name="guide_effects_p1_desc">Gently darkens or lightens the outer borders of the cropped image.</string>
+    <string name="guide_effects_p2_name">Photographic film grain</string>
+    <string name="guide_effects_p2_desc">Simulates the physical silver halide crystal structure (Size &amp; Roughness).</string>
+
+    <string name="guide_lut_title">3D LUT Import &amp; Sharing</string>
+    <string name="guide_lut_desc">Industry-standard Adobe .cube color translation tables</string>
+    <string name="guide_lut_detail">The global cinema and photography standard for exporting and sharing complex grades across Premiere Pro, DaVinci Resolve, and Photoshop.</string>
+    <string name="guide_lut_p1_name">3D Cube precision</string>
+    <string name="guide_lut_p1_desc">Volumetric interpolation grids in 17x17x17, 33x33x33, or 65x65x65 resolution.</string>
+    <string name="guide_lut_p2_name">System share sheet</string>
+    <string name="guide_lut_p2_desc">Share your .cube look via messaging, mail, cloud drive, or AirDrop instantly.</string>
+
+    <string name="guide_transfer_title">AI Style Transfer</string>
+    <string name="guide_transfer_desc">Visual signature extraction and automatic harmonizing</string>
+    <string name="guide_transfer_detail">Analyzes the statistical distribution of a reference image in perceptual OKLab space to transfer its color palette while preserving natural skin tones.</string>
+    <string name="guide_transfer_p1_name">Transfer engine</string>
+    <string name="guide_transfer_p1_desc">Optimized Wasserstein optimal transport and Reinhard transfer algorithms.</string>
+    <string name="guide_transfer_p2_name">Skin tone lock</string>
+    <string name="guide_transfer_p2_desc">Guarantees authentic, healthy skin tones even under dramatic grades.</string>
+
 </resources>

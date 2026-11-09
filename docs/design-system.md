@@ -11,7 +11,7 @@ Le système repose sur une hiérarchie stricte en 3 couches. **Les écrans ne co
 ```
 ┌────────────────────────────────────────────────────────┐
 │ 1. PRIMITIVES (Valeurs brutes, non exposées aux vues)  │
-│    ColorPrimitives, AppDimens (valeurs de base)        │
+│    Color.kt, AppDimens (valeurs de base)               │
 └───────────────────────────┬────────────────────────────┘
                             │
 ┌───────────────────────────▼────────────────────────────┐
@@ -22,22 +22,22 @@ Le système repose sur une hiérarchie stricte en 3 couches. **Les écrans ne co
                             │
 ┌───────────────────────────▼────────────────────────────┐
 │ 3. COMPOSANTS (Widgets Szl* & Écrans applicatifs)      │
-│    SzlSlider, SzlBipolarSlider, SzlIcon, EditorCrop... │
+│    SzlSlider, SzlBipolarSlider, SzlEmptyState...       │
 └────────────────────────────────────────────────────────┘
 ```
 
 ### Couche 1 — Primitives
-- **Couleurs :** Définies dans `ColorPrimitives.kt` (`AmberPrimary = Color(0xFFFFB300)`, `NoirBackground = Color(0xFF101216)`, `CyanPrimary = Color(0xFF00E5FF)`...).
+- **Couleurs :** Définies dans `Color.kt` (`AmberPrimary = Color(0xFFFFB300)`, `NoirBackground = Color(0xFF101216)`, `CyanPrimary = Color(0xFF00E5FF)`...).
 - **Dimensions :** Échelle de pas (Micro 2dp, ExtraSmall 4dp, Medium 8dp, Spacious 16dp, Massive 32dp).
 - **Polices :** Familles brutes encapsulées dans `FontSpec`.
 
 ### Couche 2 — Sémantiques
-- **Palette sémantique :** `MaterialTheme.colorScheme` (Material 3 standard) et extension dédiée `SzlColors` (`photoDarkroom`, `sliderActive`, `compareBadge`, `clippingShadows`, `clippingHighlights`, `cropOverlay`, `cropHandle`...).
+- **Palette sémantique :** `MaterialTheme.colorScheme` (Material 3 standard) et extension dédiée `SzlColors` (`photoDarkroom`, `sliderActive`, `compareBadge`, `cropOverlay`, `cropHandle`, `toolActiveDot`...).
 - **Typographie sémantique :** Rôles M3 (`displayLarge`, `titleMedium`, `bodyMedium`, `labelSmall` avec plancher à 12 sp minimum).
 - **Icônes sémantiques :** Interface `SzlIconSet` exposant les intentions (`toolBasic`, `toolCrop`, `actionExport`, `actionUndo`...).
 
 ### Couche 3 — Composants
-- Les composants réutilisables `SzlSlider`, `SzlBipolarSlider`, `SzlIcon`, `SzlEmptyState`, `DoubleViewComparison` consomment exclusivement des tokens sémantiques.
+- Les composants réutilisables `SzlSlider`, `SzlBipolarSlider`, `SzlEmptyState`, `DoubleViewComparison` consomment exclusivement des tokens sémantiques.
 
 ---
 
@@ -67,8 +67,6 @@ Chaque variable ou composant défini dans Figma porte **strictement le même nom
 | **Contrôles** | `slider/trackActive` | `SzlTheme.colors.sliderActive` | `#FFB300` |
 | **Contrôles** | `slider/trackInactive`| `SzlTheme.colors.sliderInactive`| `#262A34` |
 | **Contrôles** | `slider/thumb` | `SzlTheme.colors.sliderThumb` | `#FFB300` |
-| **Chambre Noire**| `clipping/shadows` | `SzlTheme.colors.clippingShadows` | `#2563EB` (Bleu cobalt) |
-| **Chambre Noire**| `clipping/highlights`| `SzlTheme.colors.clippingHighlights`| `#DC2626` (Rouge vif) |
 | **Recadrage** | `crop/overlay` | `SzlTheme.colors.cropOverlay` | `#B3000000` (Opacité 70%) |
 | **Recadrage** | `crop/handle` | `SzlTheme.colors.cropHandle` | `#FFB300` |
 | **Recadrage** | `crop/grid` | `SzlTheme.colors.cropGrid` | `#66FFFFFF` (Tiers 40%) |
@@ -107,10 +105,6 @@ Trois familles typographiques libres (licences OFL) sont embarquées directement
 | `typography/bodySmall` | Plus Jakarta Sans | `MaterialTheme.typography.bodySmall` | 12 sp | Normal | Sous-titres et légendes |
 | `typography/labelLarge` | Plus Jakarta Sans | `MaterialTheme.typography.labelLarge` | 14 sp | SemiBold | Libellés de boutons |
 | `typography/labelSmall` | JetBrains Mono | `MaterialTheme.typography.labelSmall` | **12 sp** | Normal / Bold | Badges, pourcentages, valeurs tabulaires |
-| `typography/bodyMedium` | `MaterialTheme.typography.bodyMedium` | 14 sp | Normal | Texte courant interface |
-| `typography/bodySmall` | `MaterialTheme.typography.bodySmall` | 12 sp | Normal | Sous-titres et légendes |
-| `typography/labelLarge` | `MaterialTheme.typography.labelLarge` | 14 sp | SemiBold | Libellés de boutons |
-| `typography/labelSmall` | `MaterialTheme.typography.labelSmall` | **12 sp** | Normal | Badges, pastilles de curseurs |
 
 ---
 
@@ -163,9 +157,9 @@ val OutfitFontFamily = FontFamily(
 3. Assigner la police dans le `ThemeSpec` :
 ```kotlin
 fontSpec = FontSpec(
-    titleFont = OutfitFontFamily,
-    bodyFont = OutfitFontFamily,
-    monoFont = FontFamily.Monospace
+    title = OutfitFontFamily,
+    body = OutfitFontFamily,
+    mono = FontFamily.Monospace
 )
 ```
 4. Tous les écrans adoptent immédiatement la nouvelle police sans retouche.
@@ -178,7 +172,7 @@ Le système d'icônes repose sur l'interface `SzlIconSet`. Pour basculer sur un 
 icons = OutlinedSzlIconSet
 ```
 2. Le `StealZaLut_MobileTheme` injecte automatiquement le jeu d'icônes via `LocalSzlIconSet provides themeSpec.icons`.
-3. Tous les appels `SzlTheme.icons.<nom>` ou `SzlIcon(...)` restituent instantanément le nouveau style visuel.
+3. Tous les appels `SzlTheme.icons.<nom>` ou `Icon(imageVector = SzlTheme.icons.<nom>, ...)` restituent instantanément le nouveau style visuel.
 
 ---
 

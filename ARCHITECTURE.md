@@ -209,13 +209,14 @@ Le Mode Éditeur Pur permet d'éditer une photo source **sans sélectionner d'im
 
 ## 7. Arborescence Complète et Découpée des Fichiers
 
-L'application respecte une modularité stricte (< 400 lignes par fichier, zéro monolithe) :
+L'application respecte une séparation stricte des responsabilités par couches, des délégués de domaine spécialisés pour le ViewModel, et des composants/panneaux UI hautement modulaires :
 
 ```
 StealZaLut_Mobile/
 ├── ARCHITECTURE.md                          Documentation architecturale globale
 ├── CODING_STANDARDS.md                      Charte technique et invariants WYSIWYG
 ├── LICENSE                                  Licence open-source MIT
+├── README.md                                Présentation, guides et instructions de build
 ├── app/
 │   └── src/
 │       ├── main/
@@ -223,87 +224,142 @@ StealZaLut_Mobile/
 │       │   │   ├── config.py                Constantes système, algorithmes et seuils
 │       │   │   ├── bridge.py                Façade unique JNI/Chaquopy (status: success/error)
 │       │   │   ├── core/
+│       │   │   │   ├── auto_edit.py         Analyse optique Rec. 2020 LightCraft
+│       │   │   │   ├── color_card.py        Génération et détection mire ColorChecker
 │       │   │   │   ├── color_space.py       Espaces perceptuels OKLab, CIE LAB, smoothstep
-│       │   │   │   ├── pipeline.py          Moteur Étapes 2 & 3, Baking LUT et masques
-│       │   │   │   ├── preset_manager.py    Gestionnaire de presets v2, migration, duplication, export
+│       │   │   │   ├── color_transfer.py    Transferts optimaux (MKL, MVGD, Reinhard, HM)
+│       │   │   │   ├── lightroom_color.py   Moteur de virage partiel et balance des blancs
+│       │   │   │   ├── lightroom_models.py  Structures de données du moteur de développement
+│       │   │   │   ├── lightroom_spatial.py Traitements spatiaux (clarté, netteté, grain)
 │       │   │   │   ├── lut_engine.py        Lattice 3D, interpolation trilinéaire & chunking anti-OOM
 │       │   │   │   ├── lut_export.py        Exportation Adobe .cube 1.0 conforme
-│       │   │   │   ├── color_transfer.py    Transferts optimaux (MKL, MVGD, Reinhard, HM)
-│       │   │   │   └── auto_edit.py         Analyse optique Rec. 2020 LightCraft
+│       │   │   │   ├── pipeline.py          Moteur Étapes 2 & 3, Baking LUT et masques
+│       │   │   │   ├── preset_manager.py    Gestionnaire de presets v2, migration, duplication, export
+│       │   │   │   ├── spatial_filters.py   Convolutions et filtres spatiaux optimisés
+│       │   │   │   └── spline_interpolator.py Interpolation par splines cubiques pour courbes
 │       │   │   ├── utils/
 │       │   │   │   └── image_io.py          I/O Pillow, préservation EXIF et extraction de palettes
 │       │   │   └── workers/
-│       │   │       ├── transfer_worker.py   Caches LRU double niveau (_RAW_LUT_CACHE, proxy)
-│       │   │       └── export_worker.py     Orchestration baking .cube et export photos HD
+│       │   │       ├── export_worker.py     Orchestration baking .cube et export photos HD
+│       │   │       └── transfer_worker.py   Caches LRU double niveau (_RAW_LUT_CACHE, proxy)
 │       │   └── java/com/stealzalut/mobile/
+│       │       ├── MainActivity.kt              Point d'entrée Android, gestion fenêtres et thèmes
+│       │       ├── StealZaLutApplication.kt     Initialisation application et Chaquopy
 │       │       ├── core/
-│       │       │   ├── AppConstants.kt      Constantes logiques, seuils d'opacité, durées
-│       │       │   ├── AppDimens.kt         Jetons de dimensions, paddings et rayons
-│       │       │   └── UiText.kt            Encapsulation i18n des chaînes pour ViewModel
+│       │       │   ├── AppConstants.kt          Constantes logiques, seuils d'opacité, durées
+│       │       │   ├── AppDimens.kt             Jetons de dimensions, paddings et rayons
+│       │       │   └── UiText.kt                Encapsulation i18n des chaînes pour ViewModel
 │       │       ├── data/
 │       │       │   ├── bridge/
 │       │       │   │   └── PythonBridgeRepository.kt Façade thread-safe sur pythonDispatcher
+│       │       │   ├── cache/
+│       │       │   │   └── LruCacheManager.kt   Cache mémoire LRU bitmaps et aperçus
 │       │       │   ├── model/
+│       │       │   │   ├── AppSettings.kt       Modèle des préférences utilisateur et thème
 │       │       │   │   ├── ColorimetryPreset.kt Modèle preset Studio / Palettes
+│       │       │   │   ├── ColorTransferMethod.kt Énumération des algorithmes de transfert
 │       │       │   │   ├── EditPreset.kt        Modèle preset Éditeur (.szlpreset)
-│       │       │   │   └── AppSettings.kt       Persistance des préférences et thèmes
+│       │       │   │   ├── LightroomDeserializer.kt Désérialisation des paramètres d'édition
+│       │       │   │   ├── LightroomSerializer.kt   Sérialisation des réglages studio
+│       │       │   │   ├── LutSize.kt           Dimensions de grille 3D LUT (17, 33, 65)
+│       │       │   │   ├── ProcessResult.kt     Conteneurs de résultats de traitement JNI
+│       │       │   │   └── SavedGradedImage.kt  Entité d'image sauvegardée en galerie
 │       │       │   └── repository/
 │       │       │       ├── PresetRepository.kt  Persistance JSON des presets Studio
+│       │       │       ├── SavedImageRepository.kt Gestion de l'historique des exports
 │       │       │       └── SettingsRepository.kt Gestion SharedPreferences
 │       │       └── ui/
 │       │           ├── components/
 │       │           │   ├── DoubleViewComparison.kt Comparateur 3 modes (Split, Side-by-side, Hold)
+│       │           │   ├── ExportActionBar.kt   Barre d'actions d'exportation
+│       │           │   ├── ImageDetailDialog.kt Modal d'inspection détaillée d'une image
+│       │           │   ├── ImagePickerCard.kt   Sélecteur d'images avec aperçu
+│       │           │   ├── LutSizeSelector.kt   Sélecteur de précision de LUT
+│       │           │   ├── MethodSelector.kt    Sélecteur d'algorithme mathématique
+│       │           │   ├── PaletteSwatchesView.kt Nuancier de palettes extraites
+│       │           │   ├── SavePresetDialog.kt  Dialogue d'enregistrement de style
+│       │           │   ├── SzlAccordionSection.kt Section accordéon rétractable
+│       │           │   ├── SzlBipolarSlider.kt  Curseur bipolaire (-100 à +100) avec point neutre
 │       │           │   ├── SzlEmptyState.kt     Composant standard d'état vide
 │       │           │   ├── SzlRgbHistogram.kt   Histogramme RVB temps réel superposable
-│       │           │   ├── SzlImageBadge.kt     Badge sémantique sur image (compareBadge)
-│       │           │   └── ...
-│       │           ├── theme/
-│       │           │   ├── SzlColors.kt         Rôles sémantiques étendus (CompositionLocal)
-│       │           │   ├── ThemeSpec.kt         Contrat de thème (colorScheme, SzlColors)
-│       │           │   ├── Themes.kt            Registre des 4 thèmes (Ambre, Cyan, OLED, Daylight)
-│       │           │   ├── Theme.kt             Provider StealZaLut_MobileTheme
-│       │           │   └── ColorCardReference.kt Constantes de mire ColorChecker physiques
+│       │           │   ├── SzlScrim.kt          Voile semi-transparent de chargement
+│       │           │   └── SzlSlider.kt         Curseur unilatéral fluide avec reset double-tap
+│       │           ├── navigation/
+│       │           │   └── AppDestination.kt    Destinations de navigation de l'application
 │       │           ├── screens/
-│       │           │   ├── studio/              Studio de gradation découpé en 7 étapes/vues
-│       │           │   │   ├── StudioStepper.kt
-│       │           │   │   ├── StudioStep1Source.kt
-│       │           │   │   ├── StudioStep2Style.kt
-│       │           │   │   ├── StudioStep3Parameters.kt
-│       │           │   │   ├── StudioStep4Computing.kt
-│       │           │   │   ├── StudioStep5Result.kt
-│       │           │   │   └── StudioComponents.kt
-│       │           │   ├── editor/              Éditeur photo seul découpé en 6 vues
-│       │           │   │   ├── EditorViewport.kt
-│       │           │   │   ├── EditorPresetsTab.kt
-│       │           │   │   ├── EditorCalibrationTab.kt
-│       │           │   │   ├── EditorLightTab.kt
-│       │           │   │   ├── EditorColorTab.kt
-│       │           │   │   └── EditorEffectsTab.kt
-│       │           │   ├── ApplyThemeScreen.kt  Orchestrateur Studio (< 200 lignes)
-│       │           │   ├── StandaloneEditorScreen.kt Orchestrateur Éditeur (< 320 lignes)
-│       │           │   ├── ProfileScreen.kt     Galerie et presets enregistrés
-│       │           │   └── SettingsScreen.kt    Sélecteur de thèmes et paramètres
+│       │           │   ├── ApplyThemeScreen.kt  Orchestrateur du Studio de gradation
+│       │           │   ├── MainColorGradingScreen.kt Conteneur principal et navigation
+│       │           │   ├── PalettesScreen.kt    Exploration et extraction de palettes cinéma
+│       │           │   ├── ProfileScreen.kt     Galerie d'images et bibliothèque de presets
+│       │           │   ├── SettingsScreen.kt    Paramètres globaux et sélecteur de thème
+│       │           │   ├── StandaloneEditorScreen.kt Orchestrateur de l'Éditeur photo autonome
+│       │           │   ├── editor/              Panneaux spécialisés de l'Éditeur autonome
+│       │           │   │   ├── EditorActionsDropdownToolbar.kt Menu déroulant presets et Auto-Edit
+│       │           │   │   ├── EditorBasicPanel.kt  Réglages de tonalité de base (EV, contraste)
+│       │           │   │   ├── EditorCalibrationPanel.kt Étape 2 (Luma Lock, Skin Lock...)
+│       │           │   │   ├── EditorColorGradingPanel.kt Color wheels 3 voies (ombres, tons moyens, HL)
+│       │           │   │   ├── EditorColorMixerPanel.kt HSL 8 canaux sélectifs
+│       │           │   │   ├── EditorCropOverlay.kt Grille de composition et recadrage
+│       │           │   │   ├── EditorDetailPanel.kt Clarté, netteté et réduction de bruit
+│       │           │   │   ├── EditorEffectsPanel.kt Grain argentique, vignetage
+│       │           │   │   ├── EditorEmptyState.kt  Invite d'import de photo dans l'éditeur
+│       │           │   │   ├── EditorExportDialog.kt Dialogue d'options d'export (.cube, JPEG)
+│       │           │   │   ├── EditorLensBlurPanel.kt Flou optique d'objectif simulé
+│       │           │   │   ├── EditorLensCorrectionsPanel.kt Correction distorsion et vignetage
+│       │           │   │   ├── EditorPresetsTab.kt  Gestionnaire de presets et import .cube
+│       │           │   │   ├── EditorSavePresetDialog.kt Dialogue d'enregistrement .szlpreset
+│       │           │   │   ├── EditorToneCurvePanel.kt Courbe de tonalité paramétrique et point-curve
+│       │           │   │   ├── EditorToolbar.kt     Barre d'outils tactile inférieure
+│       │           │   │   ├── EditorTransformPanel.kt Redressement géométrique et perspective
+│       │           │   │   └── EditorViewport.kt    Zone d'aperçu dynamique avec gestes tactiles
+│       │           │   └── studio/              Studio de gradation par étapes
+│       │           │       ├── StudioComponents.kt  Composants d'étape partagés
+│       │           │       ├── StudioStep1Source.kt Étape 1 : Sélection photo source
+│       │           │       ├── StudioStep2Style.kt  Étape 2 : Sélection du style de référence
+│       │           │       ├── StudioStep3Parameters.kt Étape 3 : Réglages colorimétriques
+│       │           │       ├── StudioStep4Computing.kt Étape 4 : Progression du calcul JNI
+│       │           │       ├── StudioStep5Result.kt Étape 5 : Rendu final et relais vers l'éditeur
+│       │           │       └── StudioStepper.kt     Indicateur horizontal d'étapes
+│       │           ├── theme/
+│       │           │   ├── Color.kt             Primitives de teintes de base
+│       │           │   ├── ColorCardReference.kt Références colorimétriques ColorChecker
+│       │           │   ├── FontSpec.kt          Contrat typographique (Playfair, Jakarta, Mono)
+│       │           │   ├── Shape.kt             Rayons de courbure standardisés
+│       │           │   ├── SzlColors.kt         Tokens sémantiques étendus (SzlTheme.colors)
+│       │           │   ├── SzlIconSet.kt        Jeu d'icônes sémantiques (SzlTheme.icons)
+│       │           │   ├── Theme.kt             Composant racine StealZaLut_MobileTheme
+│       │           │   ├── Themes.kt            Définition des 4 thèmes (Ambre, Cyan, OLED, Daylight)
+│       │           │   ├── ThemeSpec.kt         Contrat de spécification de thème
+│       │           │   └── Type.kt              Définition des styles Material 3 Typography
 │       │           └── viewmodel/
-│       │               ├── StealZaLutViewModel.kt Façade UDF (< 350 lignes)
-│       │               ├── StealZaLutUiState.kt État immuable (@Immutable)
+│       │               ├── StealZaLutUiState.kt État immuable centralisé (@Immutable)
+│       │               ├── StealZaLutViewModel.kt Façade UDF unique
 │       │               └── delegate/            Délégués spécialisés par domaine
-│       │                   ├── StudioFlowDelegate.kt
-│       │                   ├── GradingPipelineDelegate.kt
-│       │                   ├── EditorSessionDelegate.kt
-│       │                   └── PresetLibraryDelegate.kt
-│       └── test/java/com/stealzalut/mobile/
-│           ├── DesignSystemGuardTest.kt     Test JVM de garde (zéro Color/dp/sp/text en dur)
-│           ├── ThemeContrastTest.kt         Test de conformité contraste WCAG AA sur les 4 thèmes
-│           ├── GradingRelayTest.kt          Test JVM de relais Studio vers Éditeur et gestion d'erreurs
-│           ├── PresetRepositoryTest.kt      Test persistance JSON des presets
-│           └── SavedImageRepositoryTest.kt  Test persistance des images étalonnées
-└── tests/                                   97 tests Pytest (100% verts)
-    ├── test_auto_edit.py
-    ├── test_bridge.py
-    ├── test_color_transfer.py
-    ├── test_colorset_worker.py
-    ├── test_lut_engine.py
-    ├── test_lut_export.py
-    ├── test_pipeline.py
-    └── test_preset_manager.py
+│       │                   ├── EditorLightroomDelegate.kt Moteur de réglages avancés
+│       │                   ├── EditorSessionDelegate.kt  Session et historique d'édition
+│       │                   ├── GradingPipelineDelegate.kt Pipeline colorimétrique Chaquopy
+│       │                   ├── PresetLibraryDelegate.kt   Gestion de la bibliothèque de presets
+│       │                   └── StudioFlowDelegate.kt      Flux du wizard Studio 5 étapes
+│       ├── test/java/com/stealzalut/mobile/
+│       │   ├── data/model/LightroomSerializerTest.kt     Test sérialisation des modèles de retouche
+│       │   ├── data/repository/PresetRepositoryTest.kt  Test persistance JSON des presets
+│       │   ├── data/repository/SavedImageRepositoryTest.kt Test historique des images
+│       │   ├── theme/DesignSystemGuardTest.kt           Test JVM de garde (zéro primitive en dur)
+│       │   ├── theme/ThemeContrastTest.kt               Test conformité contraste WCAG AA
+│       │   ├── ui/viewmodel/GradingRelayTest.kt         Test relais Studio ↔ Éditeur
+│       │   ├── ui/viewmodel/PresetExportTest.kt         Test export de presets
+│       │   └── ui/viewmodel/SafExportIntegrationTest.kt Test flux d'exportation SAF
+│       └── androidTest/java/com/stealzalut/mobile/
+│           ├── bridge/PythonBridgeIntegrationTest.kt    Test JNI Chaquopy sur appareil/émulateur
+│           └── ui/MainColorGradingScreenTest.kt         Test UI instrumenté navigation
+└── tests/                                       99 tests Pytest (100% verts)
+    ├── conftest.py                              Fixtures Pytest partagées
+    ├── test_auto_edit.py                        Tests analyse optique LightCraft
+    ├── test_bridge.py                           Tests passerelle JNI bridge.py
+    ├── test_colorset_worker.py                  Tests génération de palettes de référence
+    ├── test_color_transfer.py                   Tests transport optimal (MKL, MVGD, Reinhard, HM)
+    ├── test_lut_engine.py                       Tests treillis 3D, interpolation et chunking
+    ├── test_lut_export.py                       Tests conformité Adobe .cube et intégrité
+    ├── test_pipeline.py                         Tests pipeline 3 étapes et masques OKLab
+    └── test_preset_manager.py                   Tests persistance v2, CRUD et migration presets
 ```

@@ -4,6 +4,9 @@
 **Auteur :** Antigravity Engine (Senior Android / Imagerie Couleur / UI-UX)  
 **Version de référence :** `StealZaLut_Mobile` master  
 
+> [!NOTE]
+> **Snapshot historique – ne reflète plus l'état actuel (novembre 2026)**. Les problèmes identifiés ci-dessous (arborescence, monolithe StealZaLutViewModel, ColorGradingViewModel mort, etc.) ont été résolus lors des refactorings ultérieurs. Consulter `ARCHITECTURE.md` pour l'état actuel.  
+
 ---
 
 ## 1. Arborescence Réelle vs `ARCHITECTURE.md §7`

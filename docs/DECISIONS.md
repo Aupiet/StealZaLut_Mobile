@@ -6,6 +6,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-01 : Design System Multi-Thèmes & Rôles Sémantiques Étendus
 
+- **Statut :** [Acceptée]
 - **Contexte :** L'ancien système de couleurs nommait les teintes par couleur brute (`AccentAmber`, `AccentCyan`), rendant impossible un basculement de thème cohérent. Un seul thème sombre existait, le paramètre `darkTheme` était ignoré, et un risque de flash blanc existait au démarrage.
 - **Décision :**
   1. Séparation stricte entre données de référence physique (mire ColorChecker dans `ColorCardReference.kt`) et jetons d'interface.
@@ -18,6 +19,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-02 : Décomposition des Monolithes par Domaine et Délégués
 
+- **Statut :** [Acceptée]
 - **Contexte :** Quatre fichiers dépassaient 1 000 lignes (`StealZaLutViewModel.kt` ~2 022 l., `ApplyThemeScreen.kt` ~1 770 l., `StandaloneEditorScreen.kt` ~1 150 l., `PythonBridgeRepository.kt` ~1 090 l.).
 - **Décision :**
   1. `ApplyThemeScreen.kt` (196 lignes) orchestre 7 sous-composants dédiés dans `ui/screens/studio/` (`StudioStepper`, `StudioStep1Source` à `StudioStep5Result`, `StudioComponents`).
@@ -29,6 +31,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-03 : Ergonomie Tactile Pro & Comparateur Triple Mode
 
+- **Statut :** [Acceptée]
 - **Contexte :** La comparaison d'image était limitée et l'éditeur ne permettait pas de revenir en arrière facilement sur mobile.
 - **Décision :**
   1. `DoubleViewComparison.kt` unifié supporte désormais 3 modes d'inspection :
@@ -43,6 +46,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-04 : Schéma de Presets v2, Rétro-compatibilité & CRUD Étendu
 
+- **Statut :** [Acceptée]
 - **Contexte :** Les fichiers `.szlpreset` n'étaient pas versionnés et risquaient de planter si des paramètres manquaient.
 - **Décision :**
   1. Spécification de `SCHEMA_VERSION = 2` dans `preset_manager.py`.
@@ -53,6 +57,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-05 : Tiling Mémoire Anti-OOM pour Export HD (> 12 MP) & Préservation EXIF
 
+- **Statut :** [Acceptée]
 - **Contexte :** L'export d'images haute résolution (12 MP à 100 MP) générait des allocations float32 volumineuses risquant de déclencher un Out-Of-Memory (OOM) sur mobile. Les métadonnées EXIF (orientation, date, appareil) étaient également perdues.
 - **Décision :**
   1. `apply_lut` découpe automatiquement le traitement en tranches de rangées contiguës plafonnées à 2 Mpx (`LUT_CHUNK_PIXEL_LIMIT`), limitant la mémoire vive crête à $< 100\text{ Mo}$.
@@ -63,6 +68,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-06 : Contrat d'Export Unique & Vérification d'Intégrité des 3D LUT (.CUBE)
 
+- **Statut :** [Acceptée]
 - **Contexte :** Lors de l'exportation d'un fichier `.cube`, le sélecteur Android SAF (`CreateDocument`) pré-créait un document vide (0 octet). La méthode `saveExportedCubeToUri` utilisait une référence privée `pendingExportCubePath` désynchronisée, et `openOutputStream(uri)?.use {}` ignorait silencieusement un flux nul sans vérifier la taille écrite.
 - **Décision :**
   1. Modèle d'export unique et universel `PendingExport(sourcePath, suggestedFileName, exportType)` intégré dans `StealZaLutUiState`, alimenté par tous les points d'export (Studio Étape 5, Éditeur Autonome, Presets de Bibliothèque).
@@ -74,6 +80,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-07 : Décodage Biaisé/Proxy Anti-Crash & Isolation Mémoire (Palettes & Auto-Edit)
 
+- **Statut :** [Acceptée]
 - **Contexte :** L'extraction de palettes sur des clichés très haute résolution (50+ MP) provoquait des crashs natifs non interceptables par `try/catch` lors du décodage bitmap pleine résolution en mémoire vive (multiples copies volumineuses de dizaines de mégaoctets avant sous-échantillonnage).
 - **Décision :**
   1. Implémentation de `load_proxy_image(path, max_dim)` dans `stealzalut/utils/image_io.py` exploitant la méthode native de Pillow `Image.draft("RGB", (max_dim, max_dim))` pour décoder immédiatement à basse résolution sans instancier le tenseur complet.
@@ -85,6 +92,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-08 : Refonte du Flux Studio ↔ Éditeur & Clarification des Rôles (WYSIWYG)
 
+- **Statut :** [Acceptée]
 - **Contexte :** Le Studio contenait des doublons de retouche (bouton Auto-Edit aux étapes 1 et 3, panneau d'édition rétractable inline à l'étape 5) qui parasitaient l'étalonnage et risquaient de violer la règle d'or WYSIWYG si les ajustements d'exposition n'étaient pas répercutés dans la 3D LUT.
 - **Décision :**
   1. **Spécialisation nette :** Le Studio est dédié à 100 % au transfert colorimétrique par 3D LUT. L'éditeur autonome est dédié à la retouche photographique fine et aux finitions de style.
@@ -98,6 +106,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-09 : Ergonomie de l'Éditeur Autonome & Single Global Reset avec Undo
 
+- **Statut :** [Acceptée]
 - **Contexte :** L'éditeur autonome comportait des boutons de réinitialisation multiples et ambigus (bouton "Reset" dans le bandeau Auto-Edit en haut, bouton dans la barre basse), une zone d'aperçu à hauteur fixe (260 dp) qui écrasait les curseurs sur petits écrans, et un risque de superposition avec la barre gestuelle Android.
 - **Décision :**
   1. Suppression du bouton de réinitialisation redondant du bandeau Auto-Edit pour unifier l'action sur un bouton unique « Réinitialiser tout ».
@@ -111,6 +120,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-10 : Refonte UI/UX Complète, Ergonomie Zero-Scroll & Stabilisation Profil
 
+- **Statut :** [Acceptée]
 - **Contexte :**
   1. La page Profil provoquait un crash immédiat au lancement à cause d'une erreur de formatage (`IllegalFormatConversionException`) dans les pastilles de statistiques (`R.string.profile_tab_photos` attendant `%1$d` et recevant `""`).
   2. L'éditeur autonome nécessitait trop de défilement vertical, particulièrement dans les panneaux Courbe de tonalité (`EditorToneCurvePanel`) et Étalonnage des couleurs (`EditorColorGradingPanel`), masquant la photo en cours d'édition.
@@ -129,6 +139,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ## ADR-11 : Sauvegarde Session & BackHandler, Zéro Défilement Intégral, Toolbox Unifiée et Ergonomie Tactile
 
+- **Statut :** [Acceptée]
 - **Contexte :**
   1. Lors de l'appui sur le bouton Retour physique/gestuel Android, l'application se fermait brutalement sans sauvegarder l'édition photo en cours.
   2. Plusieurs sous-menus de l'éditeur (`ColorMixer`, `Detail`, `Effects`, `Calibration`) utilisaient encore des listes verticales à défilement (`verticalScroll`) réduisant la visibilité du canevas photo.
@@ -147,4 +158,23 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   5. **Boîte à Outils Haut-Gauche :** Déplacement d'Auto-Edit (IA) et de la Bibliothèque de Presets dans `EditorActionsDropdownToolbar` en haut à gauche, avec ouverture des presets via `ModalBottomSheet` et libération de la barre inférieure pour les 7 outils de retouche purs.
   6. **Courbe de Tonalités Tactile :** Création de point uniquement sur appui long (`onLongPress`), déplacement du point le plus proche sur simple toucher/glissement, et suppression sur double-tap.
   7. **Page Palettes Compacte Single-Page :** Prévisualisation compacte (`ImagePickerCollapsedHeight` 120dp), masquage du bandeau d'introduction lorsque l'image est active, nuanciers avec Hex et % empilés verticalement sans chevauchement, garantissant un affichage 100% visible sans scroll.
+
+---
+
+## ADR-12 : Nettoyage Complet du Code Mort, Consolidation des Ressources et Synchronisation de la Documentation
+
+- **Statut :** [Acceptée]
+- **Date :** 9 novembre 2026
+- **Contexte :**
+  1. Le dépôt accumulait des fichiers temporaires résiduels (`scratch/` avec 44 scripts jetables, 16 scripts Figma/avant-après dans `scripts/`, fichiers `.idea/` versionnés dans git).
+  2. Le code Kotlin contenait 11 fichiers de composants obsolètes jamais référencés (`MetricsInfoScreen.kt`, `SettingsViewModel.kt`, `IntensitySlider.kt`, `SzlBottomActionBar.kt`, `SzlSectionHeader.kt`, `EditorCalibrationTab.kt`, `EditorColorTab.kt`, `EditorLightTab.kt`, `EditorEffectsTab.kt`, `EditorDevelopPanelsList.kt`, `RealtimePreviewEngine.kt`), 6 méthodes mortes dans `PythonBridgeRepository.kt`, et 46 constantes inutilisées dans `AppDimens.kt`.
+  3. Le code Python contenait un module mort non référencé (`paths.py`), 4 fonctions et sous-routines de transfert non exploitées en production (`to_float64`, `apply_intensity`, `luminance_binned_chroma_transfer`, `_numpy_statistical_transfer`), 17 constantes mortes dans `config.py`, et de nombreux imports inutilisés.
+  4. Les ressources de chaînes contenaient 217 clés mortes dupliquées à travers les catalogues multilingues (`values/strings.xml`, `values-fr/strings.xml`, `values-es/strings.xml`).
+  5. La documentation affichait des contradictions (badges Chaquopy 16.1 vs 17.2, 97 vs 91 vs 99 tests, allégations HaldCLUT inexistantes, arborescence désynchronisée).
+- **Décision :**
+  1. **Purge des fichiers parasites (Phase 1) :** Suppression de `scratch/`, nettoyage de `scripts/` (conservation de `check_guard_violations.py` avec `scripts/README.md`), désindexation de `.idea/` et enrichissement de `.gitignore`.
+  2. **Suppression du code mort Kotlin (Phase 2) :** Suppression des 11 composants morts, des 6 méthodes mortes de `PythonBridgeRepository`, des 46 constantes de `AppDimens`, et nettoyage de ~98 imports inutilisés.
+  3. **Suppression du code mort Python (Phase 3) :** Suppression de `paths.py`, des 4 fonctions non appelées en prod et de leurs 6 tests unitaires associés, nettoyage de 17 constantes de `config.py` et de tous les imports inutilisés (0 avertissement `pyflakes`).
+  4. **Synchronisation stricte des ressources Android (Phase 4) :** Élimination synchronisée de 217 clés de chaînes dans les 3 fichiers XML de langues (maintenus à 478 lignes identiques), correction des avertissements lint (`LocalContextGetResourceValueCall`).
+  5. **Qualité, formatage et audit de documentation (Phases 5 & 6) :** Reformatage via `ruff`, mise à jour de la documentation (`README.md`, `ARCHITECTURE.md`, `docs/AUDIT.md`, `docs/DECISIONS.md`, `docs/design-system.md`) pour refléter la réalité exacte du code (99 tests Python, 28 tests Kotlin, 0 régression).
 

@@ -3,13 +3,13 @@
 [![Android API 24+](https://img.shields.io/badge/Android-API%2024%2B%20(Nougat%20%E2%86%92%2015)-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20(Material%203)-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2016.1-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
+[![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2017.2.0-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
-[![Tests: 97 Pytest](https://img.shields.io/badge/Tests-97%20Pytest%20%2B%20JVM%20Guard-brightgreen.svg)](tests/)
+[![Tests: 99 Pytest + 28 Kotlin](https://img.shields.io/badge/Tests-99%20Pytest%20%2B%2028%20Kotlin-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Architecture: ARCHITECTURE.md](https://img.shields.io/badge/Doc-ARCHITECTURE.md-blue.svg)](ARCHITECTURE.md)
 
-> **Application mobile Android 100% hors-ligne d'étalonnage cinématographique et d'édition photo studio, avec pipeline non-destructif en 3 étapes, Auto-Edit intelligent, gestionnaire de presets (`.szlpreset`) et export Adobe 3D LUT (`.cube`) / HaldCLUT de qualité professionnelle.**
+> **Application mobile Android 100% hors-ligne d'étalonnage cinématographique et d'édition photo studio, avec pipeline non-destructif en 3 étapes, Auto-Edit intelligent, gestionnaire de presets (`.szlpreset`) et export Adobe 3D LUT (`.cube`) de qualité professionnelle.**
 
 ---
 
@@ -68,7 +68,7 @@ graph LR
 ### 2.2 Relais Studio ↔ Éditeur & Spécialisation des Rôles (Règle WYSIWYG)
 
 Pour garantir une expérience professionnelle sans ambiguïté et un respect absolu de la règle d'or WYSIWYG :
-- **Studio (Étalonnage Pur)** : Se concentre à 100% sur le transfert colorimétrique par 3D LUT (`HM_MKL_HM`, `MKL`, `MVGD`, `Reinhard`, `HM`). Les étapes 1 et 3 sont épurées de tout doublon d'édition, et l'étape 3 propose un **viewport d'aperçu compact épinglé en haut de l'écran** avec comparateur rideau interactif (`SPLIT_WIPE`), restant visible pendant le défilement de tous les curseurs de réglage sans clignotement. L'étape 2 affiche des **miniatures d'aperçu des presets** (`StudioPresetCard`).
+- **Studio (Étalonnage Pur)** : Se concentre à 100% sur le transfert colorimétrique par 3D LUT (`HM_MKL_HM`, `MKL`, `MVGD`, `Reinhard`, `HM`). Les étapes 1 et 3 sont épurées de tout doublon d'édition, et l'étape 3 propose un **viewport d'aperçu compact épinglé en haut de l'écran** avec comparateur rideau interactif (`SPLIT_WIPE`), restant visible pendant le défilement de tous les curseurs de réglage sans clignotement. L'étape 2 affiche des **miniatures d'aperçu des styles** (`ThemeCard`).
 - **Bouton « Retoucher dans l'éditeur » (Étape 5)** : Permet de basculer instantanément le résultat de l'étalonnage Studio vers l'éditeur autonome en exportant la 3D LUT en cache (`editorCustomLutPath`). L'éditeur s'ouvre avec la photo source, la LUT préchargée, tous les curseurs à zéro et un affichage instantané sans délai de recalcul (parité WYSIWYG prouvée avec $\Delta \le 1$ niveau 8 bits).
 - **Auto-Edit « LightCraft » dans l'Éditeur** : L'analyse optique logarithmique Rec. 2020 calibrée sur carte 18% est directement intégrée dans l'éditeur autonome, ajustant dynamiquement l'exposition, le contraste, les ombres, les hautes lumières et la vibrance.
 
@@ -144,13 +144,13 @@ graph TD
         BridgeRepo["PythonBridgeRepository.kt\n(Façade Chaquopy thread-safe)"]
     end
 
-    subgraph CorePython ["Moteur Vectorisé Python (Chaquopy 3.10)"]
+    subgraph CorePython ["Moteur Vectorisé Python (Chaquopy 17.2.0 / Python 3.10)"]
         Bridge["bridge.py (Points d'entrée)"]
         Pipeline["core/pipeline.py (Pipeline 3 Étapes)"]
         ColorSpace["core/color_space.py (sRGB / OKLab / Linear)"]
         ColorTransfer["core/color_transfer.py (MKL, MVGD, Reinhard, HM)"]
         LutEngine["core/lut_engine.py (Lattice 3D, Trilinear)"]
-        LutExport["core/lut_export.py (Adobe .cube / HaldCLUT)"]
+        LutExport["core/lut_export.py (Adobe .cube)"]
         AutoEdit["core/auto_edit.py (LightCraft Tone Mapping)"]
         PresetManager["core/preset_manager.py (.szlpreset CRUD)"]
     end
@@ -172,20 +172,46 @@ graph TD
 - **Python** : 3.10 ou supérieur (avec `numpy`, `scipy`, `pillow`, `pytest`)
 
 ### Exécuter les tests unitaires Python (Core mathématique)
+**PowerShell (Windows) :**
 ```powershell
 $env:PYTHONPATH="app/src/main/python"
-pytest tests/
+pytest tests/ -q
 ```
-> **Résultat attendu :** 91 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF et persistance presets v2).
+**Bash (Linux / macOS) :**
+```bash
+PYTHONPATH=app/src/main/python pytest tests/ -q
+```
+> **Résultat attendu :** 99 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF et persistance presets v2).
 
 ### Exécuter les tests unitaires Android (Kotlin JVM)
+**PowerShell (Windows) :**
 ```powershell
 .\gradlew.bat testDebugUnitTest
 ```
+**Bash (Linux / macOS) :**
+```bash
+./gradlew testDebugUnitTest
+```
+> **Résultat attendu :** 26 tests unitaires JVM passés avec succès (garde du Design System, contrastes WCAG AA, relais Studio ↔ Éditeur, persistance JSON et exports SAF). L'application comprend également 2 tests instrumentés (`androidTest`) pour un total de 28 tests Kotlin.
+
+### Lancer l'analyse statique Android Lint
+**PowerShell (Windows) :**
+```powershell
+.\gradlew.bat lintDebug
+```
+**Bash (Linux / macOS) :**
+```bash
+./gradlew lintDebug
+```
 
 ### Compiler le projet Android
+**PowerShell (Windows) :**
 ```powershell
 .\gradlew.bat compileDebugKotlin
+```
+**Bash (Linux / macOS) :**
+```bash
+./gradlew compileDebugKotlin
 ```
 
 ---
@@ -193,3 +219,5 @@ pytest tests/
 ## 5. Licence
 Projet sous licence [MIT](LICENSE).
 Inspiré par le projet original [StealZaLUT Desktop](https://github.com/whoismathieu/stealzalut.git) par Mathieu.
+
+*Dernière mise à jour : 9 novembre 2026*

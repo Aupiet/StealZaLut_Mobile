@@ -1,7 +1,6 @@
 <resources>
     <!-- Application Identity -->
     <string name="app_name">StealZaLUT Mobile</string>
-    <string name="app_subtitle">Talonaje sin conexión &amp; 3D LUT</string>
     <string name="app_top_bar_title">StealZaLUT Mobile</string>
 
     <!-- Navigation Destinations -->
@@ -69,53 +68,32 @@
     <string name="wizard_step_3_btn_run">Generar Render LUT (4/5) →</string>
     <string name="wizard_step_3_preview_title">Vista Previa en Vivo (WYSIWYG)</string>
     <string name="wizard_step_3_computing_badge">Procesando…</string>
-    <string name="wizard_step_3_independent_params_title">Controles de Parámetros Independientes</string>
-    <string name="param_intensity_title">Fuerza Global de Transferencia</string>
-    <string name="param_intensity_desc">Controla la intensidad general del estilo (LUT).</string>
-    <string name="param_preserve_lum_title">Preservación de Luminancia</string>
-    <string name="param_preserve_lum_desc">Conserva la exposición original de la foto fuente (CIE LAB).</string>
     <string name="param_skin_prot_title">Protección de Tonos de Piel</string>
-    <string name="param_skin_prot_desc">Mantiene el aspecto natural de rostros y piel humana.</string>
     <string name="param_neutral_lock_title">Bloqueo de Eje Neutro</string>
-    <string name="param_neutral_lock_desc">Elimina dominantes en negros profundos y blancos puros.</string>
     <string name="param_smooth_title">Suavizado Espacial 3D</string>
-    <string name="param_smooth_desc">Filtro 3D que previene el bandeado y posterización.</string>
 
     <string name="wizard_step_4_title">Generación en Curso</string>
     <string name="wizard_step_4_subtitle">Cálculo colorimétrico de alta fidelidad de 64 bits</string>
     <string name="wizard_step_4_stage_1">Paso 1/3: Analizando distribuciones RGB...</string>
     <string name="wizard_step_4_stage_2">Paso 2/3: Calculando matriz de covarianza &amp; alineación...</string>
     <string name="wizard_step_4_stage_3">Paso 3/3: Finalizando matriz de transferencia...</string>
-    <string name="wizard_step_4_tech_badge">Motor Python 3.10 • Float32</string>
 
     <string name="wizard_step_5_title">Obra Maestra Colorimétrica</string>
     <string name="wizard_step_5_subtitle">Firma Blade Runner 2049 aplicada</string>
-    <string name="wizard_step_5_autosave_badge">Mezcla de opacidad GPU instantánea</string>
     <string name="wizard_step_5_btn_save_gallery">Guardar Foto en la Galería</string>
-    <string name="wizard_step_5_exporting_image">Guardando...</string>
-    <string name="wizard_step_5_exporting_cube">Exportando LUT...</string>
-    <string name="wizard_step_5_saved_badge">Foto guardada en la Galería de Android (Pictures/StealZaLUT)</string>
     <string name="wizard_step_5_btn_save_theme">Guardar Estilo como Preset</string>
     <string name="wizard_step_5_btn_export_cube">Guardar archivo (.CUBE)</string>
-    <string name="wizard_step_5_btn_share_cube">Compartir 3D LUT (.CUBE)</string>
-    <string name="wizard_step_5_btn_reset">Finalizar</string>
 
     <!-- Intensity Slider -->
-    <string name="intensity_title">Intensidad (Mezcla GPU)</string>
-    <string name="intensity_slider_desc">Control deslizante de intensidad</string>
     <string name="intensity_decrease_desc">Disminuir intensidad en 5 por ciento</string>
     <string name="intensity_increase_desc">Aumentar intensidad en 5 por ciento</string>
 
     <!-- Palette Swatches & Accessibility -->
     <string name="swatch_a11y_format">Color %1$d de %2$d, código hexadecimal %3$s, toque para copiar</string>
     <string name="swatch_copy_label">Copiar código hexadecimal</string>
-    <string name="swatch_copied_feedback">Color hexadecimal %1$s copiado al portapapeles</string>
 
     <!-- Comparison View -->
     <string name="comparison_title">Comparación Interactiva</string>
-    <string name="comparison_side_by_side">Lado a Lado</string>
-    <string name="comparison_split_wipe">Cortina Interactiva</string>
-    <string name="comparison_hold_to_compare">Mantener pulsado</string>
     <string name="comparison_original_label">ORIGINAL</string>
     <string name="comparison_lut_label">TALONADO</string>
     <string name="comparison_handle_desc">Tirador divisor de cortina</string>
@@ -131,27 +109,21 @@
     <string name="palettes_swatches_title">Colores dominantes</string>
     <string name="palettes_saved_section_title">Presets Guardados (%1$d)</string>
     <string name="palettes_no_presets">Sin presets guardados aún.\nExtrae una paleta para enriquecer tu biblioteca.</string>
-    <string name="palettes_btn_apply">Usar en Studio</string>
-    <string name="palettes_btn_delete">Eliminar Preset</string>
     <string name="palettes_btn_export_cube">Compartir 3D LUT (.CUBE)</string>
 
     <!-- Profile & Library Screen -->
     <string name="profile_header_title">Mi Biblioteca &amp; Perfil</string>
-    <string name="profile_header_desc">Explora tus fotos tratadas, temas de color y exporta 3D LUTs para DaVinci Resolve o Premiere Pro.</string>
     <string name="profile_tab_photos">Fotos (%1$d)</string>
     <string name="profile_tab_themes">Temas &amp; Looks (%1$d)</string>
     <string name="profile_no_photos_title">No hay fotos guardadas</string>
     <string name="profile_no_photos_desc">Exporta tus fotos desde el Studio para crear tu galería personal.</string>
     <string name="profile_no_themes_title">No hay temas guardados</string>
     <string name="profile_no_themes_desc">Guarda estilos de color desde el Studio o extrae paletas para reutilizarlos en cualquier momento.</string>
-    <string name="profile_btn_share">Compartir</string>
     <string name="profile_btn_delete">Eliminar</string>
-    <string name="profile_btn_apply_theme">Usar en Studio</string>
     <string name="profile_btn_export_cube">Exportar .CUBE</string>
 
     <!-- Settings Screen -->
     <string name="settings_header_title">Preferencias de la Aplicación</string>
-    <string name="settings_header_desc">Configura los parámetros del motor Python, idioma y almacenamiento en caché.</string>
     <string name="settings_language_title">Idioma de la Aplicación</string>
     <string name="settings_lang_en">English (Default)</string>
     <string name="settings_lang_fr">Français</string>
@@ -160,17 +132,11 @@
     <string name="settings_default_lut_size">Tamaño de Rejilla 3D LUT Predeterminado</string>
     <string name="settings_proxy_dim">Resolución Proxy de Análisis</string>
     <string name="settings_export_dim">Resolución de Exportación Directa</string>
-    <string name="export_dim_1080p">1080p</string>
-    <string name="export_dim_2k">2K (2048px)</string>
-    <string name="export_dim_4k">4K (3840px)</string>
-    <string name="export_dim_native">Nativa</string>
     <string name="settings_export_format">Formato de Exportación de Imagen</string>
     <string name="settings_export_quality">Calidad JPEG (%1$d%%)</string>
-    <string name="settings_quality_slider_desc">Calidad JPEG</string>
     <string name="settings_cache_title">Almacenamiento en Caché Temporal</string>
     <string name="settings_cache_size">Espacio usado: %1$.1f MB</string>
     <string name="settings_btn_clear_cache">Vaciar Caché Temporal</string>
-    <string name="settings_btn_save">Guardar Ajustes</string>
 
     <!-- Dialogs -->
     <string name="dialog_save_theme_title">Guardar Preset</string>
@@ -182,162 +148,54 @@
 
     <!-- Status & Feedback Messages -->
     <string name="msg_cache_cleared">Caché de vista previa vaciado con éxito.</string>
-    <string name="msg_theme_saved">Preset guardado en tu biblioteca.</string>
-    <string name="msg_cube_exported">3D LUT (.cube) exportado con éxito.</string>
-    <string name="msg_cube_saved_downloads">LUT guardada en Descargas (StealZaLUT).</string>
     <string name="msg_image_saved">Foto guardada en la Galería (Pictures/StealZaLUT).</string>
-    <string name="msg_theme_deleted">Preset eliminado.</string>
 
     <!-- Missing step strings -->
-    <string name="wizard_step_3_exporting_cube">Generando LUT .CUBE…</string>
 
     <!-- Info & Metrics Screen -->
-    <string name="info_screen_title">Guía y Métricas de Color</string>
-    <string name="info_screen_subtitle">Comprende el etalonaje de un vistazo</string>
-    <string name="info_screen_btn_close">¡Entendido!</string>
-    <string name="info_ideal_for_prefix">Ideal para: </string>
-    <string name="info_section_methods_title">Métodos de transferencia</string>
-    <string name="info_section_lut_size_title">Tamaños de cuadrícula 3D LUT</string>
-    <string name="info_section_controls_title">Controles de color y exposición</string>
-    <string name="info_section_palette_title">ADN Colorimétrico y Dominancia</string>
 
-    <string name="info_method_reinhard_title">Reinhard CIE LAB</string>
-    <string name="info_method_reinhard_catch">El equilibrador rápido: ajusta promedios y contrastes fluidamente.</string>
-    <string name="info_method_reinhard_ideal">Tonos naturales y escenas homogéneas</string>
 
-    <string name="info_method_hm_title">Histogram Matching (HM)</string>
-    <string name="info_method_hm_catch">El camaleón fiel: reproduce la distribución exacta de colores.</string>
-    <string name="info_method_hm_ideal">Estilos contrastados y cielos vivos</string>
 
-    <string name="info_method_mkl_title">Monge-Kantorovitch (MKL)</string>
-    <string name="info_method_mkl_catch">El cineasta de los matices: transporta sutilmente las correlaciones de color.</string>
-    <string name="info_method_mkl_ideal">Degradados suaves y retratos delicados</string>
 
-    <string name="info_method_hybrid_title">HM-MKL-HM Encadenado (Pro)</string>
-    <string name="info_method_hybrid_catch">La obra maestra híbrida: alianza de fidelidad global y fineza local.</string>
-    <string name="info_method_hybrid_ideal">Acabado cinematográfico profesional (Recomendado)</string>
 
-    <string name="info_lut_17_title">17³ (4.913 nodos)</string>
-    <string name="info_lut_17_catch">Vista previa relámpago: cuadrícula ultra ligera para respuesta inmediata.</string>
-    <string name="info_lut_17_ideal">Vista previa ultra rápida en móvil</string>
 
-    <string name="info_lut_33_title">33³ (35.937 nodos)</string>
-    <string name="info_lut_33_catch">Estándar Pro vídeo: equilibrio perfecto entre fidelidad y tamaño.</string>
-    <string name="info_lut_33_ideal">Estándar Pro vídeo y DaVinci Resolve</string>
 
-    <string name="info_lut_65_title">64³ (262 144 nodos)</string>
-    <string name="info_lut_65_catch">Precisión quirúrgica Adobe: malla ultra fina 64³ para retoque fotográfico sin compromisos.</string>
-    <string name="info_lut_65_ideal">Mastering fotográfico de alta fidelidad</string>
 
-    <string name="info_control_intensity_title" formatted="false">Intensidad (0% a 100%)</string>
-    <string name="info_control_intensity_catch">La dosis creativa: modula el efecto de sutil a radical.</string>
-    <string name="info_control_intensity_ideal">Dosificación estética personalizada</string>
 
-    <string name="info_control_lum_title">Preservación de Luminancia</string>
-    <string name="info_control_lum_catch">El guardián de la exposición: preserva el brillo original sin alterar la foto.</string>
-    <string name="info_control_lum_ideal">Evitar sobreexposición o subexposición</string>
 
-    <string name="info_palette_title">Paleta y ADN Colorimétrico</string>
-    <string name="info_palette_catch">La huella del colorista: aísla los tonos clave y su peso visual.</string>
-    <string name="info_palette_ideal">Inspiración de estilos y reutilización</string>
 
-    <string name="settings_guide_card_title">Guía de Métricas y Algoritmos</string>
-    <string name="settings_guide_card_desc">Aprende cómo funcionan los métodos de transferencia y tamaños de LUT</string>
 
     <!-- Common UI Labels -->
-    <string name="common_close">Cerrar</string>
     <string name="common_save">Guardar</string>
     <string name="common_cancel">Cancelar</string>
-    <string name="common_share">Compartir</string>
     <string name="share_cube_title">Compartir LUT (.cube)</string>
     <string name="common_delete">Eliminar</string>
-    <string name="common_retry">Reintentar</string>
-    <string name="common_continue">Continuar</string>
-    <string name="format_percentage">%1$d%%</string>
 
     <!-- LightCraft Auto Edit -->
-    <string name="btn_auto_edit">✨ Ajuste Auto</string>
-    <string name="auto_edit_desc">Auto Edit (Calibrado LightCraft: exposición, contraste, altas luces, sombras, intensidad)</string>
-    <string name="auto_edit_badge">Auto Edit (LightCraft)</string>
-    <string name="auto_edit_exposure_label">Exposición: %1$+.2f EV</string>
-    <string name="auto_edit_contrast_label">Contraste: +68</string>
-    <string name="auto_edit_highlights_label">Altas luces: -66</string>
-    <string name="auto_edit_shadows_label">Sombras: +52</string>
-    <string name="auto_edit_vibrance_label">Intensidad: +30</string>
-    <string name="auto_edit_details">Exp: %1$+.2f EV | Contraste: +68 | Altas luces: -66 | Sombras: +52 | Intensidad: +30</string>
 
     <!-- LightCraft Edit Feature (Step 5) -->
-    <string name="btn_edit_image">Editar imagen</string>
-    <string name="btn_close_edit">Cerrar edición</string>
-    <string name="edit_panel_title">Edición (LightCraft)</string>
-    <string name="btn_reset_edits">Restablecer</string>
-    <string name="edit_section_light">Luz</string>
-    <string name="edit_section_color">Color</string>
-    <string name="edit_param_exposure">Exposición</string>
-    <string name="edit_param_contrast">Contraste</string>
-    <string name="edit_param_highlights">Altas luces</string>
-    <string name="edit_param_shadows">Sombras</string>
-    <string name="edit_param_whites">Blancos</string>
-    <string name="edit_param_blacks">Negros</string>
-    <string name="edit_param_vibrance">Intensidad</string>
-    <string name="edit_param_saturation">Saturación</string>
-    <string name="edit_active_badge">Editado</string>
 
     <!-- Mode Éditeur Pur & 3-Stage Pipeline Strings -->
     <string name="nav_editor">Editor</string>
     <string name="dest_subtitle_editor">Estudio Fotográfico Dedicado &amp; Presets</string>
     <string name="editor_title">Estudio Fotográfico</string>
-    <string name="editor_subtitle">Gradación no destructiva y creación de presets</string>
-    <string name="editor_select_image">Elegir una foto</string>
     <string name="editor_change_image">Cambiar foto</string>
-    <string name="editor_tab_presets">Presets y LUTs</string>
-    <string name="editor_tab_calibrate">Calibrar LUT</string>
-    <string name="editor_tab_light">Luz</string>
-    <string name="editor_tab_color">Color</string>
-    <string name="editor_tab_effects">Efectos</string>
     <string name="editor_import_cube">Importar .CUBE</string>
     <string name="editor_save_preset">Guardar Preset</string>
     <string name="editor_export_hd">Exportar Foto HD</string>
     <string name="editor_export_cube">Compartir 3D LUT (.CUBE)</string>
     <string name="editor_hold_compare">Mantener para comparar</string>
-    <string name="editor_double_tap_reset">Doble toque para restablecer control</string>
     <string name="editor_no_presets">No hay presets guardados. Crea uno o importa un archivo .CUBE.</string>
-    <string name="editor_active_lut_badge">LUT Activa</string>
     <string name="editor_no_lut_badge">Sin LUT base</string>
 
     <!-- Stage 2 Sliders -->
-    <string name="param_spatial_3d_title">Suavizado Espacial 3D</string>
-    <string name="param_spatial_3d_desc">Suaviza los nodos de la cuadrícula 3D para evitar bandas de color.</string>
-    <string name="param_luma_lock_title">Bloqueo de Luminancia</string>
-    <string name="param_luma_lock_desc">Fija la luminancia en la estructura original de la foto.</string>
-    <string name="param_neutral_axis_lock_title">Bloqueo de Eje Neutro</string>
-    <string name="param_neutral_axis_lock_desc">Protege grises, blancos y negros puros contra tintes parásitos.</string>
-    <string name="param_skin_tone_lock_title">Protección de Tonos de Piel</string>
-    <string name="param_skin_tone_lock_desc">Preserva el aspecto natural de la piel humana mediante OKLab.</string>
-    <string name="param_extremes_rolloff_title">Protección de Extremos</string>
-    <string name="param_extremes_rolloff_desc">Protege sombras profundas y altas luces especulares.</string>
-    <string name="param_global_intensity_title">Intensidad del Filtro</string>
-    <string name="param_global_intensity_desc">Controla la potencia global del filtro aplicado.</string>
 
     <!-- Stage 3 Sliders -->
-    <string name="param_temperature_title">Temperatura</string>
-    <string name="param_temperature_desc">Balance de blancos: más cálido o más frío.</string>
-    <string name="param_tint_title">Matiz</string>
-    <string name="param_tint_desc">Equilibrio entre verde y magenta.</string>
-    <string name="param_clarity_title">Claridad</string>
-    <string name="param_clarity_desc">Mejora el contraste local en medios tonos.</string>
-    <string name="param_sharpen_title">Enfoque</string>
-    <string name="param_sharpen_desc">Acentúa detalles finos y contornos.</string>
-    <string name="param_grain_title">Grano de Película</string>
-    <string name="param_grain_desc">Añade textura de película fotográfica analógica.</string>
 
     <!-- Preset Dialog -->
     <string name="dialog_save_preset_title">Guardar Preset de Edición</string>
     <string name="dialog_preset_name_label">Nombre del Preset</string>
     <string name="dialog_preset_name_placeholder">ej. Vintage Oro 35mm</string>
-    <string name="dialog_preset_saved">¡Preset guardado con éxito!</string>
-    <string name="dialog_preset_applied">Preset aplicado: %1$s</string>
-    <string name="dialog_preset_deleted">Preset eliminado.</string>
 
     <!-- Temas del Design System -->
     <string name="theme_amber_noir">Ámbar Noir (Por defecto)</string>
@@ -346,9 +204,6 @@
     <string name="theme_daylight">Daylight Claro</string>
     <string name="theme_system_default">Predeterminado del sistema</string>
     <string name="theme_material_you">Colores dinámicos (Material You)</string>
-    <string name="settings_section_appearance">Apariencia y Tema</string>
-    <string name="settings_theme_label">Tema Colorimétrico</string>
-    <string name="settings_theme_desc">Selecciona la atmósfera visual del estudio</string>
     <string name="settings_developer_mode_title">Modo Desarrollador</string>
     <string name="settings_developer_mode_desc">Mostrar tiempos de ejecución internos de Chaquopy</string>
     <string name="settings_max_export_native">Original (Resolución Completa)</string>
@@ -363,15 +218,9 @@
     <string name="editor_btn_reset_all">Restablecer todo</string>
     <string name="msg_edits_reset">Se restablecieron todos los ajustes</string>
     <string name="editor_compare_original_badge">ORIGINAL (Antes)</string>
-    <string name="editor_actions_export">Exportar</string>
-    <string name="editor_export_photo">Foto HD</string>
-    <string name="editor_export_options_title">Opciones de Exportación</string>
     <string name="editor_actions_menu">Acciones</string>
-    <string name="editor_tab_presets_desc">Presets y LUTs</string>
     <string name="common_undo">Deshacer</string>
     <string name="common_redo">Rehacer</string>
-    <string name="common_rename">Renombrar</string>
-    <string name="common_duplicate">Duplicar</string>
     <string name="preset_default_name_format">Estilo %1$s</string>
 
     <!-- Mensajes de Feedback -->
@@ -384,11 +233,8 @@
     <string name="msg_preset_deleted">Ajuste eliminado.</string>
     <string name="msg_photo_deleted">Foto eliminada de la biblioteca.</string>
     <string name="msg_lut_cube_saved">¡LUT .cube guardada con éxito!</string>
-    <string name="msg_lut_cube_exported">¡LUT 3D (.cube) exportada con éxito!</string>
     <string name="msg_editing_preset_saved">¡Ajuste de edición guardado!</string>
     <string name="msg_preset_applied">Ajuste aplicado: %1$s</string>
-    <string name="msg_settings_saved">Ajustes guardados.</string>
-    <string name="msg_language_updated">Idioma actualizado con éxito.</string>
 
     <!-- Mensajes de Error -->
     <string name="err_source_image_not_found">Imagen de origen no encontrada o inaccesible.</string>
@@ -399,7 +245,6 @@
     <string name="err_generic">Ocurrió un error inesperado: %1$s</string>
     <string name="err_source_load">Error al cargar la imagen de origen: %1$s</string>
     <string name="err_reference_load">Error al cargar la imagen de referencia: %1$s</string>
-    <string name="err_select_source_first">Por favor seleccione primero una foto de origen.</string>
     <string name="err_select_source_and_ref">No se puede exportar: seleccione una foto de origen y un estilo de referencia.</string>
     <string name="err_preset_no_ref">Este ajuste no contiene una imagen de referencia válida para regenerar la LUT.</string>
     <string name="err_lut_path_not_found">Error: ruta del archivo LUT no encontrada.</string>
@@ -407,7 +252,6 @@
     <string name="err_image_load_failed">No se pudo cargar la imagen: %1$s</string>
     <string name="err_lut_import_failed">Error al importar la LUT: %1$s</string>
     <string name="err_mediastore">Error de MediaStore: %1$s</string>
-    <string name="err_cache_clear_failed">Error al vaciar la caché temporal.</string>
 
     <!-- Diálogo de Detalles y Etiquetas Diversas -->
     <string name="detail_title">Detalles de la Imagen</string>
@@ -422,20 +266,12 @@
     <string name="detail_default_look">Look StealZaLUT</string>
     <string name="detail_algorithm">Algoritmo: %1$s • Intensidad: %2$d%%</string>
     <string name="detail_swatches_title">Paleta de colores (Toca para copiar el código hex):</string>
-    <string name="detail_btn_apply">Aplicar este Look en el Studio</string>
     <string name="detail_btn_share">Compartir</string>
     <string name="detail_btn_delete">Eliminar</string>
     <string name="profile_default_look_name">Look</string>
     <string name="palettes_mire_content_desc">Carta de calibración de color</string>
-    <string name="palettes_btn_apply_studio">Usar en el Studio</string>
-    <string name="editor_dialog_default_name">Mi Ajuste</string>
-    <string name="editor_filter_intensity_label">Intensidad LUT base</string>
-    <string name="editor_calibration_hint">Las máscaras de calibración operan en una LUT base o filtro activo.</string>
-    <string name="histogram_toggle_desc">Histograma RGB</string>
     <string name="msg_preset_duplicated">Preset duplicado</string>
     <string name="msg_preset_renamed">Preset renombrado</string>
-    <string name="dialog_rename_title">Renombrar preset</string>
-    <string name="dialog_rename_confirm">Renombrar</string>
     <string name="dialog_duplicate_title">Duplicar preset</string>
     <string name="err_no_pending_export">No se encontró ninguna exportación pendiente o la sesión ha caducado.</string>
     <string name="err_palette_extraction_failed">Error al extraer la paleta de la imagen.</string>
@@ -449,12 +285,6 @@
     <string name="dialog_finish_confirm">Finalizar</string>
 
     <!-- Herramientas de Barra Superior -->
-    <string name="tool_global_adjustments">Ajustes globales</string>
-    <string name="tool_crop_straighten">Recortar y enderezar</string>
-    <string name="tool_healing">Eliminación de manchas</string>
-    <string name="tool_red_eye">Corrección de ojos rojos</string>
-    <string name="tool_masking">Máscara</string>
-    <string name="tool_presets_auto">Ajustes y Auto</string>
 
     <!-- 10 Paneles de Revelado Lightroom Classic -->
     <string name="section_histogram">Histograma</string>
@@ -465,14 +295,10 @@
     <string name="section_detail">Detalle</string>
     <string name="section_lens_corrections">Correcciones de lente</string>
     <string name="section_transform">Transformar</string>
-    <string name="section_lens_blur">Desenfoque de lente</string>
     <string name="section_effects">Efectos</string>
     <string name="section_calibration">Calibración</string>
 
     <!-- Panel Básico -->
-    <string name="sub_white_balance">Equilibrio de blancos</string>
-    <string name="sub_tone">Tono</string>
-    <string name="sub_presence">Presencia</string>
     <string name="slider_temp">Temp</string>
     <string name="slider_tint">Matiz</string>
     <string name="slider_exposure">Exposición</string>
@@ -488,23 +314,12 @@
     <string name="slider_saturation">Saturación</string>
 
     <!-- Panel Curva de tonos -->
-    <string name="mode_parametric">Paramétrica</string>
-    <string name="mode_point">Puntos</string>
-    <string name="tone_curve_edit_active">Editar</string>
-    <string name="tone_curve_edit_locked">Bloqueado</string>
     <string name="channel_rgb">RGB</string>
     <string name="channel_red">Rojo</string>
     <string name="channel_green">Verde</string>
     <string name="channel_blue">Azul</string>
-    <string name="slider_lights">Tonos claros</string>
-    <string name="slider_darks">Tonos oscuros</string>
-    <string name="slider_split_shadow">División de sombras</string>
-    <string name="slider_split_midtone">División de medios</string>
-    <string name="slider_split_highlight">División de luces</string>
 
     <!-- Panel Mezclador de color -->
-    <string name="mode_hsl">HSL</string>
-    <string name="mode_point_color">Color de punto</string>
     <string name="tab_hue">Tono</string>
     <string name="tab_sat">Saturación</string>
     <string name="tab_lum">Luminancia</string>
@@ -529,12 +344,10 @@
     <string name="slider_luminance">Luminancia</string>
 
     <!-- Panel Detalle -->
-    <string name="group_sharpening">Enfoque</string>
     <string name="slider_sharpen_amount">Cantidad</string>
     <string name="slider_sharpen_radius">Radio</string>
     <string name="slider_sharpen_detail">Detalle</string>
     <string name="slider_sharpen_masking">Máscara</string>
-    <string name="group_noise_reduction">Reducción de ruido</string>
     <string name="slider_nr_luminance">Luminancia</string>
     <string name="slider_nr_lum_detail">Detalle de luminancia</string>
     <string name="slider_nr_color">Color</string>
@@ -569,11 +382,9 @@
     <string name="bokeh_ring">Anillo</string>
 
     <!-- Panel Efectos -->
-    <string name="group_post_crop_vignette">Viñeteado posterior</string>
     <string name="slider_vignette">Viñeteado</string>
     <string name="slider_roundness">Redondez</string>
     <string name="slider_feather">Desvanecer</string>
-    <string name="group_grain">Grano</string>
     <string name="slider_grain">Grano</string>
     <string name="slider_grain_size">Tamaño</string>
     <string name="slider_grain_roughness">Rugosidad</string>
@@ -595,20 +406,8 @@
     <string name="crop_square">1:1</string>
     <string name="crop_portrait">4:5</string>
     <string name="crop_widescreen">16:9</string>
-    <string name="heal_mode_heal">Corregir</string>
-    <string name="heal_mode_clone">Clonar</string>
-    <string name="slider_brush_size">Tamaño de pincel</string>
-    <string name="mask_linear">Degradado lineal</string>
-    <string name="mask_radial">Degradado radial</string>
-    <string name="mask_brush">Pincel</string>
-    <string name="mask_invert">Invertir máscara</string>
-    <string name="slider_pupil_size">Tamaño de pupila</string>
-    <string name="slider_darken">Oscurecer</string>
 
     <!-- Professional Studio & Editor Tokens -->
-    <string name="color_grading_hue_format">Tono: %1$d°</string>
-    <string name="color_grading_sat_format">Sat: %1$d%%</string>
-    <string name="palette_dominance_format">%1$d%% del encuadre</string>
     <string name="palette_shot_cinema">Muestrario de Cine</string>
     <string name="btn_tap_to_reset">Toca para restablecer</string>
     <string name="tone_curve_zone_shadows">Sombras</string>
@@ -616,21 +415,11 @@
     <string name="tone_curve_zone_lights">Claros</string>
     <string name="tone_curve_zone_highlights">Altas Luces</string>
     <string name="profile_spectrum_title">Espectro y Calibración de Color</string>
-    <string name="profile_stat_photos">Fotos</string>
-    <string name="profile_stat_presets">Ajustes</string>
     <string name="editor_collapse_panel">Contraer herramientas</string>
-    <string name="editor_expand_panel">Expandir herramientas</string>
-    <string name="editor_fullscreen_toggle">Pantalla completa</string>
-    <string name="tab_blending_balance">Mezcla y Equilibrio</string>
     <string name="studio_quick_tip">Consejo Pro</string>
     <string name="studio_quick_tip_desc">Elige una foto de referencia con tonos cinematográficos ricos para una transferencia óptima.</string>
-    <string name="studio_cat_intensity">Intensidad y Luz</string>
-    <string name="studio_cat_protection">Color y Piel</string>
-    <string name="studio_cat_method">Método</string>
-    <string name="studio_cat_lut_size">Rejilla 3D</string>
     <string name="tone_curve_mode_curve">Curva</string>
     <string name="tone_curve_mode_zones">Zonas</string>
-    <string name="swatch_percent_format">%1$d%%</string>
     <string name="editor_exit_dialog_title">¿Salir del editor?</string>
     <string name="editor_exit_dialog_message">Tus ajustes se guardan en la sesión. ¿Qué deseas hacer?</string>
     <string name="editor_btn_save_draft">Guardar como Preset</string>
@@ -644,10 +433,6 @@
     <string name="crop_free">Libre</string>
     <string name="crop_straighten_title">Enderezar horizonte</string>
     <string name="unit_degrees">°</string>
-    <string name="common_zero">0</string>
-    <string name="tool_crop">Recortar</string>
-    <string name="tool_geometry">Geometría</string>
-    <string name="tool_optics">Óptica</string>
 
     <!-- Export Dialog (FE-013) -->
     <string name="export_dialog_subtitle">Renderizado maestro de alta resolución sin pérdidas</string>
@@ -662,8 +447,6 @@
     <string name="export_dialog_progress">Exportación por teselas en curso…</string>
 
     <!-- Clipping Indicators (FE-017) -->
-    <string name="clipping_shadows_alert">Subexposición (Sombras recortadas)</string>
-    <string name="clipping_highlights_alert">Sobreexposición (Luces quemadas)</string>
     <string name="editor_empty_headline">Sublima tus Fotografías</string>
     <string name="editor_empty_subtitle">Revela tus archivos RAW o JPEG con la potencia de la emulación analógica.</string>
     <string name="editor_empty_advice_title">CONSEJO DE FOTO DE LABORATORIO</string>

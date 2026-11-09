@@ -15,7 +15,6 @@ sys.path.insert(
     0, str(Path(__file__).resolve().parent.parent / "app" / "src" / "main" / "python")
 )
 
-import numpy as np
 from PIL import Image
 
 from stealzalut.bridge import (

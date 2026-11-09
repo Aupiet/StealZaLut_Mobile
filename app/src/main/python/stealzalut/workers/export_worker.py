@@ -10,7 +10,6 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-import numpy as np
 
 from stealzalut.config import (
     DEFAULT_INTENSITY,

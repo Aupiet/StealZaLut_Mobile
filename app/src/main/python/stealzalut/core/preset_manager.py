@@ -10,7 +10,6 @@ from __future__ import annotations
 from dataclasses import asdict
 import json
 import os
-import shutil
 import time
 from typing import Any, Dict, List, Optional
 import uuid
@@ -54,7 +53,6 @@ def get_default_presets_dir() -> str:
 
 def migrate_preset(data: Dict[str, Any]) -> Dict[str, Any]:
     """Migrate legacy preset schema (v1 or unversioned) to current schema v2."""
-    version = data.get("schema_version", 1)
     data["schema_version"] = SCHEMA_VERSION
 
     if "id" not in data or not data["id"]:

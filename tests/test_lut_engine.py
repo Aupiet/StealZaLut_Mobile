@@ -10,9 +10,7 @@ import pytest
 
 try:
     from stealzalut.core.lut_engine import (  # type: ignore[import-untyped]
-        apply_intensity,
         apply_lut,
-        apply_lut_trilinear,
         compute_lut,
         generate_identity_grid,
         generate_identity_lattice,
@@ -97,58 +95,6 @@ class TestIdentityLUT:
 
 # ------------------------------------------------------------------
 # Legacy intensity blending function
-# ------------------------------------------------------------------
-
-
-class TestApplyIntensity:
-    """``apply_intensity`` must interpolate between identity and transformed LUT."""
-
-    @pytest.fixture
-    def _lut_pair(self) -> tuple[np.ndarray, np.ndarray]:
-        identity = generate_identity_lattice(17)
-        transformed = np.clip(identity + 0.1, 0.0, 1.0)
-        return identity, transformed
-
-    def test_apply_intensity_zero(
-        self, _lut_pair: tuple[np.ndarray, np.ndarray]
-    ) -> None:
-        identity, transformed = _lut_pair
-        result = apply_intensity(identity, transformed, intensity=0.0)
-        np.testing.assert_array_almost_equal(
-            result,
-            identity,
-            decimal=6,
-            err_msg="Intensity 0.0 should return the identity lattice",
-        )
-
-    def test_apply_intensity_one(
-        self, _lut_pair: tuple[np.ndarray, np.ndarray]
-    ) -> None:
-        identity, transformed = _lut_pair
-        result = apply_intensity(identity, transformed, intensity=1.0)
-        np.testing.assert_array_almost_equal(
-            result,
-            transformed,
-            decimal=6,
-            err_msg="Intensity 1.0 should return the transformed LUT",
-        )
-
-    def test_apply_intensity_half(
-        self, _lut_pair: tuple[np.ndarray, np.ndarray]
-    ) -> None:
-        identity, transformed = _lut_pair
-        result = apply_intensity(identity, transformed, intensity=0.5)
-        expected = (identity + transformed) / 2.0
-        np.testing.assert_array_almost_equal(
-            result,
-            expected,
-            decimal=5,
-            err_msg="Intensity 0.5 should return the midpoint",
-        )
-
-
-# ------------------------------------------------------------------
-# Refine and Blend 3D LUT (Professional colorimetric engine)
 # ------------------------------------------------------------------
 
 

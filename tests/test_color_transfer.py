@@ -10,11 +10,8 @@ import pytest
 
 try:
     from stealzalut.core.color_transfer import (  # type: ignore[import-untyped]
-        _numpy_statistical_transfer,
         apply_soft_clip,
         compute_color_transfer as color_transfer,
-        lab_to_rgb,
-        luminance_binned_chroma_transfer,
         rgb_to_lab,
     )
     from stealzalut.utils.image_io import resolve_export_dimensions
@@ -208,88 +205,6 @@ class TestSoftClipping:
 
 # ------------------------------------------------------------------
 # Fallback statistical transfer
-# ------------------------------------------------------------------
-
-
-class TestStatisticalTransferFallback:
-    """Validate pure numpy Reinhard statistical transfer in CIE LAB space."""
-
-    def test_statistical_fallback_execution(
-        self, sample_src_image: np.ndarray, sample_ref_image: np.ndarray
-    ) -> None:
-        result = _numpy_statistical_transfer(
-            sample_src_image, sample_ref_image, preserve_luminance=0.8, soft_clip=True
-        )
-        assert result.shape == sample_src_image.shape
-        assert result.dtype == np.uint8
-        assert 0 <= result.min() and result.max() <= 255
-
-
-# ------------------------------------------------------------------
-# Luminance-Binned Chroma Transfer & Vividness Tests
-# ------------------------------------------------------------------
-
-
-class TestLuminanceBinnedChromaTransfer:
-    """Validate luminance-partitioned chroma transfer and deep shadow roll-off."""
-
-    def test_shadow_roll_off_protects_deep_blacks(self) -> None:
-        """Deep black pixels (L < 20) must roll off towards neutral without color cast."""
-        # Create pure black / very dark pixels with L=5, a=0, b=0
-        src_lab = np.zeros((10, 10, 3), dtype=np.float32)
-        src_lab[..., 0] = 5.0  # Deep shadow L = 5
-
-        # Reference has intense saturated magenta (L=50, a=50, b=-40)
-        ref_lab = np.zeros((10, 10, 3), dtype=np.float32)
-        ref_lab[..., 0] = 50.0
-        ref_lab[..., 1] = 50.0
-        ref_lab[..., 2] = -40.0
-
-        out_lab = luminance_binned_chroma_transfer(
-            src_lab=src_lab,
-            ref_lab=ref_lab,
-            shadow_th=20.0,
-            preserve_luminance=1.0,
-        )
-
-        # Chroma in deep shadows must remain near zero (less than 4.0 LAB units)
-        shadow_chroma = np.sqrt(out_lab[..., 1] ** 2 + out_lab[..., 2] ** 2)
-        assert np.all(shadow_chroma < 4.0), (
-            f"Shadow roll-off failed: shadow chroma was {shadow_chroma.max():.2f}"
-        )
-
-    def test_vivid_reference_transfer_on_high_contrast_scene(self) -> None:
-        """Vivid reference colors must transfer effectively onto highlights/midtones."""
-        # Source midtone sky: L=60, a=0, b=-20 (light blue)
-        src_lab = np.zeros((20, 20, 3), dtype=np.float32)
-        src_lab[..., 0] = 60.0
-        src_lab[..., 2] = -20.0
-
-        # Reference: sunset sky with magenta/orange L=60, a=45, b=35 mixed with 50% dark banks
-        ref_lab = np.zeros((40, 40, 3), dtype=np.float32)
-        # Half dark banks
-        ref_lab[:20, :, 0] = 10.0
-        # Half vivid sunset
-        ref_lab[20:, :, 0] = 60.0
-        ref_lab[20:, :, 1] = 45.0
-        ref_lab[20:, :, 2] = 35.0
-
-        out_lab = luminance_binned_chroma_transfer(
-            src_lab=src_lab,
-            ref_lab=ref_lab,
-            num_bins=5,
-            vivid_percentile=30.0,
-            chroma_boost=1.25,
-            preserve_luminance=1.0,
-        )
-
-        # Transferred sky must turn warm (a > 0, b > 0)
-        assert np.mean(out_lab[..., 1]) > 10.0, "Warm magenta hue was diluted"
-        assert np.mean(out_lab[..., 2]) > 5.0, "Warm gold hue was diluted"
-
-
-# ------------------------------------------------------------------
-# Native Export Resolution Tests (No unwanted upscaling)
 # ------------------------------------------------------------------
 
 

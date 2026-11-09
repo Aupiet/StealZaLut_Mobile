@@ -39,7 +39,7 @@ from stealzalut.core.preset_manager import (
     rename_preset,
     save_preset,
 )
-from stealzalut.utils.image_io import extract_dominant_palette, load_image
+from stealzalut.utils.image_io import extract_dominant_palette
 from stealzalut.workers.export_worker import (
     run_export_pipeline,
     run_image_export_pipeline,

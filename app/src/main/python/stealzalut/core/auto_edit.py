@@ -21,18 +21,16 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from stealzalut.core.lut_engine import apply_lut_trilinear, generate_identity_grid
 from stealzalut.utils.image_io import (
-    load_image,
     load_proxy_image,
     save_image,
     to_float32,
-    to_uint8,
 )
 
 

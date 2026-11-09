@@ -9,9 +9,7 @@ Validates:
 - Bridge functions: save, load, list, delete, duplicate, rename, export, import.
 """
 
-import json
 from pathlib import Path
-import pytest
 
 from stealzalut.bridge import (
     delete_preset_bridge,
@@ -19,7 +17,6 @@ from stealzalut.bridge import (
     export_preset_bridge,
     import_preset_bridge,
     list_presets_bridge,
-    load_preset_bridge,
     rename_preset_bridge,
     save_preset_bridge,
 )
@@ -132,7 +129,7 @@ class TestPresetManager:
 
     def test_rename_preset(self, tmp_path: Path) -> None:
         orig = create_preset("Pre Rename", step3_params={"exposure": 0.1})
-        p_path = save_preset(orig, directory=str(tmp_path))
+        save_preset(orig, directory=str(tmp_path))
 
         renamed = rename_preset(orig["id"], "Post Rename", directory=str(tmp_path))
         assert renamed["name"] == "Post Rename"

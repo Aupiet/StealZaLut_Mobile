@@ -13,16 +13,8 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image, ImageOps
+from stealzalut.config import MAX_ANALYSIS_DIMENSION, PALETTE_DEFAULT_COLORS
 
-from stealzalut.config import (
-    MAX_ANALYSIS_DIMENSION,
-    PALETTE_DEFAULT_COLORS,
-    PALETTE_DELTA_E_THRESHOLD,
-    PALETTE_MIN_CHROMA,
-    PALETTE_MIN_LUMA,
-    PALETTE_RESIZE_DIM,
-    PROXY_DECODE_MAX_DIM,
-)
 
 # Use Pillow's Resampling enum with fallback for older versions
 try:
@@ -203,16 +195,6 @@ def to_float32(image: NDArray[np.uint8]) -> NDArray[np.float32]:
     return image.astype(np.float32) / np.float32(255.0)
 
 
-def to_float64(image: NDArray[np.uint8]) -> NDArray[np.float64]:
-    """Convert a ``uint8`` image in [0, 255] to ``float64`` in [0.0, 1.0].
-
-    Args:
-        image: Array with dtype ``uint8``.
-
-    Returns:
-        Array with dtype ``float64`` and values in ``[0.0, 1.0]``.
-    """
-    return image.astype(np.float32) / np.float32(255.0)
 
 
 def to_uint8(image: NDArray[Union[np.float32, np.float64]]) -> NDArray[np.uint8]:

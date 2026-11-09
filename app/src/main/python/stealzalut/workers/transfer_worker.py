@@ -27,10 +27,8 @@ from stealzalut.config import (
 )
 from stealzalut.core.lut_engine import (
     apply_lut,
-    apply_lut_trilinear,
     compute_lut,
     generate_identity_lattice,
-    refine_and_blend_lut,
 )
 from stealzalut.core.lut_export import load_cube_file
 from stealzalut.core.pipeline import (
@@ -40,7 +38,6 @@ from stealzalut.core.pipeline import (
     bake_full_pipeline_lut,
 )
 from stealzalut.utils.image_io import (
-    create_proxy_image,
     load_image,
     load_proxy_image,
     save_image,

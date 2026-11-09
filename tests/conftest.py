@@ -61,10 +61,6 @@ def identical_images() -> tuple[np.ndarray, np.ndarray]:
 # Temporary directory fixture (delegates to pytest built-in)
 # ---------------------------------------------------------------------------
 
-@pytest.fixture
-def tmp_dir(tmp_path: Path) -> Path:
-    """Alias for pytest's ``tmp_path``."""
-    return tmp_path
 
 
 # ---------------------------------------------------------------------------

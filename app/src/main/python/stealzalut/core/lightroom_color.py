@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from typing import List, Tuple
+from typing import Tuple
 
 from stealzalut.core.color_space import linear_to_srgb, srgb_to_linear, smoothstep
 from stealzalut.core.lightroom_models import (

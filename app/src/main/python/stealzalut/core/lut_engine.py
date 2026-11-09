@@ -451,24 +451,3 @@ def compute_lut(
     )
 
 
-def apply_intensity(
-    identity: NDArray[np.float32],
-    transformed: NDArray[np.float32],
-    intensity: float = DEFAULT_INTENSITY,
-) -> NDArray[np.float32]:
-    """Blend between the identity and transformed LUT tables.
-
-    Retained for backward compatibility.
-
-    Args:
-        identity: Identity LUT, shape ``(N, 3)``.
-        transformed: Transformed LUT, shape ``(N, 3)``.
-        intensity: Blend factor in [0.0, 1.0].
-
-    Returns:
-        Blended float32 array of shape ``(N, 3)`` in [0.0, 1.0].
-    """
-    inv_int: np.float32 = np.float32(1.0) - np.float32(intensity)
-    weight: np.float32 = np.float32(intensity)
-    result: NDArray[np.float32] = inv_int * identity + weight * transformed
-    return np.clip(result, 0.0, 1.0)

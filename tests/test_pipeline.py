@@ -8,7 +8,6 @@ Validates:
 """
 
 import numpy as np
-import pytest
 
 from stealzalut.core.color_space import (
     linear_to_srgb,

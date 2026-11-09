@@ -4,7 +4,7 @@ Eliminates magic numbers across the colorimetric processing, LUT generation,
 soft clipping, and caching pipelines.
 """
 
-from typing import Dict, Tuple
+from typing import Dict
 
 # Supported color-transfer methods aligned with desktop
 SUPPORTED_METHODS: Dict[str, str] = {
@@ -19,9 +19,6 @@ SUPPORTED_METHODS: Dict[str, str] = {
 DEFAULT_METHOD: str = "hm-mkl-hm"
 
 # LUT grid sizes
-LUT_SIZE_FAST: int = 17
-LUT_SIZE_STANDARD: int = 33
-LUT_SIZE_HIGH: int = 64
 DEFAULT_LUT_SIZE: int = 33
 
 # Image processing proxy maximum dimension (high fidelity for neon lights & fine details)
@@ -29,23 +26,16 @@ MAX_ANALYSIS_DIMENSION: int = 512
 PROXY_DECODE_MAX_DIM: int = 1024
 
 # Direct image export maximum dimension (4K UHD)
-MAX_EXPORT_DIMENSION: int = 3840
 
 # File extensions supported
-SUPPORTED_EXTENSIONS: Tuple[str, ...] = (".jpg", ".jpeg", ".png", ".webp")
 
 # Default colorimetric quality parameters
 # All Stage 2 protections are 0.0 / False by default to achieve 100% visual parity with desktop
 DEFAULT_INTENSITY: float = 1.0
 DEFAULT_PRESERVE_LUMINANCE: float = 0.0
-DEFAULT_PRESERVE_LUMA: bool = False
-DEFAULT_LUMA_LOCK: float = 0.0
 DEFAULT_SKIN_PROTECTION: float = 0.0
 DEFAULT_SMOOTH_SIGMA: float = 0.0
 DEFAULT_NEUTRAL_LOCK: float = 0.0
-DEFAULT_NEUTRAL_PROTECTION: float = 0.0
-DEFAULT_EXTREMES_ROLLOFF: float = 0.0
-DEFAULT_SPATIAL_SMOOTHING: float = 0.0
 
 # Soft clipping thresholds (5% darkest shadows and 5% brightest highlights)
 SOFT_CLIP_SHADOW_THRESHOLD: float = 0.05
@@ -66,13 +56,6 @@ SKIN_CR_SIGMA: float = 0.08
 NEUTRAL_LOCK_SIGMA: float = 0.08
 
 # Luminance-Binned Chroma Transfer & Vividness parameters
-DEFAULT_LUMINANCE_BINS: int = 5
-VIVID_CHROMA_PERCENTILE: float = 30.0
-MIN_CHROMA_BOOST: float = 0.8
-MAX_CHROMA_BOOST: float = 1.6
-CHROMA_BOOST_DEFAULT: float = 1.25
-SHADOW_ROLLOFF_L_THRESHOLD: float = 20.0
-LUMINANCE_ALIGN_WEIGHT: float = 0.35
 
 # Cache settings
 MAX_LUT_CACHE_SIZE: int = 4

@@ -8,27 +8,19 @@ Histogram Matching, and Reinhard statistics.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from stealzalut.config import (
-    CHROMA_BOOST_DEFAULT,
-    DEFAULT_LUMINANCE_BINS,
     DEFAULT_METHOD,
     DEFAULT_PRESERVE_LUMINANCE,
-    EPSILON,
-    LUMINANCE_ALIGN_WEIGHT,
-    MAX_CHROMA_BOOST,
     MAX_STD_RATIO,
-    MIN_CHROMA_BOOST,
     MIN_STD_RATIO,
-    SHADOW_ROLLOFF_L_THRESHOLD,
     SOFT_CLIP_HIGHLIGHT_THRESHOLD,
     SOFT_CLIP_SHADOW_THRESHOLD,
     SUPPORTED_METHODS,
-    VIVID_CHROMA_PERCENTILE,
 )
 
 # Standard D65 sRGB to XYZ transformation matrix (IEC 61966-2-1)
@@ -161,142 +153,8 @@ def apply_soft_clip(
     return np.clip(out, 0.0, 1.0)
 
 
-def luminance_binned_chroma_transfer(
-    src_lab: NDArray[np.float32],
-    ref_lab: NDArray[np.float32],
-    num_bins: int = DEFAULT_LUMINANCE_BINS,
-    vivid_percentile: float = VIVID_CHROMA_PERCENTILE,
-    chroma_boost: float = CHROMA_BOOST_DEFAULT,
-    shadow_th: float = SHADOW_ROLLOFF_L_THRESHOLD,
-    luminance_align_weight: float = LUMINANCE_ALIGN_WEIGHT,
-    preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
-) -> NDArray[np.float32]:
-    """Transfer chroma across luminance-partitioned bins with vividness selection."""
-    src_shape = src_lab.shape
-    src_flat = src_lab.reshape(-1, 3)
-    ref_flat = ref_lab.reshape(-1, 3)
-
-    l_src = src_flat[:, 0]
-    a_src = src_flat[:, 1]
-    b_src = src_flat[:, 2]
-
-    l_ref = ref_flat[:, 0]
-    a_ref = ref_flat[:, 1]
-    b_ref = ref_flat[:, 2]
-
-    chroma_ref = np.sqrt(a_ref**2 + b_ref**2)
-
-    bin_centers = np.linspace(15.0, 85.0, num_bins, dtype=np.float32)
-    step = float(bin_centers[1] - bin_centers[0]) if num_bins > 1 else 30.0
-    sigma_l = step * 0.75
-
-    w_src_list = []
-    a_trans_bins = []
-    b_trans_bins = []
-
-    boost = float(np.clip(chroma_boost, MIN_CHROMA_BOOST, MAX_CHROMA_BOOST))
-
-    global_mu_a_ref = float(np.mean(a_ref))
-    global_mu_b_ref = float(np.mean(b_ref))
-    global_std_a_ref = float(np.std(a_ref))
-    global_std_b_ref = float(np.std(b_ref))
-
-    for center in bin_centers:
-        w_s = np.exp(-0.5 * ((l_src - center) / sigma_l) ** 2)
-        w_r = np.exp(-0.5 * ((l_ref - center) / sigma_l) ** 2)
-        w_src_list.append(w_s)
-
-        active_ref = w_r > 0.10
-        if np.count_nonzero(active_ref) >= 16:
-            ref_bin_chroma = chroma_ref[active_ref]
-            th_chroma = float(np.percentile(ref_bin_chroma, vivid_percentile))
-            vivid_mask = active_ref & (chroma_ref >= th_chroma)
-            w_eff_r = w_r * vivid_mask.astype(np.float32)
-        else:
-            w_eff_r = w_r
-
-        sum_w_r = float(np.sum(w_eff_r))
-        if sum_w_r > float(EPSILON):
-            mu_a_r = float(np.sum(w_eff_r * a_ref) / sum_w_r)
-            mu_b_r = float(np.sum(w_eff_r * b_ref) / sum_w_r)
-            std_a_r = float(np.sqrt(max(0.0, float(np.sum(w_eff_r * (a_ref - mu_a_r) ** 2) / sum_w_r))))
-            std_b_r = float(np.sqrt(max(0.0, float(np.sum(w_eff_r * (b_ref - mu_b_r) ** 2) / sum_w_r))))
-        else:
-            mu_a_r = global_mu_a_ref
-            mu_b_r = global_mu_b_ref
-            std_a_r = global_std_a_ref
-            std_b_r = global_std_b_ref
-
-        sum_w_s = float(np.sum(w_s))
-        if sum_w_s > float(EPSILON):
-            mu_a_s = float(np.sum(w_s * a_src) / sum_w_s)
-            mu_b_s = float(np.sum(w_s * b_src) / sum_w_s)
-            std_a_s = float(np.sqrt(max(0.0, float(np.sum(w_s * (a_src - mu_a_s) ** 2) / sum_w_s))))
-            std_b_s = float(np.sqrt(max(0.0, float(np.sum(w_s * (b_src - mu_b_s) ** 2) / sum_w_s))))
-        else:
-            mu_a_s = float(np.mean(a_src))
-            mu_b_s = float(np.mean(b_src))
-            std_a_s = float(np.std(a_src))
-            std_b_s = float(np.std(b_src))
-
-        scale_a = float(np.clip((std_a_r / (std_a_s + float(EPSILON))) * boost, MIN_STD_RATIO, MAX_STD_RATIO))
-        scale_b = float(np.clip((std_b_r / (std_b_s + float(EPSILON))) * boost, MIN_STD_RATIO, MAX_STD_RATIO))
-
-        a_trans_bins.append((a_src - mu_a_s) * scale_a + mu_a_r)
-        b_trans_bins.append((b_src - mu_b_s) * scale_b + mu_b_r)
-
-    w_src_stack = np.stack(w_src_list, axis=0)
-    w_src_norm = w_src_stack / (np.sum(w_src_stack, axis=0, keepdims=True) + float(EPSILON))
-
-    a_trans_stack = np.stack(a_trans_bins, axis=0)
-    b_trans_stack = np.stack(b_trans_bins, axis=0)
-
-    a_trans = np.sum(w_src_norm * a_trans_stack, axis=0)
-    b_trans = np.sum(w_src_norm * b_trans_stack, axis=0)
-
-    t_shadow = np.clip(l_src / (shadow_th + float(EPSILON)), 0.0, 1.0)
-    shadow_roll = (t_shadow ** 2.5).astype(np.float32)
-    a_chroma = a_src + shadow_roll * (a_trans - a_src)
-    b_chroma = b_src + shadow_roll * (b_trans - b_src)
-
-    clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
-    if clamped_preserve < 1.0 and luminance_align_weight > 0.0:
-        percentiles = np.linspace(0.0, 100.0, 21, dtype=np.float32)
-        src_pct = np.percentile(l_src, percentiles)
-        ref_pct = np.percentile(l_ref, percentiles)
-        if float(src_pct[-1] - src_pct[0]) > float(EPSILON):
-            l_aligned = np.interp(l_src, src_pct, ref_pct).astype(np.float32)
-            l_soft = l_src + luminance_align_weight * (l_aligned - l_src)
-            l_final = clamped_preserve * l_src + (1.0 - clamped_preserve) * l_soft
-        else:
-            l_final = l_src.copy()
-    else:
-        l_final = l_src.copy()
-
-    l_final = np.nan_to_num(np.clip(l_final, 0.0, 100.0), nan=50.0, posinf=100.0, neginf=0.0)
-    a_chroma = np.nan_to_num(a_chroma, nan=0.0, posinf=127.0, neginf=-128.0)
-    b_chroma = np.nan_to_num(b_chroma, nan=0.0, posinf=127.0, neginf=-128.0)
-
-    result_flat = np.stack([l_final, a_chroma, b_chroma], axis=-1)
-    return result_flat.reshape(src_shape).astype(np.float32)
 
 
-def _numpy_statistical_transfer(
-    src_img: NDArray[np.uint8],
-    ref_img: NDArray[np.uint8],
-    preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
-    soft_clip: bool = True,
-) -> NDArray[np.uint8]:
-    """Pure NumPy statistical Reinhard color transfer in CIE LAB space."""
-    res_f = fit_and_apply_transfer(
-        src_img=src_img,
-        ref_img=ref_img,
-        target_img=src_img,
-        method="reinhard",
-        preserve_luminance=preserve_luminance,
-        soft_clip=soft_clip,
-    )
-    return (np.clip(res_f, 0.0, 1.0) * 255.0).astype(np.uint8)
 
 
 # ---------------------------------------------------------------------------

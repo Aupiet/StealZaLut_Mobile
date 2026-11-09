@@ -17,9 +17,7 @@ from PIL import Image, ImageDraw
 from stealzalut.config import MAX_ANALYSIS_DIMENSION
 from stealzalut.core.color_transfer import compute_color_transfer
 from stealzalut.utils.image_io import (
-    create_proxy_image,
     extract_dominant_palette,
-    load_image,
     load_proxy_image,
     save_image,
     to_float32,

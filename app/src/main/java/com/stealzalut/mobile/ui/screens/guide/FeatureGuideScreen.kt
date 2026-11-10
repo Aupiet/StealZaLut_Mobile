@@ -416,7 +416,7 @@ private fun FeatureGuideDetailView(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = AppDimens.SpacingSmall, bottom = AppDimens.SpacingSmall)
             )
-            InteractiveBeforeAfterSlider(demoType = item.demoType)
+            InteractiveBeforeAfterSlider(toolId = item.id)
 
             Spacer(modifier = Modifier.height(AppDimens.SpacingLarge))
 

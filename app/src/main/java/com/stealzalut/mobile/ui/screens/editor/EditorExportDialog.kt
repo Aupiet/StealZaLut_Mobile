@@ -20,7 +20,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,15 +56,31 @@ fun EditorExportDialog(
     imageWidth: Int,
     imageHeight: Int,
     onDismiss: () -> Unit,
-    onConfirmExport: (format: ExportFormat, quality: Int) -> Unit,
+    onConfirmExport: (format: ExportFormat, quality: Int, maxDim: Int) -> Unit,
+    defaultMaxDim: Int = 0,
+    defaultFormat: ExportFormat = ExportFormat.JPEG,
+    defaultQuality: Int = 95,
     modifier: Modifier = Modifier
 ) {
-    var selectedFormat by remember { mutableStateOf(ExportFormat.JPEG) }
-    var qualityPercent by remember { mutableFloatStateOf(0.95f) }
+    var selectedFormat by remember { mutableStateOf(defaultFormat) }
+    var qualityPercent by remember { mutableFloatStateOf((defaultQuality.coerceIn(50, 100)) / 100f) }
+    var selectedMaxDim by remember { mutableIntStateOf(defaultMaxDim) }
 
-    val estimatedMb = remember(selectedFormat, qualityPercent, imageWidth, imageHeight) {
-        val w = if (imageWidth > 0) imageWidth else 3840
-        val h = if (imageHeight > 0) imageHeight else 2160
+    val effectiveDimensions = remember(imageWidth, imageHeight, selectedMaxDim) {
+        val origW = if (imageWidth > 0) imageWidth else 3840
+        val origH = if (imageHeight > 0) imageHeight else 2160
+        if (selectedMaxDim > 0 && maxOf(origW, origH) > selectedMaxDim) {
+            val scale = selectedMaxDim.toDouble() / maxOf(origW, origH)
+            val w = (origW * scale).roundToInt()
+            val h = (origH * scale).roundToInt()
+            w to h
+        } else {
+            origW to origH
+        }
+    }
+
+    val estimatedMb = remember(selectedFormat, qualityPercent, effectiveDimensions) {
+        val (w, h) = effectiveDimensions
         val rawBytes = w.toDouble() * h.toDouble() * 3.0
         val compressedBytes = if (selectedFormat == ExportFormat.JPEG) {
             rawBytes * (qualityPercent * 0.12).coerceIn(0.03, 0.35)
@@ -152,6 +171,51 @@ fun EditorExportDialog(
                     }
                 }
 
+                // Resolution Selector
+                Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
+                    Text(
+                        text = stringResource(R.string.export_dialog_resolution),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    val resolutionOptions = listOf(
+                        0 to stringResource(R.string.settings_max_export_native),
+                        3840 to "4K UHD",
+                        2560 to "1440p",
+                        1920 to "1080p"
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                    ) {
+                        resolutionOptions.forEach { (dim, label) ->
+                            val isSelected = selectedMaxDim == dim
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { if (!isExporting) selectedMaxDim = dim },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                label = {
+                                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // Quality Slider (for JPEG)
                 if (selectedFormat == ExportFormat.JPEG) {
                     SzlSlider(
@@ -185,8 +249,7 @@ fun EditorExportDialog(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            val w = if (imageWidth > 0) imageWidth else 3840
-                            val h = if (imageHeight > 0) imageHeight else 2160
+                            val (w, h) = effectiveDimensions
                             Text(
                                 text = "${w} × ${h} px",
                                 style = MaterialTheme.typography.titleSmall,
@@ -241,7 +304,7 @@ fun EditorExportDialog(
                 ) {
                     Button(
                         onClick = {
-                            onConfirmExport(selectedFormat, (qualityPercent * 100).roundToInt())
+                            onConfirmExport(selectedFormat, (qualityPercent * 100).roundToInt(), selectedMaxDim)
                         },
                         enabled = !isExporting,
                         shape = RoundedCornerShape(AppDimens.CornerRadiusCard),

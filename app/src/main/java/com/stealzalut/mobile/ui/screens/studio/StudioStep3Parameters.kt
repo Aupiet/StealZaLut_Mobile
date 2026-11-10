@@ -187,20 +187,19 @@ fun StudioStep3Parameters(
             }
         }
 
-        // --- 2. CATEGORY PILLS (Thumb Zone Navigation) ---
+        // --- 2. CATEGORY PILLS (Thumb Zone Navigation: Algorithm -> 3D Grid -> Light -> Color) ---
         val categories = listOf(
-            Triple(0, "Intensité & Lumière", Icons.Default.Tune),
-            Triple(1, "Couleur & Teintes", Icons.Default.Face),
-            Triple(2, "Algorithme", Icons.Default.AutoAwesome),
-            Triple(3, "Grille 3D LUT", Icons.Default.GridOn)
+            Triple(0, stringResource(R.string.studio_tab_algorithm), Icons.Default.AutoAwesome),
+            Triple(1, stringResource(R.string.studio_tab_grid), Icons.Default.GridOn),
+            Triple(2, stringResource(R.string.studio_tab_light), Icons.Default.Tune),
+            Triple(3, stringResource(R.string.studio_tab_color), Icons.Default.Face)
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(pillScrollState)
                 .padding(vertical = AppDimens.SpacingMicro),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
         ) {
             categories.forEach { (index, title, icon) ->
                 val isSelected = activeCategory == index
@@ -219,14 +218,15 @@ fun StudioStep3Parameters(
                     shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
                     color = animatedBg,
                     modifier = Modifier
+                        .weight(1f)
                         .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
                         .clip(RoundedCornerShape(AppDimens.CornerRadiusPill))
                         .clickable { activeCategory = index }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall),
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingExtraSmall, vertical = AppDimens.SpacingSmall),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro, Alignment.CenterHorizontally)
                     ) {
                         Icon(
                             imageVector = icon,
@@ -238,7 +238,9 @@ fun StudioStep3Parameters(
                             text = title,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = animatedTextColor
+                            color = animatedTextColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -268,7 +270,21 @@ fun StudioStep3Parameters(
                 ) { category ->
                     when (category) {
                         0 -> {
-                            // Category 0: Intensity & Luminance Preservation
+                            // Category 0: Color Transfer Algorithm (Cinematic HM-MKL-HM, MKL, HM, Reinhard, MVGD)
+                            MethodSelector(
+                                selectedMethod = selectedMethod,
+                                onMethodSelected = onMethodSelected
+                            )
+                        }
+                        1 -> {
+                            // Category 1: 3D LUT Lattice Size (17x17x17, 33x33x33, 64x64x64)
+                            LutSizeSelector(
+                                selectedSize = selectedLutSize,
+                                onSizeSelected = onLutSizeSelected
+                            )
+                        }
+                        2 -> {
+                            // Category 2: Intensity & Luminance Lock
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
@@ -284,7 +300,7 @@ fun StudioStep3Parameters(
                                 )
 
                                 SzlSlider(
-                                    title = stringResource(R.string.param_smooth_title),
+                                    title = stringResource(R.string.param_luma_lock_title),
                                     value = preserveLuminance,
                                     onValueChange = onPreserveLuminanceChange,
                                     min = 0f,
@@ -294,8 +310,8 @@ fun StudioStep3Parameters(
                                 )
                             }
                         }
-                        1 -> {
-                            // Category 1: Color, Skin Protection & Neutral Lock
+                        3 -> {
+                            // Category 3: Color, Skin Protection, Neutral Lock & 3D Spatial Smoothing
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
@@ -321,7 +337,7 @@ fun StudioStep3Parameters(
                                 )
 
                                 SzlSlider(
-                                    title = "Lissage Spatial 3D",
+                                    title = stringResource(R.string.param_smooth_title),
                                     value = smoothSigma,
                                     onValueChange = onSmoothSigmaChange,
                                     min = 0f,
@@ -330,20 +346,6 @@ fun StudioStep3Parameters(
                                     defaultValue = 0.0f
                                 )
                             }
-                        }
-                        2 -> {
-                            // Category 2: Color Transfer Algorithm
-                            MethodSelector(
-                                selectedMethod = selectedMethod,
-                                onMethodSelected = onMethodSelected
-                            )
-                        }
-                        3 -> {
-                            // Category 3: 3D LUT Lattice Size
-                            LutSizeSelector(
-                                selectedSize = selectedLutSize,
-                                onSizeSelected = onLutSizeSelected
-                            )
                         }
                     }
                 }

@@ -68,6 +68,11 @@
     <string name="wizard_step_3_btn_run">Générer le Rendu LUT (4/5) →</string>
     <string name="wizard_step_3_preview_title">Aperçu en direct (WYSIWYG)</string>
     <string name="wizard_step_3_computing_badge">Calcul en cours…</string>
+    <string name="studio_tab_algorithm">Algorithme</string>
+    <string name="studio_tab_grid">Grille 3D</string>
+    <string name="studio_tab_light">Lumière</string>
+    <string name="studio_tab_color">Couleur</string>
+    <string name="param_luma_lock_title">Verrouillage de la Luminance</string>
     <string name="param_skin_prot_title">Protection des Tons Chairs</string>
     <string name="param_neutral_lock_title">Verrouillage de l\'Axe Neutre</string>
     <string name="param_smooth_title">Lissage Spatial 3D</string>
@@ -610,4 +615,31 @@
     <string name="guide_sample_graded_label">Photo étalonnée</string>
     <string name="guide_sample_reference_label">Photo de référence</string>
 
+    <!-- RAW & DNG Import -->
+    <string name="btn_open_raw_dng">Ouvrir RAW / DNG</string>
+
+    <!-- Guide 3D LUT Creation Features -->
+    <string name="guide_algorithms_title">Algorithmes de Transfert 3D</string>
+    <string name="guide_algorithms_desc">Modèles mathématiques de transport optimal et d\'ajustement colorimétrique</string>
+    <string name="guide_algorithms_detail">StealZaLUT intègre 4 algorithmes mathématiques avancés : Covariance MKL (transport optimal dans l\'espace de covariance), Correspondance Cumulative HM (histogramme par canal), Reinhard (statistiques dans l\'espace perceptuel Lab) et Cinématique Hybride (enchaînement HM + MKL sans écrasement des noirs).</string>
+    <string name="guide_algorithms_p1_name">Covariance MKL</string>
+    <string name="guide_algorithms_p1_desc">Transport optimal alignant l\'ellipsoïde de covariance des couleurs 3D.</string>
+    <string name="guide_algorithms_p2_name">Cinématique Hybride</string>
+    <string name="guide_algorithms_p2_desc">Enchaînement HM + MKL combinant dynamique d\'histogramme et transport optimal.</string>
+
+    <string name="guide_protections_title">Protections &amp; Masques OKLab</string>
+    <string name="guide_protections_desc">Préservation des tons chairs, neutres purs et continuité des dégradés</string>
+    <string name="guide_protections_detail">Garantit la fidélité des sujets lors des transferts colorimétriques intenses. Fonctionne dans l\'espace perceptuel OKLab pour isoler les carnations humaines, ancrer l\'axe des gris et verrouiller la courbe de contraste de luminance.</string>
+    <string name="guide_protections_p1_name">Luminance &amp; Axe Neutre</string>
+    <string name="guide_protections_p1_desc">Empêche les dérives de contraste et garde les blancs et noirs sans dominante indésirable.</string>
+    <string name="guide_protections_p2_name">Tons Chairs &amp; Lissage 3D</string>
+    <string name="guide_protections_p2_desc">Protège le teint naturel des visages et adoucit la grille 3D pour éviter la postérisation.</string>
+
+    <string name="guide_lattice_title">Résolution de Grille 3D LUT</string>
+    <string name="guide_lattice_desc">Densité d\'échantillonnage volumétrique et précision d\'interpolation</string>
+    <string name="guide_lattice_detail">Définit la résolution de la grille tridimensionnelle du cube de couleur. Des maillages plus denses offrent des transitions subtiles et des dégradés sans banding.</string>
+    <string name="guide_lattice_p1_name">Standards Mobiles 17³ et 33³</string>
+    <string name="guide_lattice_p1_desc">17x17x17 pour un rendu ultra-rapide, 33x33x33 pour l\'équilibre qualité/mémoire optimal.</string>
+    <string name="guide_lattice_p2_name">Haute Précision Cinéma 64³</string>
+    <string name="guide_lattice_p2_desc">Cube dense 64x64x64 pour l\'étalonnage cinéma exigeant et DaVinci Resolve.</string>
 </resources>

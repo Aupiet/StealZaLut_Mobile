@@ -48,6 +48,9 @@ fun InteractiveBeforeAfterSlider(
             FeatureDemoType.EFFECTS -> "effects"
             FeatureDemoType.LUT_EXPORT -> "lut"
             FeatureDemoType.STYLE_TRANSFER -> "transfer"
+            FeatureDemoType.LUT_ALGORITHMS -> "lut_algorithms"
+            FeatureDemoType.LUT_PROTECTIONS -> "lut_protections"
+            FeatureDemoType.LUT_LATTICE -> "lut_lattice"
         }
     }
     InteractiveBeforeAfterSlider(toolId = toolId, modifier = modifier)

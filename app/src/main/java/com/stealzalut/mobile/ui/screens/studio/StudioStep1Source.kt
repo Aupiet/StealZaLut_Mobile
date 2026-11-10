@@ -48,6 +48,12 @@ fun StudioStep1Source(
         if (uri != null) onImageSelected(uri)
     }
 
+    val rawPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) onImageSelected(uri)
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
@@ -61,6 +67,26 @@ fun StudioStep1Source(
             bitmap = sourceBitmap,
             onImageSelected = onImageSelected
         )
+
+        OutlinedButton(
+            onClick = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+        ) {
+            Icon(
+                imageVector = MaterialTheme.icons.actionImport,
+                contentDescription = null,
+                modifier = Modifier.size(AppDimens.IconNormal)
+            )
+            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+            Text(
+                text = stringResource(R.string.btn_open_raw_dng),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         if (sourceBitmap != null) {
             Row(

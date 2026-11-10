@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 class FeatureGuideRegistryTest {
 
     @Test
-    fun `registry contains exactly 12 photographic tools`() {
-        assertEquals(12, FeatureGuideRegistry.items.size)
+    fun `registry contains 15 photographic and 3D LUT tools`() {
+        assertEquals(15, FeatureGuideRegistry.items.size)
     }
 
     @Test
@@ -59,8 +59,9 @@ class FeatureGuideRegistryTest {
         assertEquals("crop", cropResults[0].id)
 
         val lutResults = FeatureGuideRegistry.filter(query = "lut")
-        assertEquals(1, lutResults.size)
-        assertEquals("lut", lutResults[0].id)
+        assertEquals(4, lutResults.size)
+        assertTrue(lutResults.any { it.id == "lut" })
+        assertTrue(lutResults.any { it.id == "lut_algorithms" })
     }
 
     @Test

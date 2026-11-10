@@ -142,7 +142,7 @@ fun MainColorGradingScreen(
                         onClick = {
                             showExitEditorConfirmDialog = false
                             viewModel.closeEditorPhoto()
-                            viewModel.navigateTo(AppDestination.STUDIO)
+                            viewModel.navigateTo(AppDestination.EDITOR)
                         }
                     ) {
                         Text(

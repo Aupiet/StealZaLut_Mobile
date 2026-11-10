@@ -12,7 +12,13 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, TiffImagePlugin
+
+try:
+    Image.register_extension(TiffImagePlugin.TiffImageFile.format, ".dng")
+    Image.register_extension(TiffImagePlugin.TiffImageFile.format, ".raw")
+except Exception:
+    pass
 from stealzalut.config import MAX_ANALYSIS_DIMENSION, PALETTE_DEFAULT_COLORS
 
 

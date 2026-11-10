@@ -346,8 +346,14 @@ private fun FeatureGuideDetailView(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppDimens.SpacingMedium)
         ) {
-            // Reference Photo Showcase (for Style Transfer)
-            if (item.demoType == FeatureDemoType.STYLE_TRANSFER) {
+            // Reference Photo Showcase (for Style Transfer & 3D LUT Generation)
+            if (item.demoType in listOf(
+                    FeatureDemoType.STYLE_TRANSFER,
+                    FeatureDemoType.LUT_ALGORITHMS,
+                    FeatureDemoType.LUT_PROTECTIONS,
+                    FeatureDemoType.LUT_LATTICE
+                )
+            ) {
                 Text(
                     text = stringResource(R.string.guide_reference_title),
                     style = MaterialTheme.typography.titleMedium,

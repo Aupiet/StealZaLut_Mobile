@@ -114,9 +114,9 @@ fun StudioStep5Result(
 
         Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
 
-        // --- 2. Primary Action Button: "Ouvrir dans l'Éditeur Pro →" (Figma node 12:409) ---
+        // --- 2. Button 1: "Exporter la photo" (High priority action) ---
         Button(
-            onClick = onOpenInEditor,
+            onClick = onSaveGradedImage,
             enabled = !isExportingImage && !isExportingCube,
             modifier = Modifier
                 .fillMaxWidth()
@@ -127,6 +127,57 @@ fun StudioStep5Result(
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
+            if (isExportingImage) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(AppDimens.IconSmall),
+                    strokeWidth = AppDimens.BorderMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.export_dialog_progress),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Icon(
+                    imageVector = if (isGradedImageSaved) MaterialTheme.icons.statusCheck else MaterialTheme.icons.actionSave,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconSmall)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.wizard_step_5_btn_save_gallery),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // --- Button 2: "Retoucher dans l'éditeur" ---
+        OutlinedButton(
+            onClick = onOpenInEditor,
+            enabled = !isExportingImage && !isExportingCube,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+            border = BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(
+                imageVector = MaterialTheme.icons.toolBasic,
+                contentDescription = null,
+                modifier = Modifier.size(AppDimens.IconSmall)
+            )
+            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
             Text(
                 text = stringResource(R.string.btn_edit_in_editor),
                 style = MaterialTheme.typography.labelMedium,

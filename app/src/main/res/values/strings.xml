@@ -68,6 +68,11 @@
     <string name="wizard_step_3_btn_run">Generate LUT Render (4/5) →</string>
     <string name="wizard_step_3_preview_title">Live Preview (WYSIWYG)</string>
     <string name="wizard_step_3_computing_badge">Rendering…</string>
+    <string name="studio_tab_algorithm">Algorithm</string>
+    <string name="studio_tab_grid">3D Grid</string>
+    <string name="studio_tab_light">Light</string>
+    <string name="studio_tab_color">Color</string>
+    <string name="param_luma_lock_title">Luminance Lock (Luma)</string>
     <string name="param_skin_prot_title">Skin Tone Protection</string>
     <string name="param_neutral_lock_title">Neutral Axis Lock</string>
     <string name="param_smooth_title">3D Spatial Smoothing</string>
@@ -610,4 +615,31 @@
     <string name="guide_sample_graded_label">Graded photo</string>
     <string name="guide_sample_reference_label">Reference photo</string>
 
+    <!-- RAW & DNG Import -->
+    <string name="btn_open_raw_dng">Open RAW / DNG</string>
+
+    <!-- Guide 3D LUT Creation Features -->
+    <string name="guide_algorithms_title">3D Color Transfer Algorithms</string>
+    <string name="guide_algorithms_desc">Mathematical optimal transport and statistical color matching models</string>
+    <string name="guide_algorithms_detail">StealZaLUT embeds 4 advanced mathematical models: Monge-Kantorovitch Linear (MKL optimal transport in covariance space), Histogram Matching (HM per-channel cumulative mapping), Reinhard (perceptual Lab statistical moments), and Hybrid Cinematic (chained HM+MKL for cinematic grading without crushing).</string>
+    <string name="guide_algorithms_p1_name">MKL (Covariance)</string>
+    <string name="guide_algorithms_p1_desc">Optimal transport matching the 3D RGB color covariance ellipsoid.</string>
+    <string name="guide_algorithms_p2_name">Hybrid Cinematic</string>
+    <string name="guide_algorithms_p2_desc">Chained HM + MKL combining histogram dynamic range and optimal transport.</string>
+
+    <string name="guide_protections_title">OKLab Color Protections &amp; Masks</string>
+    <string name="guide_protections_desc">Gamut safeguards, skin preservation, and gradient continuity</string>
+    <string name="guide_protections_detail">Safeguards subject authenticity during extreme grade transfers. Operates in perceptual OKLab space to isolate human skin tones, anchor neutral grays, and lock luminance contrast curves.</string>
+    <string name="guide_protections_p1_name">Luma &amp; Neutral Lock</string>
+    <string name="guide_protections_p1_desc">Prevents contrast shifts and keeps pure whites and blacks neutral without unwanted color casts.</string>
+    <string name="guide_protections_p2_name">Skin Tone Lock &amp; 3D Smoothing</string>
+    <string name="guide_protections_p2_desc">Preserves natural skin complexion and smooths 3D lattice gradients to eliminate banding.</string>
+
+    <string name="guide_lattice_title">3D LUT Lattice Resolution</string>
+    <string name="guide_lattice_desc">Volumetric color cube sampling density and interpolation</string>
+    <string name="guide_lattice_detail">Determines the density of the 3-dimensional color sampling cube. Higher grid resolutions provide finer sub-color gradients and subtle transitions.</string>
+    <string name="guide_lattice_p1_name">17³ &amp; 33³ Mobile Standards</string>
+    <string name="guide_lattice_p1_desc">17x17x17 for ultra-fast mobile rendering, 33x33x33 for the optimal quality/memory ratio.</string>
+    <string name="guide_lattice_p2_name">64³ Cinema Precision</string>
+    <string name="guide_lattice_p2_desc">64x64x64 high-density cube meeting DaVinci Resolve and film mastering requirements.</string>
 </resources>

@@ -69,6 +69,7 @@ import java.util.Locale
 @Composable
 fun EditorEmptyState(
     onSelectImage: () -> Unit,
+    onSelectRawDng: (() -> Unit)? = null,
     projects: List<EditorProject> = emptyList(),
     onOpenProject: (EditorProject) -> Unit = {},
     onRenameProject: (String, String) -> Unit = { _, _ -> },
@@ -124,6 +125,30 @@ fun EditorEmptyState(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+
+                if (onSelectRawDng != null) {
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = onSelectRawDng,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AppDimens.ButtonHeightStandard),
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusLarge)
+                    ) {
+                        Icon(
+                            imageVector = MaterialTheme.icons.actionImport,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconNormal)
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                        Text(
+                            text = stringResource(R.string.btn_open_raw_dng),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Surface(

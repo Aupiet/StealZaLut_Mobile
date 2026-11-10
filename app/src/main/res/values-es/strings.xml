@@ -68,6 +68,11 @@
     <string name="wizard_step_3_btn_run">Generar Render LUT (4/5) →</string>
     <string name="wizard_step_3_preview_title">Vista Previa en Vivo (WYSIWYG)</string>
     <string name="wizard_step_3_computing_badge">Procesando…</string>
+    <string name="studio_tab_algorithm">Algoritmo</string>
+    <string name="studio_tab_grid">Cuadrícula 3D</string>
+    <string name="studio_tab_light">Luz</string>
+    <string name="studio_tab_color">Color</string>
+    <string name="param_luma_lock_title">Bloqueo de Luminancia</string>
     <string name="param_skin_prot_title">Protección de Tonos de Piel</string>
     <string name="param_neutral_lock_title">Bloqueo de Eje Neutro</string>
     <string name="param_smooth_title">Suavizado Espacial 3D</string>
@@ -610,4 +615,31 @@
     <string name="guide_sample_graded_label">Foto talonada</string>
     <string name="guide_sample_reference_label">Foto de referencia</string>
 
+    <!-- RAW & DNG Import -->
+    <string name="btn_open_raw_dng">Abrir RAW / DNG</string>
+
+    <!-- Guide 3D LUT Creation Features -->
+    <string name="guide_algorithms_title">Algoritmos de Transferencia 3D</string>
+    <string name="guide_algorithms_desc">Modelos matemáticos de transporte óptimo y mapeo colorimétrico</string>
+    <string name="guide_algorithms_detail">StealZaLUT integra 4 algoritmos matemáticos avanzados: Covarianza MKL (transporte óptimo en el espacio de covarianza), Coincidencia Acumulativa HM (histograma por canal), Reinhard (estadísticas en el espacio perceptual Lab) y Cinemático Híbrido (cadena HM + MKL sin aplastar las sombras).</string>
+    <string name="guide_algorithms_p1_name">Covarianza MKL</string>
+    <string name="guide_algorithms_p1_desc">Transporte óptimo que alinea el elipsoide de covarianza de color 3D.</string>
+    <string name="guide_algorithms_p2_name">Cinemático Híbrido</string>
+    <string name="guide_algorithms_p2_desc">Cadena HM + MKL que combina rango de histograma y transporte óptimo.</string>
+
+    <string name="guide_protections_title">Protecciones y Máscaras OKLab</string>
+    <string name="guide_protections_desc">Preservación de tonos de piel, grises neutros y suavidad de gradientes</string>
+    <string name="guide_protections_detail">Garantiza la autenticidad de los sujetos durante gradaciones intensas. Opera en el espacio perceptual OKLab para aislar tonos de piel humanos, fijar el eje de grises y bloquear la curva de contraste de luminancia.</string>
+    <string name="guide_protections_p1_name">Luminancia y Eje Neutro</string>
+    <string name="guide_protections_p1_desc">Previene cambios de contraste y mantiene blancos y negros libres de dominantes.</string>
+    <string name="guide_protections_p2_name">Tonos de Piel y Suavizado 3D</string>
+    <string name="guide_protections_p2_desc">Protege la complexión natural del rostro y suaviza la malla 3D para evitar posterización.</string>
+
+    <string name="guide_lattice_title">Resolución de Malla 3D LUT</string>
+    <string name="guide_lattice_desc">Densidad de muestreo volumétrico y precisión de interpolación</string>
+    <string name="guide_lattice_detail">Determina la densidad de muestreo del cubo de color tridimensional. Mallas más densas ofrecen transiciones finas y gradientes sin bandas.</string>
+    <string name="guide_lattice_p1_name">Estándares Móviles 17³ y 33³</string>
+    <string name="guide_lattice_p1_desc">17x17x17 para renderizado ultrarrápido, 33x33x33 para el equilibrio calidad/memoria óptimo.</string>
+    <string name="guide_lattice_p2_name">Alta Precisión Cine 64³</string>
+    <string name="guide_lattice_p2_desc">Cubo denso 64x64x64 para gradación cinematográfica exigente y DaVinci Resolve.</string>
 </resources>

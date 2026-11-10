@@ -378,7 +378,8 @@ class EditorSessionDelegate(
         updateUndoRedoState()
         activeEditorSourceJob = scope.launch {
             stateFlow.update { it.copy(isEditorProcessing = true, errorMessage = null) }
-            val filename = "editor_source_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val ext = bridgeRepository.resolveExtensionFromUri(uri)
+            val filename = "editor_source_${java.util.UUID.randomUUID().toString().take(8)}.$ext"
             val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->
@@ -617,11 +618,25 @@ class EditorSessionDelegate(
                     val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
                     val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
 
+                    val currentLr = stateFlow.value.editorLightroomParams
+                    val updatedBasic = currentLr.basic.copy(
+                        exposure = autoSettings.exposure.coerceIn(-5.0f, 5.0f),
+                        contrast = autoSettings.contrast.coerceIn(-100.0f, 100.0f),
+                        highlights = autoSettings.highlights.coerceIn(-100.0f, 100.0f),
+                        shadows = autoSettings.shadows.coerceIn(-100.0f, 100.0f),
+                        whites = autoSettings.whites.coerceIn(-100.0f, 100.0f),
+                        blacks = autoSettings.blacks.coerceIn(-100.0f, 100.0f),
+                        vibrance = autoSettings.vibrance.coerceIn(-100.0f, 100.0f),
+                        saturation = autoSettings.saturation.coerceIn(-100.0f, 100.0f)
+                    )
+                    val updatedLr = currentLr.copy(basic = updatedBasic, isBasicEnabled = true)
+
                     pushUndoSnapshot()
                     stateFlow.update {
                         it.copy(
                             isComputingEdit = false,
                             isAutoEditActive = true,
+                            editorLightroomParams = updatedLr,
                             step3Exposure = expNorm,
                             step3Contrast = contrastNorm,
                             step3Highlights = highlightsNorm,
@@ -859,15 +874,24 @@ class EditorSessionDelegate(
         }
     }
 
-    fun exportEditorImage(onSavedImageRecorded: () -> Unit) {
+    fun exportEditorImage(
+        format: String? = null,
+        quality: Int? = null,
+        maxDim: Int? = null,
+        onSavedImageRecorded: () -> Unit
+    ) {
         if (stateFlow.value.isEditorExportingImage) return
         val src = stateFlow.value.editorSourcePath ?: return
+        val effFormat = format ?: stateFlow.value.settings.exportFormat
+        val effQuality = quality ?: stateFlow.value.settings.exportQuality
+        val effMaxDim = maxDim ?: stateFlow.value.settings.maxExportDim
         scope.launch {
             stateFlow.update { it.copy(isEditorExportingImage = true, errorMessage = null) }
             val res = bridgeRepository.exportEditorImage(
                 srcPath = src,
-                maxExportDim = stateFlow.value.settings.maxExportDim,
-                quality = stateFlow.value.settings.exportQuality,
+                maxExportDim = effMaxDim,
+                format = effFormat,
+                quality = effQuality,
                 lutSize = stateFlow.value.lutSize,
                 intensity = stateFlow.value.step2Intensity,
                 lumaLock = stateFlow.value.step2LumaLock,
@@ -893,11 +917,11 @@ class EditorSessionDelegate(
 
             when (res) {
                 is ImageExportResult.Success -> {
-                    val displayName = "StealZaLUT_Editor_${System.currentTimeMillis()}.${if (stateFlow.value.settings.exportFormat.equals("PNG", true)) "png" else "jpg"}"
+                    val displayName = "StealZaLUT_Editor_${System.currentTimeMillis()}.${if (effFormat.equals("PNG", true)) "png" else "jpg"}"
                     val mediaStoreResult = bridgeRepository.saveImageToMediaStore(
                         imagePath = res.imagePath,
                         displayName = displayName,
-                        mimeType = if (stateFlow.value.settings.exportFormat.equals("PNG", true)) "image/png" else "image/jpeg"
+                        mimeType = if (effFormat.equals("PNG", true)) "image/png" else "image/jpeg"
                     )
 
                     mediaStoreResult.fold(

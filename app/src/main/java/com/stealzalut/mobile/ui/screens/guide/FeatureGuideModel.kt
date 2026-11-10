@@ -34,7 +34,10 @@ enum class FeatureDemoType {
     LENS_BLUR,
     EFFECTS,
     LUT_EXPORT,
-    STYLE_TRANSFER
+    STYLE_TRANSFER,
+    LUT_ALGORITHMS,
+    LUT_PROTECTIONS,
+    LUT_LATTICE
 }
 
 /**

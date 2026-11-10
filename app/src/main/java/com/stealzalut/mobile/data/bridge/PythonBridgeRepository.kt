@@ -52,6 +52,34 @@ class PythonBridgeRepository(private val context: Context) {
     // Dedicated directory for active source/reference inputs, isolated from auto-pruned previews
     val inputsDir: File = File(context.cacheDir, "stealzalut_inputs").apply { mkdirs() }
 
+    fun resolveExtensionFromUri(uri: Uri): String {
+        return try {
+            val mime = context.contentResolver.getType(uri)
+            val extFromMime = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
+            if (!extFromMime.isNullOrBlank()) return extFromMime.lowercase()
+
+            var name: String? = null
+            if (uri.scheme == android.content.ContentResolver.SCHEME_CONTENT) {
+                val cursor = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val idx = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (idx != -1) name = it.getString(idx)
+                    }
+                }
+            }
+            if (name == null) name = uri.path
+            val dot = name?.lastIndexOf('.') ?: -1
+            if (dot != -1 && dot < (name?.length ?: 0) - 1) {
+                name!!.substring(dot + 1).lowercase()
+            } else {
+                "jpg"
+            }
+        } catch (e: Exception) {
+            "jpg"
+        }
+    }
+
     /**
      * Resolves an Android Content Uri by caching the stream into internal storage
      * within [inputsDir] so Python can read a POSIX path.
@@ -74,16 +102,27 @@ class PythonBridgeRepository(private val context: Context) {
 
                 // If not a LUT file, verify that it can be decoded bounds-first
                 if (!cacheFilename.endsWith(".cube", ignoreCase = true)) {
+                    val ext = targetFile.extension.lowercase()
+                    val isRawOrDng = ext in listOf("dng", "raw", "cr2", "nef", "arw", "orf", "rw2")
                     val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                     try {
                         BitmapFactory.decodeFile(targetFile.absolutePath, opts)
                         if (opts.outWidth <= 0 || opts.outHeight <= 0) {
-                            targetFile.delete()
-                            throw IllegalArgumentException("Format d'image non reconnu ou corrompu: $cacheFilename")
+                            if (isRawOrDng) {
+                                if (targetFile.length() < 1024L) {
+                                    targetFile.delete()
+                                    throw IllegalArgumentException("Fichier RAW/DNG corrompu: $cacheFilename")
+                                }
+                            } else {
+                                targetFile.delete()
+                                throw IllegalArgumentException("Format d'image non reconnu ou corrompu: $cacheFilename")
+                            }
                         }
                     } catch (t: Throwable) {
-                        targetFile.delete()
-                        throw IllegalStateException("Échec de vérification du format d'image: ${t.localizedMessage}", t)
+                        if (!isRawOrDng) {
+                            targetFile.delete()
+                            throw IllegalStateException("Échec de vérification du format d'image: ${t.localizedMessage}", t)
+                        }
                     }
                 }
 
@@ -627,6 +666,7 @@ class PythonBridgeRepository(private val context: Context) {
     suspend fun exportEditorImage(
         srcPath: String,
         maxExportDim: Int = 2048,
+        format: String = "JPEG",
         quality: Int = 95,
         lutSize: LutSize = LutSize.STANDARD,
         intensity: Float = 1.0f,
@@ -656,7 +696,8 @@ class PythonBridgeRepository(private val context: Context) {
 
             val outputDir = File(context.cacheDir, "exports_temp").apply { mkdirs() }
             val timestamp = System.currentTimeMillis()
-            val imageFile = File(outputDir, "StealZaLUT_Editor_Graded_${timestamp}.jpg")
+            val ext = if (format.equals("PNG", true)) "png" else "jpg"
+            val imageFile = File(outputDir, "StealZaLUT_Editor_Graded_${timestamp}.$ext")
 
             val pyResult: PyObject = bridge.callAttr(
                 "export_graded_image",

@@ -117,12 +117,27 @@ L'éditeur intègre un système complet de gestion de projets d'édition non-des
 - Sauvegarde automatique en arrière-plan débouncée à 2 secondes lors de toute modification.
 - Écran d'accueil de l'éditeur affichant l'historique chronologique des projets récents avec métadonnées relatives, duplication, renommage et suppression.
 
-### 2.5 Centre d'Aide & Découverte des 12 Outils Photographiques
-L'application propose un espace dédié à l'apprentissage et à la découverte interactive des 12 outils majeurs (`ui/screens/guide/`) :
+### 2.5 Centre d'Aide & Découverte des 15 Outils Photographiques et 3D LUT
+L'application propose un espace dédié à l'apprentissage et à la découverte interactive des outils majeurs (`ui/screens/guide/`) :
 - Modélisation typée `FeatureGuideModel` (catégories, paramètres, échelles de valeurs, conseils pratiques).
+- Couverture intégrale des **outils de retouche Lightroom** (Recadrage, Courbes, Mixeur HSL, Étalonnage 3 Voies, Étalonnage Capteur, Netteté, Optique, Géométrie, Flou d'objectif, Effets & Grain) ET de la **création de 3D LUT** (Algorithmes de transfert MKL/HM/Reinhard/Cinématique, Masques & Protections OKLab, Résolution de grille 3D LUT 17³/33³/64³, Exportation `.cube`).
 - Réutilisation directe du comparateur tactile haute performance du Studio `DoubleViewComparison` (Split-Wipe, Side-by-Side, Hold-to-Compare).
-- Photographies réelles d'étalonnage embarquées (`guide_sample_depart.jpg`, `guide_sample_etalonnee.jpg`, `guide_sample_reference.jpg`) avec cache mémoire d'effets pré-générés pour une démonstration instantanée sans latence.
+- Photographies réelles d'étalonnage embarquées (`guide_sample_depart.jpg`, `guide_sample_graded.jpg`, `guide_sample_reference.jpg`) avec cache mémoire d'effets pré-générés pour une démonstration instantanée sans latence.
 - Navigation hiérarchique préservant le contexte du guide lors des retours arrière.
+
+### 2.6 Prise en Charge Universelle RAW & DNG
+Pour pallier la limitation du sélecteur de photos standard d'Android (`PickVisualMedia`) qui filtre les fichiers bruts :
+- Intégration d'un bouton dédié « Ouvrir RAW / DNG » s'appuyant sur le Storage Access Framework Android (`ActivityResultContracts.GetContent("*/*")`).
+- Résolution dynamique de l'extension de fichier originale depuis le `ContentResolver` (préservation des `.dng`, `.raw`, `.cr2`, `.nef`, `.arw`).
+- Décodage résilient des aperçus : contournement de la vérification bounds de `BitmapFactory` pour les formats RAW/DNG, extraction native des vignettes EXIF intégrées via `android.media.ExifInterface.thumbnailBitmap` / `thumbnailBytes`.
+- Enregistrement des extensions `.dng` et `.raw` dans le plugin TIFF de Pillow (`PIL.TiffImagePlugin`) pour une ouverture directe côté Python.
+
+### 2.7 Dialogue d'Exportation HD et Pilotage Multi-Résolution
+Le dialogue d'exportation de l'éditeur autonome (`EditorExportDialog.kt`) offre un contrôle complet :
+- Sélection de la résolution cible : 1080p FHD (1920), 1440p QHD (2560), 4K UHD (3840) et Résolution Native (0).
+- Sélection du format : JPEG et PNG non-destructif.
+- Curseur de qualité de compression JPEG (50% à 100%) avec calcul en temps réel du poids estimé en Mo et des dimensions en pixels.
+- Transmission intégrale des paramètres (`format`, `quality`, `maxDim`) vers `PythonBridgeRepository.exportEditorImage` et `export_graded_image` pour un rendu haute précision.
 
 ---
 

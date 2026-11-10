@@ -25,7 +25,10 @@ object GuideDemoColors {
             FeatureDemoType.LENS_BLUR -> Brush.linearGradient(listOf(Color(0xFF1B2631), Color(0xFF283747)))
             FeatureDemoType.EFFECTS -> Brush.linearGradient(listOf(Color(0xFF424949), Color(0xFF515A5A)))
             FeatureDemoType.LUT_EXPORT -> Brush.linearGradient(listOf(Color(0xFF566573), Color(0xFF707B7C)))
-            FeatureDemoType.STYLE_TRANSFER -> Brush.linearGradient(listOf(Color(0xFF4D5656), Color(0xFF626567)))
+            FeatureDemoType.STYLE_TRANSFER,
+            FeatureDemoType.LUT_ALGORITHMS,
+            FeatureDemoType.LUT_PROTECTIONS,
+            FeatureDemoType.LUT_LATTICE -> Brush.linearGradient(listOf(Color(0xFF4D5656), Color(0xFF626567)))
         }
     }
 
@@ -42,7 +45,10 @@ object GuideDemoColors {
             FeatureDemoType.LENS_BLUR -> Brush.radialGradient(listOf(Color(0xFFE67E22), Color(0xFF1C2833)))
             FeatureDemoType.EFFECTS -> Brush.radialGradient(listOf(Color(0xFFD35400), Color(0xFF0B0C10)))
             FeatureDemoType.LUT_EXPORT -> Brush.linearGradient(listOf(Color(0xFF6C3483), Color(0xFFF1C40F)))
-            FeatureDemoType.STYLE_TRANSFER -> Brush.linearGradient(listOf(Color(0xFF78281F), Color(0xFFB9770E), Color(0xFF1E8449)))
+            FeatureDemoType.STYLE_TRANSFER,
+            FeatureDemoType.LUT_ALGORITHMS,
+            FeatureDemoType.LUT_PROTECTIONS,
+            FeatureDemoType.LUT_LATTICE -> Brush.linearGradient(listOf(Color(0xFF78281F), Color(0xFFB9770E), Color(0xFF1E8449)))
         }
     }
 }

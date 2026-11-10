@@ -188,6 +188,51 @@ object FeatureGuideRegistry {
                 FeatureParam(R.string.guide_transfer_p2_name, R.string.guide_transfer_p2_desc)
             ),
             demoType = FeatureDemoType.STYLE_TRANSFER
+        ),
+
+        // 13. 3D Color Transfer Algorithms (MKL, HM, Reinhard, Cinematic)
+        FeatureGuideItem(
+            id = "lut_algorithms",
+            titleRes = R.string.guide_algorithms_title,
+            shortDescRes = R.string.guide_algorithms_desc,
+            detailedExplanationRes = R.string.guide_algorithms_detail,
+            category = FeatureCategory.LUTS,
+            iconProvider = { it.toolColorGrading },
+            keyParameters = listOf(
+                FeatureParam(R.string.guide_algorithms_p1_name, R.string.guide_algorithms_p1_desc),
+                FeatureParam(R.string.guide_algorithms_p2_name, R.string.guide_algorithms_p2_desc)
+            ),
+            demoType = FeatureDemoType.LUT_ALGORITHMS
+        ),
+
+        // 14. OKLab Protections & Masks (Luma Lock, Skin tones, Neutral axis, 3D Smoothing)
+        FeatureGuideItem(
+            id = "lut_protections",
+            titleRes = R.string.guide_protections_title,
+            shortDescRes = R.string.guide_protections_desc,
+            detailedExplanationRes = R.string.guide_protections_detail,
+            category = FeatureCategory.LUTS,
+            iconProvider = { it.toolCalibration },
+            keyParameters = listOf(
+                FeatureParam(R.string.guide_protections_p1_name, R.string.guide_protections_p1_desc),
+                FeatureParam(R.string.guide_protections_p2_name, R.string.guide_protections_p2_desc)
+            ),
+            demoType = FeatureDemoType.LUT_PROTECTIONS
+        ),
+
+        // 15. 3D LUT Lattice Resolution (17³, 33³, 64³)
+        FeatureGuideItem(
+            id = "lut_lattice",
+            titleRes = R.string.guide_lattice_title,
+            shortDescRes = R.string.guide_lattice_desc,
+            detailedExplanationRes = R.string.guide_lattice_detail,
+            category = FeatureCategory.LUTS,
+            iconProvider = { it.actionExport },
+            keyParameters = listOf(
+                FeatureParam(R.string.guide_lattice_p1_name, R.string.guide_lattice_p1_desc),
+                FeatureParam(R.string.guide_lattice_p2_name, R.string.guide_lattice_p2_desc)
+            ),
+            demoType = FeatureDemoType.LUT_LATTICE
         )
     ).toPersistentList()
 

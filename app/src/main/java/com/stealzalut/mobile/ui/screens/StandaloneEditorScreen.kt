@@ -119,6 +119,12 @@ fun StandaloneEditorScreen(
         uri?.let { viewModel.setEditorSourceImage(it) }
     }
 
+    val rawPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.setEditorSourceImage(it) }
+    }
+
     val lutPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -144,9 +150,12 @@ fun StandaloneEditorScreen(
             exportProgress = uiState.exportProgress,
             imageWidth = srcBmp?.width ?: 3840,
             imageHeight = srcBmp?.height ?: 2160,
+            defaultMaxDim = uiState.settings.maxExportDim,
+            defaultFormat = if (uiState.settings.exportFormat.equals("PNG", true)) com.stealzalut.mobile.ui.screens.editor.ExportFormat.PNG else com.stealzalut.mobile.ui.screens.editor.ExportFormat.JPEG,
+            defaultQuality = uiState.settings.exportQuality,
             onDismiss = { viewModel.dismissExportDialog() },
-            onConfirmExport = { _, _ ->
-                viewModel.exportEditorImage()
+            onConfirmExport = { format, quality, maxDim ->
+                viewModel.exportEditorImage(format = format.name, quality = quality, maxDim = maxDim)
                 viewModel.dismissExportDialog()
             }
         )
@@ -198,6 +207,7 @@ fun StandaloneEditorScreen(
         if (uiState.editorSourceBitmap == null) {
             EditorEmptyState(
                 onSelectImage = { imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, // GUARD_ALLOW
+                onSelectRawDng = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
                 projects = uiState.editorProjects,
                 onOpenProject = { viewModel.openProject(it) },
                 onRenameProject = { id, newName -> viewModel.renameProject(id, newName) },

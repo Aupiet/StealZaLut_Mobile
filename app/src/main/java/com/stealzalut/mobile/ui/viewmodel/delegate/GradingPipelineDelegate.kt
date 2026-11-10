@@ -103,7 +103,8 @@ class GradingPipelineDelegate(
         activeGradingJob?.cancel()
         activeSourceJob = scope.launch {
             stateFlow.update { it.copy(isProcessingPreview = true, errorMessage = null) }
-            val filename = "source_${java.util.UUID.randomUUID().toString().take(8)}.jpg"
+            val ext = bridgeRepository.resolveExtensionFromUri(uri)
+            val filename = "source_${java.util.UUID.randomUUID().toString().take(8)}.$ext"
             val cacheResult = bridgeRepository.cacheImageFromUri(uri, filename)
             cacheResult.fold(
                 onSuccess = { file ->

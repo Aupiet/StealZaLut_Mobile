@@ -34,7 +34,10 @@ object GuideImageProvider {
             "blur" -> R.drawable.guide_demo_blur
             "effects" -> R.drawable.guide_demo_effects
             "lut" -> R.drawable.guide_demo_lut
-            "transfer" -> R.drawable.guide_demo_style_transfer
+            "transfer" -> R.drawable.guide_sample_graded
+            "lut_algorithms" -> R.drawable.guide_sample_graded
+            "lut_protections" -> R.drawable.guide_sample_graded
+            "lut_lattice" -> R.drawable.guide_sample_graded
             else -> R.drawable.guide_demo_effects
         }
     }

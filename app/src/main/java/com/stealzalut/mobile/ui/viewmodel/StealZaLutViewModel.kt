@@ -311,7 +311,11 @@ class StealZaLutViewModel(
     fun resetAllEditorParams() = editorSessionDelegate.resetAllEditorParams()
     fun closeEditorPhoto() = editorSessionDelegate.closeEditorPhoto()
     fun exportEditorCube(onSuccess: (String) -> Unit) = editorSessionDelegate.exportEditorCube(onSuccess)
-    fun exportEditorImage() = editorSessionDelegate.exportEditorImage { loadSavedImages() }
+    fun exportEditorImage(
+        format: String? = null,
+        quality: Int? = null,
+        maxDim: Int? = null
+    ) = editorSessionDelegate.exportEditorImage(format, quality, maxDim) { loadSavedImages() }
 
     // Phase 4: Undo / Redo for Editor
     fun undoEditor() = editorSessionDelegate.undo()
@@ -417,7 +421,18 @@ class StealZaLutViewModel(
         return try {
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(path, options)
-            if (options.outWidth <= 0 || options.outHeight <= 0) return null
+            if (options.outWidth <= 0 || options.outHeight <= 0) {
+                val exif = try { android.media.ExifInterface(path) } catch (e: Throwable) { null }
+                val thumbBitmap = exif?.thumbnailBitmap
+                if (thumbBitmap != null) {
+                    return thumbBitmap
+                }
+                val thumbData = exif?.thumbnailBytes
+                if (thumbData != null) {
+                    return BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
+                }
+                return null
+            }
 
             var sampleSize = 1
             val maxActual = maxOf(options.outWidth, options.outHeight)

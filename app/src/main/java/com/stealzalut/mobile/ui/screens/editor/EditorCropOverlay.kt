@@ -19,15 +19,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.RotateRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.RotateRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -35,11 +36,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -185,11 +188,100 @@ object CropPhysics {
     }
 
     /**
+     * Calculates the current magnification factor of the crop selection.
+     * Full frame is 1.0x.
+     */
+    fun computeCurrentZoom(crop: CropRegion): Float {
+        val w = crop.right - crop.left
+        val h = crop.bottom - crop.top
+        val maxDim = max(w, h)
+        return if (maxDim > 0.001f) (1.0f / maxDim).coerceIn(1.0f, 10.0f) else 1.0f
+    }
+
+    /**
+     * Multiplies current zoom level by [factor] around the center of the crop framing.
+     * factor > 1.0 zooms in (tighter crop box).
+     * factor < 1.0 zooms out (larger crop box).
+     */
+    fun zoomBy(
+        crop: CropRegion,
+        factor: Float,
+        ratio: CropAspectRatio,
+        imageWidth: Int,
+        imageHeight: Int,
+        minDim: Float = 0.05f
+    ): CropRegion {
+        if (factor <= 0f) return crop
+        val cx = (crop.left + crop.right) / 2f
+        val cy = (crop.top + crop.bottom) / 2f
+        return applyPinchZoomPan(
+            crop = crop,
+            zoomFactor = factor,
+            panDx = 0f,
+            panDy = 0f,
+            centroidX = cx,
+            centroidY = cy,
+            ratio = ratio,
+            imageWidth = imageWidth,
+            imageHeight = imageHeight,
+            minDim = minDim
+        )
+    }
+
+    /**
+     * Sets target zoom level directly (e.g. from 1.0x to 4.0x) maintaining the current center.
+     */
+    fun setZoom(
+        crop: CropRegion,
+        targetZoom: Float,
+        ratio: CropAspectRatio,
+        imageWidth: Int,
+        imageHeight: Int
+    ): CropRegion {
+        val currentZoom = computeCurrentZoom(crop)
+        if (currentZoom <= 0.01f || targetZoom <= 0.01f) return crop
+        val factor = targetZoom / currentZoom
+        return zoomBy(crop, factor, ratio, imageWidth, imageHeight)
+    }
+
+    /**
+     * Translates (nudges) the crop framing by [deltaX] and [deltaY] in normalized coordinates.
+     */
+    fun nudge(crop: CropRegion, deltaX: Float, deltaY: Float): CropRegion {
+        val w = crop.right - crop.left
+        val h = crop.bottom - crop.top
+        val newL = (crop.left + deltaX).coerceIn(0f, 1f - w)
+        val newT = (crop.top + deltaY).coerceIn(0f, 1f - h)
+        return crop.copy(
+            left = newL,
+            top = newT,
+            right = newL + w,
+            bottom = newT + h
+        )
+    }
+
+    /**
+     * Centers the crop framing within the image boundaries without altering its size.
+     */
+    fun center(crop: CropRegion): CropRegion {
+        val w = crop.right - crop.left
+        val h = crop.bottom - crop.top
+        val newL = ((1.0f - w) / 2f).coerceIn(0f, 1f - w)
+        val newT = ((1.0f - h) / 2f).coerceIn(0f, 1f - h)
+        return crop.copy(
+            left = newL,
+            top = newT,
+            right = newL + w,
+            bottom = newT + h
+        )
+    }
+
+    /**
      * Applies pinch-to-zoom and two-finger pan to the crop region.
      * When zooming into the photo (zoomFactor > 1), the crop box in normalized image space shrinks
      * centered at the touch centroid (framing a tighter portion of the image).
      * When zooming out of the photo (zoomFactor < 1), the crop box expands towards full image bounds [0, 1].
-     * Pan translates the crop box across the image.
+     * Pan translates the crop box across the image in the direction of the fingers.
      * When an aspect ratio is locked, the ratio is strictly preserved.
      */
     fun applyPinchZoomPan(
@@ -230,8 +322,8 @@ object CropPhysics {
             val relX = if (curW > 0.001f) (anchorX - crop.left) / curW else 0.5f
             val relY = if (curH > 0.001f) (anchorY - crop.top) / curH else 0.5f
 
-            var newL = anchorX - relX * newW - panDx
-            var newT = anchorY - relY * newH - panDy
+            var newL = anchorX - relX * newW + panDx
+            var newT = anchorY - relY * newH + panDy
 
             if (newL < 0f) newL = 0f
             if (newL + newW > 1.0f) {
@@ -262,8 +354,8 @@ object CropPhysics {
             val relX = if (curW > 0.001f) (anchorX - crop.left) / curW else 0.5f
             val relY = if (curH > 0.001f) (anchorY - crop.top) / curH else 0.5f
 
-            var newL = (anchorX - relX * newW - panDx).coerceIn(0f, 1f - newW)
-            var newT = (anchorY - relY * newH - panDy).coerceIn(0f, 1f - newH)
+            var newL = (anchorX - relX * newW + panDx).coerceIn(0f, 1f - newW)
+            var newT = (anchorY - relY * newH + panDy).coerceIn(0f, 1f - newH)
 
             return crop.copy(
                 left = newL,
@@ -452,8 +544,17 @@ fun EditorCropOverlay(
     val darkroomColor = MaterialTheme.szlColors.photoDarkroom
     val density = LocalDensity.current
 
+    val currentCropRegion by rememberUpdatedState(cropRegion)
+    val currentSelectedRatio by rememberUpdatedState(selectedRatio)
+    val currentImageWidth by rememberUpdatedState(imageWidth)
+    val currentImageHeight by rememberUpdatedState(imageHeight)
+    val currentOnCropRegionChange by rememberUpdatedState(onCropRegionChange)
+    val currentOnCropFinished by rememberUpdatedState(onCropFinished)
+
     var activeHandle by remember { mutableStateOf(DragHandle.NONE) }
     var isInteracting by remember { mutableStateOf(false) }
+    var lastTapTime by remember { mutableStateOf(0L) }
+    var lastTapPos by remember { mutableStateOf(Offset.Zero) }
 
     val gridAlpha by animateFloatAsState(
         targetValue = if (isInteracting) 1.0f else 0.0f,
@@ -464,16 +565,23 @@ fun EditorCropOverlay(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .pointerInput(cropRegion, selectedRatio, imageWidth, imageHeight) {
+            .pointerInput(imageWidth, imageHeight) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+
+                    val now = System.currentTimeMillis()
+                    val isDoubleTap = (now - lastTapTime < 350L) && (down.position - lastTapPos).getDistance() < 50f
+                    lastTapTime = now
+                    lastTapPos = down.position
+
                     val paddingH = with(density) { AppDimens.SpacingSmall.toPx() }
                     val paddingV = with(density) { AppDimens.SpacingMicro.toPx() }
                     val availW = (size.width - 2f * paddingH).coerceAtLeast(1f)
                     val availH = (size.height - 2f * paddingV).coerceAtLeast(1f)
 
-                    val (imgW, imgH) = if (imageWidth > 0 && imageHeight > 0) {
-                        val imgAspect = imageWidth.toFloat() / imageHeight.toFloat()
+                    val (imgW, imgH) = if (currentImageWidth > 0 && currentImageHeight > 0) {
+                        val imgAspect = currentImageWidth.toFloat() / currentImageHeight.toFloat()
                         val availAspect = availW / availH
                         if (availAspect > imgAspect) (availH * imgAspect) to availH else availW to (availW / imgAspect)
                     } else {
@@ -483,19 +591,46 @@ fun EditorCropOverlay(
                     val imgLeft = paddingH + (availW - imgW) / 2f
                     val imgTop = paddingV + (availH - imgH) / 2f
 
-                    val leftPx = imgLeft + cropRegion.left * imgW
-                    val topPx = imgTop + cropRegion.top * imgH
-                    val rightPx = imgLeft + cropRegion.right * imgW
-                    val bottomPx = imgTop + cropRegion.bottom * imgH
+                    if (isDoubleTap && imgW > 0f && imgH > 0f) {
+                        // Tactile double-tap zoom toggle: 2x zoom into tap point <-> 1x reset
+                        val tapNormX = ((down.position.x - imgLeft) / imgW).coerceIn(0f, 1f)
+                        val tapNormY = ((down.position.y - imgTop) / imgH).coerceIn(0f, 1f)
+                        val curZoom = CropPhysics.computeCurrentZoom(currentCropRegion)
+                        val toggled = if (curZoom > 1.25f) {
+                            CropPhysics.zoomBy(currentCropRegion, 1.0f / curZoom, currentSelectedRatio, currentImageWidth, currentImageHeight)
+                        } else {
+                            CropPhysics.applyPinchZoomPan(
+                                crop = currentCropRegion,
+                                zoomFactor = 2.0f,
+                                panDx = 0f,
+                                panDy = 0f,
+                                centroidX = tapNormX,
+                                centroidY = tapNormY,
+                                ratio = currentSelectedRatio,
+                                imageWidth = currentImageWidth,
+                                imageHeight = currentImageHeight
+                            )
+                        }
+                        currentOnCropRegionChange(toggled)
+                        currentOnCropFinished?.invoke()
+                        lastTapTime = 0L
+                        return@awaitEachGesture
+                    }
+
+                    val initialCrop = currentCropRegion
+                    val leftPx = imgLeft + initialCrop.left * imgW
+                    val topPx = imgTop + initialCrop.top * imgH
+                    val rightPx = imgLeft + initialCrop.right * imgW
+                    val bottomPx = imgTop + initialCrop.bottom * imgH
 
                     val x = down.position.x
                     val y = down.position.y
                     fun dist(px: Float, py: Float) = hypot(x - px, y - py)
 
-                    val cornerRadius = with(density) { 44.dp.toPx() }
-                    val edgeRadius = with(density) { 36.dp.toPx() }
+                    val cornerRadius = with(density) { 52.dp.toPx() }
+                    val edgeRadius = with(density) { 42.dp.toPx() }
 
-                    var handle = when {
+                    val handle = when {
                         dist(leftPx, topPx) <= cornerRadius -> DragHandle.TOP_LEFT
                         dist(rightPx, topPx) <= cornerRadius -> DragHandle.TOP_RIGHT
                         dist(leftPx, bottomPx) <= cornerRadius -> DragHandle.BOTTOM_LEFT
@@ -504,13 +639,14 @@ fun EditorCropOverlay(
                         abs(x - rightPx) <= edgeRadius && y in (topPx - edgeRadius)..(bottomPx + edgeRadius) -> DragHandle.RIGHT_EDGE
                         abs(y - topPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.TOP_EDGE
                         abs(y - bottomPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.BOTTOM_EDGE
-                        x in leftPx..rightPx && y in topPx..bottomPx -> DragHandle.INSIDE_MOVE
-                        else -> DragHandle.NONE
+                        // Any drag inside selection or on the photo translates the crop window
+                        else -> DragHandle.INSIDE_MOVE
                     }
 
                     activeHandle = handle
                     isInteracting = true
-                    var currentCrop = cropRegion
+                    var currentCrop = initialCrop
+                    var totalDragDist = 0f
 
                     while (true) {
                         val event = awaitPointerEvent()
@@ -518,12 +654,13 @@ fun EditorCropOverlay(
                         if (activePointers.isEmpty()) {
                             activeHandle = DragHandle.NONE
                             isInteracting = false
-                            onCropFinished?.invoke()
+                            currentOnCropFinished?.invoke()
                             break
                         }
 
                         if (activePointers.size >= 2) {
                             // Multitouch pinch-to-zoom and two-finger pan
+                            lastTapTime = 0L
                             activeHandle = DragHandle.NONE
                             val zoom = event.calculateZoom()
                             val pan = event.calculatePan()
@@ -542,21 +679,25 @@ fun EditorCropOverlay(
                                     panDy = panDy,
                                     centroidX = centroidNormX,
                                     centroidY = centroidNormY,
-                                    ratio = selectedRatio,
-                                    imageWidth = imageWidth,
-                                    imageHeight = imageHeight
+                                    ratio = currentSelectedRatio,
+                                    imageWidth = currentImageWidth,
+                                    imageHeight = currentImageHeight
                                 )
-                                onCropRegionChange(currentCrop)
+                                currentOnCropRegionChange(currentCrop)
                             }
                             onTransformImage?.invoke(zoom, pan)
                             event.changes.forEach { it.consume() }
-                        } else if (activePointers.size == 1 && handle != DragHandle.NONE) {
+                        } else if (activePointers.size == 1) {
                             // Single pointer dragging handle or box
                             val change = activePointers.first()
                             val dragDelta = change.position - change.previousPosition
+                            totalDragDist += dragDelta.getDistance()
+                            if (totalDragDist > 8f) {
+                                lastTapTime = 0L
+                            }
                             change.consume()
 
-                            if (imgW > 0f && imgH > 0f) {
+                            if (imgW > 0f && imgH > 0f && (abs(dragDelta.x) > 0.001f || abs(dragDelta.y) > 0.001f)) {
                                 val dx = dragDelta.x / imgW
                                 val dy = dragDelta.y / imgH
                                 currentCrop = CropPhysics.applyDrag(
@@ -564,11 +705,11 @@ fun EditorCropOverlay(
                                     handle = handle,
                                     dx = dx,
                                     dy = dy,
-                                    ratio = selectedRatio,
-                                    imageWidth = imageWidth,
-                                    imageHeight = imageHeight
+                                    ratio = currentSelectedRatio,
+                                    imageWidth = currentImageWidth,
+                                    imageHeight = currentImageHeight
                                 )
-                                onCropRegionChange(currentCrop)
+                                currentOnCropRegionChange(currentCrop)
                             }
                         }
                     }
@@ -670,6 +811,19 @@ fun EditorCropOverlay(
             // Right edge
             drawLine(shadowColor, Offset(rightPx, midH - notchLen / 2f), Offset(rightPx, midH + notchLen / 2f), shadowThickness)
             drawLine(cropHandleColor, Offset(rightPx, midH - notchLen / 2f), Offset(rightPx, midH + notchLen / 2f), handleThickness)
+
+            // 7. Tactical Center Move Reticle (subtle indicator showing draggable selection when idle)
+            if (cropW >= 100f && cropH >= 100f && gridAlpha < 0.2f) {
+                val reticleRadius = 14f
+                val reticleColor = cropHandleColor.copy(alpha = 0.35f)
+                val reticleStroke = AppDimens.BorderThin.toPx()
+                drawCircle(color = reticleColor, radius = reticleRadius, center = Offset(midW, midH), style = Stroke(width = reticleStroke))
+                val tickLen = 6f
+                drawLine(reticleColor, Offset(midW - reticleRadius - tickLen, midH), Offset(midW - reticleRadius, midH), reticleStroke)
+                drawLine(reticleColor, Offset(midW + reticleRadius, midH), Offset(midW + reticleRadius + tickLen, midH), reticleStroke)
+                drawLine(reticleColor, Offset(midW, midH - reticleRadius - tickLen), Offset(midW, midH - reticleRadius), reticleStroke)
+                drawLine(reticleColor, Offset(midW, midH + reticleRadius), Offset(midW, midH + reticleRadius + tickLen), reticleStroke)
+            }
         }
 
         // Floating Top Confirmation Bar: Cancel | Rotate 90° | Reset | Apply
@@ -703,13 +857,29 @@ fun EditorCropOverlay(
                     )
                 }
 
+                // Current Zoom Factor Badge
+                val topZoom = CropPhysics.computeCurrentZoom(cropRegion)
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.padding(horizontal = 2.dp)
+                ) {
+                    Text(
+                        text = String.format(Locale.US, "%.1fx", topZoom),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = 4.dp)
+                    )
+                }
+
                 // Rotate 90° button
                 IconButton(
                     onClick = { onRotate90?.invoke() },
                     modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.RotateRight,
+                        imageVector = Icons.AutoMirrored.Rounded.RotateRight,
                         contentDescription = stringResource(R.string.crop_rotate_90),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(AppDimens.IconMedium)
@@ -831,7 +1001,7 @@ fun EditorCropPanel(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.RotateRight,
+                        imageVector = Icons.AutoMirrored.Rounded.RotateRight,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(AppDimens.IconSmall)

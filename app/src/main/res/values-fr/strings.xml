@@ -421,6 +421,16 @@
     <string name="crop_rotate_90">Pivoter 90°</string>
     <string name="crop_apply">Valider</string>
     <string name="crop_cancel">Annuler</string>
+    <string name="crop_zoom_title">Zoom de la sélection</string>
+    <string name="crop_pan_title">Déplacer la sélection</string>
+    <string name="crop_center">Centrer</string>
+    <string name="crop_pan_up">Haut</string>
+    <string name="crop_pan_down">Bas</string>
+    <string name="crop_pan_left">Gauche</string>
+    <string name="crop_pan_right">Droite</string>
+    <string name="crop_zoom_in">Zoom avant</string>
+    <string name="crop_zoom_out">Zoom arrière</string>
+    <string name="crop_reset_zoom">1x</string>
 
     <!-- Professional Studio & Editor Tokens -->
     <string name="palette_shot_cinema">Nuancier Cinéma</string>

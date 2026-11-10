@@ -262,6 +262,7 @@ fun StandaloneEditorScreen(
                         onApplyAutoEdit = { viewModel.applyEditorAutoEdit() },
                         gpuDeltas = uiState.editorGpuDeltas,
                         cropAngle = if (uiState.editorActiveTool == 0) uiState.editorCropRegion.angle else 0f,
+                        isGesturesEnabled = uiState.editorActiveTool != 0,
                         modifier = Modifier.fillMaxSize()
                     )
 

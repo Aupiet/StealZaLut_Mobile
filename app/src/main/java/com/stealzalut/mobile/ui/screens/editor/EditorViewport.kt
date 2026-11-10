@@ -80,7 +80,8 @@ fun EditorViewport(
     isHistogramExpanded: Boolean = false,
     onToggleHistogram: () -> Unit = {},
     isComputingAutoEdit: Boolean = false,
-    onApplyAutoEdit: () -> Unit = {}
+    onApplyAutoEdit: () -> Unit = {},
+    isGesturesEnabled: Boolean = true
 ) {
     var isHoldingCompare by remember { mutableStateOf(false) }
     var scale by remember { mutableFloatStateOf(1f) }
@@ -92,10 +93,8 @@ fun EditorViewport(
     val activeDeltas = if (isHoldingCompare) GpuPreviewDeltas() else gpuDeltas
     val gpuPreviewState = rememberGpuPreviewState(activeDeltas)
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.szlColors.photoDarkroom)
+    val gestureModifier = if (isGesturesEnabled) {
+        Modifier
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = {
@@ -155,6 +154,15 @@ fun EditorViewport(
                     }
                 }
             }
+    } else {
+        Modifier
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.szlColors.photoDarkroom)
+            .then(gestureModifier)
     ) {
         // --- 1. Photo Canvas with Darkroom Rounded Frame (Figma parity) ---
         displayBitmap?.let { bmp ->

@@ -128,10 +128,10 @@ class CropRegionTest {
             imageHeight = 1000
         )
 
-        assertEquals(0.1f, panned.left, 1e-3f)
-        assertEquals(0.25f, panned.top, 1e-3f)
-        assertEquals(0.5f, panned.right, 1e-3f)
-        assertEquals(0.65f, panned.bottom, 1e-3f)
+        assertEquals(0.3f, panned.left, 1e-3f)
+        assertEquals(0.15f, panned.top, 1e-3f)
+        assertEquals(0.7f, panned.right, 1e-3f)
+        assertEquals(0.55f, panned.bottom, 1e-3f)
     }
 
     @Test
@@ -301,5 +301,66 @@ class CropRegionTest {
         )
         assertTrue(dragged.right >= dragged.left + 0.05f)
         assertTrue(dragged.bottom >= dragged.top + 0.05f)
+    }
+
+    @Test
+    fun `computeCurrentZoom returns 1 for full frame and 2 for half size`() {
+        val full = CropRegion()
+        assertEquals(1.0f, CropPhysics.computeCurrentZoom(full), 1e-3f)
+
+        val half = CropRegion(left = 0.25f, top = 0.25f, right = 0.75f, bottom = 0.75f)
+        assertEquals(2.0f, CropPhysics.computeCurrentZoom(half), 1e-3f)
+    }
+
+    @Test
+    fun `zoomBy scales crop framing around center`() {
+        val initial = CropRegion(left = 0.2f, top = 0.2f, right = 0.8f, bottom = 0.8f)
+        val zoomedIn = CropPhysics.zoomBy(initial, 1.5f, CropAspectRatio.FREE, 1000, 1000)
+
+        val origCenterX = (initial.left + initial.right) / 2f
+        val origCenterY = (initial.top + initial.bottom) / 2f
+        val newCenterX = (zoomedIn.left + zoomedIn.right) / 2f
+        val newCenterY = (zoomedIn.top + zoomedIn.bottom) / 2f
+
+        assertEquals(origCenterX, newCenterX, 1e-3f)
+        assertEquals(origCenterY, newCenterY, 1e-3f)
+        assertTrue(zoomedIn.right - zoomedIn.left < initial.right - initial.left)
+    }
+
+    @Test
+    fun `setZoom directly sets desired magnification`() {
+        val initial = CropRegion(left = 0.1f, top = 0.1f, right = 0.9f, bottom = 0.9f)
+        val zoomed = CropPhysics.setZoom(initial, 2.0f, CropAspectRatio.FREE, 1000, 1000)
+        assertEquals(2.0f, CropPhysics.computeCurrentZoom(zoomed), 0.05f)
+    }
+
+    @Test
+    fun `nudge translates crop box in all directions within bounds`() {
+        val initial = CropRegion(left = 0.3f, top = 0.3f, right = 0.7f, bottom = 0.7f)
+
+        val right = CropPhysics.nudge(initial, 0.05f, 0f)
+        assertEquals(0.35f, right.left, 1e-4f)
+        assertEquals(0.75f, right.right, 1e-4f)
+
+        val down = CropPhysics.nudge(initial, 0f, 0.05f)
+        assertEquals(0.35f, down.top, 1e-4f)
+        assertEquals(0.75f, down.bottom, 1e-4f)
+
+        val clamped = CropPhysics.nudge(initial, 0.8f, 0.8f)
+        assertEquals(0.6f, clamped.left, 1e-4f)
+        assertEquals(1.0f, clamped.right, 1e-4f)
+        assertEquals(0.6f, clamped.top, 1e-4f)
+        assertEquals(1.0f, clamped.bottom, 1e-4f)
+    }
+
+    @Test
+    fun `center places crop box exactly at center of image`() {
+        val offCenter = CropRegion(left = 0.1f, top = 0.2f, right = 0.5f, bottom = 0.6f)
+        val centered = CropPhysics.center(offCenter)
+
+        assertEquals(0.3f, centered.left, 1e-4f)
+        assertEquals(0.7f, centered.right, 1e-4f)
+        assertEquals(0.3f, centered.top, 1e-4f)
+        assertEquals(0.7f, centered.bottom, 1e-4f)
     }
 }

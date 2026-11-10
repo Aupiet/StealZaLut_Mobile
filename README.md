@@ -5,7 +5,7 @@
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20(Material%203)-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2017.2.0-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
-[![Tests: 99 Pytest + 28 Kotlin](https://img.shields.io/badge/Tests-99%20Pytest%20%2B%2028%20Kotlin-brightgreen.svg)](tests/)
+[![Tests: 113 Pytest + 87 Kotlin](https://img.shields.io/badge/Tests-113%20Pytest%20%2B%2087%20Kotlin-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Architecture: ARCHITECTURE.md](https://img.shields.io/badge/Doc-ARCHITECTURE.md-blue.svg)](ARCHITECTURE.md)
 
@@ -78,22 +78,30 @@ Pour garantir une expérience professionnelle sans ambiguïté et un respect abs
 
 Un espace de création dédié accessible directement depuis la barre de navigation principale :
 - **Retouche autonome** : Modifiez n'importe quelle photo de votre galerie sans nécessiter d'image de référence B.
-- **Importation de LUTs externes** : Chargez n'importe quel fichier `.cube` tiers et appliquez-lui le pipeline complet (Retravail Étape 2 + Grading Étape 3).
-- **Zone d'aperçu proportionnelle adaptative** : Calculée dynamiquement à ~40% de la hauteur utile de l'écran (200 à 360 dp) pour libérer 60% d'espace aux onglets et curseurs de réglage.
-- **Bouton unique « Réinitialiser tout » avec confirmation & Annulation (Undo)** : Un clic réinitialise l'ensemble des réglages et affiche un Snackbar d'annulation (`undoEditor()`) permettant de restaurer instantanément l'état précédent.
-- **Barre d'outils accessible** : Conçue pour respecter les zones d'insets de navigation gestuelle Android (`navigationBarsPadding()`).
-- **Navigation par onglets thématiques** :
-  - *Presets & LUTs* : Gestion de votre bibliothèque de looks et importation de fichiers `.cube`.
-  - *Calibrage* : Contrôle des 6 paramètres avancés de l'Étape 2.
-  - *Lumière* : Exposition, Contraste, Hautes Lumières, Ombres.
-  - *Couleur* : Température, Teinte, Vibrance, Saturation.
-  - *Effets* : Clarté, Netteté, Grain argentique.
+- **Importation de LUTs externes & Presets dynamiques** : Chargez n'importe quel fichier `.cube` tiers et appliquez-lui le pipeline complet (Retravail Étape 2 + Grading Étape 3) ou piochez dans vos presets personnalisés sans dépendance de styles en dur.
+- **Prévisualisation GPU Instantanée à 2 Étages (AGSL RuntimeShader & ColorMatrix)** :
+  - *Étage 1 (GPU / < 1 ms, 60–120 FPS)* : Rendu instantané sur 100% des outils (Exposition, Contraste, Balance des blancs, Courbes de tonalité, Mixeur HSL 8 bandes, Roues Color Grading 3 voies, Étalonnage capteur, Vignettage, Grain et Netteté). Le calcul opère par deltas relatifs ($\Delta = \text{actuel} - \text{Python}$), éliminant toute latence perçue au toucher.
+  - *Étage 2 (Fidélité maximale en arrière-plan)* : Déclenchement automatique de la passe complète Python Chaquopy dès le relâchement du geste ou après une inactivité de 200 ms, garantissant une parité visuelle absolue ($\Delta E \le 0.5$ niveau 8 bits).
+- **Physique de Recadrage & Redressement Fluide (`CropPhysics`)** :
+  - *Verrouillage strict des ratios* : Libre, Original, Carré 1:1, Portrait 4:5, Photo 3:2, Cinéma 16:9 calculés sur les pixels physiques réels ($k = \frac{W_{\text{image}}}{H_{\text{image}} \cdot R_{\text{target}}}$).
+  - *Ergonomie tactile pro* : 8 poignées (équerres L-brackets blanches de 3 dp avec ombre portée, encoches centrales) et zones de capture généreuses (44 dp).
+  - *Grille des tiers dynamique* : Fading fluide de la grille (`gridAlpha`) visible uniquement pendant le déplacement.
+  - *Redressement d'horizon GPU 120 FPS* : Rotation en temps réel de l'image sous la grille de niveau fixe, avec découplage du buffer de prévisualisation (zéro rétrécissement récursif).
+- **Courbes de Tonalité Spline Monotone (Fritsch-Carlson)** :
+  - *Parité mathématique 100%* : Algorithme Hermite monotone garantissant l'absence totale d'oscillations et d'inversions de pente.
+  - *Manipulation tactile par delta relatif* : Zéro saut visuel au toucher, création/sélection intuitive, retour haptique et coordonnées RVB dynamiques [0, 255].
+- **Gestionnaire de Projets d'Édition Non-Destructifs** :
+  - *Persistance Sidecar Atomique* : Sauvegarde automatique débouncée des sessions dans `filesDir/projects/<id>/` (`project.json`, photo locale et vignette d'aperçu).
+  - *Écran d'accueil Pro* : Historique des projets récents avec vignettes, métadonnées relatives, renommage, duplication et suppression sécurisée.
+- **Pile Annuler / Rétablir (Undo/Redo) Profonde & Coalescence de Gestes** :
+  - Coalescence des micro-ticks de curseurs (un seul snapshot par geste tactile), plafond FIFO de 50 états, couverture intégrale de tous les réglages Étape 2/3, modèles Lightroom et recadrage.
+- **Partage Avancé & Fiche Recette** :
+  - Dialogue d'exportation étendu permettant de partager la 3D LUT `.cube`, la vignette haute fidélité `.png` et la fiche recette de développement au format JSON.
 - **Expérience tactile haut de gamme** :
   - **Comparaison tactile robuste** : Appui maintenu (`HOLD_TO_COMPARE`) avec détection stationnaire de 400 ms sur toute la surface et relâchement garanti sans blocage.
   - **Pinch-to-zoom & Panoramique synchronisés** : Inspectez les détails jusqu'à $4\times$, réinitialisable par double-tap ($1\times$).
   - **Double-tap Reset** : Double-cliquez sur n'importe quel curseur pour le ramener à sa valeur neutre.
-  - **Undo / Redo illimité** : Annulez et rétablissez librement vos manipulations d'édition depuis la barre supérieure.
-  - **Histogramme RVB temps réel** : Analyse dynamique des canaux Rouge, Vert, Bleu superposable à l'image.
+  - **Histogramme RVB temps réel** : Analyse dynamique des canaux Rouge, Vert, Bleu superposable à l'image, agrandissable en HUD étendu.
 
 ---
 
@@ -126,6 +134,14 @@ Un espace de création dédié accessible directement depuis la barre de navigat
 - **Zéro Flash au Démarrage & Zéro Artefact** : Démarrage synchronisé avec `windowBackground`, bascule à chaud sans perte d'état et tests de contraste WCAG AA validés par test JVM.
 
 ---
+
+### 2.7 Centre d'Aide & Guide Interactif des 12 Outils Photographiques
+
+Pour accompagner les photographes sans encombrer le flux d'édition :
+- **Catalogue complet des 12 outils** : Fiches détaillées pour le Recadrage & Redressement, Courbes de tonalité, Mixeur HSL, Color Grading, Profils capteur, Détails & Netteté, Corrections optiques, Déformation géométrique, Flou d'objectif bokeh, Effets & Grain, LUTs 3D, et Transfert de style.
+- **Comparateur Tactile Unifié `DoubleViewComparison`** : Utilise le même composant d'excellence que le Studio avec les modes Split-Wipe (rideau draggable), Side-by-Side (côte à côte) et Hold-to-Compare (appui maintenu).
+- **Démonstrations Réelles & Effets Pré-rendus en Cache** : Intégration de photographies réelles d'étalonnage (`guide_sample_depart.jpg`, `guide_sample_etalonnee.jpg`, `guide_sample_reference.jpg`) avec génération et mise en cache mémoire d'effets contextuels fluides pour chaque outil.
+- **Navigation Hiérarchique Sans Faille** : Le retour arrière depuis un outil ramène directement à la liste des outils sans quitter inopportunément la section d'aide.
 
 ## 3. Architecture Technique
 
@@ -181,7 +197,7 @@ pytest tests/ -q
 ```bash
 PYTHONPATH=app/src/main/python pytest tests/ -q
 ```
-> **Résultat attendu :** 99 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF et persistance presets v2).
+> **Résultat attendu :** 113 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF, persistance presets v2 et parité GPU preview).
 
 ### Exécuter les tests unitaires Android (Kotlin JVM)
 **PowerShell (Windows) :**
@@ -192,7 +208,7 @@ PYTHONPATH=app/src/main/python pytest tests/ -q
 ```bash
 ./gradlew testDebugUnitTest
 ```
-> **Résultat attendu :** 26 tests unitaires JVM passés avec succès (garde du Design System, contrastes WCAG AA, relais Studio ↔ Éditeur, persistance JSON et exports SAF). L'application comprend également 2 tests instrumentés (`androidTest`) pour un total de 28 tests Kotlin.
+> **Résultat attendu :** 85 tests unitaires JVM passés avec succès (garde du Design System, contrastes WCAG AA, relais Studio ↔ Éditeur, persistance JSON, exports SAF, physique de recadrage CropPhysics, interpolation Fritsch-Carlson, gestionnaire de projets, parité GPU preview, pile Undo/Redo et registre du guide). L'application comprend également 2 tests instrumentés (`androidTest`) pour un total de 87 tests Kotlin.
 
 ### Lancer l'analyse statique Android Lint
 **PowerShell (Windows) :**
@@ -220,4 +236,4 @@ PYTHONPATH=app/src/main/python pytest tests/ -q
 Projet sous licence [MIT](LICENSE).
 Inspiré par le projet original [StealZaLUT Desktop](https://github.com/whoismathieu/stealzalut.git) par Mathieu.
 
-*Dernière mise à jour : 9 novembre 2026*
+*Dernière mise à jour : 10 novembre 2026*

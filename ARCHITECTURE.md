@@ -19,6 +19,10 @@ StealZaLUT repose sur un principe d'alignement strict entre la version Desktop d
 | **Workers** | `workers/transfer_worker.py`<br>`workers/export_worker.py` | `workers/transfer_worker.py`<br>`workers/export_worker.py` | Caches LRU double niveau (`_RAW_LUT_CACHE`, `_SRC_PROXY_CACHE`), réactivité slider $< 5\text{ ms}$, baking WYSIWYG complet. |
 | **Bridge / JNI** | N/A (Appels Qt directs) | `stealzalut/bridge.py`<br>`PythonBridgeRepository.kt` | Façade Chaquopy JNI thread-safe sous `pythonDispatcher` (`limitedParallelism(1)`) pour protéger le GIL Python. |
 | **UI Layer** | PySide6 / QML | Jetpack Compose (Material 3) | 120 FPS UI réactive, Flow MVI, DoubleView comparateur split-wipe, pinch-to-zoom tactile, Mode Éditeur Pur. |
+| **GPU Preview** | N/A (OpenGL Qt) | `ui/preview/GpuPreviewEngine.kt` | Moteur AGSL RuntimeShader instantané (< 1 ms) avec repli ColorMatrix, deltas différentiels relatifs et parité $\Delta E \le 0.5$. |
+| **Crop Physics** | N/A (QGraphicsItem) | `ui/screens/editor/EditorCropOverlay.kt` | Physique mathématique pure (`CropPhysics`), verrouillage de ratio d'aspect strict, poignées L-brackets et redressement 120 FPS. |
+| **Project Storage** | N/A (Fichiers locaux) | `data/repository/ProjectRepository.kt` | Persistance sidecar atomique non-destructive des sessions d'édition (`project.json`, photo locale et vignette). |
+| **Feature Guide** | N/A | `ui/screens/guide/` | Centre d'aide interactif des 12 outils avec comparateur unifié `DoubleViewComparison` et cache d'effets pré-rendus. |
 
 ---
 
@@ -86,6 +90,39 @@ Le cœur du traitement est unifié entre l'image affichée à l'écran et la 3D 
 - `_RAW_LUT_CACHE` : Associe la clé `(src_path, ref_path, method, lut_size, preserve_luma, soft_clip)` au tableau NumPy $33 \times 33 \times 33 \times 3$ ($35\,937$ triplets float32, soit environ $420\text{ Ko}$).
 - `_SRC_PROXY_CACHE` : Conserve le proxy de prévisualisation (bord long $\le 1024\text{ px}$) pour éviter tout décodage JPEG lors du déplacement des curseurs.
 - Grâce à cette architecture, toute modification des 6 curseurs de l'Étape 2 ou des 11 curseurs de l'Étape 3 s'exécute en **moins de 5 ms** sur le lattice ou le proxy, garantissant une fluidité de 60 à 120 FPS sur smartphone.
+
+### 2.2 Architecture de Prévisualisation GPU Hybride à 2 Étages (AGSL / ColorMatrix & Chaquopy)
+Pour concilier l'exigence de réactivité tactile absolue (60–120 FPS sans saccade) et la règle d'or WYSIWYG (ADR-08), l'application implémente un pipeline hybride différentiel à deux étages (`GpuPreviewEngine.kt`) :
+1. **Étage 1 (GPU / < 1 ms par trame) :**
+   - Évaluation instantanée des ajustements sur GPU via AGSL `RuntimeShader` (`android.graphics.RuntimeShader`) sur Android 13+ (API 33+), avec repli matériel transparent sur `ColorFilter.colorMatrix` pour Android 7.0–12 (API 24–32).
+   - Couverture intégrale des 10 modules d'édition : Exposition (espace linéaire $2^{\Delta EV}$), balance des blancs vectorielle, contraste sigmoïdal $\tanh$, ombres/hautes lumières smoothstep, courbes de tonalité paramétriques, mixeur HSL 8 bandes (fenêtres gaussiennes $\sigma = 22^\circ$), roues 3-way color grading, étalonnage de profil capteur, vignettage radial, netteté et grain.
+   - Les shaders opèrent sur des **deltas relatifs** ($\Delta = \text{valeur actuelle} - \text{valeur Python}$).
+2. **Étage 2 (Fidélité Maximale en Tâche de Fond) :**
+   - Déclenchement automatique de la passe de référence Python Chaquopy dès le relâchement du geste tactile ou après 200 ms d'inactivité.
+   - À réception du nouveau bitmap développé, le delta s'annule ($\Delta = 0$), le shader redevient une identité mathématique neutre : transition sans clignotement et parité $\Delta E \le 0.5$ niveau 8 bits.
+
+### 2.3 Moteur Géométrique de Recadrage & Redressement (`CropPhysics`)
+Le recadrage et le redressement d'horizon (`EditorCropOverlay.kt`) reposent sur un modèle géométrique pur conforme à la spécification Adobe Camera Raw (`crs:Crop*`) :
+- **Verrouillage strict des ratios :**
+  $$k = \frac{W_{\text{image}}}{H_{\text{image}} \cdot R_{\text{target}}}$$
+  Permet de contraindre rigoureusement les proportions physiques réelles (Libre, Original, 1:1, 4:5, 3:2, 16:9).
+- **8 Poignées & Panoramique Biaisé :** 4 coins en équerre L-brackets haute visibilité (3 dp blancs avec ombre portée) et 4 encoches médianes, avec détection de contact généreuse (44 dp) et garde-fou d'inversion (`minDim = 0.05f`).
+- **Alignement Sub-pixel au Viewport :** Projection exacte sur le rectangle de l'image letterboxée (`ContentScale.Fit`) avec gestion du Darkroom.
+- **Découplage de l'Aperçu & Redressement 120 FPS :** Dans l'outil Recadrer (`editorActiveTool == 0`), le buffer d'aperçu Python conserve l'image complète non tronquée, évitant tout effet de rétrécissement récursif. La rotation de redressement est appliquée en temps réel sur GPU (`graphicsLayer { rotationZ = -cropAngle }`) sous la grille de tiers fixe. Lors de la validation ou de l'export, Python exécute la découpe et la rotation finales.
+
+### 2.4 Persistance Sidecar et Modèle de Projets d'Édition (`EditorProject`)
+L'éditeur intègre un système complet de gestion de projets d'édition non-destructifs (`ProjectRepository.kt`) :
+- Chaque projet est isolé dans son répertoire `filesDir/projects/<id>/` contenant le manifeste `project.json`, une copie permanente de la photo source et la vignette d'aperçu.
+- Écriture atomique avec fichier temporaire et remplacement sécurisé (`Files.move` avec `REPLACE_EXISTING`), immunisé contre les extinctions inopinées.
+- Sauvegarde automatique en arrière-plan débouncée à 2 secondes lors de toute modification.
+- Écran d'accueil de l'éditeur affichant l'historique chronologique des projets récents avec métadonnées relatives, duplication, renommage et suppression.
+
+### 2.5 Centre d'Aide & Découverte des 12 Outils Photographiques
+L'application propose un espace dédié à l'apprentissage et à la découverte interactive des 12 outils majeurs (`ui/screens/guide/`) :
+- Modélisation typée `FeatureGuideModel` (catégories, paramètres, échelles de valeurs, conseils pratiques).
+- Réutilisation directe du comparateur tactile haute performance du Studio `DoubleViewComparison` (Split-Wipe, Side-by-Side, Hold-to-Compare).
+- Photographies réelles d'étalonnage embarquées (`guide_sample_depart.jpg`, `guide_sample_etalonnee.jpg`, `guide_sample_reference.jpg`) avec cache mémoire d'effets pré-générés pour une démonstration instantanée sans latence.
+- Navigation hiérarchique préservant le contexte du guide lors des retours arrière.
 
 ---
 
@@ -346,18 +383,27 @@ StealZaLut_Mobile/
 │       │                   ├── PresetLibraryDelegate.kt   Gestion de la bibliothèque de presets
 │       │                   └── StudioFlowDelegate.kt      Flux du wizard Studio 5 étapes
 │       ├── test/java/com/stealzalut/mobile/
+│       │   ├── core/MonotoneCubicSplineTest.kt          Test interpolation Fritsch-Carlson
 │       │   ├── data/model/LightroomSerializerTest.kt     Test sérialisation des modèles de retouche
 │       │   ├── data/repository/PresetRepositoryTest.kt  Test persistance JSON des presets
+│       │   ├── data/repository/ProjectRepositoryTest.kt Test persistance atomique des projets
 │       │   ├── data/repository/SavedImageRepositoryTest.kt Test historique des images
 │       │   ├── theme/DesignSystemGuardTest.kt           Test JVM de garde (zéro primitive en dur)
 │       │   ├── theme/ThemeContrastTest.kt               Test conformité contraste WCAG AA
+│       │   ├── ui/preview/GpuPreviewParityTest.kt       Test parité mathématique GPU vs Python
+│       │   ├── ui/screens/editor/CropRegionTest.kt      Test physique de recadrage CropPhysics
+│       │   ├── ui/screens/editor/ToneCurveInteractionTest.kt Test interaction tactile courbe
+│       │   ├── ui/screens/guide/FeatureGuideRegistryTest.kt  Test intégrité du registre des 12 guides
+│       │   ├── ui/screens/guide/GuideImageProviderTest.kt    Test cache des effets de guide
+│       │   ├── ui/viewmodel/EditorUndoRedoStackTest.kt  Test pile Undo/Redo et coalescence
 │       │   ├── ui/viewmodel/GradingRelayTest.kt         Test relais Studio ↔ Éditeur
 │       │   ├── ui/viewmodel/PresetExportTest.kt         Test export de presets
-│       │   └── ui/viewmodel/SafExportIntegrationTest.kt Test flux d'exportation SAF
+│       │   ├── ui/viewmodel/SafExportIntegrationTest.kt Test flux d'exportation SAF
+│       │   └── ui/viewmodel/StudioFlowNavigationTest.kt Test navigation du wizard Studio
 │       └── androidTest/java/com/stealzalut/mobile/
 │           ├── bridge/PythonBridgeIntegrationTest.kt    Test JNI Chaquopy sur appareil/émulateur
 │           └── ui/MainColorGradingScreenTest.kt         Test UI instrumenté navigation
-└── tests/                                       99 tests Pytest (100% verts)
+└── tests/                                       113 tests Pytest (100% verts)
     ├── conftest.py                              Fixtures Pytest partagées
     ├── test_auto_edit.py                        Tests analyse optique LightCraft
     ├── test_bridge.py                           Tests passerelle JNI bridge.py

@@ -83,7 +83,7 @@ fun MainColorGradingScreen(
                 showExitEditorConfirmDialog = true
             }
             uiState.currentDestination == AppDestination.GUIDE -> {
-                viewModel.navigateTo(AppDestination.SETTINGS)
+                viewModel.navigateBackFromGuide()
             }
             isStudioWizardOngoing -> {
                 viewModel.setWizardStep(uiState.wizardStep - 1)
@@ -392,7 +392,7 @@ fun MainColorGradingScreen(
             }
             AppDestination.GUIDE -> {
                 FeatureGuideScreen(
-                    onNavigateBack = { viewModel.navigateTo(AppDestination.SETTINGS) },
+                    onNavigateBack = { viewModel.navigateBackFromGuide() },
                     modifier = Modifier.fillMaxSize()
                 )
             }

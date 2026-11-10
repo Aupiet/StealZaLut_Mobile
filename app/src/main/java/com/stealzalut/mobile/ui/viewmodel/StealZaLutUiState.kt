@@ -43,6 +43,7 @@ data class PendingExport(
 @Immutable
 data class StealZaLutUiState(
     val currentDestination: AppDestination = AppDestination.STUDIO,
+    val previousDestination: AppDestination? = null,
 
     // ========================================================================
     // 1. STUDIO DE GRADATION (WIZARD FUNNEL)

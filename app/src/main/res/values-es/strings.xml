@@ -601,4 +601,13 @@
     <string name="guide_transfer_p2_name">Bloqueo de tonos de piel</string>
     <string name="guide_transfer_p2_desc">Mantiene la autenticidad natural de los rostros incluso bajo gradaciones intensas.</string>
 
+    <!-- Guide Sample Images and Demo Controls -->
+    <string name="guide_reference_title">Foto de referencia (Estilo objetivo)</string>
+    <string name="guide_reference_desc">Esta foto proporcionó la paleta cromática (cielo violeta intenso, iluminación nocturna contrastada) transferida a la imagen de partida.</string>
+    <string name="guide_demo_toggle_photo">Foto real</string>
+    <string name="guide_demo_toggle_schematic">Diagrama técnico</string>
+    <string name="guide_sample_depart_label">Foto de inicio</string>
+    <string name="guide_sample_graded_label">Foto talonada</string>
+    <string name="guide_sample_reference_label">Foto de referencia</string>
+
 </resources>

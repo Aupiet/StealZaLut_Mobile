@@ -601,4 +601,13 @@
     <string name="guide_transfer_p2_name">Verrouillage des carnations</string>
     <string name="guide_transfer_p2_desc">Préserve le réalisme naturel des visages lors de modifications chromatiques intenses.</string>
 
+    <!-- Guide Sample Images and Demo Controls -->
+    <string name="guide_reference_title">Photo de référence (Style cible)</string>
+    <string name="guide_reference_desc">Cette photo a fourni la palette chromatique (ciel violet intense, éclairage nocturne contrasté) transférée sur l\'image de départ.</string>
+    <string name="guide_demo_toggle_photo">Photo réelle</string>
+    <string name="guide_demo_toggle_schematic">Schéma technique</string>
+    <string name="guide_sample_depart_label">Photo de départ</string>
+    <string name="guide_sample_graded_label">Photo étalonnée</string>
+    <string name="guide_sample_reference_label">Photo de référence</string>
+
 </resources>

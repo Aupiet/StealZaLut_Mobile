@@ -1,10 +1,12 @@
 package com.stealzalut.mobile.ui.screens.guide
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -43,7 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
@@ -51,6 +55,7 @@ import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.theme.RoundedSzlIconSet
 import com.stealzalut.mobile.ui.theme.icons
+import com.stealzalut.mobile.ui.theme.szlColors
 
 /**
  * Modular Feature Guide and Help Screen.
@@ -66,6 +71,11 @@ fun FeatureGuideScreen(
     var searchQuery by remember { mutableStateOf("") }
     val context = LocalContext.current
     val icons = MaterialTheme.icons
+
+    // Intercept system Back when inside a tool detail sub-menu
+    BackHandler(enabled = selectedItemId != null) {
+        selectedItemId = null
+    }
 
     AnimatedContent(
         targetState = selectedItemId,
@@ -104,19 +114,12 @@ fun FeatureGuideScreen(
                         )
                     }
                     Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.guide_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = stringResource(R.string.dest_subtitle_guide),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.guide_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
 
                 // Search Bar
@@ -126,7 +129,8 @@ fun FeatureGuideScreen(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.guide_search_placeholder),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
                     leadingIcon = {
@@ -139,8 +143,6 @@ fun FeatureGuideScreen(
                     singleLine = true,
                     shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
                     ),
@@ -149,12 +151,12 @@ fun FeatureGuideScreen(
                         .padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall)
                 )
 
-                // Category Chips (Horizontal Scroll)
+                // Category Chips Carousel
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingExtraSmall),
+                        .padding(horizontal = AppDimens.SpacingMedium, vertical = AppDimens.SpacingSmall),
                     horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                 ) {
                     // "All" chip
@@ -344,6 +346,68 @@ private fun FeatureGuideDetailView(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppDimens.SpacingMedium)
         ) {
+            // Reference Photo Showcase (for Style Transfer)
+            if (item.demoType == FeatureDemoType.STYLE_TRANSFER) {
+                Text(
+                    text = stringResource(R.string.guide_reference_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = AppDimens.SpacingSmall, bottom = AppDimens.SpacingSmall)
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                    color = MaterialTheme.szlColors.photoDarkroom,
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(AppDimens.FeatureDemoReferenceHeight)
+                                .clip(RoundedCornerShape(topStart = AppDimens.CornerRadiusLarge, topEnd = AppDimens.CornerRadiusLarge))
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.guide_sample_reference),
+                                contentDescription = stringResource(R.string.guide_sample_reference_label),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(AppDimens.SpacingSmall)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.guide_sample_reference_label),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
+                                )
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.guide_reference_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(AppDimens.SpacingMedium)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AppDimens.SpacingLarge))
+            }
+
             // Interactive Demo Card
             Text(
                 text = stringResource(R.string.guide_section_interactive_demo),

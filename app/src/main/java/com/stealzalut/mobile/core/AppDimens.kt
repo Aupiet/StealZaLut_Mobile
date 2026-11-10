@@ -99,6 +99,8 @@ object AppDimens {
     val DrawerHandleHeight: Dp = 4.dp
     val ButtonHeightCompact: Dp = 40.dp
     val FeatureDemoHeight: Dp = 200.dp
+    val FeatureDemoPhotoHeight: Dp = 260.dp
+    val FeatureDemoReferenceHeight: Dp = 190.dp
     val FeatureDemoDividerWidth: Dp = 2.dp
     val FeatureDemoThumbSize: Dp = 32.dp
     val FeatureDemoThumbTouchTarget: Dp = 44.dp

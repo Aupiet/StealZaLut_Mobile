@@ -176,6 +176,8 @@ class StealZaLutViewModel(
         }
     }
 
+    fun navigateBackFromGuide() = studioFlowDelegate.navigateBackFromGuide()
+
     fun setWizardStep(step: Int) {
         studioFlowDelegate.setWizardStep(step)
         if (step == AppConstants.STEP_3_PARAMS) {

@@ -13,7 +13,20 @@ class StudioFlowDelegate(
     private val stateFlow: MutableStateFlow<StealZaLutUiState>
 ) {
     fun navigateTo(destination: AppDestination) {
-        stateFlow.update { it.copy(currentDestination = destination) }
+        stateFlow.update { state ->
+            val prev = if (state.currentDestination != destination) state.currentDestination else state.previousDestination
+            state.copy(
+                currentDestination = destination,
+                previousDestination = prev
+            )
+        }
+    }
+
+    fun navigateBackFromGuide() {
+        stateFlow.update { state ->
+            val target = state.previousDestination ?: AppDestination.SETTINGS
+            state.copy(currentDestination = target)
+        }
     }
 
     fun setWizardStep(step: Int) {

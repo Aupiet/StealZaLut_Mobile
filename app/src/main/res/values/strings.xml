@@ -601,4 +601,13 @@
     <string name="guide_transfer_p2_name">Skin tone lock</string>
     <string name="guide_transfer_p2_desc">Guarantees authentic, healthy skin tones even under dramatic grades.</string>
 
+    <!-- Guide Sample Images and Demo Controls -->
+    <string name="guide_reference_title">Reference Photo (Target Palette)</string>
+    <string name="guide_reference_desc">This reference image provided the chromatic atmosphere (deep purple sky, high-contrast night glow) transferred onto the starting photo.</string>
+    <string name="guide_demo_toggle_photo">Real photo</string>
+    <string name="guide_demo_toggle_schematic">Technical diagram</string>
+    <string name="guide_sample_depart_label">Starting photo</string>
+    <string name="guide_sample_graded_label">Graded photo</string>
+    <string name="guide_sample_reference_label">Reference photo</string>
+
 </resources>

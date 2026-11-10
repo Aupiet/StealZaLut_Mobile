@@ -296,6 +296,17 @@ object GpuPreviewEngine {
             return clamp(rgb + m, 0.0, 1.0);
         }
 
+        float getMixerCenter(int i) {
+            if (i == 0) return 0.0;
+            if (i == 1) return 30.0;
+            if (i == 2) return 60.0;
+            if (i == 3) return 120.0;
+            if (i == 4) return 180.0;
+            if (i == 5) return 240.0;
+            if (i == 6) return 280.0;
+            return 320.0;
+        }
+
         half4 main(float2 fragCoord) {
             half4 color = image.eval(fragCoord);
             if (color.a == 0.0) {
@@ -418,15 +429,14 @@ object GpuPreviewEngine {
             // STAGE 4: COLOR MIXER (HSL 8 Channels)
             // ================================================================
             float3 hsl = rgbToHsl(rgb);
-            float centers[8] = float[8](0.0, 30.0, 60.0, 120.0, 180.0, 240.0, 280.0, 320.0);
-            float total_dh = 0.0;
+                        float total_dh = 0.0;
             float total_ds = 0.0;
             float total_dl = 0.0;
             float total_w = 0.0;
 
             for (int i = 0; i < 8; i++) {
                 if (abs(uMixerHues[i]) > 0.0001 || abs(uMixerSats[i]) > 0.0001 || abs(uMixerLums[i]) > 0.0001) {
-                    float diff = abs(hsl.x - centers[i]);
+                    float diff = abs(hsl.x - getMixerCenter(i));
                     diff = min(diff, 360.0 - diff);
                     float weight = exp(-0.5 * pow(diff / 22.0, 2.0));
                     total_dh += weight * (uMixerHues[i] / 100.0) * 30.0;
@@ -882,17 +892,25 @@ fun rememberGpuPreviewState(deltas: GpuPreviewDeltas): GpuPreviewState {
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val shader = remember { RuntimeShader(GpuPreviewEngine.AGSL_SHADER_SRC) }
-        val renderEffect = remember(deltas) {
-            GpuPreviewEngine.updateShaderUniforms(shader, deltas)
-            RenderEffect.createRuntimeShaderEffect(shader, "image").asComposeRenderEffect()
+        val shader = remember {
+            try {
+                RuntimeShader(GpuPreviewEngine.AGSL_SHADER_SRC)
+            } catch (_: Throwable) {
+                null
+            }
         }
-        return GpuPreviewState(renderEffect = renderEffect)
-    } else {
-        val colorFilter = remember(deltas) {
-            val cm = GpuPreviewEngine.createFallbackColorMatrix(deltas)
-            ColorFilter.colorMatrix(cm)
+        if (shader != null) {
+            val renderEffect = remember(deltas, shader) {
+                GpuPreviewEngine.updateShaderUniforms(shader, deltas)
+                RenderEffect.createRuntimeShaderEffect(shader, "image").asComposeRenderEffect()
+            }
+            return GpuPreviewState(renderEffect = renderEffect)
         }
-        return GpuPreviewState(colorFilter = colorFilter)
     }
+
+    val colorFilter = remember(deltas) {
+        val cm = GpuPreviewEngine.createFallbackColorMatrix(deltas)
+        ColorFilter.colorMatrix(cm)
+    }
+    return GpuPreviewState(colorFilter = colorFilter)
 }

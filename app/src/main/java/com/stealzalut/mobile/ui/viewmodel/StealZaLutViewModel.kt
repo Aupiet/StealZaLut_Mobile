@@ -6,6 +6,10 @@ import java.io.File
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.graphics.Matrix
+import android.media.ExifInterface
+import android.os.Build
 import android.net.Uri
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -417,19 +421,70 @@ class StealZaLutViewModel(
 
 
 
+    private fun rotateBitmapIfRequired(bitmap: Bitmap, path: String): Bitmap {
+        val orientation = try {
+            val exif = ExifInterface(path)
+            exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+        } catch (e: Throwable) {
+            ExifInterface.ORIENTATION_NORMAL
+        }
+
+        val degrees = when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
+        }
+
+        if (degrees == 0f) return bitmap
+
+        val matrix = Matrix().apply { postRotate(degrees) }
+        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        if (rotated != bitmap) {
+            bitmap.recycle()
+        }
+        return rotated
+    }
+
     private fun decodeSampledBitmap(path: String, maxDim: Int = 1080): Bitmap? {
         return try {
+            val file = File(path)
+            if (!file.exists()) return null
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try {
+                    val source = ImageDecoder.createSource(file)
+                    val bitmap = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                        decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        val origW = info.size.width
+                        val origH = info.size.height
+                        val maxActual = maxOf(origW, origH)
+                        if (maxActual > maxDim && maxDim > 0) {
+                            val sampleRatio = maxActual.toFloat() / maxDim.toFloat()
+                            val targetW = (origW / sampleRatio).toInt().coerceAtLeast(1)
+                            val targetH = (origH / sampleRatio).toInt().coerceAtLeast(1)
+                            decoder.setTargetSize(targetW, targetH)
+                        }
+                    }
+                    return bitmap
+                } catch (t: Throwable) {
+                    // Fallback to BitmapFactory if ImageDecoder is not able to handle this file
+                }
+            }
+
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(path, options)
+
             if (options.outWidth <= 0 || options.outHeight <= 0) {
-                val exif = try { android.media.ExifInterface(path) } catch (e: Throwable) { null }
+                val exif = try { ExifInterface(path) } catch (e: Throwable) { null }
                 val thumbBitmap = exif?.thumbnailBitmap
                 if (thumbBitmap != null) {
-                    return thumbBitmap
+                    return rotateBitmapIfRequired(thumbBitmap, path)
                 }
                 val thumbData = exif?.thumbnailBytes
                 if (thumbData != null) {
-                    return BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
+                    val decoded = BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
+                    return if (decoded != null) rotateBitmapIfRequired(decoded, path) else null
                 }
                 return null
             }
@@ -440,7 +495,8 @@ class StealZaLutViewModel(
                 sampleSize *= 2
             }
             val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-            BitmapFactory.decodeFile(path, decodeOptions)
+            val decoded = BitmapFactory.decodeFile(path, decodeOptions) ?: return null
+            rotateBitmapIfRequired(decoded, path)
         } catch (t: Throwable) {
             android.util.Log.e("StealZaLutViewModel", "decodeSampledBitmap error: ${t.localizedMessage}", t)
             null

@@ -270,19 +270,27 @@ def run_image_export_pipeline(
         )
         del raw_lut
 
-        # 3. Load full-resolution source image
+        # 3. Check if crop is active in Lightroom develop settings
+        has_active_crop = False
+        if isinstance(lr_settings, dict):
+            crop_dict = lr_settings.get("crop", {})
+            if isinstance(crop_dict, dict):
+                has_active_crop = (
+                    abs(crop_dict.get("left", 0.0)) > 1e-4
+                    or abs(crop_dict.get("top", 0.0)) > 1e-4
+                    or abs(crop_dict.get("right", 1.0) - 1.0) > 1e-4
+                    or abs(crop_dict.get("bottom", 1.0) - 1.0) > 1e-4
+                    or abs(crop_dict.get("angle", 0.0)) > 1e-4
+                )
+
+        # 4. Load source image at full native resolution
         src_img = load_image(src_path)
         orig_h, orig_w = src_img.shape[:2]
 
-        # 4. Resolve target dimensions
-        target_w, target_h = resolve_export_dimensions(
-            orig_w=orig_w,
-            orig_h=orig_h,
-            target_max_dim=max_export_dim,
-        )
-
-        if (target_w, target_h) != (orig_w, orig_h):
-            src_work = create_proxy_image(src_img, max_dim=max(target_w, target_h))
+        # In non-cropped mode, downscaling early saves peak memory; in cropped mode,
+        # we preserve full resolution through the crop pipeline to maintain maximum sensor detail
+        if not has_active_crop and max_export_dim > 0 and max(orig_w, orig_h) > max_export_dim:
+            src_work = create_proxy_image(src_img, max_dim=max_export_dim)
             del src_img
         else:
             src_work = src_img
@@ -291,7 +299,7 @@ def run_image_export_pipeline(
         graded = apply_lut(src_work, baked_lut)
         del src_work, baked_lut
 
-        # 6. Apply 2D spatial effects (clarity, sharpen, grain) on the graded image
+        # 6. Apply 2D spatial effects (clarity, sharpen, grain, crop & straighten)
         if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             from stealzalut.utils.image_io import to_float32, to_uint8
 
@@ -305,9 +313,13 @@ def run_image_export_pipeline(
             graded = to_uint8(graded_f)
             del graded_f
 
+        # 7. If crop was active and a maximum export dimension was requested, scale the cropped result
         out_h, out_w = graded.shape[:2]
+        if max_export_dim > 0 and max(out_w, out_h) > max_export_dim:
+            graded = create_proxy_image(graded, max_dim=max_export_dim)
+            out_h, out_w = graded.shape[:2]
 
-        # 7. Extract EXIF metadata from source image and save to disk
+        # 8. Extract EXIF metadata from source image and save to disk
         source_exif = get_clean_exif_bytes(src_path)
         saved_path: str = save_image(
             graded,

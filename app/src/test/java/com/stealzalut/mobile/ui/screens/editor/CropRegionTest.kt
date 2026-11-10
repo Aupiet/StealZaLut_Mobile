@@ -39,10 +39,124 @@ class CropRegionTest {
 
     @Test
     fun `aspect ratio values match standard ratios`() {
+        assertEquals(null, CropAspectRatio.FREE.ratio)
+        assertEquals(null, CropAspectRatio.ORIGINAL.ratio)
         assertEquals(1.0f, CropAspectRatio.SQUARE_1_1.ratio)
-        assertEquals(0.8f, CropAspectRatio.PORTRAIT_4_5.ratio)
+        assertEquals(4.0f / 3.0f, CropAspectRatio.RATIO_4_3.ratio)
         assertEquals(1.5f, CropAspectRatio.RATIO_3_2.ratio)
         assertEquals(16.0f / 9.0f, CropAspectRatio.LANDSCAPE_16_9.ratio)
+        assertEquals(9.0f / 16.0f, CropAspectRatio.PORTRAIT_9_16.ratio)
+        assertEquals(1.25f, CropAspectRatio.RATIO_5_4.ratio)
+        assertEquals(0.8f, CropAspectRatio.PORTRAIT_4_5.ratio)
+    }
+
+    @Test
+    fun `adaptCropToRatio adapts around current center non destructively`() {
+        // Start with a crop box centered at (0.5, 0.5) of size 0.4 x 0.4
+        val initial = CropRegion(left = 0.3f, top = 0.3f, right = 0.7f, bottom = 0.7f)
+        val imageW = 1000
+        val imageH = 1000
+
+        // Adapt to 4:3 ratio -> target ratio = 4/3 -> k = 1000 / (1000 * 4/3) = 0.75
+        val adapted = CropPhysics.adaptCropToRatio(initial, CropAspectRatio.RATIO_4_3, imageW, imageH)
+
+        // Center should remain unchanged at (0.5, 0.5)
+        val centerX = (adapted.left + adapted.right) / 2f
+        val centerY = (adapted.top + adapted.bottom) / 2f
+        assertEquals(0.5f, centerX, 1e-3f)
+        assertEquals(0.5f, centerY, 1e-3f)
+
+        // Height should equal Width * k
+        val w = adapted.right - adapted.left
+        val h = adapted.bottom - adapted.top
+        assertEquals(w * 0.75f, h, 1e-3f)
+    }
+
+    @Test
+    fun `rotate90 rotates crop framing 90 degrees clockwise and four rotations return to original`() {
+        val initial = CropRegion(left = 0.2f, top = 0.1f, right = 0.8f, bottom = 0.5f)
+
+        val rot1 = CropPhysics.rotate90(initial)
+        assertEquals(0.5f, rot1.left, 1e-4f)
+        assertEquals(0.2f, rot1.top, 1e-4f)
+        assertEquals(0.9f, rot1.right, 1e-4f)
+        assertEquals(0.8f, rot1.bottom, 1e-4f)
+
+        val rot2 = CropPhysics.rotate90(rot1)
+        val rot3 = CropPhysics.rotate90(rot2)
+        val rot4 = CropPhysics.rotate90(rot3)
+
+        assertEquals(initial.left, rot4.left, 1e-4f)
+        assertEquals(initial.top, rot4.top, 1e-4f)
+        assertEquals(initial.right, rot4.right, 1e-4f)
+        assertEquals(initial.bottom, rot4.bottom, 1e-4f)
+    }
+
+    @Test
+    fun `applyPinchZoomPan zooms in and shrinks crop box around centroid`() {
+        val initial = CropRegion(left = 0.2f, top = 0.2f, right = 0.8f, bottom = 0.8f)
+        val zoomed = CropPhysics.applyPinchZoomPan(
+            crop = initial,
+            zoomFactor = 2.0f, // 2x zoom into image -> crop box shrinks by 0.5
+            panDx = 0f,
+            panDy = 0f,
+            centroidX = 0.5f,
+            centroidY = 0.5f,
+            ratio = CropAspectRatio.FREE,
+            imageWidth = 1000,
+            imageHeight = 1000
+        )
+
+        assertEquals(0.35f, zoomed.left, 1e-3f)
+        assertEquals(0.35f, zoomed.top, 1e-3f)
+        assertEquals(0.65f, zoomed.right, 1e-3f)
+        assertEquals(0.65f, zoomed.bottom, 1e-3f)
+    }
+
+    @Test
+    fun `applyPinchZoomPan pans crop box across image`() {
+        val initial = CropRegion(left = 0.2f, top = 0.2f, right = 0.6f, bottom = 0.6f)
+        val panned = CropPhysics.applyPinchZoomPan(
+            crop = initial,
+            zoomFactor = 1.0f,
+            panDx = 0.1f,
+            panDy = -0.05f,
+            centroidX = 0.4f,
+            centroidY = 0.4f,
+            ratio = CropAspectRatio.FREE,
+            imageWidth = 1000,
+            imageHeight = 1000
+        )
+
+        assertEquals(0.1f, panned.left, 1e-3f)
+        assertEquals(0.25f, panned.top, 1e-3f)
+        assertEquals(0.5f, panned.right, 1e-3f)
+        assertEquals(0.65f, panned.bottom, 1e-3f)
+    }
+
+    @Test
+    fun `applyPinchZoomPan strictly preserves locked aspect ratio`() {
+        // 16:9 on 1920x1080 -> k = 1920 / (1080 * 16/9) = 1.0
+        val initial = CropRegion(left = 0.2f, top = 0.2f, right = 0.6f, bottom = 0.6f)
+        val transformed = CropPhysics.applyPinchZoomPan(
+            crop = initial,
+            zoomFactor = 1.5f,
+            panDx = 0.05f,
+            panDy = 0.05f,
+            centroidX = 0.4f,
+            centroidY = 0.4f,
+            ratio = CropAspectRatio.LANDSCAPE_16_9,
+            imageWidth = 1920,
+            imageHeight = 1080
+        )
+
+        val w = transformed.right - transformed.left
+        val h = transformed.bottom - transformed.top
+        assertEquals(w, h, 1e-3f) // k = 1.0
+        assertTrue(transformed.left >= 0f)
+        assertTrue(transformed.top >= 0f)
+        assertTrue(transformed.right <= 1f)
+        assertTrue(transformed.bottom <= 1f)
     }
 
     @Test

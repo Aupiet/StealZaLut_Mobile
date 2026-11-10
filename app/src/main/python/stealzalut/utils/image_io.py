@@ -12,14 +12,10 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from PIL import Image, ImageOps, TiffImagePlugin
+from PIL import Image, ImageOps
 
-try:
-    Image.register_extension(TiffImagePlugin.TiffImageFile.format, ".dng")
-    Image.register_extension(TiffImagePlugin.TiffImageFile.format, ".raw")
-except Exception:
-    pass
 from stealzalut.config import MAX_ANALYSIS_DIMENSION, PALETTE_DEFAULT_COLORS
+from stealzalut.core.raw_decoder import decode_dng_image, is_raw_or_dng_file
 
 
 # Use Pillow's Resampling enum with fallback for older versions
@@ -32,6 +28,8 @@ except AttributeError:
 def load_image(path: str) -> NDArray[np.uint8]:
     """Load an image file and return it as an RGB uint8 array.
 
+    Supports standard formats (JPEG, PNG, etc.) via Pillow and camera RAW / DNG formats
+    via the dedicated demosaicing engine without external libtiff.so dependency.
     Applies EXIF transposition systematically to handle mobile camera orientation.
 
     Args:
@@ -47,6 +45,14 @@ def load_image(path: str) -> NDArray[np.uint8]:
     """
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Image file not found: {path}")
+
+    # Camera RAW / DNG formats decoded via dedicated demosaicing engine
+    if is_raw_or_dng_file(path):
+        try:
+            f32 = decode_dng_image(path)
+            return to_uint8(f32)
+        except Exception as exc:
+            raise ValueError(f"Cannot decode RAW/DNG image at {path}: {exc}") from exc
 
     try:
         img: Image.Image = Image.open(path)
@@ -78,9 +84,8 @@ def load_proxy_image(
 ) -> NDArray[np.uint8]:
     """Load an image file directly as a downscaled proxy, bounding memory consumption.
 
-    Uses Pillow's native JPEG draft downsampling and thumbnail reduction before
-    allocating full NumPy arrays, preventing memory spikes on high-resolution photos
-    (e.g. 50 MP) while respecting EXIF orientation.
+    Supports camera RAW / DNG formats natively with proper demosaicing and white balance,
+    completely bypassing Pillow's TIFF plugin. For JPEG images, uses native C downsampling.
 
     Args:
         path: Path to the image file.
@@ -91,6 +96,14 @@ def load_proxy_image(
     """
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Image file not found: {path}")
+
+    # Camera RAW / DNG formats decoded via dedicated demosaicing engine directly into downscaled proxy
+    if is_raw_or_dng_file(path):
+        try:
+            f32 = decode_dng_image(path, max_dim=max_dim)
+            return to_uint8(f32)
+        except Exception as exc:
+            raise ValueError(f"Cannot decode proxy image at {path}: {exc}") from exc
 
     try:
         img: Image.Image = Image.open(path)
@@ -228,7 +241,7 @@ def get_clean_exif_bytes(path: str) -> Optional[bytes]:
     Returns:
         Cleaned EXIF bytes if available and within safe JPEG APP1 bounds (<= 65500 bytes), or None.
     """
-    if not os.path.isfile(path):
+    if not os.path.isfile(path) or is_raw_or_dng_file(path):
         return None
     try:
         with Image.open(path) as img:

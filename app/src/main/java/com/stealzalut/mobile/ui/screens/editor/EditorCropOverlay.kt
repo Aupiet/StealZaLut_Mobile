@@ -5,17 +5,33 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.RotateRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,31 +47,35 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
 import com.stealzalut.mobile.ui.theme.szlColors
 import kotlin.math.abs
 import kotlin.math.hypot
+import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Photographic standard crop ratios.
+ * Photographic standard crop ratios conforming to professional photography workflows.
  */
 enum class CropAspectRatio(val ratio: Float?, @param:StringRes val labelRes: Int) {
-    FREE(null, R.string.crop_free),
     ORIGINAL(null, R.string.crop_original),
+    FREE(null, R.string.crop_free),
     SQUARE_1_1(1.0f, R.string.crop_square),
-    PORTRAIT_4_5(0.8f, R.string.crop_portrait),
+    RATIO_4_3(4.0f / 3.0f, R.string.crop_4_3),
     RATIO_3_2(1.5f, R.string.crop_3_2),
-    LANDSCAPE_16_9(16.0f / 9.0f, R.string.crop_widescreen)
+    LANDSCAPE_16_9(16.0f / 9.0f, R.string.crop_16_9),
+    PORTRAIT_9_16(9.0f / 16.0f, R.string.crop_9_16),
+    RATIO_5_4(5.0f / 4.0f, R.string.crop_5_4),
+    PORTRAIT_4_5(0.8f, R.string.crop_portrait)
 }
 
 enum class DragHandle {
@@ -99,6 +119,161 @@ object CropPhysics {
         }
     }
 
+    /**
+     * Adapts the current crop region to a new target aspect ratio around its current center,
+     * preserving the user's framing instead of resetting unnecessarily to the full image.
+     */
+    fun adaptCropToRatio(
+        crop: CropRegion,
+        ratio: CropAspectRatio,
+        imageWidth: Int,
+        imageHeight: Int
+    ): CropRegion {
+        if (ratio == CropAspectRatio.FREE || imageWidth <= 0 || imageHeight <= 0) {
+            return crop
+        }
+        val targetRatio = if (ratio == CropAspectRatio.ORIGINAL) {
+            imageWidth.toFloat() / imageHeight.toFloat()
+        } else {
+            ratio.ratio ?: return crop
+        }
+
+        val k = imageWidth.toFloat() / (imageHeight.toFloat() * targetRatio)
+        val cx = ((crop.left + crop.right) / 2f).coerceIn(0.05f, 0.95f)
+        val cy = ((crop.top + crop.bottom) / 2f).coerceIn(0.05f, 0.95f)
+
+        val curW = (crop.right - crop.left).coerceAtLeast(0.05f)
+        val curH = (crop.bottom - crop.top).coerceAtLeast(0.05f)
+
+        val maxWCenter = min(cx, 1f - cx) * 2f
+        val maxHCenter = min(cy, 1f - cy) * 2f
+        val maxW = min(maxWCenter, maxHCenter / k)
+
+        var targetW = max(curW, curH / k).coerceIn(0.05f, maxW)
+        var targetH = targetW * k
+
+        if (targetH > maxHCenter) {
+            targetH = maxHCenter
+            targetW = targetH / k
+        }
+
+        val newLeft = (cx - targetW / 2f).coerceIn(0f, 1f - targetW)
+        val newTop = (cy - targetH / 2f).coerceIn(0f, 1f - targetH)
+
+        return crop.copy(
+            left = newLeft,
+            top = newTop,
+            right = newLeft + targetW,
+            bottom = newTop + targetH
+        )
+    }
+
+    /**
+     * Rotates crop framing by 90 degrees clockwise while preserving bounds.
+     */
+    fun rotate90(crop: CropRegion): CropRegion {
+        val newL = (1.0f - crop.bottom).coerceIn(0f, 1f)
+        val newT = crop.left.coerceIn(0f, 1f)
+        val newR = (1.0f - crop.top).coerceIn(0f, 1f)
+        val newB = crop.right.coerceIn(0f, 1f)
+        return crop.copy(
+            left = min(newL, newR),
+            top = min(newT, newB),
+            right = max(newL, newR),
+            bottom = max(newT, newB)
+        )
+    }
+
+    /**
+     * Applies pinch-to-zoom and two-finger pan to the crop region.
+     * When zooming into the photo (zoomFactor > 1), the crop box in normalized image space shrinks
+     * centered at the touch centroid (framing a tighter portion of the image).
+     * When zooming out of the photo (zoomFactor < 1), the crop box expands towards full image bounds [0, 1].
+     * Pan translates the crop box across the image.
+     * When an aspect ratio is locked, the ratio is strictly preserved.
+     */
+    fun applyPinchZoomPan(
+        crop: CropRegion,
+        zoomFactor: Float,
+        panDx: Float,
+        panDy: Float,
+        centroidX: Float,
+        centroidY: Float,
+        ratio: CropAspectRatio,
+        imageWidth: Int,
+        imageHeight: Int,
+        minDim: Float = 0.05f
+    ): CropRegion {
+        if (zoomFactor <= 0f) return crop
+
+        val curW = crop.right - crop.left
+        val curH = crop.bottom - crop.top
+
+        val k: Float? = when (ratio) {
+            CropAspectRatio.FREE -> null
+            CropAspectRatio.ORIGINAL -> if (imageHeight > 0 && imageWidth > 0) 1.0f else null
+            else -> ratio.ratio?.let { r ->
+                if (imageHeight > 0 && r > 0f) (imageWidth.toFloat() / (imageHeight.toFloat() * r)) else null
+            }
+        }
+
+        // Zooming in on image shrinks the crop box; zooming out expands it
+        val scale = 1.0f / zoomFactor
+
+        if (k == null) {
+            var newW = (curW * scale).coerceIn(minDim, 1.0f)
+            var newH = (curH * scale).coerceIn(minDim, 1.0f)
+
+            val anchorX = if (centroidX in crop.left..crop.right) centroidX else (crop.left + curW / 2f)
+            val anchorY = if (centroidY in crop.top..crop.bottom) centroidY else (crop.top + curH / 2f)
+
+            val relX = if (curW > 0.001f) (anchorX - crop.left) / curW else 0.5f
+            val relY = if (curH > 0.001f) (anchorY - crop.top) / curH else 0.5f
+
+            var newL = anchorX - relX * newW - panDx
+            var newT = anchorY - relY * newH - panDy
+
+            if (newL < 0f) newL = 0f
+            if (newL + newW > 1.0f) {
+                if (newW > 1.0f) newW = 1.0f
+                newL = (1.0f - newW).coerceAtLeast(0f)
+            }
+
+            if (newT < 0f) newT = 0f
+            if (newT + newH > 1.0f) {
+                if (newH > 1.0f) newH = 1.0f
+                newT = (1.0f - newH).coerceAtLeast(0f)
+            }
+
+            return crop.copy(
+                left = newL,
+                top = newT,
+                right = newL + newW,
+                bottom = newT + newH
+            )
+        } else {
+            val maxW = min(1.0f, 1.0f / k)
+            var newW = (curW * scale).coerceIn(minDim, maxW)
+            var newH = newW * k
+
+            val anchorX = if (centroidX in crop.left..crop.right) centroidX else (crop.left + curW / 2f)
+            val anchorY = if (centroidY in crop.top..crop.bottom) centroidY else (crop.top + curH / 2f)
+
+            val relX = if (curW > 0.001f) (anchorX - crop.left) / curW else 0.5f
+            val relY = if (curH > 0.001f) (anchorY - crop.top) / curH else 0.5f
+
+            var newL = (anchorX - relX * newW - panDx).coerceIn(0f, 1f - newW)
+            var newT = (anchorY - relY * newH - panDy).coerceIn(0f, 1f - newH)
+
+            return crop.copy(
+                left = newL,
+                top = newT,
+                right = newL + newW,
+                bottom = newT + newH
+            )
+        }
+    }
+
     fun applyDrag(
         crop: CropRegion,
         handle: DragHandle,
@@ -111,7 +286,7 @@ object CropPhysics {
     ): CropRegion {
         val k: Float? = when (ratio) {
             CropAspectRatio.FREE -> null
-            CropAspectRatio.ORIGINAL -> 1.0f
+            CropAspectRatio.ORIGINAL -> if (imageHeight > 0 && imageWidth > 0) 1.0f else null
             else -> ratio.ratio?.let { r ->
                 if (imageHeight > 0 && r > 0f) (imageWidth.toFloat() / (imageHeight.toFloat() * r)) else null
             }
@@ -165,7 +340,7 @@ object CropPhysics {
             DragHandle.BOTTOM_LEFT -> {
                 if (k == null) {
                     val newL = (crop.left + dx).coerceIn(0f, crop.right - minDim)
-                    val newB = (crop.bottom + dy).coerceIn(crop.top + minDim, 1f)
+                    val newB = (crop.bottom + dy).coerceIn(0f, crop.bottom - minDim)
                     crop.copy(left = newL, bottom = newB)
                 } else {
                     val maxW = min(crop.right, (1f - crop.top) / k)
@@ -253,7 +428,8 @@ object CropPhysics {
  * - Dynamic Rule of Thirds grid that fades in smoothly during active drag gestures.
  * - Strict aspect ratio locking based on physical pixel dimensions.
  * - High-contrast corner L-brackets with drop shadows for pro visibility.
- * - Hardware accelerated real-time straighten rotation.
+ * - Multitouch pinch-to-zoom and pan support without gesture conflict.
+ * - Top Action Strip with Cancel, Rotate 90°, Reset, and Apply buttons.
  */
 @Composable
 fun EditorCropOverlay(
@@ -263,7 +439,12 @@ fun EditorCropOverlay(
     imageHeight: Int = 0,
     selectedRatio: CropAspectRatio = CropAspectRatio.FREE,
     modifier: Modifier = Modifier,
-    onCropFinished: (() -> Unit)? = null
+    onCropFinished: (() -> Unit)? = null,
+    onCancelCrop: (() -> Unit)? = null,
+    onApplyCrop: (() -> Unit)? = null,
+    onRotate90: (() -> Unit)? = null,
+    onResetCrop: (() -> Unit)? = null,
+    onTransformImage: ((zoom: Float, pan: Offset) -> Unit)? = null
 ) {
     val cropOverlayColor = MaterialTheme.szlColors.cropOverlay
     val cropHandleColor = MaterialTheme.szlColors.cropHandle
@@ -272,84 +453,20 @@ fun EditorCropOverlay(
     val density = LocalDensity.current
 
     var activeHandle by remember { mutableStateOf(DragHandle.NONE) }
-    val isDragging = activeHandle != DragHandle.NONE
+    var isInteracting by remember { mutableStateOf(false) }
 
     val gridAlpha by animateFloatAsState(
-        targetValue = if (isDragging) 1.0f else 0.0f,
+        targetValue = if (isInteracting) 1.0f else 0.0f,
         animationSpec = tween(durationMillis = 180),
-        label = "cropGridAlpha" // GUARD_ALLOW
+        label = "cropGridAlpha"
     )
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(cropRegion, selectedRatio, imageWidth, imageHeight) {
-                detectDragGestures(
-                    onDragStart = { startOffset ->
-                        val paddingH = with(density) { AppDimens.SpacingSmall.toPx() }
-                        val paddingV = with(density) { AppDimens.SpacingMicro.toPx() }
-                        val availW = (size.width - 2f * paddingH).coerceAtLeast(1f)
-                        val availH = (size.height - 2f * paddingV).coerceAtLeast(1f)
-
-                        val (imgW, imgH) = if (imageWidth > 0 && imageHeight > 0) {
-                            val imgAspect = imageWidth.toFloat() / imageHeight.toFloat()
-                            val availAspect = availW / availH
-                            if (availAspect > imgAspect) (availH * imgAspect) to availH else availW to (availW / imgAspect)
-                        } else {
-                            availW to availH
-                        }
-
-                        val imgLeft = paddingH + (availW - imgW) / 2f
-                        val imgTop = paddingV + (availH - imgH) / 2f
-
-                        val leftPx = imgLeft + cropRegion.left * imgW
-                        val topPx = imgTop + cropRegion.top * imgH
-                        val rightPx = imgLeft + cropRegion.right * imgW
-                        val bottomPx = imgTop + cropRegion.bottom * imgH
-
-                        val x = startOffset.x
-                        val y = startOffset.y
-                        fun dist(px: Float, py: Float) = hypot(x - px, y - py)
-
-                        val cornerRadius = with(density) { 44.dp.toPx() }
-                        val edgeRadius = with(density) { 36.dp.toPx() }
-
-                        activeHandle = when {
-                            dist(leftPx, topPx) <= cornerRadius -> DragHandle.TOP_LEFT
-                            dist(rightPx, topPx) <= cornerRadius -> DragHandle.TOP_RIGHT
-                            dist(leftPx, bottomPx) <= cornerRadius -> DragHandle.BOTTOM_LEFT
-                            dist(rightPx, bottomPx) <= cornerRadius -> DragHandle.BOTTOM_RIGHT
-                            abs(x - leftPx) <= edgeRadius && y in (topPx - edgeRadius)..(bottomPx + edgeRadius) -> DragHandle.LEFT_EDGE
-                            abs(x - rightPx) <= edgeRadius && y in (topPx - edgeRadius)..(bottomPx + edgeRadius) -> DragHandle.RIGHT_EDGE
-                            abs(y - topPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.TOP_EDGE
-                            abs(y - bottomPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.BOTTOM_EDGE
-                            x in leftPx..rightPx && y in topPx..bottomPx -> DragHandle.INSIDE_MOVE
-                            else -> {
-                                val dTL = dist(leftPx, topPx)
-                                val dTR = dist(rightPx, topPx)
-                                val dBL = dist(leftPx, bottomPx)
-                                val dBR = dist(rightPx, bottomPx)
-                                val minD = min(min(dTL, dTR), min(dBL, dBR))
-                                if (minD <= cornerRadius * 1.5f) {
-                                    when (minD) {
-                                        dTL -> DragHandle.TOP_LEFT
-                                        dTR -> DragHandle.TOP_RIGHT
-                                        dBL -> DragHandle.BOTTOM_LEFT
-                                        else -> DragHandle.BOTTOM_RIGHT
-                                    }
-                                } else DragHandle.NONE
-                            }
-                        }
-                    },
-                    onDragEnd = {
-                        activeHandle = DragHandle.NONE
-                        onCropFinished?.invoke()
-                    },
-                    onDragCancel = {
-                        activeHandle = DragHandle.NONE
-                    }
-                ) { change, dragAmount ->
-                    change.consume()
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
                     val paddingH = with(density) { AppDimens.SpacingSmall.toPx() }
                     val paddingV = with(density) { AppDimens.SpacingMicro.toPx() }
                     val availW = (size.width - 2f * paddingH).coerceAtLeast(1f)
@@ -363,21 +480,98 @@ fun EditorCropOverlay(
                         availW to availH
                     }
 
-                    if (imgW <= 0f || imgH <= 0f) return@detectDragGestures
+                    val imgLeft = paddingH + (availW - imgW) / 2f
+                    val imgTop = paddingV + (availH - imgH) / 2f
 
-                    val dx = dragAmount.x / imgW
-                    val dy = dragAmount.y / imgH
+                    val leftPx = imgLeft + cropRegion.left * imgW
+                    val topPx = imgTop + cropRegion.top * imgH
+                    val rightPx = imgLeft + cropRegion.right * imgW
+                    val bottomPx = imgTop + cropRegion.bottom * imgH
 
-                    val updated = CropPhysics.applyDrag(
-                        crop = cropRegion,
-                        handle = activeHandle,
-                        dx = dx,
-                        dy = dy,
-                        ratio = selectedRatio,
-                        imageWidth = imageWidth,
-                        imageHeight = imageHeight
-                    )
-                    onCropRegionChange(updated)
+                    val x = down.position.x
+                    val y = down.position.y
+                    fun dist(px: Float, py: Float) = hypot(x - px, y - py)
+
+                    val cornerRadius = with(density) { 44.dp.toPx() }
+                    val edgeRadius = with(density) { 36.dp.toPx() }
+
+                    var handle = when {
+                        dist(leftPx, topPx) <= cornerRadius -> DragHandle.TOP_LEFT
+                        dist(rightPx, topPx) <= cornerRadius -> DragHandle.TOP_RIGHT
+                        dist(leftPx, bottomPx) <= cornerRadius -> DragHandle.BOTTOM_LEFT
+                        dist(rightPx, bottomPx) <= cornerRadius -> DragHandle.BOTTOM_RIGHT
+                        abs(x - leftPx) <= edgeRadius && y in (topPx - edgeRadius)..(bottomPx + edgeRadius) -> DragHandle.LEFT_EDGE
+                        abs(x - rightPx) <= edgeRadius && y in (topPx - edgeRadius)..(bottomPx + edgeRadius) -> DragHandle.RIGHT_EDGE
+                        abs(y - topPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.TOP_EDGE
+                        abs(y - bottomPx) <= edgeRadius && x in (leftPx - edgeRadius)..(rightPx + edgeRadius) -> DragHandle.BOTTOM_EDGE
+                        x in leftPx..rightPx && y in topPx..bottomPx -> DragHandle.INSIDE_MOVE
+                        else -> DragHandle.NONE
+                    }
+
+                    activeHandle = handle
+                    isInteracting = true
+                    var currentCrop = cropRegion
+
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val activePointers = event.changes.filter { it.pressed }
+                        if (activePointers.isEmpty()) {
+                            activeHandle = DragHandle.NONE
+                            isInteracting = false
+                            onCropFinished?.invoke()
+                            break
+                        }
+
+                        if (activePointers.size >= 2) {
+                            // Multitouch pinch-to-zoom and two-finger pan
+                            activeHandle = DragHandle.NONE
+                            val zoom = event.calculateZoom()
+                            val pan = event.calculatePan()
+                            val centroid = event.calculateCentroid()
+
+                            if (imgW > 0f && imgH > 0f) {
+                                val panDx = pan.x / imgW
+                                val panDy = pan.y / imgH
+                                val centroidNormX = ((centroid.x - imgLeft) / imgW).coerceIn(0f, 1f)
+                                val centroidNormY = ((centroid.y - imgTop) / imgH).coerceIn(0f, 1f)
+
+                                currentCrop = CropPhysics.applyPinchZoomPan(
+                                    crop = currentCrop,
+                                    zoomFactor = zoom,
+                                    panDx = panDx,
+                                    panDy = panDy,
+                                    centroidX = centroidNormX,
+                                    centroidY = centroidNormY,
+                                    ratio = selectedRatio,
+                                    imageWidth = imageWidth,
+                                    imageHeight = imageHeight
+                                )
+                                onCropRegionChange(currentCrop)
+                            }
+                            onTransformImage?.invoke(zoom, pan)
+                            event.changes.forEach { it.consume() }
+                        } else if (activePointers.size == 1 && handle != DragHandle.NONE) {
+                            // Single pointer dragging handle or box
+                            val change = activePointers.first()
+                            val dragDelta = change.position - change.previousPosition
+                            change.consume()
+
+                            if (imgW > 0f && imgH > 0f) {
+                                val dx = dragDelta.x / imgW
+                                val dy = dragDelta.y / imgH
+                                currentCrop = CropPhysics.applyDrag(
+                                    crop = currentCrop,
+                                    handle = handle,
+                                    dx = dx,
+                                    dy = dy,
+                                    ratio = selectedRatio,
+                                    imageWidth = imageWidth,
+                                    imageHeight = imageHeight
+                                )
+                                onCropRegionChange(currentCrop)
+                            }
+                        }
+                    }
                 }
             }
     ) {
@@ -405,8 +599,8 @@ fun EditorCropOverlay(
             val topPx = imgTop + cropRegion.top * imgH
             val rightPx = imgLeft + cropRegion.right * imgW
             val bottomPx = imgTop + cropRegion.bottom * imgH
-            val cropW = rightPx - leftPx
-            val cropH = bottomPx - topPx
+            val cropW = (rightPx - leftPx).coerceAtLeast(1f)
+            val cropH = (bottomPx - topPx).coerceAtLeast(1f)
 
             // 1. Outside photo darkroom letterboxing
             drawRect(color = darkroomColor, topLeft = Offset(0f, 0f), size = Size(canvasW, imgTop))
@@ -428,7 +622,7 @@ fun EditorCropOverlay(
                 style = Stroke(width = AppDimens.BorderMedium.toPx())
             )
 
-            // 4. Rule-of-thirds grid (fades in smoothly when dragging)
+            // 4. Rule-of-thirds grid (fades in smoothly when interacting)
             if (gridAlpha > 0.01f) {
                 val oneThirdW = cropW / 3f
                 val oneThirdH = cropH / 3f
@@ -477,6 +671,90 @@ fun EditorCropOverlay(
             drawLine(shadowColor, Offset(rightPx, midH - notchLen / 2f), Offset(rightPx, midH + notchLen / 2f), shadowThickness)
             drawLine(cropHandleColor, Offset(rightPx, midH - notchLen / 2f), Offset(rightPx, midH + notchLen / 2f), handleThickness)
         }
+
+        // Floating Top Confirmation Bar: Cancel | Rotate 90° | Reset | Apply
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = AppDimens.SpacingNormal)
+                .padding(horizontal = AppDimens.SpacingSmall),
+            shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.90f),
+            border = androidx.compose.foundation.BorderStroke(
+                AppDimens.BorderThin,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+            ) {
+                // Cancel button
+                IconButton(
+                    onClick = { onCancelCrop?.invoke() },
+                    modifier = Modifier.size(AppDimens.MinInteractiveTarget)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.crop_cancel),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(AppDimens.IconMedium)
+                    )
+                }
+
+                // Rotate 90° button
+                IconButton(
+                    onClick = { onRotate90?.invoke() },
+                    modifier = Modifier.size(AppDimens.MinInteractiveTarget)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.RotateRight,
+                        contentDescription = stringResource(R.string.crop_rotate_90),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(AppDimens.IconMedium)
+                    )
+                }
+
+                // Reset button
+                IconButton(
+                    onClick = { onResetCrop?.invoke() },
+                    modifier = Modifier.size(AppDimens.MinInteractiveTarget)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.RestartAlt,
+                        contentDescription = stringResource(R.string.crop_reset),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(AppDimens.IconMedium)
+                    )
+                }
+
+                // Apply button
+                Button(
+                    onClick = { onApplyCrop?.invoke() },
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier.defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
+                        Text(
+                            text = stringResource(R.string.crop_apply),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -492,7 +770,8 @@ fun EditorCropPanel(
     selectedRatio: CropAspectRatio = CropAspectRatio.ORIGINAL,
     onRatioChange: (CropAspectRatio) -> Unit = {},
     modifier: Modifier = Modifier,
-    onCropFinished: (() -> Unit)? = null
+    onCropFinished: (() -> Unit)? = null,
+    onRotate90: (() -> Unit)? = null
 ) {
     var currentAngle by remember { mutableFloatStateOf(cropRegion.angle) }
 
@@ -502,13 +781,14 @@ fun EditorCropPanel(
             .padding(AppDimens.SpacingMedium),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-        // Ratio Pills Row with Reset button
+        // Ratio Pills Row with Reset and Rotate 90°
         val ratioScrollState = androidx.compose.foundation.rememberScrollState()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(ratioScrollState),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall, Alignment.CenterHorizontally)
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Reset Crop button
             Surface(
@@ -535,6 +815,38 @@ fun EditorCropPanel(
                 }
             }
 
+            // Rotate 90° button
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusFull),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
+                    .clickable {
+                        onRotate90?.invoke()
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.RotateRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "90°",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Predefined Aspect Ratio Pills
             CropAspectRatio.entries.forEach { ratio ->
                 val isSelected = selectedRatio == ratio
                 Surface(
@@ -544,8 +856,9 @@ fun EditorCropPanel(
                         .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
                         .clickable {
                             onRatioChange(ratio)
-                            val fitted = CropPhysics.computeFittedCropRegion(ratio, imageWidth, imageHeight)
-                            onCropRegionChange(fitted.copy(angle = currentAngle))
+                            // Non-destructive adaptation around current framing center
+                            val adapted = CropPhysics.adaptCropToRatio(cropRegion, ratio, imageWidth, imageHeight)
+                            onCropRegionChange(adapted.copy(angle = currentAngle))
                             onCropFinished?.invoke()
                         }
                 ) {
@@ -556,7 +869,6 @@ fun EditorCropPanel(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall)
                         )
                     }

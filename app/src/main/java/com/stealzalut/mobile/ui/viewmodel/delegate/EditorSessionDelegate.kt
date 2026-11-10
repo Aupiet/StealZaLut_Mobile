@@ -407,7 +407,7 @@ class EditorSessionDelegate(
                             editorSourceBitmap = thumbnail,
                             editorPreviewBitmap = thumbnail,
                             editorPreviewPath = file.absolutePath,
-                            isEditorProcessing = false,
+                            isEditorProcessing = thumbnail == null,
                             editorCommittedSnapshot = currentSnapshot()
                         )
                     }
@@ -789,6 +789,7 @@ class EditorSessionDelegate(
                     }
                     stateFlow.update {
                         it.copy(
+                            editorSourceBitmap = it.editorSourceBitmap ?: bitmap,
                             editorPreviewBitmap = bitmap,
                             editorPreviewPath = res.previewPath,
                             editorExecutionTimeMs = res.executionTimeMs,

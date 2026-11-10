@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.activity.result.PickVisualMediaRequest
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.ui.screens.editor.CropAspectRatio
+import com.stealzalut.mobile.ui.screens.editor.CropPhysics
 import com.stealzalut.mobile.ui.screens.editor.EditorCropOverlay
 import com.stealzalut.mobile.ui.screens.editor.EditorCropPanel
 import com.stealzalut.mobile.ui.screens.editor.EditorExportDialog
@@ -37,6 +38,7 @@ import com.stealzalut.mobile.ui.screens.editor.EditorTransformPanel
 import com.stealzalut.mobile.data.model.LensCorrectionsModel
 import com.stealzalut.mobile.data.model.TransformModel
 import com.stealzalut.mobile.ui.theme.icons
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +47,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,6 +115,13 @@ fun StandaloneEditorScreen(
 
     var isDrawerExpanded by remember { mutableStateOf(true) }
     var cropAspectRatio by remember { mutableStateOf(CropAspectRatio.ORIGINAL) }
+    var initialCropRegion by remember { mutableStateOf<CropRegion?>(null) }
+
+    LaunchedEffect(uiState.editorActiveTool) {
+        if (uiState.editorActiveTool == 0) {
+            initialCropRegion = uiState.editorCropRegion
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -205,18 +215,29 @@ fun StandaloneEditorScreen(
             .background(MaterialTheme.szlColors.photoDarkroom)
     ) {
         if (uiState.editorSourceBitmap == null) {
-            EditorEmptyState(
-                onSelectImage = { imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, // GUARD_ALLOW
-                onSelectRawDng = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
-                projects = uiState.editorProjects,
-                onOpenProject = { viewModel.openProject(it) },
-                onRenameProject = { id, newName -> viewModel.renameProject(id, newName) },
-                onDuplicateProject = { viewModel.duplicateProject(it) },
-                onDeleteProject = { viewModel.deleteProject(it) },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(AppDimens.SpacingSpacious)
-            )
+            if (uiState.isEditorProcessing) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else {
+                EditorEmptyState(
+                    onSelectImage = { imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, // GUARD_ALLOW
+                    onSelectRawDng = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
+                    projects = uiState.editorProjects,
+                    onOpenProject = { viewModel.openProject(it) },
+                    onRenameProject = { id, newName -> viewModel.renameProject(id, newName) },
+                    onDuplicateProject = { viewModel.duplicateProject(it) },
+                    onDeleteProject = { viewModel.deleteProject(it) },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppDimens.SpacingSpacious)
+                )
+            }
         } else {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -253,6 +274,26 @@ fun StandaloneEditorScreen(
                             imageHeight = uiState.editorSourceBitmap?.height ?: 0,
                             selectedRatio = cropAspectRatio,
                             onCropFinished = { viewModel.onCropFinished() },
+                            onCancelCrop = {
+                                initialCropRegion?.let { viewModel.updateCropRegion(it) }
+                                initialCropRegion = null
+                                delegate.setEditorActiveTool(1)
+                            },
+                            onApplyCrop = {
+                                initialCropRegion = null
+                                viewModel.onCropFinished()
+                                delegate.setEditorActiveTool(1)
+                            },
+                            onRotate90 = {
+                                val rotated = CropPhysics.rotate90(uiState.editorCropRegion)
+                                viewModel.updateCropRegion(rotated)
+                                viewModel.onCropFinished()
+                            },
+                            onResetCrop = {
+                                cropAspectRatio = CropAspectRatio.ORIGINAL
+                                viewModel.updateCropRegion(CropRegion())
+                                viewModel.onCropFinished()
+                            },
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -394,7 +435,12 @@ fun StandaloneEditorScreen(
                                             imageHeight = uiState.editorSourceBitmap?.height ?: 0,
                                             selectedRatio = cropAspectRatio,
                                             onRatioChange = { cropAspectRatio = it },
-                                            onCropFinished = { viewModel.onCropFinished() }
+                                            onCropFinished = { viewModel.onCropFinished() },
+                                            onRotate90 = {
+                                                val rotated = CropPhysics.rotate90(uiState.editorCropRegion)
+                                                viewModel.updateCropRegion(rotated)
+                                                viewModel.onCropFinished()
+                                            }
                                         )
                                         1 -> EditorBasicPanel(
                                             basic = lrParams.basic,

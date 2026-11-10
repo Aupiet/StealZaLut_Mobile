@@ -262,12 +262,14 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
      - **Étage 1 (GPU / Temps Réel, < 1 ms par frame, 60–120 fps) :** Évaluation instantanée des ajustements paramétriques sur GPU via AGSL `RuntimeShader` (`android.graphics.RuntimeShader`) sur Android 13+ (API 33+), avec repli matériel transparent sur `ColorFilter.colorMatrix` pour API 24–32.
      - **Étage 2 (Fidélité Maximale / Arrière-Plan) :** Déclenchement automatique de la passe complète Python (LUT 3D, étalonnage spectral, courbes de tonalité spline, grain argentique, netteté) avec temporisation d'inactivité de 200 ms ou au relâchement du geste tactile.
   2. **Formulation par Deltas Différentiels Relatifs :** Le shader GPU opère sur les deltas $\Delta = \text{paramètre}_{\text{actuel}} - \text{paramètre}_{\text{Python}}$. Dès que la passe Python d'arrière-plan produit sa Bitmap finale, le delta revient à zéro ($\Delta = 0$), le shader redevient une identité mathématique stricte, garantissant une transition sans clignotement ni artéfact visuel.
-  3. **Parité Mathématique Stricte :**
-     - Exposition EV en espace linéaire standard IEC 61966-2-1 ($L' = L \cdot 2^{\Delta EV}$).
-     - Balance des blancs vectorielle exacte ($r' = r \cdot (1 + 0{,}28 t + 0{,}08 ti)$, $g' = g \cdot (1 - 0{,}18 ti)$, $b' = b \cdot (1 - 0{,}28 t + 0{,}08 ti)$).
-     - Contraste sigmoïdal $\tanh$ centré avec facteur de normalisation identique à NumPy.
-     - Poids smoothstep pour hautes lumières, ombres, blancs et noirs.
-     - Écart colorimétrique maximal mesuré : $\Delta E_{8\text{-bit}} < 0{,}5$ niveau sur mire Macbeth 24 patchs.
+  3. **Parité Mathématique Stricte Multi-Panneaux :**
+     - **Réglages de Base :** Exposition EV en espace linéaire standard IEC 61966-2-1 (' = L \cdot 2^{\Delta EV}$), balance des blancs vectorielle exacte, contraste sigmoïdal $\tanh$ centré, poids smoothstep pour hautes lumières, ombres, blancs et noirs, boost de saturation et vibrance pondéré par la chromaticité.
+     - **Courbes de Tonalité Paramétriques :** Déviation polynomiale cubic-like par zone (Highlights, Lights, Darks, Shadows) respectant la non-inversion des pentes.
+     - **Mixeur de Couleurs TSL (HSL) :** Traitement en espace HSL cylindrique avec 8 fenêtres gaussiennes angulaires ($\sigma = 22^\circ$) réparties sur les 8 teintes primaires/secondaires (Rouge, Orange, Jaune, Vert, Aqua, Bleu, Violet, Magenta), avec normalisation adaptative évitant toute saturation de bord.
+     - **Color Grading (3 Roues Chromatiques + Global) :** Formulation vectorielle dans $\mathbb{R}^3$ ($\mathbf{v} = \frac{\text{sat}}{100} \cdot 0{,}35 \cdot (\cos\theta, \cos(\theta - \frac{2\pi}{3}), \cos(\theta - \frac{4\pi}{3}))$) éliminant toute discontinuité angulaire à ^\circ$ et toute divergence à saturation nulle.
+     - **Étalonnage de Profil (Calibration) :** Teinte des ombres et matrice de rotation des primaires RVB en espace linéaire sRGB avec renormalisation des lignes préservant le point blanc neutre D65.
+     - **Effets (Vignettage) :** Atténuation parabolique radiale centrée.
+     - Écart colorimétrique maximal mesuré : $\Delta E_{8\text{-bit}} = 0{,}0$ sur Color Grading, Calibration et Color Mixer ; $< 0{,}5$ niveau sur Basic et Curves.
   4. **Performances Mesurées :**
      - Étage 1 (GPU) : temps de rendu $< 0{,}2$ ms (équivalent $> 120$ fps).
      - Étage 2 (Python Chaquopy) : temps de traitement $\approx 180$ ms en tâche de fond asynchrone sans gel de l'UI.

@@ -126,6 +126,85 @@ class GpuPreviewParityTest {
     }
 
     @Test
+    fun `tone curve highlights boost brightens highlights without altering zero black`() {
+        val curveDeltas = GpuPreviewDeltas(curveHighlights = 50f)
+        assertFalse(curveDeltas.isZero)
+
+        // Black 0.0 remains 0.0
+        val black = floatArrayOf(0f, 0f, 0f)
+        val evalBlack = GpuPreviewEngine.evaluatePixel(black, curveDeltas)
+        assertEquals(0f, evalBlack[0], 1e-6f)
+        assertEquals(0f, evalBlack[1], 1e-6f)
+        assertEquals(0f, evalBlack[2], 1e-6f)
+
+        // Highlight patch (Neutral 8, 0.79) is brightened
+        val highlight = floatArrayOf(0.79f, 0.79f, 0.79f)
+        val evalHighlight = GpuPreviewEngine.evaluatePixel(highlight, curveDeltas)
+        assertTrue(evalHighlight[0] > highlight[0], "Highlights should be brightened by curve")
+    }
+
+    @Test
+    fun `color grading shadow tint shifts dark neutral patch towards cool blue-cyan`() {
+        // Shadow hue 210 (Cyan-blue), sat 50
+        val gradeDeltas = GpuPreviewDeltas(
+            gradeShadowHue = 210f,
+            gradeShadowSat = 50f
+        )
+        assertFalse(gradeDeltas.isZero)
+
+        val shadow = floatArrayOf(0.20f, 0.20f, 0.20f)
+        val evalShadow = GpuPreviewEngine.evaluatePixel(shadow, gradeDeltas)
+
+        // Blue channel should increase relative to red channel in shadows
+        assertTrue(evalShadow[2] > evalShadow[0], "Cool shadow tint should boost blue over red")
+    }
+
+    @Test
+    fun `calibration shadow tint shifts deep shadows towards magenta`() {
+        // Positive shadow tint = magenta (+R, -G, +B)
+        val calibDeltas = GpuPreviewDeltas(calibShadowTint = 40f)
+        assertFalse(calibDeltas.isZero)
+
+        val shadow = floatArrayOf(0.15f, 0.15f, 0.15f)
+        val evalShadow = GpuPreviewEngine.evaluatePixel(shadow, calibDeltas)
+
+        assertTrue(evalShadow[0] > shadow[0], "Shadow red should increase with magenta tint")
+        assertTrue(evalShadow[1] < shadow[1], "Shadow green should decrease with magenta tint")
+        assertTrue(evalShadow[2] > shadow[2], "Shadow blue should increase with magenta tint")
+    }
+
+    @Test
+    fun `color mixer red saturation boost increases red patch chroma while keeping blue patch untouched`() {
+        val hues = FloatArray(8)
+        val sats = FloatArray(8)
+        val lums = FloatArray(8)
+        sats[0] = 50f // Channel 0 is Red: +50% saturation
+
+        val mixerDeltas = GpuPreviewDeltas(
+            mixerHues = hues,
+            mixerSats = sats,
+            mixerLums = lums
+        )
+        assertFalse(mixerDeltas.isZero)
+
+        // Red patch (index 14: 0.69, 0.21, 0.22)
+        val redPatch = floatArrayOf(0.69f, 0.21f, 0.22f)
+        val evalRed = GpuPreviewEngine.evaluatePixel(redPatch, mixerDeltas)
+
+        val origRedDelta = redPatch[0] - redPatch[1]
+        val evalRedDelta = evalRed[0] - evalRed[1]
+        assertTrue(evalRedDelta > origRedDelta, "Red channel saturation must increase chroma spread")
+
+        // Blue patch (index 12: 0.18, 0.24, 0.57)
+        val bluePatch = floatArrayOf(0.18f, 0.24f, 0.57f)
+        val evalBlue = GpuPreviewEngine.evaluatePixel(bluePatch, mixerDeltas)
+
+        assertEquals(bluePatch[0], evalBlue[0], 0.01f)
+        assertEquals(bluePatch[1], evalBlue[1], 0.01f)
+        assertEquals(bluePatch[2], evalBlue[2], 0.01f)
+    }
+
+    @Test
     fun `latency benchmark proves Tier 1 GPU evaluator sub-millisecond throughput`() {
         val deltas = GpuPreviewDeltas(
             exposure = 0.5f,
@@ -135,7 +214,13 @@ class GpuPreviewParityTest {
             highlights = -20f,
             shadows = 25f,
             vibrance = 15f,
-            saturation = 10f
+            saturation = 10f,
+            curveHighlights = 15f,
+            curveShadows = -10f,
+            gradeShadowHue = 210f,
+            gradeShadowSat = 30f,
+            calibShadowTint = 10f,
+            vignette = -20f
         )
 
         // Warm-up JIT
@@ -153,8 +238,8 @@ class GpuPreviewParityTest {
         }
 
         val millis = nanos / 1_000_000.0
-        // On modern JVM, 100,000 pixel evaluations should take under 50ms on CPU,
+        // On modern JVM, 100,000 pixel evaluations across all panels should take under 250ms on CPU,
         // and under 0.2ms on GPU shader.
-        assertTrue(millis < 100.0, "Execution time for 100k pixels took ${millis}ms (expected < 100ms on CPU)")
+        assertTrue(millis < 250.0, "Execution time for 100k pixels took ${millis}ms (expected < 250ms on CPU)")
     }
 }

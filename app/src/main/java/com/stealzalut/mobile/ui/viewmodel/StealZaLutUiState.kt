@@ -9,6 +9,12 @@ import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CropRegion
+import com.stealzalut.mobile.data.model.BasicAdjustmentsModel
+import com.stealzalut.mobile.data.model.CalibrationModel
+import com.stealzalut.mobile.data.model.ColorGradingModel
+import com.stealzalut.mobile.data.model.ColorMixerModel
+import com.stealzalut.mobile.data.model.EffectsModel
+import com.stealzalut.mobile.data.model.ToneCurveModel
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.EditorParamsSnapshot
 import com.stealzalut.mobile.ui.preview.GpuPreviewDeltas
@@ -223,10 +229,57 @@ data class StealZaLutUiState(
 
     val editorGpuDeltas: GpuPreviewDeltas
         get() {
-            val currBasic = editorLightroomParams.basic
-            val commBasic = editorCommittedSnapshot.lightroomParams.basic
-            val currEffects = editorLightroomParams.effects
-            val commEffects = editorCommittedSnapshot.lightroomParams.effects
+            val currLr = editorLightroomParams
+            val commLr = editorCommittedSnapshot.lightroomParams
+
+            val currBasic = if (currLr.isBasicEnabled) currLr.basic else BasicAdjustmentsModel()
+            val commBasic = if (commLr.isBasicEnabled) commLr.basic else BasicAdjustmentsModel()
+
+            val currTone = if (currLr.isToneCurveEnabled) currLr.toneCurve else ToneCurveModel()
+            val commTone = if (commLr.isToneCurveEnabled) commLr.toneCurve else ToneCurveModel()
+
+            val currGrading = if (currLr.isColorGradingEnabled) currLr.colorGrading else ColorGradingModel()
+            val commGrading = if (commLr.isColorGradingEnabled) commLr.colorGrading else ColorGradingModel()
+
+            val currCalib = if (currLr.isCalibrationEnabled) currLr.calibration else CalibrationModel()
+            val commCalib = if (commLr.isCalibrationEnabled) commLr.calibration else CalibrationModel()
+
+            val currMixer = if (currLr.isColorMixerEnabled) currLr.colorMixer else ColorMixerModel()
+            val commMixer = if (commLr.isColorMixerEnabled) commLr.colorMixer else ColorMixerModel()
+
+            val currEffects = if (currLr.isEffectsEnabled) currLr.effects else EffectsModel()
+            val commEffects = if (commLr.isEffectsEnabled) commLr.effects else EffectsModel()
+
+            val mixerHues = floatArrayOf(
+                currMixer.hueRed - commMixer.hueRed,
+                currMixer.hueOrange - commMixer.hueOrange,
+                currMixer.hueYellow - commMixer.hueYellow,
+                currMixer.hueGreen - commMixer.hueGreen,
+                currMixer.hueAqua - commMixer.hueAqua,
+                currMixer.hueBlue - commMixer.hueBlue,
+                currMixer.huePurple - commMixer.huePurple,
+                currMixer.hueMagenta - commMixer.hueMagenta
+            )
+            val mixerSats = floatArrayOf(
+                currMixer.satRed - commMixer.satRed,
+                currMixer.satOrange - commMixer.satOrange,
+                currMixer.satYellow - commMixer.satYellow,
+                currMixer.satGreen - commMixer.satGreen,
+                currMixer.satAqua - commMixer.satAqua,
+                currMixer.satBlue - commMixer.satBlue,
+                currMixer.satPurple - commMixer.satPurple,
+                currMixer.satMagenta - commMixer.satMagenta
+            )
+            val mixerLums = floatArrayOf(
+                currMixer.lumRed - commMixer.lumRed,
+                currMixer.lumOrange - commMixer.lumOrange,
+                currMixer.lumYellow - commMixer.lumYellow,
+                currMixer.lumGreen - commMixer.lumGreen,
+                currMixer.lumAqua - commMixer.lumAqua,
+                currMixer.lumBlue - commMixer.lumBlue,
+                currMixer.lumPurple - commMixer.lumPurple,
+                currMixer.lumMagenta - commMixer.lumMagenta
+            )
 
             return GpuPreviewDeltas(
                 exposure = (currBasic.exposure + step3Exposure) - (commBasic.exposure + editorCommittedSnapshot.exposure),
@@ -239,6 +292,51 @@ data class StealZaLutUiState(
                 blacks = currBasic.blacks - commBasic.blacks,
                 vibrance = (currBasic.vibrance + step3Vibrance) - (commBasic.vibrance + editorCommittedSnapshot.vibrance),
                 saturation = (currBasic.saturation + step3Saturation) - (commBasic.saturation + editorCommittedSnapshot.saturation),
+
+                curveHighlights = currTone.highlights - commTone.highlights,
+                curveLights = currTone.lights - commTone.lights,
+                curveDarks = currTone.darks - commTone.darks,
+                curveShadows = currTone.shadows - commTone.shadows,
+
+                gradeShadowHue = currGrading.shadowHue,
+                gradeShadowSat = currGrading.shadowSat,
+                gradeShadowLum = currGrading.shadowLum - commGrading.shadowLum,
+                commGradeShadowSat = commGrading.shadowSat,
+                commGradeShadowHue = commGrading.shadowHue,
+
+                gradeMidtoneHue = currGrading.midtoneHue,
+                gradeMidtoneSat = currGrading.midtoneSat,
+                gradeMidtoneLum = currGrading.midtoneLum - commGrading.midtoneLum,
+                commGradeMidtoneSat = commGrading.midtoneSat,
+                commGradeMidtoneHue = commGrading.midtoneHue,
+
+                gradeHighlightHue = currGrading.highlightHue,
+                gradeHighlightSat = currGrading.highlightSat,
+                gradeHighlightLum = currGrading.highlightLum - commGrading.highlightLum,
+                commGradeHighlightSat = commGrading.highlightSat,
+                commGradeHighlightHue = commGrading.highlightHue,
+
+                gradeGlobalHue = currGrading.globalHue,
+                gradeGlobalSat = currGrading.globalSat,
+                gradeGlobalLum = currGrading.globalLum - commGrading.globalLum,
+                commGradeGlobalSat = commGrading.globalSat,
+                commGradeGlobalHue = commGrading.globalHue,
+
+                gradeBlending = currGrading.blending,
+                gradeBalance = currGrading.balance - commGrading.balance,
+
+                calibShadowTint = currCalib.shadowTint - commCalib.shadowTint,
+                calibRedHue = currCalib.redHue - commCalib.redHue,
+                calibRedSat = currCalib.redSat - commCalib.redSat,
+                calibGreenHue = currCalib.greenHue - commCalib.greenHue,
+                calibGreenSat = currCalib.greenSat - commCalib.greenSat,
+                calibBlueHue = currCalib.blueHue - commCalib.blueHue,
+                calibBlueSat = currCalib.blueSat - commCalib.blueSat,
+
+                mixerHues = mixerHues,
+                mixerSats = mixerSats,
+                mixerLums = mixerLums,
+
                 vignette = currEffects.vignetteAmount - commEffects.vignetteAmount
             )
         }

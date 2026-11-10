@@ -28,7 +28,11 @@ class EditorLightroomDelegate(
 
     // --- Toolbar & Viewport Controls ---
     fun setEditorActiveTool(tool: Int) {
+        val previousTool = stateFlow.value.editorActiveTool
         stateFlow.update { it.copy(editorActiveTool = tool) }
+        if (previousTool == 0 || tool == 0) {
+            onScheduleUpdate()
+        }
     }
 
     fun toggleHistogramExpanded() {

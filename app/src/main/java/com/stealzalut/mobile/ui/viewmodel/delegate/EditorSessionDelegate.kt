@@ -707,6 +707,11 @@ class EditorSessionDelegate(
 
     fun scheduleEditorPreviewUpdate() {
         val src = stateFlow.value.editorSourcePath ?: return
+        val effectiveCrop = if (stateFlow.value.editorActiveTool == 0) {
+            com.stealzalut.mobile.data.model.CropRegion()
+        } else {
+            stateFlow.value.editorCropRegion
+        }
         val req = StandaloneEditorDebounceRequest(
             srcPath = src,
             intensity = stateFlow.value.step2Intensity,
@@ -728,7 +733,7 @@ class EditorSessionDelegate(
             grain = stateFlow.value.step3Grain,
             customLutPath = stateFlow.value.editorCustomLutPath,
             lightroomParams = stateFlow.value.editorLightroomParams,
-            cropRegion = stateFlow.value.editorCropRegion
+            cropRegion = effectiveCrop
         )
         editorDebounceFlow.tryEmit(req)
     }

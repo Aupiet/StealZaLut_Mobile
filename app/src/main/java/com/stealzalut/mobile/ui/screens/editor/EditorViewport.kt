@@ -76,6 +76,7 @@ fun EditorViewport(
     onChangePhoto: () -> Unit,
     modifier: Modifier = Modifier,
     gpuDeltas: GpuPreviewDeltas = GpuPreviewDeltas(),
+    cropAngle: Float = 0f,
     isHistogramExpanded: Boolean = false,
     onToggleHistogram: () -> Unit = {},
     isComputingAutoEdit: Boolean = false,
@@ -177,6 +178,9 @@ fun EditorViewport(
                             scaleY = scale
                             translationX = offsetX
                             translationY = offsetY
+                            if (cropAngle != 0f) {
+                                rotationZ = -cropAngle
+                            }
                             if (gpuPreviewState.renderEffect != null) {
                                 renderEffect = gpuPreviewState.renderEffect
                             }

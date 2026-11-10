@@ -28,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.unit.dp
 import androidx.activity.result.PickVisualMediaRequest
 import com.stealzalut.mobile.data.model.CropRegion
+import com.stealzalut.mobile.ui.screens.editor.CropAspectRatio
 import com.stealzalut.mobile.ui.screens.editor.EditorCropOverlay
 import com.stealzalut.mobile.ui.screens.editor.EditorCropPanel
 import com.stealzalut.mobile.ui.screens.editor.EditorExportDialog
@@ -110,6 +111,7 @@ fun StandaloneEditorScreen(
     }
 
     var isDrawerExpanded by remember { mutableStateOf(true) }
+    var cropAspectRatio by remember { mutableStateOf(CropAspectRatio.ORIGINAL) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -228,6 +230,7 @@ fun StandaloneEditorScreen(
                         isComputingAutoEdit = uiState.isComputingEdit,
                         onApplyAutoEdit = { viewModel.applyEditorAutoEdit() },
                         gpuDeltas = uiState.editorGpuDeltas,
+                        cropAngle = if (uiState.editorActiveTool == 0) uiState.editorCropRegion.angle else 0f,
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -236,6 +239,9 @@ fun StandaloneEditorScreen(
                         EditorCropOverlay(
                             cropRegion = uiState.editorCropRegion,
                             onCropRegionChange = { viewModel.updateCropRegion(it) },
+                            imageWidth = uiState.editorSourceBitmap?.width ?: 0,
+                            imageHeight = uiState.editorSourceBitmap?.height ?: 0,
+                            selectedRatio = cropAspectRatio,
                             onCropFinished = { viewModel.onCropFinished() },
                             modifier = Modifier.fillMaxSize()
                         )
@@ -374,6 +380,10 @@ fun StandaloneEditorScreen(
                                         0 -> EditorCropPanel(
                                             cropRegion = uiState.editorCropRegion,
                                             onCropRegionChange = { viewModel.updateCropRegion(it) },
+                                            imageWidth = uiState.editorSourceBitmap?.width ?: 0,
+                                            imageHeight = uiState.editorSourceBitmap?.height ?: 0,
+                                            selectedRatio = cropAspectRatio,
+                                            onRatioChange = { cropAspectRatio = it },
                                             onCropFinished = { viewModel.onCropFinished() }
                                         )
                                         1 -> EditorBasicPanel(

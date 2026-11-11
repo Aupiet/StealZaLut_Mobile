@@ -2,7 +2,6 @@ package com.stealzalut.mobile.ui.components
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +49,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.core.image.SampledBitmapLoader
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import kotlinx.coroutines.Dispatchers
@@ -72,23 +72,7 @@ fun ImageDetailDialog(
 
     val fullBitmap by produceState<Bitmap?>(initialValue = null, image.filePath) {
         value = withContext(Dispatchers.IO) {
-            try {
-                val f = File(image.filePath)
-                if (f.exists()) {
-                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeFile(f.absolutePath, opts)
-                    if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
-                    var sample = 1
-                    val maxDim = maxOf(opts.outWidth, opts.outHeight)
-                    while (maxDim / (sample * 2) >= 1440) {
-                        sample *= 2
-                    }
-                    val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
-                    BitmapFactory.decodeFile(f.absolutePath, decodeOpts)
-                } else null
-            } catch (t: Throwable) {
-                null
-            }
+            SampledBitmapLoader.decodeFile(File(image.filePath), maxDimension = 1440)
         }
     }
 
@@ -155,14 +139,14 @@ fun ImageDetailDialog(
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (fullBitmap != null) {
+                        fullBitmap?.let { bitmap ->
                             Image(
-                                bitmap = fullBitmap!!.asImageBitmap(),
+                                bitmap = bitmap.asImageBitmap(),
                                 contentDescription = image.themeName ?: stringResource(R.string.detail_title),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Fit
                             )
-                        } else {
+                        } ?: run {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     }

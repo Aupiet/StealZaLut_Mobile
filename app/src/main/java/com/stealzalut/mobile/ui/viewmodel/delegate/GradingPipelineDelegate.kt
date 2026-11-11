@@ -746,10 +746,8 @@ class GradingPipelineDelegate(
                     val reader = stream.bufferedReader()
                     var lutSize: Int? = null
                     var dataCount = 0
-                    var line: String?
-
-                    while (reader.readLine().also { line = it } != null) {
-                        val trimmed = line!!.trim()
+                    while (true) {
+                        val trimmed = reader.readLine()?.trim() ?: break
                         if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("TITLE")) {
                             continue
                         }

@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asComposeRenderEffect
+import com.stealzalut.mobile.core.diagnostics.AppLog
+import com.stealzalut.mobile.core.diagnostics.LogLevel
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
@@ -895,16 +897,32 @@ fun rememberGpuPreviewState(deltas: GpuPreviewDeltas): GpuPreviewState {
         val shader = remember {
             try {
                 RuntimeShader(GpuPreviewEngine.AGSL_SHADER_SRC)
-            } catch (_: Throwable) {
+            } catch (error: Exception) {
+                AppLog.log(
+                    level = LogLevel.WARN,
+                    tag = "GpuPreviewEngine",
+                    message = "Runtime shader creation failed; using color-matrix fallback",
+                    throwable = error
+                )
                 null
             }
         }
         if (shader != null) {
             val renderEffect = remember(deltas, shader) {
-                GpuPreviewEngine.updateShaderUniforms(shader, deltas)
-                RenderEffect.createRuntimeShaderEffect(shader, "image").asComposeRenderEffect()
+                try {
+                    GpuPreviewEngine.updateShaderUniforms(shader, deltas)
+                    RenderEffect.createRuntimeShaderEffect(shader, "image").asComposeRenderEffect()
+                } catch (error: Exception) {
+                    AppLog.log(
+                        level = LogLevel.WARN,
+                        tag = "GpuPreviewEngine",
+                        message = "Runtime effect creation failed; using color-matrix fallback",
+                        throwable = error
+                    )
+                    null
+                }
             }
-            return GpuPreviewState(renderEffect = renderEffect)
+            if (renderEffect != null) return GpuPreviewState(renderEffect = renderEffect)
         }
     }
 

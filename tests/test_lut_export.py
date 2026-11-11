@@ -386,6 +386,20 @@ class TestCubeExportCreationContract:
         exported = load_image(target_img)
         assert exported.shape[:2] == (orig_h, orig_w)
 
+    def test_run_image_export_pipeline_pre_downscales_before_processing(
+        self, sample_src_path: Path, tmp_path: Path
+    ) -> None:
+        target_img = str(tmp_path / "memory_limited_export.jpg")
+        res = run_image_export_pipeline(
+            src_path=str(sample_src_path),
+            output_image_path=target_img,
+            max_export_dim=64,
+            pre_downscale=True,
+        )
+
+        assert res["status"] == "success"
+        assert max(res["width"], res["height"]) <= 64
+
 
 # ------------------------------------------------------------------
 # Full 3-Stage Pipeline Baking & Cube Parser

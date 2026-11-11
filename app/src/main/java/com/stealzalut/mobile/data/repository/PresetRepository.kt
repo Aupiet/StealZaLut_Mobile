@@ -7,6 +7,7 @@ import android.os.Build
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
+import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
 import com.stealzalut.mobile.data.model.LutSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -42,7 +43,7 @@ class PresetRepository(private val context: Context) {
 
     suspend fun savePreset(preset: ColorimetryPreset): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 var updatedPreset = preset
 
                 // Ensure reference image is persisted safely away from cache directory
@@ -89,7 +90,7 @@ class PresetRepository(private val context: Context) {
 
     suspend fun deletePreset(presetId: String): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 val current = loadUserPresets().toMutableList()
                 val removed = current.firstOrNull { it.id == presetId }
                 removed?.thumbnailPath?.let { File(it).delete() }
@@ -107,7 +108,7 @@ class PresetRepository(private val context: Context) {
 
     suspend fun duplicatePreset(presetId: String, newName: String? = null): Result<ColorimetryPreset> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 val current = loadUserPresets().toMutableList()
                 val orig = current.firstOrNull { it.id == presetId }
                     ?: error("Preset not found: $presetId")
@@ -126,7 +127,7 @@ class PresetRepository(private val context: Context) {
 
     suspend fun renamePreset(presetId: String, newName: String): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 val current = loadUserPresets().toMutableList()
                 val index = current.indexOfFirst { it.id == presetId }
                 if (index >= 0) {

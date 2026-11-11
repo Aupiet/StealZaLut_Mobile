@@ -244,11 +244,17 @@
 
     <!-- Messages d\'Erreur -->
     <string name="err_source_image_not_found">Image source introuvable ou inaccessible.</string>
+    <string name="err_incoming_image_unavailable">L’image partagée est indisponible ou inaccessible.</string>
+    <string name="crash_report_title">L’application s’est fermée de façon inattendue</string>
+    <string name="crash_report_message">Un rapport de plantage local est disponible. Vous pouvez le partager pour aider au diagnostic.</string>
+    <string name="crash_report_share">Partager le rapport</string>
+    <string name="crash_report_ignore">Ignorer</string>
     <string name="err_reference_image_not_found">Image de référence introuvable ou inaccessible.</string>
     <string name="err_matrix_singularity">Singularité matricielle détectée (image source ou référence trop uniforme).</string>
     <string name="err_out_of_memory">Mémoire insuffisante pour effectuer le traitement haute résolution.</string>
     <string name="err_export_io">Erreur d\'écriture ou d\'accès disque : %1$s</string>
     <string name="err_generic">Une erreur inattendue est survenue : %1$s</string>
+    <string name="err_unexpected_operation">L’opération n’a pas pu être effectuée.</string>
     <string name="err_source_load">Erreur chargement source : %1$s</string>
     <string name="err_reference_load">Erreur chargement référence : %1$s</string>
     <string name="err_select_source_and_ref">Impossible d\'exporter : veuillez sélectionner une photo source et un style de référence.</string>

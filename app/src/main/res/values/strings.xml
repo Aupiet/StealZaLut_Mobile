@@ -211,6 +211,9 @@
     <string name="theme_material_you">Dynamic Colors (Material You)</string>
     <string name="settings_developer_mode_title">Developer Mode</string>
     <string name="settings_developer_mode_desc">Show internal Chaquopy execution timings</string>
+    <string name="settings_developer_diagnostics_title">Recent local diagnostics</string>
+    <string name="settings_developer_diagnostics_empty">No diagnostic events recorded this session.</string>
+    <string name="settings_developer_diagnostics_entry">%1$s · %2$s</string>
     <string name="settings_max_export_native">Original (Full Resolution)</string>
 
     <!-- Editor & UI Elements -->

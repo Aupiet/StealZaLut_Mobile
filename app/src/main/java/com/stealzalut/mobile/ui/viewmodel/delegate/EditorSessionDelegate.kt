@@ -941,7 +941,14 @@ class EditorSessionDelegate(
                             stateFlow.update {
                                 it.copy(
                                     isEditorExportingImage = false,
-                                    userMessage = UiText.Resource(R.string.msg_photo_saved)
+                                    userMessage = if (res.wasReducedForMemory) {
+                                        UiText.Resource(
+                                            R.string.msg_export_reduced,
+                                            listOf(maxOf(res.width, res.height))
+                                        )
+                                    } else {
+                                        UiText.Resource(R.string.msg_photo_saved)
+                                    }
                                 )
                             }
                         },

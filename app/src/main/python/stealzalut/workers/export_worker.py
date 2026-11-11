@@ -32,6 +32,7 @@ from stealzalut.utils.image_io import (
     create_proxy_image,
     get_clean_exif_bytes,
     load_image,
+    load_proxy_image,
     resolve_export_dimensions,
     save_image,
 )
@@ -204,6 +205,7 @@ def run_image_export_pipeline(
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
+    pre_downscale: bool = False,
 ) -> Dict[str, Any]:
     """Execute high-resolution image export with absolute WYSIWYG fidelity."""
     start: float = time.monotonic()
@@ -283,12 +285,12 @@ def run_image_export_pipeline(
                     or abs(crop_dict.get("angle", 0.0)) > 1e-4
                 )
 
-        # 4. Load source image at full native resolution
-        src_img = load_image(src_path)
+        # 4. Decode at the requested limit to avoid allocating a full-resolution
+        # image when the Kotlin memory guard has selected a smaller export size.
+        src_img = load_proxy_image(src_path, max_dim=max_export_dim) if pre_downscale else load_image(src_path)
         orig_h, orig_w = src_img.shape[:2]
 
-        # In non-cropped mode, downscaling early saves peak memory; in cropped mode,
-        # we preserve full resolution through the crop pipeline to maintain maximum sensor detail
+        # Keep the requested output bound for both cropped and uncropped exports.
         if not has_active_crop and max_export_dim > 0 and max(orig_w, orig_h) > max_export_dim:
             src_work = create_proxy_image(src_img, max_dim=max_export_dim)
             del src_img

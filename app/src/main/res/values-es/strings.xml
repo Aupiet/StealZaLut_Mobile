@@ -233,6 +233,7 @@
     <string name="msg_auto_edit_applied">Auto-Edición aplicada: Exp %1$+.2f EV | Cont %2$+.0f%% | Sombras %3$+.0f%%</string>
     <string name="msg_photo_saved">¡Foto guardada en Galería y Biblioteca!</string>
     <string name="msg_photo_hd_saved">¡Foto HD guardada en la Galería de Android!</string>
+    <string name="msg_export_reduced">Exportación reducida a %1$d px para proteger la memoria disponible.</string>
     <string name="msg_preset_saved">¡Ajuste \'%1$s\' guardado!</string>
     <string name="msg_palette_extracted">¡Paleta extraída con éxito!</string>
     <string name="msg_preset_deleted">Ajuste eliminado.</string>

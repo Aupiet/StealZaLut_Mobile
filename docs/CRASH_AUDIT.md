@@ -37,7 +37,7 @@ The excerpt identifies a native NumPy frame, but does not establish whether the 
 - `.\gradlew.bat compileDebugKotlin testDebugUnitTest` — BUILD SUCCESSFUL.
 - `PYTHONPATH=app/src/main/python python -m pytest tests/ -q` — 120 passed.
 - `python scripts/check_guard_violations.py` — 53 violations, unchanged from the 53-violation baseline.
-- `.\gradlew.bat assembleRelease` — pending final result.
+- `.\gradlew.bat assembleRelease` — BUILD SUCCESSFUL in 6m 6s, including R8 and resource shrinking.
 - CI now uses the configured JDK 25 daemon and builds/tests both Debug and Release.
 
 No device or emulator was available for reproducing the reported NumPy native crash or validating the large-image export path on the affected Redmi device.

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import com.stealzalut.mobile.core.AppConstants
+import com.stealzalut.mobile.core.storage.AtomicJsonFile
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
@@ -182,8 +183,8 @@ class PresetRepository(private val context: Context) {
 
     private fun loadUserPresets(): List<ColorimetryPreset> {
         if (!presetsFile.exists()) return emptyList()
+        val jsonText = AtomicJsonFile.readText(presetsFile)
         return try {
-            val jsonText = presetsFile.readText(Charsets.UTF_8)
             val jsonArray = JSONArray(jsonText)
             val list = mutableListOf<ColorimetryPreset>()
             for (i in 0 until jsonArray.length()) {
@@ -213,7 +214,8 @@ class PresetRepository(private val context: Context) {
                 )
             }
             list
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            AtomicJsonFile.quarantineCorrupt(presetsFile, error)
             emptyList()
         }
     }
@@ -236,6 +238,6 @@ class PresetRepository(private val context: Context) {
             }
             jsonArray.put(obj)
         }
-        presetsFile.writeText(jsonArray.toString(2), Charsets.UTF_8)
+        AtomicJsonFile.writeText(presetsFile, jsonArray.toString(2))
     }
 }

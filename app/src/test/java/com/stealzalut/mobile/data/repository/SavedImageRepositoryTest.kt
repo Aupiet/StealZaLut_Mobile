@@ -39,6 +39,20 @@ class SavedImageRepositoryTest {
     }
 
     @Test
+    fun `corrupt manifest is quarantined before an empty manifest is written`() = runTest {
+        val manifest = File(tempDir, "saved_images_manifest.json").apply { writeText("not json") }
+
+        assertTrue(repository.getSavedImages().isEmpty())
+
+        val quarantined = tempDir.listFiles().orEmpty().single {
+            it.name.startsWith("saved_images_manifest.json.corrupt_")
+        }
+        assertEquals("not json", quarantined.readText())
+        assertTrue(manifest.exists())
+        assertEquals("[]", manifest.readText())
+    }
+
+    @Test
     fun `recordGradedImage saves metadata and persists it`() = runTest {
         val fakeSource = File(tempDir, "temp_src.jpg").apply {
             writeText("fake image bytes")

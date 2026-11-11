@@ -366,6 +366,7 @@ def export_graded_image(
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
     develop_settings_json: Optional[str] = None,
+    pre_downscale: bool = False,
 ) -> Dict[str, Any]:
     """Export the graded source image directly in high resolution."""
     try:
@@ -413,6 +414,7 @@ def export_graded_image(
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
             lr_settings=develop_settings_json,
+            pre_downscale=pre_downscale,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))[

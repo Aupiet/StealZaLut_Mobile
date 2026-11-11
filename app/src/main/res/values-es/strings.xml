@@ -244,11 +244,17 @@
 
     <!-- Mensajes de Error -->
     <string name="err_source_image_not_found">Imagen de origen no encontrada o inaccesible.</string>
+    <string name="err_incoming_image_unavailable">La imagen compartida no está disponible o no se puede acceder a ella.</string>
+    <string name="crash_report_title">La aplicación se cerró inesperadamente</string>
+    <string name="crash_report_message">Hay un informe de fallo local disponible. Puedes compartirlo para ayudar a diagnosticar el problema.</string>
+    <string name="crash_report_share">Compartir informe</string>
+    <string name="crash_report_ignore">Ignorar</string>
     <string name="err_reference_image_not_found">Imagen de referencia no encontrada o inaccesible.</string>
     <string name="err_matrix_singularity">Singularidad matricial detectada (imagen de origen o referencia demasiado uniforme).</string>
     <string name="err_out_of_memory">Memoria insuficiente para procesar la imagen de alta resolución.</string>
     <string name="err_export_io">Error de escritura o acceso a disco: %1$s</string>
     <string name="err_generic">Ocurrió un error inesperado: %1$s</string>
+    <string name="err_unexpected_operation">No se pudo completar la operación.</string>
     <string name="err_source_load">Error al cargar la imagen de origen: %1$s</string>
     <string name="err_reference_load">Error al cargar la imagen de referencia: %1$s</string>
     <string name="err_select_source_and_ref">No se puede exportar: seleccione una foto de origen y un estilo de referencia.</string>

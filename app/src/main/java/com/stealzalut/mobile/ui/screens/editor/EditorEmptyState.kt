@@ -1,6 +1,6 @@
 package com.stealzalut.mobile.ui.screens.editor
 
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.core.image.SampledBitmapLoader
 import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.ui.theme.icons
 import com.stealzalut.mobile.ui.theme.szlColors
@@ -57,6 +59,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Editorial "Chambre Noire" Editor Landing & Projects Hub (F7).
@@ -324,16 +328,11 @@ private fun ProjectItemCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val thumbnailBitmap = remember(project.id, project.updatedAt) {
+    val thumbnailBitmap by produceState<Bitmap?>(initialValue = null, project.id, project.updatedAt) {
         val path = project.previewImagePath ?: project.sourceImagePath
-        val file = File(path)
-        if (file.exists()) {
-            try {
-                BitmapFactory.decodeFile(file.absolutePath)
-            } catch (_: Exception) {
-                null
-            }
-        } else null
+        value = withContext(Dispatchers.IO) {
+            SampledBitmapLoader.decodeFile(File(path), maxDimension = 600)
+        }
     }
 
     Card(
@@ -359,14 +358,14 @@ private fun ProjectItemCard(
                     .background(MaterialTheme.szlColors.photoDarkroom),
                 contentAlignment = Alignment.Center
             ) {
-                if (thumbnailBitmap != null) {
+                thumbnailBitmap?.let { bitmap ->
                     Image(
-                        bitmap = thumbnailBitmap.asImageBitmap(),
+                        bitmap = bitmap.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-                } else {
+                } ?: run {
                     Icon(
                         imageVector = MaterialTheme.icons.actionCamera,
                         contentDescription = null,

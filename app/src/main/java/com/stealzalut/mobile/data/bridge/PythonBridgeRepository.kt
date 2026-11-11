@@ -72,10 +72,10 @@ class PythonBridgeRepository(private val context: Context) {
                     }
                 }
             }
-            if (name == null) name = uri.path
-            val dot = name?.lastIndexOf('.') ?: -1
-            if (dot != -1 && dot < (name?.length ?: 0) - 1) {
-                name!!.substring(dot + 1).lowercase()
+            val resolvedName = name ?: uri.path
+            val dot = resolvedName?.lastIndexOf('.') ?: -1
+            if (resolvedName != null && dot != -1 && dot < resolvedName.length - 1) {
+                resolvedName.substring(dot + 1).lowercase()
             } else {
                 "jpg"
             }

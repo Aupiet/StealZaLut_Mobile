@@ -3,7 +3,6 @@ package com.stealzalut.mobile.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -62,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.core.image.SampledBitmapLoader
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.ui.components.ImageDetailDialog
@@ -243,23 +243,7 @@ private fun InstagramGridThumbnail(
 ) {
     val thumbnailBitmap by produceState<Bitmap?>(initialValue = null, image.filePath) {
         value = withContext(Dispatchers.IO) {
-            try {
-                val file = File(image.filePath)
-                if (file.exists()) {
-                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeFile(file.absolutePath, opts)
-                    if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
-                    var sample = 1
-                    val maxDim = maxOf(opts.outWidth, opts.outHeight)
-                    while (maxDim / (sample * 2) >= 300) {
-                        sample *= 2
-                    }
-                    val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
-                    BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
-                } else null
-            } catch (t: Throwable) {
-                null
-            }
+            SampledBitmapLoader.decodeFile(File(image.filePath), maxDimension = 300)
         }
     }
 
@@ -270,14 +254,14 @@ private fun InstagramGridThumbnail(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.BottomStart
     ) {
-        if (thumbnailBitmap != null) {
+        thumbnailBitmap?.let { bitmap ->
             Image(
-                bitmap = thumbnailBitmap!!.asImageBitmap(),
+                bitmap = bitmap.asImageBitmap(),
                 contentDescription = image.themeName ?: stringResource(R.string.profile_default_look_name),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-        } else {
+        } ?: run {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(AppDimens.ProgressBarHeight),
@@ -302,25 +286,8 @@ private fun PresetCardWithColorSpectrum(
 ) {
     val cardBitmap by produceState<Bitmap?>(initialValue = null, preset.thumbnailPath, preset.referenceImagePath) {
         value = withContext(Dispatchers.IO) {
-            try {
-                val targetPath = preset.thumbnailPath ?: preset.referenceImagePath
-                if (targetPath != null) {
-                    val file = File(targetPath)
-                    if (file.exists()) {
-                        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                        BitmapFactory.decodeFile(file.absolutePath, opts)
-                        if (opts.outWidth <= 0 || opts.outHeight <= 0) return@withContext null
-                        var sample = 1
-                        val maxDim = maxOf(opts.outWidth, opts.outHeight)
-                        while (maxDim / (sample * 2) >= 600) {
-                            sample *= 2
-                        }
-                        val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
-                        BitmapFactory.decodeFile(file.absolutePath, decodeOpts)
-                    } else null
-                } else null
-            } catch (t: Throwable) {
-                null
+            (preset.thumbnailPath ?: preset.referenceImagePath)?.let { path ->
+                SampledBitmapLoader.decodeFile(File(path), maxDimension = 600)
             }
         }
     }
@@ -390,14 +357,14 @@ private fun PresetCardWithColorSpectrum(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (cardBitmap != null) {
+                cardBitmap?.let { bitmap ->
                     Image(
-                        bitmap = cardBitmap!!.asImageBitmap(),
+                        bitmap = bitmap.asImageBitmap(),
                         contentDescription = stringResource(R.string.palettes_mire_content_desc),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
-                } else {
+                } ?: run {
                     FallbackVisualColorCard(paletteHexes = preset.paletteHexes)
                 }
             }

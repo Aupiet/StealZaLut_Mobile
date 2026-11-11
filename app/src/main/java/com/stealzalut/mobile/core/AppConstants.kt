@@ -102,6 +102,10 @@ object AppConstants {
     const val EXPORT_DIM_2K: Int = 2048
     const val EXPORT_DIM_4K: Int = 3840
     const val EXPORT_DIM_NATIVE: Int = 0
+    const val EXPORT_MEMORY_BUDGET_FRACTION: Double = 0.25
+    const val EXPORT_ESTIMATED_BYTES_PER_PIXEL: Long = 48L
+    const val EXPORT_MINIMUM_SAFE_DIMENSION: Int = 256
+    const val EXPORT_UNKNOWN_DIMENSION_FALLBACK: Int = EXPORT_DIM_2K
 
     // --- Export Formats ---
     const val EXPORT_FORMAT_JPEG: String = "JPEG"

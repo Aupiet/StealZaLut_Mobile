@@ -1,5 +1,6 @@
 package com.stealzalut.mobile.data.bridge
 
+import android.app.ActivityManager
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -25,6 +26,9 @@ import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
+import com.stealzalut.mobile.core.AppConstants
+import com.stealzalut.mobile.core.image.ExportMemoryDecision
+import com.stealzalut.mobile.core.image.ExportMemoryGuard
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LightroomDeserializer
 import com.stealzalut.mobile.data.model.LightroomSerializer
@@ -286,6 +290,8 @@ class PythonBridgeRepository(private val context: Context) {
         vibrance: Float = 0.0f,
         saturation: Float = 0.0f
     ): ImageExportResult = withContext(pythonDispatcher) {
+        val memoryDecision = resolveExportMemory(srcPath, maxExportDim)
+            ?: return@withContext ImageExportResult.Error(LutDomainError.OutOfMemoryError)
         runCatching {
             val py = Python.getInstance()
             val bridge = py.getModule("stealzalut.bridge")
@@ -302,7 +308,7 @@ class PythonBridgeRepository(private val context: Context) {
                 imageFile.absolutePath,
                 method.key,
                 intensity.toDouble(),
-                maxExportDim,
+                memoryDecision.maxDimension,
                 quality,
                 preserveLuminance.toDouble(),
                 skinProtection.toDouble(),
@@ -316,7 +322,20 @@ class PythonBridgeRepository(private val context: Context) {
                 whites.toDouble(),
                 blacks.toDouble(),
                 vibrance.toDouble(),
-                saturation.toDouble()
+                saturation.toDouble(),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                null,
+                null,
+                memoryDecision.wasReducedForMemory
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -326,7 +345,13 @@ class PythonBridgeRepository(private val context: Context) {
                 val w = pyResult.callAttr("get", "width")?.toInt() ?: 0
                 val h = pyResult.callAttr("get", "height")?.toInt() ?: 0
                 val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                ImageExportResult.Success(imagePath = path, width = w, height = h, executionTimeMs = timeMs)
+                ImageExportResult.Success(
+                    imagePath = path,
+                    width = w,
+                    height = h,
+                    executionTimeMs = timeMs,
+                    wasReducedForMemory = memoryDecision.wasReducedForMemory
+                )
             } else {
                 val errorCode = pyResult.callAttr("get", "error_code")?.toString()
                 val message = pyResult.callAttr("get", "message")?.toString()
@@ -690,6 +715,8 @@ class PythonBridgeRepository(private val context: Context) {
         lightroomParams: LightroomDevelopModel? = null,
         cropRegion: com.stealzalut.mobile.data.model.CropRegion? = null
     ): ImageExportResult = withContext(pythonDispatcher) {
+        val memoryDecision = resolveExportMemory(srcPath, maxExportDim)
+            ?: return@withContext ImageExportResult.Error(LutDomainError.OutOfMemoryError)
         runCatching {
             val py = Python.getInstance()
             val bridge = py.getModule("stealzalut.bridge")
@@ -706,7 +733,7 @@ class PythonBridgeRepository(private val context: Context) {
                 imageFile.absolutePath,
                 "reinhard",
                 intensity.toDouble(),
-                maxExportDim,
+                memoryDecision.maxDimension,
                 quality,
                 0.0,
                 0.0,
@@ -734,7 +761,8 @@ class PythonBridgeRepository(private val context: Context) {
                 customLutPath,
                 if (lightroomParams != null || (cropRegion != null && cropRegion.hasCrop)) {
                     LightroomSerializer.toJson(lightroomParams ?: LightroomDevelopModel(), cropRegion)
-                } else null
+                } else null,
+                memoryDecision.wasReducedForMemory
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -743,7 +771,13 @@ class PythonBridgeRepository(private val context: Context) {
                 val w = pyResult.callAttr("get", "width")?.toInt() ?: 0
                 val h = pyResult.callAttr("get", "height")?.toInt() ?: 0
                 val timeMs = pyResult.callAttr("get", "execution_time_ms")?.toDouble() ?: 0.0
-                ImageExportResult.Success(imagePath = path, width = w, height = h, executionTimeMs = timeMs)
+                ImageExportResult.Success(
+                    imagePath = path,
+                    width = w,
+                    height = h,
+                    executionTimeMs = timeMs,
+                    wasReducedForMemory = memoryDecision.wasReducedForMemory
+                )
             } else {
                 val errorCode = pyResult.callAttr("get", "error_code")?.toString()
                 val message = pyResult.callAttr("get", "message")?.toString()
@@ -971,6 +1005,28 @@ class PythonBridgeRepository(private val context: Context) {
             val pyResult: PyObject = bridge.callAttr("clear_caches")
             pyResult.callAttr("get", "status")?.toString() == "success"
         }.getOrDefault(false)
+    }
+
+    private fun resolveExportMemory(
+        srcPath: String,
+        requestedMaxDimension: Int
+    ): ExportMemoryDecision? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(srcPath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            return ExportMemoryGuard.fallback(requestedMaxDimension)
+        }
+
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            ?: return ExportMemoryGuard.fallback(requestedMaxDimension)
+        val memoryInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memoryInfo)
+        return ExportMemoryGuard.resolve(
+            width = bounds.outWidth,
+            height = bounds.outHeight,
+            requestedMaxDimension = requestedMaxDimension,
+            availableMemoryBytes = memoryInfo.availMem
+        )
     }
 
     /**

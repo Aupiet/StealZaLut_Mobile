@@ -118,7 +118,8 @@ sealed interface ImageExportResult {
         val imagePath: String,
         val width: Int,
         val height: Int,
-        val executionTimeMs: Double
+        val executionTimeMs: Double,
+        val wasReducedForMemory: Boolean = false
     ) : ImageExportResult
 
     @Immutable

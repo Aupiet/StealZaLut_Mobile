@@ -452,7 +452,14 @@ class GradingPipelineDelegate(
                                     isExportingImage = false,
                                     exportedImagePath = result.imagePath,
                                     isGradedImageSaved = true,
-                                    userMessage = UiText.Resource(R.string.msg_photo_hd_saved)
+                                    userMessage = if (result.wasReducedForMemory) {
+                                        UiText.Resource(
+                                            R.string.msg_export_reduced,
+                                            listOf(maxOf(result.width, result.height))
+                                        )
+                                    } else {
+                                        UiText.Resource(R.string.msg_photo_hd_saved)
+                                    }
                                 )
                             }
                         },

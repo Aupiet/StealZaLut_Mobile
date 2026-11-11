@@ -149,5 +149,9 @@ class ProjectRepositoryTest {
         // Should only return the 1 valid project
         assertEquals(1, all.size)
         assertEquals(valid.id, all[0].id)
+        val quarantinedFile = corruptDir.listFiles().orEmpty().single {
+            it.name.startsWith("project.json.corrupt_")
+        }
+        assertEquals("{ this is definitely not valid json }", quarantinedFile.readText())
     }
 }

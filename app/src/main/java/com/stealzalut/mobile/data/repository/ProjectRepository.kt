@@ -1,7 +1,7 @@
 package com.stealzalut.mobile.data.repository
 
 import android.content.Context
-import android.os.Build
+import com.stealzalut.mobile.core.storage.AtomicJsonFile
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditorParamsSnapshot
 import com.stealzalut.mobile.data.model.EditorProject
@@ -13,7 +13,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -78,38 +77,8 @@ class ProjectRepository(private val context: Context) {
             val dir = getProjectDir(project.id)
             val projFile = File(dir, "project.json")
             val jsonString = projectToJson(project)
-            writeAtomically(projFile, jsonString)
+            AtomicJsonFile.writeText(projFile, jsonString)
             project
-        }
-    }
-
-    private fun writeAtomically(targetFile: File, content: String) {
-        val tempFile = File(targetFile.parentFile, "${targetFile.name}.tmp")
-        tempFile.writeText(content, StandardCharsets.UTF_8)
-
-        val moved = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                java.nio.file.Files.move(
-                    tempFile.toPath(),
-                    targetFile.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                )
-                true
-            } else {
-                false
-            }
-        } catch (_: Throwable) {
-            false
-        }
-
-        if (!moved) {
-            if (targetFile.exists()) {
-                targetFile.delete()
-            }
-            if (!tempFile.renameTo(targetFile)) {
-                tempFile.copyTo(targetFile, overwrite = true)
-                tempFile.delete()
-            }
         }
     }
 
@@ -220,11 +189,12 @@ class ProjectRepository(private val context: Context) {
     }
 
     private fun readProjectFile(file: File): EditorProject? {
+        if (!file.exists() || !file.isFile) return null
+        val jsonString = AtomicJsonFile.readText(file)
         return try {
-            if (!file.exists() || !file.isFile) return null
-            val jsonStr = file.readText(StandardCharsets.UTF_8)
-            jsonToProject(jsonStr)
-        } catch (_: Exception) {
+            jsonToProject(jsonString)
+        } catch (error: Exception) {
+            AtomicJsonFile.quarantineCorrupt(file, error)
             null
         }
     }

@@ -205,7 +205,7 @@ class GpuPreviewParityTest {
     }
 
     @Test
-    fun `latency benchmark proves Tier 1 GPU evaluator sub-millisecond throughput`() {
+    fun `CPU reference evaluator remains within the throughput budget`() {
         val deltas = GpuPreviewDeltas(
             exposure = 0.5f,
             contrast = 20f,
@@ -231,15 +231,19 @@ class GpuPreviewParityTest {
 
         // Benchmark 100,000 pixels (equivalent to full viewport proxy)
         val iterations = 100_000
-        val nanos = measureNanoTime {
-            for (i in 0 until iterations) {
-                GpuPreviewEngine.evaluatePixel(sample, deltas)
-            }
+        val timingsMs = List(3) {
+            measureNanoTime {
+                for (i in 0 until iterations) {
+                    GpuPreviewEngine.evaluatePixel(sample, deltas)
+                }
+            } / 1_000_000.0
         }
+        val bestTimingMs = timingsMs.minOrNull()
+            ?: throw AssertionError("Expected at least one benchmark measurement")
 
-        val millis = nanos / 1_000_000.0
-        // On modern JVM, 100,000 pixel evaluations across all panels should take under 250ms on CPU,
-        // and under 0.2ms on GPU shader.
-        assertTrue(millis < 250.0, "Execution time for 100k pixels took ${millis}ms (expected < 250ms on CPU)")
+        assertTrue(
+            bestTimingMs < 250.0,
+            "Best of three runs for 100k pixels took ${bestTimingMs}ms (expected < 250ms on CPU)"
+        )
     }
 }

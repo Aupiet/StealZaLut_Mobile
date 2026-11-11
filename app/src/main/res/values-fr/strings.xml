@@ -211,6 +211,9 @@
     <string name="theme_material_you">Couleurs dynamiques (Material You)</string>
     <string name="settings_developer_mode_title">Mode Développeur</string>
     <string name="settings_developer_mode_desc">Afficher les temps d\'exécution internes Chaquopy</string>
+    <string name="settings_developer_diagnostics_title">Diagnostics locaux récents</string>
+    <string name="settings_developer_diagnostics_empty">Aucun événement de diagnostic enregistré dans cette session.</string>
+    <string name="settings_developer_diagnostics_entry">%1$s · %2$s</string>
     <string name="settings_max_export_native">Originale (Pleine Résolution)</string>
 
     <!-- Éditeur & Éléments UI -->

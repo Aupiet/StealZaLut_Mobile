@@ -189,8 +189,11 @@ graph TD
 
 ### Prérequis
 - **Android Studio** : Ladybug ou supérieur
-- **JDK** : Version 17 ou supérieure
+- **JDK** : Version 25, conformément au toolchain Gradle du projet (`gradle/gradle-daemon-jvm.properties`)
 - **Python** : 3.10 ou supérieur (avec `numpy`, `scipy`, `pillow`, `pytest`)
+
+Si Gradle ne détecte pas le JDK requis, définissez `org.gradle.java.home` dans le fichier utilisateur `~/.gradle/gradle.properties` (non versionné).
+Sous Windows, le chemin du JDK peut être configuré dans `%USERPROFILE%\.gradle\gradle.properties`.
 
 ### Exécuter les tests unitaires Python (Core mathématique)
 **PowerShell (Windows) :**

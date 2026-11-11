@@ -31,10 +31,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -61,7 +61,7 @@ class GradingPipelineDelegate(
     private val decodeSampledBitmap: (path: String, maxDim: Int) -> Bitmap?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    private val previewDebounceFlow = MutableSharedFlow<PreviewDebounceRequest>(replay = 1)
+    private val previewDebounceFlow = MutableStateFlow<PreviewDebounceRequest?>(null)
     private var activeGradingJob: Job? = null
     private var activeSourceJob: Job? = null
     private var activeCustomRefJob: Job? = null
@@ -90,6 +90,7 @@ class GradingPipelineDelegate(
     init {
         scope.launch {
             previewDebounceFlow
+                .filterNotNull()
                 .debounce(200L)
                 .distinctUntilChanged()
                 .collect { req ->
@@ -273,20 +274,16 @@ class GradingPipelineDelegate(
         val current = stateFlow.value
         val src = current.sourcePath ?: return
         val ref = current.effectiveReferencePath ?: return
-        scope.launch {
-            previewDebounceFlow.emit(
-                PreviewDebounceRequest(
-                    srcPath = src,
-                    refPath = ref,
-                    method = current.method,
-                    intensity = current.intensity,
-                    preserveLuminance = current.preserveLuminance,
-                    skinProtection = current.skinProtection,
-                    smoothSigma = current.smoothSigma,
-                    neutralLock = current.neutralLock
-                )
-            )
-        }
+        previewDebounceFlow.value = PreviewDebounceRequest(
+            srcPath = src,
+            refPath = ref,
+            method = current.method,
+            intensity = current.intensity,
+            preserveLuminance = current.preserveLuminance,
+            skinProtection = current.skinProtection,
+            smoothSigma = current.smoothSigma,
+            neutralLock = current.neutralLock
+        )
     }
 
     private suspend fun computePythonPreview(req: PreviewDebounceRequest) {

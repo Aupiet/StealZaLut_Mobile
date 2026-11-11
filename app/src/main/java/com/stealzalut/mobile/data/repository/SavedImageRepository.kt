@@ -3,6 +3,7 @@ package com.stealzalut.mobile.data.repository
 import android.content.Context
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
+import com.stealzalut.mobile.core.storage.AtomicJsonFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -151,8 +152,9 @@ class SavedImageRepository(private val context: Context) {
 
     private fun loadManifest(): List<SavedGradedImage> {
         if (!trackingFile.exists()) return emptyList()
+        val jsonText = AtomicJsonFile.readText(trackingFile)
         return try {
-            val json = JSONArray(trackingFile.readText(Charsets.UTF_8))
+            val json = JSONArray(jsonText)
             val list = mutableListOf<SavedGradedImage>()
             for (i in 0 until json.length()) {
                 val obj = json.getJSONObject(i)
@@ -179,7 +181,8 @@ class SavedImageRepository(private val context: Context) {
                 )
             }
             list
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            AtomicJsonFile.quarantineCorrupt(trackingFile, error)
             emptyList()
         }
     }
@@ -201,6 +204,6 @@ class SavedImageRepository(private val context: Context) {
             }
             json.put(obj)
         }
-        trackingFile.writeText(json.toString(2), Charsets.UTF_8)
+        AtomicJsonFile.writeText(trackingFile, json.toString(2))
     }
 }

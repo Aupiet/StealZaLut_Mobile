@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
+import com.stealzalut.mobile.core.diagnostics.launchSafely as launch
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
@@ -35,7 +36,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException

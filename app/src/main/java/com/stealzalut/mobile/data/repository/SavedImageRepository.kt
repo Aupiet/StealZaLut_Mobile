@@ -2,6 +2,7 @@ package com.stealzalut.mobile.data.repository
 
 import android.content.Context
 import com.stealzalut.mobile.data.model.SavedGradedImage
+import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -76,7 +77,7 @@ class SavedImageRepository(private val context: Context) {
         paletteHexes: List<String> = emptyList()
     ): Result<SavedGradedImage> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 val src = File(sourceFilePath)
                 require(src.exists()) { "Source file does not exist: $sourceFilePath" }
 
@@ -96,7 +97,7 @@ class SavedImageRepository(private val context: Context) {
                     File(it.filePath).exists()
                 }
                 if (existingRecent != null) {
-                    return@runCatching existingRecent
+                    return@suspendRunCatching existingRecent
                 }
 
                 val finalPath = if (src.parentFile?.absolutePath == exportsDir.absolutePath) {
@@ -136,7 +137,7 @@ class SavedImageRepository(private val context: Context) {
      */
     suspend fun deleteSavedImage(id: String): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            runCatching {
+            suspendRunCatching {
                 val current = loadManifest().toMutableList()
                 val item = current.firstOrNull { it.id == id }
                 if (item != null) {

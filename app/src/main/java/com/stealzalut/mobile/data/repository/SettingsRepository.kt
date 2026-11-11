@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.stealzalut.mobile.data.cache.LruCacheManager
 import com.stealzalut.mobile.data.model.AppSettings
+import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.ui.theme.AppThemes
@@ -88,7 +89,7 @@ class SettingsRepository(private val context: Context) {
      * Clears all temporary preview and calculation files from the cache directory.
      */
     suspend fun clearCache(): Boolean = withContext(Dispatchers.IO) {
-        runCatching {
+        suspendRunCatching {
             lruCacheManager.clearAll()
             context.cacheDir.listFiles()?.forEach { file ->
                 file.deleteRecursively()

@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
+import com.stealzalut.mobile.core.diagnostics.AppLog
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -90,6 +92,10 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val monoFont = LocalFontSpec.current.mono
+    val diagnosticEntries = remember(settings.developerMode) {
+        if (settings.developerMode) AppLog.current()?.recentEntries(8).orEmpty().asReversed()
+        else emptyList()
+    }
 
     val themesList = listOf(
         AppThemes.THEME_SYSTEM_DEFAULT to "Système par défaut (Auto Jour/Nuit)",
@@ -255,6 +261,42 @@ fun SettingsScreen(
                                             tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(12.dp)
                                         )
+                                    }
+                                }
+
+                                if (settings.developerMode) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = AppDimens.SpacingSmall),
+                                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.settings_developer_diagnostics_title),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (diagnosticEntries.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.settings_developer_diagnostics_empty),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        } else {
+                                            diagnosticEntries.forEach { entry ->
+                                                Text(
+                                                    text = stringResource(
+                                                        R.string.settings_developer_diagnostics_entry,
+                                                        entry.level.name,
+                                                        entry.message
+                                                    ),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 2
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }

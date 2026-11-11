@@ -14,7 +14,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.chaquo.python.PyObject
-import com.chaquo.python.Python
 import com.stealzalut.mobile.data.cache.LruCacheManager
 import com.stealzalut.mobile.data.model.AutoSettingsResult
 import com.stealzalut.mobile.data.model.ColorTransferMethod
@@ -26,6 +25,7 @@ import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
 import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
+import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.image.ExportMemoryDecision
 import com.stealzalut.mobile.core.image.ExportMemoryGuard
@@ -47,7 +47,7 @@ import java.io.FileOutputStream
 class PythonBridgeRepository(private val context: Context) {
 
     // Dedicated single-threaded dispatcher protecting the Python Global Interpreter Lock (GIL)
-    private val pythonDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private val pythonDispatcher = PythonRuntime.dispatcher
 
     val lruCacheManager: LruCacheManager = LruCacheManager(
         File(context.cacheDir, LruCacheManager.PREVIEWS_DIR_NAME)
@@ -91,7 +91,7 @@ class PythonBridgeRepository(private val context: Context) {
      */
     suspend fun cacheImageFromUri(uri: Uri, cacheFilename: String): Result<File> =
         withContext(Dispatchers.IO) {
-            runCatching {
+            suspendRunCatching {
                 val targetFile = File(inputsDir, cacheFilename)
                 val bytesCopied = context.contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(targetFile).use { output ->
@@ -147,8 +147,8 @@ class PythonBridgeRepository(private val context: Context) {
         smoothSigma: Float = com.stealzalut.mobile.core.AppConstants.SMOOTH_SIGMA_DEFAULT,
         neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT
     ): PreviewResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val previewOutputFile = lruCacheManager.createPreviewFile("preview_")
@@ -206,8 +206,8 @@ class PythonBridgeRepository(private val context: Context) {
         vibrance: Float = 0.0f,
         saturation: Float = 0.0f
     ): CubeExportResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val outputDir = File(context.cacheDir, "shared_luts").apply { mkdirs() }
@@ -292,8 +292,8 @@ class PythonBridgeRepository(private val context: Context) {
     ): ImageExportResult = withContext(pythonDispatcher) {
         val memoryDecision = resolveExportMemory(srcPath, maxExportDim)
             ?: return@withContext ImageExportResult.Error(LutDomainError.OutOfMemoryError)
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val ext = if (format.equals("PNG", ignoreCase = true)) "png" else "jpg"
@@ -371,8 +371,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Computes LightCraft auto exposure and tone settings for an image.
      */
     suspend fun computeAutoSettings(imagePath: String): AutoSettingsResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val pyResult: PyObject = bridge.callAttr("compute_auto_settings", imagePath)
@@ -416,8 +416,8 @@ class PythonBridgeRepository(private val context: Context) {
      */
     suspend fun extractPalette(imagePath: String, numColors: Int = 6): List<String> =
         withContext(pythonDispatcher) {
-            runCatching {
-                val py = Python.getInstance()
+            suspendRunCatching {
+                val py = PythonRuntime.ensureStarted(context)
                 val bridge = py.getModule("stealzalut.bridge")
                 val pyResult = bridge.callAttr("extract_palette", imagePath, numColors)
                 val status = pyResult.callAttr("get", "status")?.toString()
@@ -447,8 +447,8 @@ class PythonBridgeRepository(private val context: Context) {
         method: ColorTransferMethod = ColorTransferMethod.HM_MKL_HM,
         intensity: Float = 1.0f
     ): Result<String> = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val pyResult = bridge.callAttr(
                 "generate_color_card",
@@ -475,7 +475,7 @@ class PythonBridgeRepository(private val context: Context) {
         displayName: String = "StealZaLUT_${System.currentTimeMillis()}.jpg",
         mimeType: String = "image/jpeg"
     ): Result<Uri> = withContext(Dispatchers.IO) {
-        runCatching {
+        suspendRunCatching {
             val sourceFile = File(imagePath)
             if (!sourceFile.exists()) {
                 throw IllegalStateException("Fichier source introuvable: $imagePath")
@@ -540,8 +540,8 @@ class PythonBridgeRepository(private val context: Context) {
         lightroomParams: LightroomDevelopModel? = null,
         cropRegion: com.stealzalut.mobile.data.model.CropRegion? = null
     ): PreviewResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val previewOutputFile = lruCacheManager.createPreviewFile("editor_preview_")
@@ -614,8 +614,8 @@ class PythonBridgeRepository(private val context: Context) {
         customLutPath: String? = null,
         lightroomParams: LightroomDevelopModel? = null
     ): CubeExportResult = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val outputDir = File(context.cacheDir, "shared_luts").apply { mkdirs() }
@@ -717,8 +717,8 @@ class PythonBridgeRepository(private val context: Context) {
     ): ImageExportResult = withContext(pythonDispatcher) {
         val memoryDecision = resolveExportMemory(srcPath, maxExportDim)
             ?: return@withContext ImageExportResult.Error(LutDomainError.OutOfMemoryError)
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val outputDir = File(context.cacheDir, "exports_temp").apply { mkdirs() }
@@ -794,8 +794,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Saves an editing preset using the Python Bridge and preset manager.
      */
     suspend fun saveEditingPresetBridge(preset: EditPreset): Result<String> = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val presetsDir = File(context.filesDir, "szl_presets").apply { mkdirs() }
@@ -850,16 +850,16 @@ class PythonBridgeRepository(private val context: Context) {
      * Lists all saved editing presets (.szlpreset).
      */
     suspend fun listEditingPresetsBridge(): List<EditPreset> = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets").apply { mkdirs() }
 
             val pyResult = bridge.callAttr("list_presets_bridge", presetsDir.absolutePath)
             val status = pyResult.callAttr("get", "status")?.toString()
-            if (status != "success") return@runCatching emptyList<EditPreset>()
+            if (status != "success") return@suspendRunCatching emptyList<EditPreset>()
 
-            val pyList = pyResult.callAttr("get", "presets") ?: return@runCatching emptyList<EditPreset>()
+            val pyList = pyResult.callAttr("get", "presets") ?: return@suspendRunCatching emptyList<EditPreset>()
             val count = pyList.callAttr("__len__")?.toInt() ?: 0
             val list = mutableListOf<EditPreset>()
 
@@ -902,12 +902,12 @@ class PythonBridgeRepository(private val context: Context) {
                     val str = lrObj.toString()
                     val lrJson = if (str.startsWith("{")) str else {
                         // In case Chaquopy represented it as a map or json representation
-                        runCatching {
+                        suspendRunCatching {
                             val map = lrObj.asMap()
                             JSONObject(map.map { (k, v) -> k.toString() to v.toString() }.toMap()).toString()
                         }.getOrDefault("{}")
                     }
-                    runCatching { LightroomDeserializer.fromJson(lrJson) }.getOrDefault(LightroomDevelopModel())
+                    suspendRunCatching { LightroomDeserializer.fromJson(lrJson) }.getOrDefault(LightroomDevelopModel())
                 } else {
                     LightroomDevelopModel()
                 }
@@ -934,8 +934,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Deletes a saved editing preset.
      */
     suspend fun deleteEditingPresetBridge(presetIdOrPath: String): Boolean = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets")
 
@@ -948,8 +948,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Duplicates an existing editing preset.
      */
     suspend fun duplicateEditingPresetBridge(presetIdOrPath: String, newName: String? = null): Boolean = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets")
             val pyResult = bridge.callAttr("duplicate_preset_bridge", presetIdOrPath, newName, presetsDir.absolutePath)
@@ -961,8 +961,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Renames an existing editing preset.
      */
     suspend fun renameEditingPresetBridge(presetIdOrPath: String, newName: String): Boolean = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets")
             val pyResult = bridge.callAttr("rename_preset_bridge", presetIdOrPath, newName, presetsDir.absolutePath)
@@ -974,8 +974,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Exports an editing preset to a file.
      */
     suspend fun exportEditingPresetBridge(presetIdOrPath: String, exportPath: String): String? = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets")
             val pyResult = bridge.callAttr("export_preset_bridge", presetIdOrPath, exportPath, presetsDir.absolutePath)
@@ -989,8 +989,8 @@ class PythonBridgeRepository(private val context: Context) {
      * Imports an editing preset from a file.
      */
     suspend fun importEditingPresetBridge(importPath: String): Boolean = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val presetsDir = File(context.filesDir, "szl_presets")
             val pyResult = bridge.callAttr("import_preset_bridge", importPath, presetsDir.absolutePath)
@@ -999,8 +999,8 @@ class PythonBridgeRepository(private val context: Context) {
     }
 
     suspend fun clearCaches(): Boolean = withContext(pythonDispatcher) {
-        runCatching {
-            val py = Python.getInstance()
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
             val pyResult: PyObject = bridge.callAttr("clear_caches")
             pyResult.callAttr("get", "status")?.toString() == "success"

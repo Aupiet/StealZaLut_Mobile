@@ -2,8 +2,10 @@ package com.stealzalut.mobile
 
 import android.app.Application
 import android.util.Log
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
+import com.stealzalut.mobile.core.diagnostics.AppLog
+import com.stealzalut.mobile.core.diagnostics.CrashReporter
+import com.stealzalut.mobile.core.diagnostics.LogLevel
+import com.stealzalut.mobile.data.bridge.PythonRuntime
 import com.stealzalut.mobile.data.cache.LruCacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,14 +25,13 @@ class StealZaLutApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLog.initialize(this)
+        CrashReporter.install(this)
 
         // Asynchronous warm-up of Python and cache maintenance
         applicationScope.launch {
             try {
-                if (!Python.isStarted()) {
-                    Python.start(AndroidPlatform(this@StealZaLutApplication))
-                }
-                val py = Python.getInstance()
+                val py = PythonRuntime.ensureStarted(this@StealZaLutApplication)
                 // Warm up heavy modules in background
                 py.getModule("numpy")
                 py.getModule("scipy")
@@ -38,7 +39,7 @@ class StealZaLutApplication : Application() {
                 py.getModule("stealzalut.bridge")
                 Log.i(TAG, "Chaquopy warm-up completed successfully.")
             } catch (e: Exception) {
-                Log.w(TAG, "Chaquopy background warm-up encountered an issue: ${e.message}")
+                AppLog.log(LogLevel.WARN, TAG, "Chaquopy background warm-up failed.", e)
             }
 
             // Clean up temporary preview cache on startup (LRU policy: > 24h or > 50MB)
@@ -46,7 +47,7 @@ class StealZaLutApplication : Application() {
                 val previewDir = File(cacheDir, "stealzalut_previews")
                 LruCacheManager(previewDir).cleanupOldOrExcessFiles()
             } catch (e: Exception) {
-                Log.w(TAG, "Initial cache cleanup encountered an issue: ${e.message}")
+                AppLog.log(LogLevel.WARN, TAG, "Initial cache cleanup failed.", e)
             }
         }
     }

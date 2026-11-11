@@ -56,6 +56,7 @@ import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import com.stealzalut.mobile.ui.screens.editor.EditorActionsDropdownToolbar
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
+import com.stealzalut.mobile.core.diagnostics.DiagnosticUiEvents
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -167,6 +168,12 @@ fun MainColorGradingScreen(
         uiState.errorMessage?.let { err ->
             snackbarHostState.showSnackbar(err.asString(context), duration = SnackbarDuration.Long)
             viewModel.dismissMessage()
+        }
+    }
+
+    LaunchedEffect(snackbarHostState) {
+        DiagnosticUiEvents.events.collect { event ->
+            snackbarHostState.showSnackbar(event.asString(context), duration = SnackbarDuration.Long)
         }
     }
 

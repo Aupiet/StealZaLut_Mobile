@@ -244,11 +244,17 @@
 
     <!-- Error Messages -->
     <string name="err_source_image_not_found">Source image not found or inaccessible.</string>
+    <string name="err_incoming_image_unavailable">The shared image is unavailable or cannot be accessed.</string>
+    <string name="crash_report_title">The app closed unexpectedly</string>
+    <string name="crash_report_message">A local crash report is available. You can share it to help diagnose the problem.</string>
+    <string name="crash_report_share">Share report</string>
+    <string name="crash_report_ignore">Ignore</string>
     <string name="err_reference_image_not_found">Reference image not found or inaccessible.</string>
     <string name="err_matrix_singularity">Matrix singularity detected (source or reference image is too uniform).</string>
     <string name="err_out_of_memory">Insufficient memory to process high resolution image.</string>
     <string name="err_export_io">Disk access or write error: %1$s</string>
     <string name="err_generic">An unexpected error occurred: %1$s</string>
+    <string name="err_unexpected_operation">The operation could not be completed.</string>
     <string name="err_source_load">Error loading source image: %1$s</string>
     <string name="err_reference_load">Error loading reference image: %1$s</string>
     <string name="err_select_source_and_ref">Cannot export: please select a source photo and reference style.</string>

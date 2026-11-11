@@ -286,6 +286,10 @@ class StealZaLutViewModel(
     // ========================================================================
 
     fun setEditorSourceImage(uri: Uri) = editorSessionDelegate.setEditorSourceImage(uri)
+
+    fun reportIncomingImageError() {
+        _uiState.update { it.copy(errorMessage = UiText.Resource(R.string.err_incoming_image_unavailable)) }
+    }
     fun setEditorCustomLut(uri: Uri, name: String) = editorSessionDelegate.setEditorCustomLut(uri, name)
     fun clearEditorCustomLut() = editorSessionDelegate.clearEditorCustomLut()
     fun setEditorTab(tab: Int) = editorSessionDelegate.setEditorTab(tab)

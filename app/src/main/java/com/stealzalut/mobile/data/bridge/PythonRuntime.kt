@@ -20,4 +20,12 @@ object PythonRuntime {
             Python.getInstance()
         }
     }
+
+    suspend fun warmUp(context: Context) = withContext(dispatcher) {
+        val python = ensureStarted(context)
+        python.getModule("numpy")
+        python.getModule("scipy")
+        python.getModule("color_matcher")
+        python.getModule("stealzalut.bridge")
+    }
 }

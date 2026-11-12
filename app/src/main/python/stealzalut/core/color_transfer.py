@@ -8,6 +8,7 @@ Histogram Matching, and Reinhard statistics.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Optional, Union
 
 import numpy as np
@@ -22,6 +23,7 @@ from stealzalut.config import (
     SOFT_CLIP_SHADOW_THRESHOLD,
     SUPPORTED_METHODS,
 )
+from stealzalut.core.color_space import gamut_compress, oklab_to_rgb, rgb_to_oklab
 
 # Standard D65 sRGB to XYZ transformation matrix (IEC 61966-2-1)
 _M_SRGB_TO_XYZ: NDArray[np.float32] = np.array(
@@ -51,6 +53,7 @@ _D65_WHITE: NDArray[np.float32] = np.array(
 _CIE_DELTA: float = 6.0 / 29.0
 _CIE_DELTA_CUBED: float = _CIE_DELTA**3
 _CIE_3_DELTA_SQUARED: float = 3.0 * (_CIE_DELTA**2)
+OKLAB_SCALE_LIMITS: tuple[float, float] = (0.5, 2.0)
 
 
 def rgb_to_lab(rgb: NDArray[np.float32]) -> NDArray[np.float32]:
@@ -192,10 +195,11 @@ def _compute_mkl_matrix(
     cov_src: NDArray[np.float64],
     cov_ref: NDArray[np.float64],
 ) -> NDArray[np.float32]:
-    """Compute the 3x3 Monge-Kantorovich Linear (MKL) transfer matrix."""
+    """Compute the Monge-Kantorovich Linear (MKL) transfer matrix."""
+    n = cov_src.shape[0]
     eps = 1e-6
-    cov_s = cov_src + eps * np.eye(3, dtype=np.float64)
-    cov_r = cov_ref + eps * np.eye(3, dtype=np.float64)
+    cov_s = cov_src + eps * np.eye(n, dtype=np.float64)
+    cov_r = cov_ref + eps * np.eye(n, dtype=np.float64)
 
     eig_val_r, eig_vec_r = np.linalg.eigh(cov_s)
     eig_val_r = np.maximum(eig_val_r, 0.0)
@@ -215,17 +219,16 @@ def _compute_mvgd_matrix(
     cov_src: NDArray[np.float64],
     cov_ref: NDArray[np.float64],
 ) -> NDArray[np.float32]:
-    """Compute the 3x3 Multi-Variate Gaussian Distribution (MVGD) transfer matrix."""
+    """Compute the Multi-Variate Gaussian Distribution (MVGD) transfer matrix."""
+    n = cov_src.shape[0]
     eps = 1e-6
-    cov_s = cov_src + eps * np.eye(3, dtype=np.float64)
-    cov_r = cov_ref + eps * np.eye(3, dtype=np.float64)
+    cov_s = cov_src + eps * np.eye(n, dtype=np.float64)
+    cov_r = cov_ref + eps * np.eye(n, dtype=np.float64)
 
-    # Diagonalize cov_s
     val_s, vec_s = np.linalg.eigh(cov_s)
     val_s = np.maximum(val_s, 0.0)
     inv_sqrt_s = vec_s @ np.diag(1.0 / np.sqrt(val_s + 1e-7)) @ vec_s.T
 
-    # Diagonalize cov_r
     val_r, vec_r = np.linalg.eigh(cov_r)
     val_r = np.maximum(val_r, 0.0)
     sqrt_r = vec_r @ np.diag(np.sqrt(val_r)) @ vec_r.T
@@ -304,13 +307,39 @@ def fit_and_apply_transfer(
 
     meth = method.lower()
 
-    if meth == "reinhard":
+    if meth == "zones":
+        model = fit_transfer(src_img, ref_img, method="zones")
+        result = model.apply(t_f.reshape(-1, 3)).reshape(t_f.shape)
+
+    elif meth == "reinhard":
         result = _reinhard_lab_transfer(
             src_f=src_f,
             ref_f=ref_f,
             target_f=t_f,
             preserve_luminance=preserve_luminance,
         )
+
+    elif meth == "oklab":
+        src_lab = rgb_to_oklab(src_f.reshape(-1, 3)).astype(np.float32)
+        ref_lab = rgb_to_oklab(ref_f.reshape(-1, 3)).astype(np.float32)
+        t_lab = rgb_to_oklab(t_f.reshape(-1, 3)).astype(np.float32)
+
+        mu_s = src_lab.mean(axis=0)
+        mu_r = ref_lab.mean(axis=0)
+        std_s = src_lab.std(axis=0) + 1e-6
+        std_r = ref_lab.std(axis=0) + 1e-6
+        scale = np.clip(std_r / std_s, MIN_STD_RATIO, MAX_STD_RATIO)
+        out_lab = (t_lab - mu_s) * scale + mu_r
+
+        clamped_preserve = float(np.clip(preserve_luminance, 0.0, 1.0))
+        if clamped_preserve > 0.0:
+            out_lab[:, 0] = (
+                clamped_preserve * t_lab[:, 0] + (1.0 - clamped_preserve) * out_lab[:, 0]
+            )
+
+        out_lab = gamut_compress(out_lab)
+        out_lab[:, 0] = np.clip(out_lab[:, 0], 0.0, 1.0)
+        result = oklab_to_rgb(out_lab.reshape(t_f.shape)).astype(np.float32)
 
     elif meth == "hm":
         result = _histogram_match_1d(src=src_f, ref=ref_f, target=t_f)
@@ -420,3 +449,181 @@ def compute_color_transfer(
         soft_clip=soft_clip,
     )
     return (np.clip(res_f, 0.0, 1.0) * 255.0).astype(np.uint8)
+
+
+class TransferModel:
+    @property
+    def method(self) -> str:
+        raise NotImplementedError
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class AffineTransferModel(TransferModel):
+    method_name: str = "mkl"
+    src_mean: NDArray[np.float64] = np.array([])
+    ref_mean: NDArray[np.float64] = np.array([])
+    transform: NDArray[np.float64] = np.array([])
+
+    def __post_init__(self) -> None:
+        if self.src_mean.size == 0:
+            raise ValueError("src_mean is required")
+        if self.ref_mean.size == 0:
+            raise ValueError("ref_mean is required")
+        if self.transform.size == 0:
+            raise ValueError("transform is required")
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        colors = np.asarray(colors, dtype=np.float64)
+        if colors.ndim == 1:
+            colors = colors.reshape(1, -1)
+        return np.clip((colors - self.src_mean) @ self.transform.T + self.ref_mean, 0.0, 1.0)
+
+
+@dataclass(frozen=True)
+class HistogramTransferModel(TransferModel):
+    src_values: tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    mapped_values: tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+
+    @property
+    def method(self) -> str:
+        return "hm"
+
+    @property
+    def method_name(self) -> str:
+        return self.method
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        colors = np.asarray(colors, dtype=np.float64)
+        out = np.empty_like(colors)
+        for ch in range(3):
+            out[:, ch] = np.interp(colors[:, ch], self.src_values[ch], self.mapped_values[ch])
+        return np.clip(out, 0.0, 1.0)
+
+
+@dataclass(frozen=True)
+class ReinhardTransferModel(TransferModel):
+    mean_s: NDArray[np.float64]
+    mean_r: NDArray[np.float64]
+    std_ratios: NDArray[np.float64]
+
+    @property
+    def method(self) -> str:
+        return "reinhard"
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        colors = np.asarray(colors, dtype=np.float64)
+        if colors.ndim == 1:
+            colors = colors.reshape(1, -1)
+        out = (colors - self.mean_s) * self.std_ratios + self.mean_r
+        return np.clip(out, 0.0, 1.0)
+
+
+@dataclass(frozen=True)
+class OklabTransferModel(TransferModel):
+    src_mean: NDArray[np.float64]
+    ref_mean: NDArray[np.float64]
+    lightness_scale: float
+    chroma_matrix: NDArray[np.float64]
+
+    @property
+    def method(self) -> str:
+        return "oklab"
+
+    @property
+    def method_name(self) -> str:
+        return self.method
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        lab = rgb_to_oklab(colors)
+        out = np.empty_like(lab)
+        out[:, 0] = self.ref_mean[0] + self.lightness_scale * (lab[:, 0] - self.src_mean[0])
+        out[:, 1:] = self.ref_mean[1:] + (lab[:, 1:] - self.src_mean[1:]) @ self.chroma_matrix.T
+        return np.clip(oklab_to_rgb(gamut_compress(out)), 0.0, 1.0)
+
+
+def _bound_symmetric(matrix: NDArray[np.float64], lo: float, hi: float) -> NDArray[np.float64]:
+    """Clip eigenvalues of a symmetric matrix to a bounded interval."""
+    eigvals, eigvecs = np.linalg.eigh(0.5 * (matrix + matrix.T))
+    result = eigvecs @ np.diag(np.clip(eigvals, lo, hi)) @ eigvecs.T
+    return result.astype(np.float64)
+
+
+def _fit_oklab(source: NDArray[np.uint8], reference: NDArray[np.uint8]) -> OklabTransferModel:
+    flat_s = source.reshape(-1, 3).astype(np.float64) / 255.0
+    flat_r = reference.reshape(-1, 3).astype(np.float64) / 255.0
+    lab_s = rgb_to_oklab(flat_s)
+    lab_r = rgb_to_oklab(flat_r)
+    lo, hi = OKLAB_SCALE_LIMITS
+    sigma_s = float(np.std(lab_s[:, 0]))
+    sigma_r = float(np.std(lab_r[:, 0]))
+    lightness_scale = float(np.clip(sigma_r / max(sigma_s, 1e-6), lo, hi))
+    reg = 1e-8 * np.eye(2)
+    cov_s = np.asarray(np.cov(lab_s[:, 1:], rowvar=False), dtype=np.float64) + reg
+    cov_r = np.asarray(np.cov(lab_r[:, 1:], rowvar=False), dtype=np.float64) + reg
+    chroma_matrix = _bound_symmetric(_compute_mkl_matrix(cov_s, cov_r), lo, hi)
+    return OklabTransferModel(
+        src_mean=lab_s.mean(axis=0),
+        ref_mean=lab_r.mean(axis=0),
+        lightness_scale=lightness_scale,
+        chroma_matrix=chroma_matrix,
+    )
+
+
+def fit_transfer(
+    source: NDArray[np.uint8],
+    reference: NDArray[np.uint8],
+    method: str = DEFAULT_METHOD,
+) -> TransferModel:
+    """Fit a transfer model to *source* and *reference* images."""
+    chosen = method.lower()
+    if chosen == "oklab":
+        return _fit_oklab(source, reference)
+    if chosen == "zones":
+        from stealzalut.core.zone_transfer import fit_zone_transfer
+
+        return fit_zone_transfer(source, reference)
+    if chosen in ("mkl", "mvgd", "default"):
+        s_flat = source.reshape(-1, 3).astype(np.float64) / 255.0
+        r_flat = reference.reshape(-1, 3).astype(np.float64) / 255.0
+        mu_s = s_flat.mean(axis=0)
+        mu_r = r_flat.mean(axis=0)
+        cov_s = np.cov(s_flat, rowvar=False)
+        cov_r = np.cov(r_flat, rowvar=False)
+        mat = _compute_mkl_matrix(cov_s, cov_r)
+        return AffineTransferModel(
+            method_name=chosen,
+            src_mean=mu_s,
+            ref_mean=mu_r,
+            transform=mat,
+        )
+    if chosen == "reinhard":
+        mean_s = source.reshape(-1, 3).astype(np.float64) / 255.0
+        mean_r = reference.reshape(-1, 3).astype(np.float64) / 255.0
+        std_s = np.std(mean_s, axis=0) + 1e-6
+        std_r = np.std(mean_r, axis=0) + 1e-6
+        return ReinhardTransferModel(
+            mean_s=mean_s.mean(axis=0),
+            mean_r=mean_r.mean(axis=0),
+            std_ratios=std_r / std_s,
+        )
+    if chosen == "hm":
+        s_flat = source.reshape(-1, 3).astype(np.float64) / 255.0
+        r_flat = reference.reshape(-1, 3).astype(np.float64) / 255.0
+        src_values = []
+        mapped_values = []
+        for ch in range(3):
+            s_vals, s_cnts = np.unique(source[..., ch].ravel(), return_counts=True)
+            r_vals, r_cnts = np.unique(reference[..., ch].ravel(), return_counts=True)
+            s_cdf = np.cumsum(s_cnts).astype(np.float64) / source[..., ch].size
+            r_cdf = np.cumsum(r_cnts).astype(np.float64) / reference[..., ch].size
+            mapped = np.interp(s_cdf, r_cdf, r_vals) / 255.0
+            src_values.append(s_vals.astype(np.float64) / 255.0)
+            mapped_values.append(mapped)
+        return HistogramTransferModel(
+            src_values=(src_values[0], src_values[1], src_values[2]),
+            mapped_values=(mapped_values[0], mapped_values[1], mapped_values[2]),
+        )
+    raise ValueError(f"Unsupported color transfer method '{method}'")

@@ -95,13 +95,16 @@ fun StudioStep3Parameters(
     onNeutralLockChange: (Float) -> Unit,
     selectedLutSize: LutSize,
     onLutSizeSelected: (LutSize) -> Unit,
+    isAnalyzingZones: Boolean = false,
+    hasZoneAnalysis: Boolean = false,
+    onAnalyzeZones: () -> Unit = {},
     isExportingCube: Boolean = false,
     onExportCube: () -> Unit = {},
     onBack: () -> Unit,
     onRun: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var activeCategory by remember { mutableIntStateOf(0) } // 0 = Intensity/Lum, 1 = Color/Skin, 2 = Method, 3 = Grid
+    var activeCategory by remember { mutableIntStateOf(0) } // 0 = Method, 1 = Grid, 2 = Intensity, 3 = Color, 4 = Advanced
     val pillScrollState = rememberScrollState()
     val paramsScrollState = rememberScrollState()
     val monoFont = LocalFontSpec.current.mono
@@ -192,7 +195,8 @@ fun StudioStep3Parameters(
             Triple(0, stringResource(R.string.studio_tab_algorithm), Icons.Default.AutoAwesome),
             Triple(1, stringResource(R.string.studio_tab_grid), Icons.Default.GridOn),
             Triple(2, stringResource(R.string.studio_tab_light), Icons.Default.Tune),
-            Triple(3, stringResource(R.string.studio_tab_color), Icons.Default.Face)
+            Triple(3, stringResource(R.string.studio_tab_color), Icons.Default.Face),
+            Triple(4, stringResource(R.string.studio_tab_advanced), Icons.Default.AutoAwesome)
         )
 
         Row(
@@ -345,6 +349,53 @@ fun StudioStep3Parameters(
                                     step = 0.01f,
                                     defaultValue = 0.0f
                                 )
+                            }
+                        }
+                        4 -> {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.studio_zones_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(R.string.studio_zones_description),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Button(
+                                    onClick = onAnalyzeZones,
+                                    enabled = !isAnalyzingZones,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+                                ) {
+                                    if (isAnalyzingZones) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(AppDimens.IconNormal),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(AppDimens.IconNormal)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                                    Text(
+                                        text = if (hasZoneAnalysis) {
+                                            stringResource(R.string.studio_zones_reanalyze)
+                                        } else {
+                                            stringResource(R.string.studio_zones_analyze)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

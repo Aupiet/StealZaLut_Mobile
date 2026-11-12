@@ -15,14 +15,18 @@ from numpy.typing import NDArray
 from PIL import Image, ImageOps
 
 from stealzalut.config import MAX_ANALYSIS_DIMENSION, PALETTE_DEFAULT_COLORS
-from stealzalut.core.raw_decoder import decode_dng_image, is_raw_or_dng_file
-
-
 # Use Pillow's Resampling enum with fallback for older versions
 try:
     _RESAMPLING_BILINEAR = Image.Resampling.BILINEAR
 except AttributeError:
     _RESAMPLING_BILINEAR = Image.BILINEAR
+
+_RAW_DNG_EXTENSIONS = (".dng", ".raw", ".cr2", ".nef", ".arw", ".orf", ".rw2")
+
+
+def is_raw_or_dng_file(path: str) -> bool:
+    """Return whether a path uses a camera RAW/DNG extension."""
+    return bool(path) and os.path.splitext(path)[1].lower() in _RAW_DNG_EXTENSIONS
 
 
 def load_image(path: str) -> NDArray[np.uint8]:
@@ -49,6 +53,8 @@ def load_image(path: str) -> NDArray[np.uint8]:
     # Camera RAW / DNG formats decoded via dedicated demosaicing engine
     if is_raw_or_dng_file(path):
         try:
+            from stealzalut.core.raw_decoder import decode_dng_image
+
             f32 = decode_dng_image(path)
             return to_uint8(f32)
         except Exception as exc:
@@ -100,6 +106,8 @@ def load_proxy_image(
     # Camera RAW / DNG formats decoded via dedicated demosaicing engine directly into downscaled proxy
     if is_raw_or_dng_file(path):
         try:
+            from stealzalut.core.raw_decoder import decode_dng_image
+
             f32 = decode_dng_image(path, max_dim=max_dim)
             return to_uint8(f32)
         except Exception as exc:

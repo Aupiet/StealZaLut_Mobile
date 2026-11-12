@@ -9,11 +9,13 @@ import numpy as np
 import pytest
 
 try:
+    from stealzalut.core.color_space import gamut_compress, oklab_to_rgb, rgb_to_oklab
     from stealzalut.core.color_transfer import (  # type: ignore[import-untyped]
         apply_soft_clip,
         compute_color_transfer as color_transfer,
         rgb_to_lab,
     )
+    from stealzalut.core.regularize import fold_fraction, smooth_field
     from stealzalut.utils.image_io import resolve_export_dimensions
 
     _HAS_COLOR_TRANSFER = True
@@ -60,7 +62,7 @@ class TestColorTransferContract:
 # Parametric method tests
 # ------------------------------------------------------------------
 
-ALL_METHODS = ["hm-mkl-hm", "mkl", "hm", "reinhard"]
+ALL_METHODS = ["hm-mkl-hm", "mkl", "hm", "reinhard", "oklab"]
 
 
 class TestColorTransferMethods:
@@ -264,3 +266,116 @@ class TestReinhardResilience:
         assert out.shape == identity_lattice.shape
         assert out.dtype == np.uint8
         assert not np.isnan(out).any()
+
+
+class TestPhaseZeroFoundations:
+    """Validate the new desktop-parity foundations added for the zones port."""
+
+    def test_oklab_method_is_supported_and_valid(self, sample_src_image, sample_ref_image):
+        out = color_transfer(sample_src_image, sample_ref_image, method="oklab")
+        assert out.shape == sample_src_image.shape
+        assert out.dtype == np.uint8
+        assert 0 <= out.min() <= out.max() <= 255
+
+    def test_gamut_compress_keeps_output_in_srgb_gamut(self):
+        lab = np.array(
+            [[0.75, 0.45, 0.40], [0.5, 0.10, -0.10], [0.25, -0.25, 0.30]],
+            dtype=np.float32,
+        )
+        compressed = gamut_compress(lab)
+        rgb = oklab_to_rgb(compressed)
+        assert np.all(rgb >= 0.0)
+        assert np.all(rgb <= 1.0)
+        assert np.all(np.isfinite(rgb))
+
+    def test_smooth_field_is_stable_and_fold_fraction_respects_monotonicity(self):
+        field = np.ones((27, 3), dtype=np.float64)
+        smoothed = smooth_field(field, 3, 0.0)
+        np.testing.assert_allclose(smoothed, field)
+
+        monotone = np.linspace(0.1, 0.9, 27, dtype=np.float64)
+        assert fold_fraction(monotone, 3) == 0.0
+
+
+class TestZonePortFoundations:
+    """Validate the zone-analysis pipeline introduced in the next porting phase."""
+
+    def test_zone_analysis_returns_consistent_palette(self):
+        from stealzalut.core.palette import analyze_zones
+
+        src = np.zeros((80, 120, 3), dtype=np.uint8)
+        src[:40, :60] = (40, 60, 90)
+        src[:40, 60:] = (180, 150, 120)
+        src[40:, :60] = (210, 185, 150)
+        src[40:, 60:] = (245, 240, 235)
+
+        palette = analyze_zones(src, zone_count=4)
+        assert len(palette.zones) >= 2
+        assert all(z.area > 0.0 for z in palette.zones)
+        assert palette.labels.shape == src.shape[:2]
+
+    def test_zone_matching_produces_valid_mapping(self):
+        from stealzalut.core.matching import match_zones
+        from stealzalut.core.palette import analyze_zones
+
+        src = np.array([[[30, 30, 30]], [[200, 180, 150]]], dtype=np.uint8)
+        ref = np.array([[[80, 120, 140]], [[240, 220, 200]]], dtype=np.uint8)
+
+        src_palette = analyze_zones(src.reshape(2, 1, 3), zone_count=2)
+        ref_palette = analyze_zones(ref.reshape(2, 1, 3), zone_count=2)
+        mapping = match_zones(src_palette, ref_palette)
+
+        assert set(mapping) == set(src_palette.ids)
+        for src_id, targets in mapping.items():
+            assert np.isclose(sum(targets.values()), 1.0)
+            assert set(targets).issubset(set(ref_palette.ids))
+
+    def test_zone_transfer_model_fits_on_sample_images(self):
+        from stealzalut.core.zone_transfer import fit_zone_transfer
+
+        src = np.zeros((80, 120, 3), dtype=np.uint8)
+        src[:40, :60] = (20, 50, 70)
+        src[:40, 60:] = (120, 180, 220)
+        src[40:, :60] = (180, 160, 130)
+        src[40:, 60:] = (240, 235, 230)
+
+        model = fit_zone_transfer(src, src, zone_count=4)
+        assert model.method == "zones"
+        assert len(model.source.zones) >= 2
+        transferred = model.apply(src.reshape(-1, 3).astype(np.float64) / 255.0)
+        assert transferred.shape == (src.size // 3, 3)
+        assert np.all(np.isfinite(transferred))
+
+    def test_zone_bridge_api_exposes_palette_and_matching(self, tmp_path):
+        from PIL import Image
+
+        from stealzalut.bridge import (
+            analyze_zone_palette_bridge,
+            fit_zone_transfer_bridge,
+            match_zone_palette_bridge,
+        )
+
+        src = np.zeros((32, 32, 3), dtype=np.uint8)
+        src[:16, :] = (60, 70, 80)
+        src[16:, :] = (200, 190, 180)
+        ref = np.zeros_like(src)
+        ref[:, :16] = (100, 140, 160)
+        ref[:, 16:] = (240, 230, 220)
+
+        src_path = tmp_path / "source.png"
+        ref_path = tmp_path / "reference.png"
+        Image.fromarray(src).save(src_path)
+        Image.fromarray(ref).save(ref_path)
+
+        palette = analyze_zone_palette_bridge(str(src_path), zone_count=4)
+        assert palette["status"] == "success"
+        assert palette["zone_count"] >= 2
+
+        mapping = match_zone_palette_bridge(str(src_path), str(ref_path), zone_count=4)
+        assert mapping["status"] == "success"
+        assert len(mapping["matching"]) >= 2
+
+        model = fit_zone_transfer_bridge(str(src_path), str(ref_path), zone_count=4)
+        assert model["status"] == "success"
+        assert model["method"] == "zones"
+        assert len(model["correspondence"]) >= 2

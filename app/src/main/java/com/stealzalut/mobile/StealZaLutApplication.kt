@@ -31,12 +31,7 @@ class StealZaLutApplication : Application() {
         // Asynchronous warm-up of Python and cache maintenance
         applicationScope.launch {
             try {
-                val py = PythonRuntime.ensureStarted(this@StealZaLutApplication)
-                // Warm up heavy modules in background
-                py.getModule("numpy")
-                py.getModule("scipy")
-                py.getModule("color_matcher")
-                py.getModule("stealzalut.bridge")
+                PythonRuntime.warmUp(this@StealZaLutApplication)
                 Log.i(TAG, "Chaquopy warm-up completed successfully.")
             } catch (e: Exception) {
                 AppLog.log(LogLevel.WARN, TAG, "Chaquopy background warm-up failed.", e)

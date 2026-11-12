@@ -126,6 +126,18 @@ object CrashReporter {
         emptyList()
     }
 
+    fun allReports(application: Application): List<File> =
+        reportsInDirectory(File(application.filesDir, "crash"))
+
+    internal fun reportsInDirectory(directory: File): List<File> = try {
+        directory.listFiles { file ->
+            file.name.matches(Regex("""crash_\d+_\d+\.(?:txt|read)"""))
+        }.orEmpty().sortedByDescending(File::lastModified)
+    } catch (error: Throwable) {
+        AppLog.log(LogLevel.WARN, TAG, "Could not list crash reports.", error)
+        emptyList()
+    }
+
     fun markHandled(file: File) {
         try {
             val handled = File(file.parentFile, "${file.nameWithoutExtension}.read")

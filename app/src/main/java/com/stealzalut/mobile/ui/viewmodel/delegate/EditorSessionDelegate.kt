@@ -57,7 +57,32 @@ data class StandaloneEditorDebounceRequest(
     val customLutPath: String?,
     val lightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
     val cropRegion: CropRegion = CropRegion()
-)
+) {
+    val requiresImageProcessing: Boolean
+        get() = customLutPath != null ||
+            !intensity.isApproximately(1.0f) ||
+            !lumaLock.isApproximately(0.0f) ||
+            !neutralAxisLock.isApproximately(0.0f) ||
+            !skinToneLock.isApproximately(0.0f) ||
+            !extremesRolloff.isApproximately(0.0f) ||
+            !spatial3d.isApproximately(0.0f) ||
+            !exposure.isApproximately(0.0f) ||
+            !contrast.isApproximately(0.0f) ||
+            !highlights.isApproximately(0.0f) ||
+            !shadows.isApproximately(0.0f) ||
+            !temperature.isApproximately(0.0f) ||
+            !tint.isApproximately(0.0f) ||
+            !vibrance.isApproximately(0.0f) ||
+            !saturation.isApproximately(0.0f) ||
+            !clarity.isApproximately(0.0f) ||
+            !sharpen.isApproximately(0.0f) ||
+            !grain.isApproximately(0.0f) ||
+            lightroomParams != LightroomDevelopModel() ||
+            cropRegion.hasCrop
+}
+
+private fun Float.isApproximately(expected: Float): Boolean =
+    kotlin.math.abs(this - expected) < 0.0001f
 
 // EditorParamsSnapshot and EditorProject are imported from com.stealzalut.mobile.data.model
 
@@ -755,6 +780,17 @@ class EditorSessionDelegate(
 
     private suspend fun computeStandaloneEditorPreview(req: StandaloneEditorDebounceRequest) {
         activeStandaloneJob?.cancel()
+        if (!req.requiresImageProcessing && stateFlow.value.editorSourceBitmap != null) {
+            stateFlow.update {
+                it.copy(
+                    editorPreviewBitmap = it.editorSourceBitmap,
+                    editorPreviewPath = req.srcPath,
+                    editorExecutionTimeMs = null,
+                    isEditorProcessing = false
+                )
+            }
+            return
+        }
         activeStandaloneJob = scope.launch {
             stateFlow.update { it.copy(isEditorProcessing = true) }
             val res = bridgeRepository.generateEditorPreview(

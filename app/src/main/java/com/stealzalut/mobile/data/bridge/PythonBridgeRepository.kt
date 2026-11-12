@@ -23,8 +23,15 @@ import com.stealzalut.mobile.data.model.ImageExportResult
 import com.stealzalut.mobile.data.model.LutDomainError
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.PreviewResult
+import com.stealzalut.mobile.data.model.RecipePayload
 import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
+import com.stealzalut.mobile.data.model.AnalysisPackExport
+import com.stealzalut.mobile.data.model.ZoneDescriptor
+import com.stealzalut.mobile.data.model.ZoneLink
+import com.stealzalut.mobile.data.model.ZoneMatching
+import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
+import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.image.ExportMemoryDecision
@@ -436,6 +443,224 @@ class PythonBridgeRepository(private val context: Context) {
                 }
             }.getOrDefault(emptyList())
         }
+
+    /**
+     * Analyze a source image into JSON-friendly zone descriptors using the desktop-aligned
+     * zone engine, without relying on any GPU or extra native dependencies.
+     */
+    suspend fun analyzeZonePalette(
+        imagePath: String,
+        zoneCount: Int = 8
+    ): Result<ZonePaletteAnalysis> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr("analyze_zone_palette_bridge", imagePath, zoneCount)
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "Zone analysis failed"
+                throw IllegalStateException(message)
+            }
+
+            fun floatList(value: PyObject): List<Float> =
+                value.asList().map { item -> item.toFloat() }
+
+            val zoneList = pyResult.callAttr("get", "zones").asList()
+            val zones = zoneList.map { zoneObj ->
+                val mean = floatList(zoneObj.callAttr("get", "mean"))
+                val centroid = floatList(zoneObj.callAttr("get", "centroid_xy"))
+                val bbox = floatList(zoneObj.callAttr("get", "bbox"))
+                ZoneDescriptor(
+                    id = zoneObj.callAttr("get", "id")?.toInt() ?: 0,
+                    area = zoneObj.callAttr("get", "area")?.toFloat() ?: 0f,
+                    lRank = zoneObj.callAttr("get", "l_rank")?.toFloat() ?: 0f,
+                    mean = mean,
+                    hex = zoneObj.callAttr("get", "hex")?.toString() ?: "#000000",
+                    centroidXY = centroid,
+                    bbox = bbox
+                )
+            }
+
+            val labelsShape = (pyResult.callAttr("get", "labels_shape").asList() ?: emptyList())
+                .map { item -> item.toInt() }
+
+            ZonePaletteAnalysis(
+                zoneCount = pyResult.callAttr("get", "zone_count")?.toInt() ?: zones.size,
+                zones = zones,
+                labelsShape = labelsShape
+            )
+        }
+    }
+
+    /**
+     * Compute source/reference zone matching using the Sinkhorn assignment logic exposed by the
+     * desktop-aligned Python zone engine.
+     */
+    suspend fun matchZonePalette(
+        sourcePath: String,
+        referencePath: String,
+        zoneCount: Int = 8
+    ): Result<ZoneMatching> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr("match_zone_palette_bridge", sourcePath, referencePath, zoneCount)
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "Zone matching failed"
+                throw IllegalStateException(message)
+            }
+
+            val matchingPy = pyResult.callAttr("get", "matching")
+            val matching = mutableMapOf<String, Map<String, Float>>()
+            val sourceCount = matchingPy.callAttr("__len__")?.toInt() ?: 0
+            for (i in 0 until sourceCount) {
+                val sourceKey = matchingPy.callAttr("keys")?.callAttr("__getitem__", i)?.toString() ?: "0"
+                val targetMapPy = matchingPy.callAttr("__getitem__", sourceKey)
+                val targetMap = mutableMapOf<String, Float>()
+                val targetCount = targetMapPy.callAttr("__len__")?.toInt() ?: 0
+                for (j in 0 until targetCount) {
+                    val targetKey = targetMapPy.callAttr("keys")?.callAttr("__getitem__", j)?.toString() ?: "0"
+                    val targetValue = targetMapPy.callAttr("get", targetKey)?.toFloat() ?: 0f
+                    targetMap[targetKey] = targetValue
+                }
+                matching[sourceKey] = targetMap
+            }
+            ZoneMatching(matching = matching)
+        }
+    }
+
+    /**
+     * Fit a zone-aware transfer model and summarize its source/reference correspondence.
+     */
+    suspend fun fitZoneTransfer(
+        sourcePath: String,
+        referencePath: String,
+        zoneCount: Int = 8
+    ): Result<ZoneTransferSummary> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr("fit_zone_transfer_bridge", sourcePath, referencePath, zoneCount)
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "Zone transfer fit failed"
+                throw IllegalStateException(message)
+            }
+
+            val correspondencePy = pyResult.callAttr("get", "correspondence")
+            val correspondenceCount = correspondencePy.callAttr("__len__")?.toInt() ?: 0
+            val correspondence = mutableListOf<ZoneLink>()
+            for (i in 0 until correspondenceCount) {
+                val linkPy = correspondencePy.callAttr("__getitem__", i)
+                val targetsPy = linkPy.callAttr("get", "targets")
+                val targets = mutableMapOf<String, Float>()
+                val targetCount = targetsPy.callAttr("__len__")?.toInt() ?: 0
+                for (j in 0 until targetCount) {
+                    val targetKey = targetsPy.callAttr("keys")?.callAttr("__getitem__", j)?.toString() ?: "0"
+                    val targetValue = targetsPy.callAttr("get", targetKey)?.toFloat() ?: 0f
+                    targets[targetKey] = targetValue
+                }
+                correspondence.add(
+                    ZoneLink(
+                        sourceZone = linkPy.callAttr("get", "source_zone")?.toInt() ?: 0,
+                        targets = targets,
+                        strength = linkPy.callAttr("get", "strength")?.toFloat() ?: 0f,
+                        locked = linkPy.callAttr("get", "locked")?.toBoolean() ?: false
+                    )
+                )
+            }
+
+            ZoneTransferSummary(
+                sourceZoneIds = pyResult.callAttr("get", "source_zone_ids").let {
+                    val size = it.callAttr("__len__")?.toInt() ?: 0
+                    buildList {
+                        for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0)
+                    }
+                },
+                referenceZoneIds = pyResult.callAttr("get", "reference_zone_ids").let {
+                    val size = it.callAttr("__len__")?.toInt() ?: 0
+                    buildList {
+                        for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0)
+                    }
+                },
+                analysisId = pyResult.callAttr("get", "analysis_id")?.toString() ?: "",
+                method = pyResult.callAttr("get", "method")?.toString() ?: "zones",
+                correspondence = correspondence
+            )
+        }
+    }
+
+    /**
+     * Parse AI-produced recipe text or raw JSON into a normalized, structured payload.
+     */
+    suspend fun parseRecipeBridge(recipeText: String): Result<RecipePayload> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr("parse_recipe_bridge", recipeText)
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "Recipe parsing failed"
+                throw IllegalStateException(message)
+            }
+
+            val recipeMapPy = pyResult.callAttr("get", "recipe")
+            val recipeMap = mutableMapOf<String, Any>()
+            val keysPy = recipeMapPy.callAttr("keys")
+            val keyCount = keysPy.callAttr("__len__")?.toInt() ?: 0
+            for (i in 0 until keyCount) {
+                val key = keysPy.callAttr("__getitem__", i)?.toString() ?: continue
+                val value = recipeMapPy.callAttr("__getitem__", key)
+                recipeMap[key] = value.toString()
+            }
+
+            RecipePayload(
+                analysisId = pyResult.callAttr("get", "analysis_id")?.toString(),
+                mode = pyResult.callAttr("get", "mode")?.toString(),
+                zoneCount = pyResult.callAttr("get", "zone_count")?.toInt(),
+                recipe = recipeMap,
+                json = pyResult.callAttr("get", "json")?.toString() ?: ""
+            )
+        }
+    }
+
+    /**
+     * Build the lightweight AI analysis pack for a source/reference pair and return the folder path.
+     */
+    suspend fun writeAiPack(
+        sourcePath: String,
+        referencePath: String,
+        outputDir: String,
+        packName: String = "demo",
+        zoneCount: Int = 8
+    ): Result<AnalysisPackExport> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr("write_ai_pack_bridge", sourcePath, referencePath, outputDir, packName, zoneCount)
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "AI pack export failed"
+                throw IllegalStateException(message)
+            }
+
+            val filesPy = pyResult.callAttr("get", "files")
+            val files = mutableListOf<String>()
+            val fileCount = filesPy.callAttr("__len__")?.toInt() ?: 0
+            for (i in 0 until fileCount) {
+                files.add(filesPy.callAttr("__getitem__", i)?.toString() ?: "")
+            }
+
+            AnalysisPackExport(
+                packDir = pyResult.callAttr("get", "pack_dir")?.toString() ?: outputDir,
+                packName = pyResult.callAttr("get", "pack_name")?.toString() ?: packName,
+                analysisId = pyResult.callAttr("get", "analysis_id")?.toString() ?: "",
+                files = files,
+                prompt = pyResult.callAttr("get", "prompt")?.toString() ?: ""
+            )
+        }
+    }
 
     /**
      * Generates a visual calibration color card showcasing how the reference style

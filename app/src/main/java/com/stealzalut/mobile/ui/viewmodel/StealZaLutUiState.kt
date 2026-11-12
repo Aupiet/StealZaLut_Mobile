@@ -18,10 +18,15 @@ import com.stealzalut.mobile.data.model.ToneCurveModel
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.EditorParamsSnapshot
 import com.stealzalut.mobile.ui.preview.GpuPreviewDeltas
+import com.stealzalut.mobile.data.model.AnalysisPackExport
 import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.data.model.RecipePayload
 import com.stealzalut.mobile.data.model.SavedGradedImage
+import com.stealzalut.mobile.data.model.ZoneMatching
+import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
+import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -184,6 +189,13 @@ data class StealZaLutUiState(
     val isExtractingPalette: Boolean = false,
     val extractedPalette: ImmutableList<String> = persistentListOf(),
     val savedPresets: ImmutableList<ColorimetryPreset> = persistentListOf(),
+    val zoneAnalysis: ZonePaletteAnalysis? = null,
+    val referenceZoneAnalysis: ZonePaletteAnalysis? = null,
+    val zoneMatching: ZoneMatching? = null,
+    val zoneTransfer: ZoneTransferSummary? = null,
+    val isAnalyzingZones: Boolean = false,
+    val lastRecipePayload: RecipePayload? = null,
+    val lastAiPackExport: AnalysisPackExport? = null,
 
     // ========================================================================
     // 3. PROFIL & BIBLIOTHÈQUE

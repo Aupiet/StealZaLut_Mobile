@@ -22,7 +22,9 @@ from stealzalut.bridge import (
     export_graded_image,
     extract_palette,
     generate_color_card,
+    parse_recipe_bridge,
     process_preview,
+    write_ai_pack_bridge,
 )
 
 
@@ -165,8 +167,44 @@ def test_nominal_bridge_calls():
         assert os.path.getsize(r_ref_cube["cube_path"]) > 0
 
 
+def test_recipe_and_pack_bridge_helpers():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src_path = os.path.join(tmp_dir, "source.jpg")
+        ref_path = os.path.join(tmp_dir, "ref.jpg")
+        _create_sample_image(src_path, color=(40, 100, 200))
+        _create_sample_image(ref_path, color=(220, 140, 50))
+
+        recipe = parse_recipe_bridge(
+            '''
+            ```json
+            {
+              "format": "stealzalut.recipe",
+              "version": 2,
+              "analysis_id": "abcd1234",
+              "mode": "zones",
+              "links": [{"source_zone": 1, "targets": {"2": 0.7, "3": 0.3}, "strength": "full"}]
+            }
+            ```
+            '''
+        )
+        assert recipe["status"] == "success"
+        assert recipe["analysis_id"] == "abcd1234"
+
+        pack = write_ai_pack_bridge(
+            source_path=src_path,
+            reference_path=ref_path,
+            output_dir=tmp_dir,
+            pack_name="demo",
+            zone_count=4,
+        )
+        assert pack["status"] == "success"
+        assert os.path.isdir(pack["pack_dir"])
+        assert pack["analysis_id"]
+
+
 if __name__ == "__main__":
     test_missing_files_error_codes()
     test_corrupted_file_handling()
     test_nominal_bridge_calls()
+    test_recipe_and_pack_bridge_helpers()
     print("All bridge tests passed successfully!")

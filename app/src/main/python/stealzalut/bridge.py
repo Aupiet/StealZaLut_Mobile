@@ -865,12 +865,97 @@ def match_zone_palette_bridge(
         return _make_error_response(exc=exc)
 
 
+ZONE_NAMES: tuple[str, ...] = (
+    "deep_shadows",
+    "shadows",
+    "low_mids",
+    "midtones",
+    "high_mids",
+    "highlights",
+    "whites",
+)
+
+
+def _oklab_to_oklch(lab: list[float]) -> list[float]:
+    L, a, b = lab[0], lab[1], lab[2]
+    C = float(np.hypot(a, b))
+    h = float((np.degrees(np.arctan2(b, a))) % 360.0)
+    return [float(L), C, h]
+
+
+def _dominant_hue(C: float, h: float) -> str:
+    if C < 0.03:
+        return "Neutral"
+    if 345.0 <= h or h < 30.0:
+        return "Red"
+    elif 30.0 <= h < 65.0:
+        return "Orange"
+    elif 65.0 <= h < 110.0:
+        return "Yellow"
+    elif 110.0 <= h < 165.0:
+        return "Green"
+    elif 165.0 <= h < 215.0:
+        return "Cyan"
+    elif 215.0 <= h < 275.0:
+        return "Blue"
+    elif 275.0 <= h < 315.0:
+        return "Purple"
+    else:
+        return "Magenta"
+
+
+def _hex_to_rgb_ints(hex_str: str) -> list[int]:
+    clean = hex_str.lstrip("#")
+    if len(clean) == 6:
+        return [int(clean[i:i + 2], 16) for i in (0, 2, 4)]
+    return [128, 128, 128]
+
+
+def _describe_zone(name: str, hue: str) -> str:
+    return f"{name.replace('_', ' ').capitalize()} · {hue}"
+
+
+def _describe_zone_change(
+    src_name: str,
+    src_l: float,
+    src_hue: str,
+    ref_l: float,
+    ref_hue: str,
+) -> str:
+    label = src_name.replace("_", " ").capitalize()
+    dl = ref_l - src_l
+    if dl < -0.04:
+        lum_desc = "Assombri"
+    elif dl > 0.04:
+        lum_desc = "Éclairci"
+    else:
+        lum_desc = "Luminance préservée"
+
+    if ref_hue == "Neutral":
+        hue_desc = "désaturé / neutre"
+    elif ref_hue != src_hue:
+        hue_desc = f"teinte vers {ref_hue}"
+    else:
+        hue_desc = f"teinte {ref_hue} maintenue"
+    return f"{label} -> {lum_desc}, {hue_desc}"
+
+
 def fit_zone_transfer_bridge(
     source_path: str,
     reference_path: str,
     zone_count: int = DEFAULT_ZONE_COUNT,
+    user_overrides_json: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Fit a zone-aware transfer model and expose the resulting correspondence summary."""
+    """Fit a zone-aware transfer model and expose the resulting correspondence summary.
+
+    Args:
+        source_path: Path to the source image (RGB uint8).
+        reference_path: Path to the reference image (RGB uint8).
+        zone_count: Number of zones per palette.
+        user_overrides_json: Optional JSON string mapping source_zone (str) to
+            reference_zone (int), e.g. ``'{"0": 2, "3": 1}'``.  When provided,
+            the automatic correspondence is overridden for those zones only.
+    """
     try:
         if not source_path or not os.path.isfile(source_path):
             return _make_error_response(
@@ -883,31 +968,190 @@ def fit_zone_transfer_bridge(
                 error_code="REFERENCE_NOT_FOUND",
             )
 
+        import json
+
         from PIL import Image
+        from stealzalut.core.correspondence import retarget
 
         src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
         ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
         model = fit_zone_transfer(src, ref, zone_count=zone_count)
-        table = {
+
+        # Apply user overrides to the automatic correspondence table
+        table = model.table
+        user_overrides: Dict[str, int] = {}
+        if user_overrides_json:
+            try:
+                raw = json.loads(user_overrides_json)
+                user_overrides = {str(k): int(v) for k, v in raw.items()}
+                for src_zone_str, ref_zone_id in user_overrides.items():
+                    src_zone_id = int(src_zone_str)
+                    table = retarget(table, src_zone_id, ref_zone_id)
+            except (json.JSONDecodeError, ValueError, KeyError):
+                pass  # Silently ignore malformed overrides; keep auto table
+
+        def enrich_zone(zone_obj: Any, idx: int) -> Dict[str, Any]:
+            name = ZONE_NAMES[idx] if idx < len(ZONE_NAMES) else f"zone_{idx}"
+            oklab = [float(v) for v in zone_obj.mean.tolist()]
+            oklch = _oklab_to_oklch(oklab)
+            dominant = _dominant_hue(oklch[1], oklch[2])
+            return {
+                "index": idx,
+                "id": int(zone_obj.id),
+                "name": name,
+                "hex": zone_obj.hex,
+                "mean_rgb": zone_obj.hex,
+                "mean_rgb_int": _hex_to_rgb_ints(zone_obj.hex),
+                "mean_oklab": oklab,
+                "mean_oklch": oklch,
+                "area": float(zone_obj.area),
+                "pixel_percentage": float(round(zone_obj.area * 100.0, 2)),
+                "l_rank": float(zone_obj.l_rank),
+                "dominant_hue": dominant,
+                "describe_zone": _describe_zone(name, dominant),
+            }
+
+        src_zones = [enrich_zone(z, i) for i, z in enumerate(model.source.zones)]
+        ref_zones = [enrich_zone(z, i) for i, z in enumerate(model.reference.zones)]
+        ref_zone_map = {z["id"]: z for z in ref_zones}
+
+        corr_list: list[Dict[str, Any]] = []
+        for i, link in enumerate(table.links):
+            primary_target = int(max(link.targets, key=lambda k: link.targets[k])) if link.targets else -1
+            target_obj = ref_zone_map.get(primary_target)
+            src_obj = src_zones[i] if i < len(src_zones) else None
+
+            if src_obj and target_obj:
+                change_desc = _describe_zone_change(
+                    src_obj["name"],
+                    src_obj["mean_oklch"][0],
+                    src_obj["dominant_hue"],
+                    target_obj["mean_oklch"][0],
+                    target_obj["dominant_hue"],
+                )
+            else:
+                change_desc = ""
+
+            similarity = float(link.targets.get(primary_target, 1.0)) if primary_target != -1 else 0.0
+
+            corr_list.append({
+                "source_zone": int(link.source_zone),
+                "src_idx": i,
+                "ref_idx": (target_obj["index"] if target_obj else -1),
+                "targets": {str(ref_id): float(weight) for ref_id, weight in link.targets.items()},
+                "target_entries": [
+                    {"target_zone": str(ref_id), "weight": float(weight)}
+                    for ref_id, weight in link.targets.items()
+                ],
+                "strength": float(link.strength),
+                "similarity": similarity,
+                "locked": bool(link.locked),
+                "origin": link.origin,
+                "is_overridden": str(link.source_zone) in user_overrides,
+                "primary_target": primary_target,
+                "describe_change": change_desc,
+            })
+
+        result_table: Dict[str, Any] = {
             "source_zone_ids": [int(zone.id) for zone in model.source.zones],
             "reference_zone_ids": [int(zone.id) for zone in model.reference.zones],
             "analysis_id": model.analysis_id,
             "method": model.method,
-            "correspondence": [
-                {
-                    "source_zone": int(link.source_zone),
-                    "targets": {str(ref_id): float(weight) for ref_id, weight in link.targets.items()},
-                    "target_entries": [
-                        {"target_zone": str(ref_id), "weight": float(weight)}
-                        for ref_id, weight in link.targets.items()
-                    ],
-                    "strength": float(link.strength),
-                    "locked": bool(link.locked),
-                }
-                for link in model.table.links
-            ],
+            "source_zones": src_zones,
+            "reference_zones": ref_zones,
+            "correspondence": corr_list,
+            "user_overrides": user_overrides,
         }
-        return {"status": "success", **table}
+        return {"status": "success", **result_table}
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def get_zone_mask_bridge(
+    image_path: str,
+    zone_index: int,
+    zone_count: int = DEFAULT_ZONE_COUNT,
+    output_mask_path: str = "",
+    mode: str = "bw",
+) -> Dict[str, Any]:
+    """Generate and save a soft zone-membership mask for the given zone.
+
+    Args:
+        image_path: Path to the source (or reference) image.
+        zone_index: 0-based zone id whose mask to render.
+        zone_count: Number of zones used for clustering.
+        output_mask_path: Where to write the PNG mask (auto-generated if empty).
+        mode: ``"bw"`` = greyscale uint8 (zone weight × 255); ``"color"`` = darkened
+            image with the zone's mean colour overlaid where the mask is active.
+    """
+    try:
+        if not image_path or not os.path.isfile(image_path):
+            return _make_error_response(
+                message=f"Image file not found: {image_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+
+        import tempfile
+
+        from PIL import Image as PILImage
+
+        from stealzalut.core.palette import analyze_zones
+
+        img_arr = np.asarray(PILImage.open(image_path).convert("RGB"), dtype=np.uint8)
+        palette = analyze_zones(img_arr, zone_count=zone_count)
+
+        # labels is a 2-D array (H, W) of zone ids
+        labels = palette.labels  # shape (H, W)
+
+        if zone_index < 0 or zone_index >= len(palette.zones):
+            return _make_error_response(
+                message=f"zone_index {zone_index} out of range [0, {len(palette.zones) - 1}]",
+                error_code="GENERIC_ERROR",
+            )
+
+        zone = palette.zones[zone_index]
+
+        # Build a soft membership mask: 1.0 where label == zone.id, 0.0 elsewhere.
+        # (The desktop uses a Mahalanobis-based soft weight; for the mask view a
+        #  hard membership is sufficient and much faster on mobile.)
+        mask_f = (labels == zone.id).astype(np.float32)  # shape (H, W) in [0,1]
+
+        if mode == "color":
+            # Darken image to 25 % then overlay zone colour where mask is active
+            dark = (img_arr * 0.25).astype(np.uint8)
+            mean_rgb = np.clip(zone.mean[::-1] * 255, 0, 255).astype(np.uint8) if hasattr(zone, "mean") else np.array([128, 128, 128], dtype=np.uint8)
+            # Zone mean is in Oklab; convert back to sRGB
+            from stealzalut.core.colorspace import oklab_to_srgb, gamut_compress
+            mean_rgb_f = oklab_to_srgb(gamut_compress(zone.mean[None, :]))[0]
+            mean_rgb_u8 = np.clip(mean_rgb_f * 255, 0, 255).astype(np.uint8)
+            overlay = np.where(
+                mask_f[:, :, None] > 0.5,
+                mean_rgb_u8[None, None, :],
+                dark,
+            ).astype(np.uint8)
+            out_img = PILImage.fromarray(overlay, mode="RGB")
+        else:
+            # Black-and-white mask
+            mask_u8 = (mask_f * 255).astype(np.uint8)
+            out_img = PILImage.fromarray(mask_u8, mode="L")
+
+        if not output_mask_path:
+            suffix = "_mask_color.png" if mode == "color" else "_mask_bw.png"
+            fd, output_mask_path = tempfile.mkstemp(suffix=suffix, prefix=f"szl_zone{zone_index}")
+            import os as _os
+            _os.close(fd)
+
+        out_img.save(output_mask_path, format="PNG")
+
+        return {
+            "status": "success",
+            "mask_path": output_mask_path,
+            "zone_id": int(zone.id),
+            "zone_index": zone_index,
+            "mode": mode,
+            "area": float(zone.area),
+            "hex": zone.hex,
+        }
     except Exception as exc:  # noqa: BLE001
         return _make_error_response(exc=exc)
 

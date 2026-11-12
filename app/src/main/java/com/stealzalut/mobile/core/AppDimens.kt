@@ -113,6 +113,19 @@ object AppDimens {
     val DialogElevation: Dp = 6.dp
     val ElevationLow: Dp = 2.dp
 
+    // --- Zone Correspondence Graph ---
+    /** Width of one zone swatch node in the correspondence canvas. */
+    val ZoneNodeWidth: Dp = 100.dp
+    /** Height of one zone swatch node in the correspondence canvas. */
+    val ZoneNodeHeight: Dp = 32.dp
+    val ZoneGraphMinHeight: Dp = 220.dp
+    val ZoneMaskPreviewHeight: Dp = 160.dp
+    val ZonePlaceholderHeight: Dp = 120.dp
+    val ZoneBorderSelected: Dp = 2.5.dp
+    val ZoneCurveStrokeMin: Dp = 1.5.dp
+    val ZoneCurveStrokeMax: Dp = 4.dp
+    val ZoneCurveDragStroke: Dp = 2.5.dp
+
     // --- Typography Scale Tokens ---
     val FontDisplayLarge: TextUnit = 32.sp
     val FontDisplayMedium: TextUnit = 28.sp

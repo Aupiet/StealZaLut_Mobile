@@ -717,4 +717,24 @@
     <string name="guide_lattice_p1_desc">17x17x17 para renderizado ultrarrápido, 33x33x33 para el equilibrio calidad/memoria óptimo.</string>
     <string name="guide_lattice_p2_name">Alta Precisión Cine 64³</string>
     <string name="guide_lattice_p2_desc">Cubo denso 64x64x64 para gradación cinematográfica exigente y DaVinci Resolve.</string>
+
+    <!-- Zonas de Color — Correspondencias e Inspector -->
+    <string name="zone_tab_correspondences">Correspondencias</string>
+    <string name="zone_tab_inspector">Inspector de Zonas</string>
+    <string name="zone_placeholder_load">Carga una fuente y una referencia para ver sus zonas.</string>
+    <string name="zone_reset_correspondences">Restablecer (Auto)</string>
+    <string name="zone_inspector_select_zone">Seleccionar una zona</string>
+    <string name="zone_inspector_mask_preview">Máscara de Zona</string>
+    <string name="zone_mask_mode_color">Cambiar a Color</string>
+    <string name="zone_mask_mode_bw">Cambiar a B&amp;N</string>
+    <string name="zone_inspector_zone_title">Zona — %1$d%% de píxeles</string>
+    <string name="zone_inspector_strength">Intensidad de transferencia: %1$d%%</string>
+    <string name="zone_inspector_hint">Toca una tarjeta de zona para inspeccionarla.</string>
+    <string name="zone_link_origin_auto">Vínculo definido automáticamente</string>
+    <string name="zone_link_origin_user">Vínculo definido por el usuario</string>
+    <string name="zone_link_origin_ai">Vínculo definido por la IA</string>
+    <string name="zone_link_overridden">&#9888; Reemplazado manualmente</string>
+    <string name="zone_slider_strength_title">Fuerza de transferencia</string>
+    <string name="zone_slider_chroma_title">Color y Croma</string>
+    <string name="zone_slider_luma_title">Luminancia objetivo</string>
 </resources>

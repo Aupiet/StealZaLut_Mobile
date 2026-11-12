@@ -25,6 +25,7 @@ import com.stealzalut.mobile.ui.viewmodel.ExportType
 import com.stealzalut.mobile.ui.viewmodel.PendingExport
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -816,5 +817,130 @@ class GradingPipelineDelegate(
         } catch (_: Exception) {
             null
         }
+    }
+
+    // ── Zone Correspondence Actions ───────────────────────────────────────────
+
+    /**
+     * User dragged a source node onto a reference node: update the override map
+     * and re-fit the zone transfer so the LUT recalculates with the new wiring.
+     */
+    fun onZoneCorrespondenceChanged(srcIdx: Int, refIdx: Int) {
+        val state = stateFlow.value
+        val srcPath = state.sourcePath ?: return
+        val refPath = state.effectiveReferencePath ?: return
+
+        // Update the in-memory override map first (immediate UI feedback)
+        val newOverrides = stateFlow.value.zoneUserOverrides.toMutableMap()
+        newOverrides[srcIdx.toString()] = refIdx
+        val immutableOverrides = newOverrides.toPersistentMap()
+        stateFlow.update { it.copy(zoneUserOverrides = immutableOverrides, isAnalyzingZones = true) }
+
+        scope.launch {
+            val result = bridgeRepository.fitZoneTransfer(
+                sourcePath = srcPath,
+                referencePath = refPath,
+                zoneCount = stateFlow.value.zoneTransfer?.sourceZoneIds?.size ?: 8,
+                userOverrides = newOverrides
+            )
+            result.fold(
+                onSuccess = { summary ->
+                    stateFlow.update { it.copy(zoneTransfer = summary, isAnalyzingZones = false) }
+                    // Trigger a full LUT recalculation
+                    schedulePreviewRefresh()
+                },
+                onFailure = { err ->
+                    stateFlow.update { it.copy(isAnalyzingZones = false,
+                        userMessage = UiText.DynamicString(err.localizedMessage ?: "Zone rewire failed")) }
+                }
+            )
+        }
+    }
+
+    /** Reset all user overrides and restore the automatic correspondence table. */
+    fun onResetZoneCorrespondences() {
+        val state = stateFlow.value
+        val srcPath = state.sourcePath ?: return
+        val refPath = state.effectiveReferencePath ?: return
+        stateFlow.update { it.copy(
+            zoneUserOverrides = kotlinx.collections.immutable.persistentMapOf(),
+            isAnalyzingZones = true
+        )}
+        scope.launch {
+            val result = bridgeRepository.fitZoneTransfer(
+                sourcePath = srcPath,
+                referencePath = refPath,
+                zoneCount = state.zoneTransfer?.sourceZoneIds?.size ?: 8,
+                userOverrides = emptyMap()
+            )
+            result.fold(
+                onSuccess = { summary ->
+                    stateFlow.update { it.copy(zoneTransfer = summary, isAnalyzingZones = false) }
+                    schedulePreviewRefresh()
+                },
+                onFailure = { err ->
+                    stateFlow.update { it.copy(isAnalyzingZones = false,
+                        userMessage = UiText.DynamicString(err.localizedMessage ?: "Reset failed")) }
+                }
+            )
+        }
+    }
+
+    /** User tapped a zone card — load its mask in background. */
+    fun onZoneSelected(zoneIndex: Int) {
+        stateFlow.update { it.copy(selectedZoneIndex = zoneIndex, isGeneratingZoneMask = true) }
+        val srcPath = stateFlow.value.sourcePath ?: run {
+            stateFlow.update { it.copy(isGeneratingZoneMask = false) }
+            return
+        }
+        val mode = stateFlow.value.zoneMaskMode
+        val zoneCount = stateFlow.value.zoneTransfer?.sourceZoneIds?.size ?: 8
+        val outputPath = java.io.File(context.cacheDir, "zone_mask_${zoneIndex}_${mode}.png").absolutePath
+
+        scope.launch {
+            val result = bridgeRepository.getZoneMask(
+                imagePath = srcPath,
+                zoneIndex = zoneIndex,
+                zoneCount = zoneCount,
+                outputMaskPath = outputPath,
+                mode = mode
+            )
+            result.fold(
+                onSuccess = { maskResult ->
+                    stateFlow.update { it.copy(zoneMaskPath = maskResult.maskPath, isGeneratingZoneMask = false) }
+                },
+                onFailure = {
+                    stateFlow.update { it.copy(isGeneratingZoneMask = false, zoneMaskPath = null) }
+                }
+            )
+        }
+    }
+
+    /** Toggle the mask visualisation mode (B&W ↔ Color) and regenerate. */
+    fun onToggleZoneMaskMode() {
+        val newMode = if (stateFlow.value.zoneMaskMode == "bw") "color" else "bw"
+        stateFlow.update { it.copy(zoneMaskMode = newMode, zoneMaskPath = null) }
+        val idx = stateFlow.value.selectedZoneIndex
+        if (idx >= 0) onZoneSelected(idx)
+    }
+
+    /**
+     * Post a debounced preview refresh after a zone table change.
+     * Reuses the same debounce mechanism used for slider changes.
+     */
+    private fun schedulePreviewRefresh() {
+        val state = stateFlow.value
+        val srcPath = state.sourcePath ?: return
+        val refPath = state.effectiveReferencePath ?: return
+        previewDebounceFlow.value = PreviewDebounceRequest(
+            srcPath = srcPath,
+            refPath = refPath,
+            method = state.method,
+            intensity = state.step2Intensity,
+            preserveLuminance = state.preserveLuminance,
+            skinProtection = state.skinProtection,
+            smoothSigma = state.smoothSigma,
+            neutralLock = state.neutralLock
+        )
     }
 }

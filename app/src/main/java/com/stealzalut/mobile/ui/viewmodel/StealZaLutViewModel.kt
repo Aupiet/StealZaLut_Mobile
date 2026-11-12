@@ -231,6 +231,10 @@ class StealZaLutViewModel(
     fun createShareCubeIntent(cubeFilePath: String? = null): Intent? = gradingPipelineDelegate.createShareCubeIntent(cubeFilePath)
     fun getShareIntent(filePath: String): Intent? = gradingPipelineDelegate.getShareIntent(filePath)
     fun openInEditorFromStudio() = gradingPipelineDelegate.openInEditorFromStudio()
+    fun onZoneCorrespondenceChanged(srcIdx: Int, refIdx: Int) = gradingPipelineDelegate.onZoneCorrespondenceChanged(srcIdx, refIdx)
+    fun onResetZoneCorrespondences() = gradingPipelineDelegate.onResetZoneCorrespondences()
+    fun onZoneSelected(zoneIndex: Int) = gradingPipelineDelegate.onZoneSelected(zoneIndex)
+    fun onToggleZoneMaskMode() = gradingPipelineDelegate.onToggleZoneMaskMode()
 
     fun shareCube(context: Context, cubePath: String? = null) {
         val intent = createShareCubeIntent(cubePath)

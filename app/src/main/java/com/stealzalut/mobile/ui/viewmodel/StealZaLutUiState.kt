@@ -30,7 +30,7 @@ import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
+import kotlinx.collections.immutable.ImmutableMap
 @Immutable
 enum class ExportType {
     CUBE_LUT,
@@ -196,6 +196,17 @@ data class StealZaLutUiState(
     val isAnalyzingZones: Boolean = false,
     val lastRecipePayload: RecipePayload? = null,
     val lastAiPackExport: AnalysisPackExport? = null,
+
+    // Zone correspondence interactive state
+    /** 0-based index of the zone selected in the Zone Inspector, -1 = none. */
+    val selectedZoneIndex: Int = -1,
+    /** Current user correspondence overrides: source-zone-id → reference-zone-id. */
+    val zoneUserOverrides: kotlinx.collections.immutable.ImmutableMap<String, Int> = kotlinx.collections.immutable.persistentMapOf(),
+    /** File path of the last generated zone mask PNG, null if not yet generated. */
+    val zoneMaskPath: String? = null,
+    /** Mask visualisation mode — "bw" or "color". */
+    val zoneMaskMode: String = "bw",
+    val isGeneratingZoneMask: Boolean = false,
 
     // ========================================================================
     // 3. PROFIL & BIBLIOTHÈQUE

@@ -21,7 +21,9 @@ from stealzalut.bridge import (
     export_cube_file,
     export_graded_image,
     extract_palette,
+    fit_zone_transfer_bridge,
     generate_color_card,
+    get_zone_mask_bridge,
     parse_recipe_bridge,
     process_preview,
     write_ai_pack_bridge,
@@ -200,6 +202,52 @@ def test_recipe_and_pack_bridge_helpers():
         assert pack["status"] == "success"
         assert os.path.isdir(pack["pack_dir"])
         assert pack["analysis_id"]
+
+
+def test_zone_transfer_and_mask_bridge():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src_path = os.path.join(tmp_dir, "source.jpg")
+        ref_path = os.path.join(tmp_dir, "ref.jpg")
+        _create_sample_image(src_path, color=(40, 100, 200))
+        _create_sample_image(ref_path, color=(220, 140, 50))
+
+        # 1. Nominal fit_zone_transfer_bridge
+        res = fit_zone_transfer_bridge(src_path, ref_path, zone_count=7)
+        assert res["status"] == "success"
+        assert len(res["source_zones"]) > 0
+        assert len(res["reference_zones"]) > 0
+        assert len(res["correspondence"]) > 0
+        z0 = res["source_zones"][0]
+        assert "name" in z0
+        assert "mean_rgb" in z0
+        assert "mean_oklch" in z0
+        assert "pixel_percentage" in z0
+        assert "dominant_hue" in z0
+        assert "describe_zone" in z0
+
+        # 2. Overrides support
+        overrides_json = '{"1": 2}'
+        res_ov = fit_zone_transfer_bridge(src_path, ref_path, zone_count=7, user_overrides_json=overrides_json)
+        assert res_ov["status"] == "success"
+        assert "1" in res_ov["user_overrides"]
+
+        # 3. get_zone_mask_bridge in bw and color
+        mask_bw = get_zone_mask_bridge(src_path, zone_index=0, zone_count=7, mode="bw")
+        assert mask_bw["status"] == "success"
+        assert os.path.isfile(mask_bw["mask_path"])
+
+        mask_col = get_zone_mask_bridge(src_path, zone_index=0, zone_count=7, mode="color")
+        assert mask_col["status"] == "success"
+        assert os.path.isfile(mask_col["mask_path"])
+
+        # 4. Error handling
+        err_fit = fit_zone_transfer_bridge("nonexistent.jpg", ref_path)
+        assert err_fit["status"] == "error"
+        assert err_fit["error_code"] == "SOURCE_NOT_FOUND"
+
+        err_mask = get_zone_mask_bridge("nonexistent.jpg", zone_index=0)
+        assert err_mask["status"] == "error"
+        assert err_mask["error_code"] == "SOURCE_NOT_FOUND"
 
 
 if __name__ == "__main__":

@@ -717,4 +717,24 @@
     <string name="guide_lattice_p1_desc">17x17x17 for ultra-fast mobile rendering, 33x33x33 for the optimal quality/memory ratio.</string>
     <string name="guide_lattice_p2_name">64³ Cinema Precision</string>
     <string name="guide_lattice_p2_desc">64x64x64 high-density cube meeting DaVinci Resolve and film mastering requirements.</string>
+
+    <!-- Zone Colours Feature — Correspondence and Inspector -->
+    <string name="zone_tab_correspondences">Correspondences</string>
+    <string name="zone_tab_inspector">Zone Inspector</string>
+    <string name="zone_placeholder_load">Load a source and a reference image to see their zones.</string>
+    <string name="zone_reset_correspondences">Reset to Auto</string>
+    <string name="zone_inspector_select_zone">Select a zone</string>
+    <string name="zone_inspector_mask_preview">Zone Mask</string>
+    <string name="zone_mask_mode_color">Switch to Color</string>
+    <string name="zone_mask_mode_bw">Switch to B&amp;W</string>
+    <string name="zone_inspector_zone_title">Zone — %1$d%% of pixels</string>
+    <string name="zone_inspector_strength">Transfer strength: %1$d%%</string>
+    <string name="zone_inspector_hint">Tap a zone card above to inspect it.</string>
+    <string name="zone_link_origin_auto">Link set automatically</string>
+    <string name="zone_link_origin_user">Link set by user</string>
+    <string name="zone_link_origin_ai">Link set by AI</string>
+    <string name="zone_link_overridden">&#9888; Manually overridden</string>
+    <string name="zone_slider_strength_title">Transfer Strength</string>
+    <string name="zone_slider_chroma_title">Color Chroma</string>
+    <string name="zone_slider_luma_title">Target Luminance</string>
 </resources>

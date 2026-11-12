@@ -64,6 +64,7 @@ import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
 import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
+import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.ui.components.DoubleViewComparison
 import com.stealzalut.mobile.ui.components.LutSizeSelector
 import com.stealzalut.mobile.ui.components.MethodSelector
@@ -103,6 +104,14 @@ fun StudioStep3Parameters(
     hasZoneAnalysis: Boolean = false,
     sourceZoneAnalysis: ZonePaletteAnalysis? = null,
     referenceZoneAnalysis: ZonePaletteAnalysis? = null,
+    zoneTransfer: ZoneTransferSummary? = null,
+    selectedZoneIndex: Int = -1,
+    maskPath: String? = null,
+    maskMode: String = "bw",
+    onZoneCorrespondenceChanged: (srcIdx: Int, refIdx: Int) -> Unit = { _, _ -> },
+    onResetCorrespondences: () -> Unit = {},
+    onZoneSelected: (zoneIndex: Int) -> Unit = {},
+    onToggleMaskMode: () -> Unit = {},
     onAnalyzeZones: () -> Unit = {},
     isExportingCube: Boolean = false,
     onExportCube: () -> Unit = {},
@@ -304,7 +313,15 @@ fun StudioStep3Parameters(
                                 )
                                 ZonePaletteVisualization(
                                     source = sourceZoneAnalysis,
-                                    reference = referenceZoneAnalysis
+                                    reference = referenceZoneAnalysis,
+                                    zoneTransfer = zoneTransfer,
+                                    selectedZoneIndex = selectedZoneIndex,
+                                    maskPath = maskPath,
+                                    maskMode = maskMode,
+                                    onZoneCorrespondenceChanged = onZoneCorrespondenceChanged,
+                                    onResetCorrespondences = onResetCorrespondences,
+                                    onZoneSelected = onZoneSelected,
+                                    onToggleMaskMode = onToggleMaskMode
                                 )
                                 if (sourceZoneAnalysis != null || referenceZoneAnalysis != null) {
                                     Text(

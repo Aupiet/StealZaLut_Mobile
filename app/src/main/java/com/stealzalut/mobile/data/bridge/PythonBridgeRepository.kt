@@ -28,8 +28,10 @@ import com.stealzalut.mobile.data.model.Step2Model
 import com.stealzalut.mobile.data.model.Step3Model
 import com.stealzalut.mobile.data.model.AnalysisPackExport
 import com.stealzalut.mobile.data.model.ZoneDescriptor
+import com.stealzalut.mobile.data.model.ZoneInfo
 import com.stealzalut.mobile.data.model.ZoneLink
 import com.stealzalut.mobile.data.model.ZoneMatching
+import com.stealzalut.mobile.data.model.ZoneMaskResult
 import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
 import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.core.diagnostics.suspendRunCatching
@@ -534,22 +536,38 @@ class PythonBridgeRepository(private val context: Context) {
 
     /**
      * Fit a zone-aware transfer model and summarize its source/reference correspondence.
+     *
+     * @param userOverrides Optional map of source-zone-id → reference-zone-id overrides.
+     *   These are encoded as JSON and forwarded to Python so the returned
+     *   [ZoneTransferSummary.correspondence] reflects the user's rewiring.
      */
     suspend fun fitZoneTransfer(
         sourcePath: String,
         referencePath: String,
-        zoneCount: Int = 8
+        zoneCount: Int = 8,
+        userOverrides: Map<String, Int> = emptyMap()
     ): Result<ZoneTransferSummary> = withContext(pythonDispatcher) {
         suspendRunCatching {
             val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
-            val pyResult = bridge.callAttr("fit_zone_transfer_bridge", sourcePath, referencePath, zoneCount)
+
+            val overridesJson: String? = if (userOverrides.isEmpty()) null
+            else org.json.JSONObject(userOverrides.mapValues { it.value }).toString()
+
+            val pyResult = bridge.callAttr(
+                "fit_zone_transfer_bridge",
+                sourcePath,
+                referencePath,
+                zoneCount,
+                overridesJson
+            )
             val status = pyResult.callAttr("get", "status")?.toString()
             if (status != "success") {
                 val message = pyResult.callAttr("get", "message")?.toString() ?: "Zone transfer fit failed"
                 throw IllegalStateException(message)
             }
 
+            // ── Parse correspondence links ──────────────────────────────────
             val correspondencePy = pyResult.callAttr("get", "correspondence")
             val correspondenceCount = correspondencePy.callAttr("__len__")?.toInt() ?: 0
             val correspondence = mutableListOf<ZoneLink>()
@@ -569,27 +587,112 @@ class PythonBridgeRepository(private val context: Context) {
                         sourceZone = linkPy.callAttr("get", "source_zone")?.toInt() ?: 0,
                         targets = targets,
                         strength = linkPy.callAttr("get", "strength")?.toFloat() ?: 0f,
-                        locked = linkPy.callAttr("get", "locked")?.toBoolean() ?: false
+                        locked = linkPy.callAttr("get", "locked")?.toBoolean() ?: false,
+                        origin = linkPy.callAttr("get", "origin")?.toString() ?: "auto",
+                        isOverridden = linkPy.callAttr("get", "is_overridden")?.toBoolean() ?: false,
+                        primaryTarget = linkPy.callAttr("get", "primary_target")?.toInt() ?: -1,
+                        similarity = linkPy.callAttr("get", "similarity")?.toFloat() ?: 1.0f,
+                        describeChange = linkPy.callAttr("get", "describe_change")?.toString() ?: ""
                     )
                 )
+            }
+
+            // ── Parse zone descriptors (source & reference) ─────────────────
+            fun parseZoneInfoList(key: String): List<ZoneInfo> {
+                val listPy = pyResult.callAttr("get", key) ?: return emptyList()
+                val count = listPy.callAttr("__len__")?.toInt() ?: 0
+                return buildList {
+                    for (i in 0 until count) {
+                        val z = listPy.callAttr("__getitem__", i)
+                        val oklabPy = z.callAttr("get", "mean_oklab")
+                        val oklab = buildList<Float> {
+                            val sz = oklabPy.callAttr("__len__")?.toInt() ?: 0
+                            for (k in 0 until sz) add(oklabPy.callAttr("__getitem__", k)?.toFloat() ?: 0f)
+                        }
+                        add(ZoneInfo(
+                            id = z.callAttr("get", "id")?.toInt() ?: 0,
+                            hex = z.callAttr("get", "hex")?.toString() ?: "#000000",
+                            area = z.callAttr("get", "area")?.toFloat() ?: 0f,
+                            lRank = z.callAttr("get", "l_rank")?.toFloat() ?: 0f,
+                            meanOklab = oklab,
+                            name = z.callAttr("get", "name")?.toString() ?: "",
+                            pixelPercentage = z.callAttr("get", "pixel_percentage")?.toFloat() ?: ((z.callAttr("get", "area")?.toFloat() ?: 0f) * 100f),
+                            dominantHue = z.callAttr("get", "dominant_hue")?.toString() ?: "",
+                            describeZone = z.callAttr("get", "describe_zone")?.toString() ?: ""
+                        ))
+                    }
+                }
+            }
+
+            // ── Parse user_overrides echo ───────────────────────────────────
+            val parsedOverrides = mutableMapOf<String, Int>()
+            val overridesPy = pyResult.callAttr("get", "user_overrides")
+            if (overridesPy != null) {
+                try {
+                    val keysPy = overridesPy.callAttr("keys")
+                    val keysCount = keysPy.callAttr("__len__")?.toInt() ?: 0
+                    for (i in 0 until keysCount) {
+                        val k = keysPy.callAttr("__getitem__", i)?.toString() ?: continue
+                        val v = overridesPy.callAttr("__getitem__", k)?.toInt() ?: continue
+                        parsedOverrides[k] = v
+                    }
+                } catch (_: Exception) {}
             }
 
             ZoneTransferSummary(
                 sourceZoneIds = pyResult.callAttr("get", "source_zone_ids").let {
                     val size = it.callAttr("__len__")?.toInt() ?: 0
-                    buildList {
-                        for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0)
-                    }
+                    buildList { for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0) }
                 },
                 referenceZoneIds = pyResult.callAttr("get", "reference_zone_ids").let {
                     val size = it.callAttr("__len__")?.toInt() ?: 0
-                    buildList {
-                        for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0)
-                    }
+                    buildList { for (i in 0 until size) add(it.callAttr("__getitem__", i)?.toInt() ?: 0) }
                 },
                 analysisId = pyResult.callAttr("get", "analysis_id")?.toString() ?: "",
                 method = pyResult.callAttr("get", "method")?.toString() ?: "zones",
-                correspondence = correspondence
+                correspondence = correspondence,
+                sourceZones = parseZoneInfoList("source_zones"),
+                referenceZones = parseZoneInfoList("reference_zones"),
+                userOverrides = parsedOverrides
+            )
+        }
+    }
+
+    /**
+     * Generate a soft zone-membership mask for the given zone index.
+     *
+     * @param mode "bw" for greyscale or "color" for darkened image + zone colour overlay.
+     */
+    suspend fun getZoneMask(
+        imagePath: String,
+        zoneIndex: Int,
+        zoneCount: Int = 8,
+        outputMaskPath: String = "",
+        mode: String = "bw"
+    ): Result<ZoneMaskResult> = withContext(pythonDispatcher) {
+        suspendRunCatching {
+            val py = PythonRuntime.ensureStarted(context)
+            val bridge = py.getModule("stealzalut.bridge")
+            val pyResult = bridge.callAttr(
+                "get_zone_mask_bridge",
+                imagePath,
+                zoneIndex,
+                zoneCount,
+                outputMaskPath,
+                mode
+            )
+            val status = pyResult.callAttr("get", "status")?.toString()
+            if (status != "success") {
+                val message = pyResult.callAttr("get", "message")?.toString() ?: "Zone mask generation failed"
+                throw IllegalStateException(message)
+            }
+            ZoneMaskResult(
+                maskPath = pyResult.callAttr("get", "mask_path")?.toString() ?: "",
+                zoneId = pyResult.callAttr("get", "zone_id")?.toInt() ?: zoneIndex,
+                zoneIndex = zoneIndex,
+                mode = mode,
+                area = pyResult.callAttr("get", "area")?.toFloat() ?: 0f,
+                hex = pyResult.callAttr("get", "hex")?.toString() ?: "#000000"
             )
         }
     }

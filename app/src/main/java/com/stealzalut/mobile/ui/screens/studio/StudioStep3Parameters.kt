@@ -11,15 +11,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +33,6 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -61,11 +63,13 @@ import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
 import com.stealzalut.mobile.ui.components.DoubleViewComparison
 import com.stealzalut.mobile.ui.components.LutSizeSelector
 import com.stealzalut.mobile.ui.components.MethodSelector
 import com.stealzalut.mobile.ui.components.SzlSlider
 import com.stealzalut.mobile.ui.theme.LocalFontSpec
+
 
 /**
  * Step 3: Studio Parameter Adjustments (WYSIWYG Live Workstation).
@@ -97,6 +101,8 @@ fun StudioStep3Parameters(
     onLutSizeSelected: (LutSize) -> Unit,
     isAnalyzingZones: Boolean = false,
     hasZoneAnalysis: Boolean = false,
+    sourceZoneAnalysis: ZonePaletteAnalysis? = null,
+    referenceZoneAnalysis: ZonePaletteAnalysis? = null,
     onAnalyzeZones: () -> Unit = {},
     isExportingCube: Boolean = false,
     onExportCube: () -> Unit = {},
@@ -113,82 +119,16 @@ fun StudioStep3Parameters(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-        // --- 1. PINNED LIVE WYSIWYG PREVIEW CARD ---
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)),
-            border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(AppDimens.SpacingSmall),
-                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AppDimens.SpacingSmall),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Visibility,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(AppDimens.IconSmall)
-                        )
-                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                        Text(
-                            text = stringResource(R.string.wizard_step_3_preview_title),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (isProcessingPreview) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(AppDimens.ProgressIndicatorSize),
-                                strokeWidth = AppDimens.BorderThick,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                            Text(
-                                text = stringResource(R.string.wizard_step_3_computing_badge),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        } else if (executionTimeMs != null) {
-                            Surface(
-                                shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                            ) {
-                                Text(
-                                    text = "${executionTimeMs.toInt()} ms",
-                                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = monoFont),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Interactive WYSIWYG Comparator View
-                DoubleViewComparison(
-                    sourceBitmap = sourceBitmap,
-                    previewBitmap = previewBitmap ?: sourceBitmap,
-                    height = 200.dp,
-                    
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
+        // --- 1. PINNED LIVE WYSIWYG PREVIEW ---
+        DoubleViewComparison(
+            sourceBitmap = sourceBitmap,
+            previewBitmap = previewBitmap ?: sourceBitmap,
+            executionTimeMs = executionTimeMs,
+            fillAvailableHeight = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+        )
 
         // --- 2. CATEGORY PILLS (Thumb Zone Navigation: Algorithm -> 3D Grid -> Light -> Color) ---
         val categories = listOf(
@@ -247,6 +187,7 @@ fun StudioStep3Parameters(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+
                 }
             }
         }
@@ -361,11 +302,21 @@ fun StudioStep3Parameters(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text(
-                                    text = stringResource(R.string.studio_zones_description),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ZonePaletteVisualization(
+                                    source = sourceZoneAnalysis,
+                                    reference = referenceZoneAnalysis
                                 )
+                                if (sourceZoneAnalysis != null || referenceZoneAnalysis != null) {
+                                    Text(
+                                        text = listOfNotNull(
+                                            sourceZoneAnalysis?.let { "source ${it.zoneCount}" },
+                                            referenceZoneAnalysis?.let { "reference ${it.zoneCount}" }
+                                        ).joinToString(" • "),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                                 Button(
                                     onClick = onAnalyzeZones,
                                     enabled = !isAnalyzingZones,
@@ -387,16 +338,20 @@ fun StudioStep3Parameters(
                                             modifier = Modifier.size(AppDimens.IconNormal)
                                         )
                                     }
+
                                     Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                                     Text(
                                         text = if (hasZoneAnalysis) {
                                             stringResource(R.string.studio_zones_reanalyze)
                                         } else {
                                             stringResource(R.string.studio_zones_analyze)
-                                        }
+                                        },
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
+
                         }
                     }
                 }

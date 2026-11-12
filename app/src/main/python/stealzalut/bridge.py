@@ -850,6 +850,16 @@ def match_zone_palette_bridge(
                 }
                 for src_id, targets in match.items()
             },
+            "matching_entries": [
+                {
+                    "source_zone": str(src_id),
+                    "targets": [
+                        {"target_zone": str(ref_id), "weight": float(weight)}
+                        for ref_id, weight in targets.items()
+                    ],
+                }
+                for src_id, targets in match.items()
+            ],
         }
     except Exception as exc:  # noqa: BLE001
         return _make_error_response(exc=exc)
@@ -887,6 +897,10 @@ def fit_zone_transfer_bridge(
                 {
                     "source_zone": int(link.source_zone),
                     "targets": {str(ref_id): float(weight) for ref_id, weight in link.targets.items()},
+                    "target_entries": [
+                        {"target_zone": str(ref_id), "weight": float(weight)}
+                        for ref_id, weight in link.targets.items()
+                    ],
                     "strength": float(link.strength),
                     "locked": bool(link.locked),
                 }

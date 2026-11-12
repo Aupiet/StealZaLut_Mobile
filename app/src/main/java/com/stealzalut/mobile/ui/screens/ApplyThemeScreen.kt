@@ -45,11 +45,11 @@ import com.stealzalut.mobile.ui.screens.studio.StudioStepper
 import com.stealzalut.mobile.ui.viewmodel.StealZaLutViewModel
 import java.io.File
 
+@Composable
 /**
  * ApplyThemeScreen: Lightweight Studio Wizard Orchestrator (Steps 1 to 5).
  * Coordinates navigation and state transitions between modular Studio steps.
  */
-@Composable
 fun ApplyThemeScreen(
     viewModel: StealZaLutViewModel,
     modifier: Modifier = Modifier
@@ -119,8 +119,6 @@ fun ApplyThemeScreen(
 
         val contentModifier: Modifier = if (isStep3) Modifier.weight(1f).fillMaxWidth() else Modifier.fillMaxWidth()
 
-        ZoneInsightCard(uiState)
-
         // --- 2. Dynamic Step Content ---
         AnimatedContent(
             targetState = uiState.wizardStep,
@@ -182,6 +180,8 @@ fun ApplyThemeScreen(
                         onLutSizeSelected = { viewModel.setLutSize(it) },
                         isAnalyzingZones = uiState.isAnalyzingZones,
                         hasZoneAnalysis = uiState.zoneAnalysis != null && uiState.referenceZoneAnalysis != null,
+                        sourceZoneAnalysis = uiState.zoneAnalysis,
+                        referenceZoneAnalysis = uiState.referenceZoneAnalysis,
                         onAnalyzeZones = { viewModel.analyzeCurrentZones() },
                         isExportingCube = uiState.isExportingCube,
                         onExportCube = {
@@ -223,76 +223,6 @@ fun ApplyThemeScreen(
                         onReset = { viewModel.resetWizard() }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ZoneInsightCard(uiState: com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState) {
-    val hasZoneData = uiState.zoneAnalysis != null || uiState.referenceZoneAnalysis != null || uiState.zoneMatching != null || uiState.zoneTransfer != null
-    if (!hasZoneData) return
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
-        ),
-        border = BorderStroke(
-            AppDimens.BorderThin,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(AppDimens.SpacingMedium),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
-                Text(
-                    text = "Zone-aware analysis",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = buildString {
-                        if (uiState.zoneAnalysis != null) {
-                            append("source ${uiState.zoneAnalysis.zoneCount} zones")
-                        }
-                        if (uiState.referenceZoneAnalysis != null) {
-                            if (uiState.zoneAnalysis != null) append(" • ")
-                            append("reference ${uiState.referenceZoneAnalysis.zoneCount} zones")
-                        }
-                        if (uiState.zoneMatching != null) {
-                            if (isNotEmpty()) append(" • ")
-                            append("${uiState.zoneMatching.matching.size} matches")
-                        }
-                        if (uiState.zoneTransfer != null) {
-                            if (isNotEmpty()) append(" • ")
-                            append("${uiState.zoneTransfer.correspondence.size} links")
-                        }
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Surface(
-                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-            ) {
-                Text(
-                    text = uiState.zoneTransfer?.method ?: "zones",
-                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingExtraSmall),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                )
             }
         }
     }

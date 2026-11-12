@@ -511,17 +511,19 @@ class PythonBridgeRepository(private val context: Context) {
                 throw IllegalStateException(message)
             }
 
-            val matchingPy = pyResult.callAttr("get", "matching")
+            val matchingPy = pyResult.callAttr("get", "matching_entries")
             val matching = mutableMapOf<String, Map<String, Float>>()
             val sourceCount = matchingPy.callAttr("__len__")?.toInt() ?: 0
             for (i in 0 until sourceCount) {
-                val sourceKey = matchingPy.callAttr("keys")?.callAttr("__getitem__", i)?.toString() ?: "0"
-                val targetMapPy = matchingPy.callAttr("__getitem__", sourceKey)
+                val sourceEntry = matchingPy.callAttr("__getitem__", i)
+                val sourceKey = sourceEntry.callAttr("get", "source_zone")?.toString() ?: "0"
+                val targetEntriesPy = sourceEntry.callAttr("get", "targets")
                 val targetMap = mutableMapOf<String, Float>()
-                val targetCount = targetMapPy.callAttr("__len__")?.toInt() ?: 0
+                val targetCount = targetEntriesPy.callAttr("__len__")?.toInt() ?: 0
                 for (j in 0 until targetCount) {
-                    val targetKey = targetMapPy.callAttr("keys")?.callAttr("__getitem__", j)?.toString() ?: "0"
-                    val targetValue = targetMapPy.callAttr("get", targetKey)?.toFloat() ?: 0f
+                    val targetEntry = targetEntriesPy.callAttr("__getitem__", j)
+                    val targetKey = targetEntry.callAttr("get", "target_zone")?.toString() ?: "0"
+                    val targetValue = targetEntry.callAttr("get", "weight")?.toFloat() ?: 0f
                     targetMap[targetKey] = targetValue
                 }
                 matching[sourceKey] = targetMap
@@ -553,12 +555,13 @@ class PythonBridgeRepository(private val context: Context) {
             val correspondence = mutableListOf<ZoneLink>()
             for (i in 0 until correspondenceCount) {
                 val linkPy = correspondencePy.callAttr("__getitem__", i)
-                val targetsPy = linkPy.callAttr("get", "targets")
+                val targetsPy = linkPy.callAttr("get", "target_entries")
                 val targets = mutableMapOf<String, Float>()
                 val targetCount = targetsPy.callAttr("__len__")?.toInt() ?: 0
                 for (j in 0 until targetCount) {
-                    val targetKey = targetsPy.callAttr("keys")?.callAttr("__getitem__", j)?.toString() ?: "0"
-                    val targetValue = targetsPy.callAttr("get", targetKey)?.toFloat() ?: 0f
+                    val targetEntry = targetsPy.callAttr("__getitem__", j)
+                    val targetKey = targetEntry.callAttr("get", "target_zone")?.toString() ?: "0"
+                    val targetValue = targetEntry.callAttr("get", "weight")?.toFloat() ?: 0f
                     targets[targetKey] = targetValue
                 }
                 correspondence.add(

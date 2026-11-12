@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,8 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import com.stealzalut.mobile.ui.theme.icons
@@ -50,12 +49,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
@@ -72,34 +73,25 @@ fun DoubleViewComparison(
     intensity: Float = 1.0f,
     executionTimeMs: Double? = null,
     height: androidx.compose.ui.unit.Dp = AppDimens.DoubleViewHeight,
+    fillAvailableHeight: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
     var splitFraction by remember { mutableFloatStateOf(AppConstants.SPLIT_WIPE_DEFAULT_FRACTION) }
+    var comparisonHeight by remember(height) { mutableStateOf(height) }
 
     // Synchronized Zoom & Pan state
     var zoomScale by remember { mutableFloatStateOf(AppConstants.ZOOM_SCALE_MIN) }
     var panOffset by remember { mutableStateOf(Offset.Zero) }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = CardDefaults.outlinedCardBorder()
-    ) {
-        Column(modifier = Modifier.padding(AppDimens.SpacingLarge)) {
+    Column(modifier = modifier.fillMaxWidth()) {
             // Header with Execution Time & Zoom Reset
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.comparison_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (zoomScale > AppConstants.ZOOM_THRESHOLD_RESET) {
                         Surface(
@@ -131,7 +123,6 @@ fun DoubleViewComparison(
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     fontWeight = FontWeight.Bold
                                 )
-                            }
                         }
                     }
 
@@ -169,7 +160,10 @@ fun DoubleViewComparison(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(height)
+                    .then(
+                        if (fillAvailableHeight) Modifier.weight(1f)
+                        else Modifier.height(comparisonHeight)
+                    )
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusCard))
                     .clipToBounds()
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_SUBTLE))
@@ -239,7 +233,7 @@ fun DoubleViewComparison(
                                 translationX = panOffset.x
                                 translationY = panOffset.y
                             },
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Fit
                     )
 
                     // Vertical Divider Line
@@ -307,6 +301,30 @@ fun DoubleViewComparison(
                         )
                     }
                 }
+
+                if (!fillAvailableHeight) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp)
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures { change, dragAmount ->
+                                    change.consume()
+                                    val delta = with(density) { dragAmount.toDp() }
+                                    comparisonHeight = (comparisonHeight + delta).coerceIn(140.dp, 360.dp)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(AppDimens.CornerRadiusPill))
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                        )
+                    }
+                }
             }
         }
     }
@@ -345,7 +363,7 @@ private fun GpuBlendedImage(
                         translationX = panOffset.x
                         translationY = panOffset.y
                     },
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
         }
     }

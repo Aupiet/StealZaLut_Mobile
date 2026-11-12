@@ -42,7 +42,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -92,6 +94,7 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val monoFont = LocalFontSpec.current.mono
+    var showMaintenanceScreen by remember { mutableStateOf(false) }
     val diagnosticEntries = remember(settings.developerMode) {
         if (settings.developerMode) AppLog.current()?.recentEntries(8).orEmpty().asReversed()
         else emptyList()
@@ -761,6 +764,16 @@ fun SettingsScreen(
                     )
                 }
 
+                OutlinedButton(
+                    onClick = { showMaintenanceScreen = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusNormal)
+                ) {
+                    Text(stringResource(R.string.maintenance_open))
+                }
+
                 // Developer Mode Toggle
                 Surface(
                     shape = RoundedCornerShape(AppDimens.CornerRadiusNormal),
@@ -805,5 +818,12 @@ fun SettingsScreen(
         }
 
         Spacer(modifier = Modifier.height(AppDimens.ListBottomPadding))
+    }
+
+    if (showMaintenanceScreen) {
+        MaintenanceMonitorScreen(
+            viewModel = viewModel,
+            onDismiss = { showMaintenanceScreen = false }
+        )
     }
 }

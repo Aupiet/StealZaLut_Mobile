@@ -14,6 +14,8 @@ SUPPORTED_METHODS: Dict[str, str] = {
     "mvgd": "Multi-Variate Gaussian Distribution",
     "hm": "Histogram Matching",
     "reinhard": "Reinhard (LAB stats)",
+    "oklab": "Oklab perceptual transfer",
+    "zones": "Zone-based correspondence transfer",
 }
 
 DEFAULT_METHOD: str = "hm-mkl-hm"

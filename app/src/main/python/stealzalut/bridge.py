@@ -19,6 +19,8 @@ import os
 import time
 from typing import Any, Dict, Optional
 
+import numpy as np
+
 from stealzalut.config import (
     DEFAULT_INTENSITY,
     DEFAULT_LUT_SIZE,
@@ -28,6 +30,11 @@ from stealzalut.config import (
     DEFAULT_SKIN_PROTECTION,
     DEFAULT_SMOOTH_SIGMA,
 )
+from stealzalut.core.ai_pack import PACK_FILES, analysis_dict, build_prompt, write_pack
+from stealzalut.core.palette import DEFAULT_ZONE_COUNT, analyze_zones
+from stealzalut.core.matching import match_zones
+from stealzalut.core.recipe import RecipeError, dump_recipe, parse_recipe, recipe_to_dict
+from stealzalut.core.zone_transfer import fit_zone_transfer
 from stealzalut.core.preset_manager import (
     create_preset,
     delete_preset,
@@ -772,6 +779,177 @@ def extract_palette(image_path: str, num_colors: int = 6) -> Dict[str, Any]:
         resp = _make_error_response(exc=exc)
         resp["palette"] = []
         return resp
+
+
+def analyze_zone_palette_bridge(
+    image_path: str,
+    zone_count: int = DEFAULT_ZONE_COUNT,
+) -> Dict[str, Any]:
+    """Analyze a source image into colour zones and expose a JSON-friendly summary."""
+    try:
+        if not image_path or not os.path.isfile(image_path):
+            return _make_error_response(
+                message=f"Image file not found: {image_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+
+        from PIL import Image
+
+        img = np.asarray(Image.open(image_path).convert("RGB"), dtype=np.uint8)
+        palette = analyze_zones(img, zone_count=zone_count)
+        return {
+            "status": "success",
+            "zone_count": len(palette.zones),
+            "zones": [
+                {
+                    "id": int(zone.id),
+                    "area": float(zone.area),
+                    "l_rank": float(zone.l_rank),
+                    "mean": [float(v) for v in zone.mean.tolist()],
+                    "hex": zone.hex,
+                    "centroid_xy": [float(v) for v in zone.centroid_xy],
+                    "bbox": [float(v) for v in zone.bbox],
+                }
+                for zone in palette.zones
+            ],
+            "labels_shape": list(palette.labels.shape),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def match_zone_palette_bridge(
+    source_path: str,
+    reference_path: str,
+    zone_count: int = DEFAULT_ZONE_COUNT,
+) -> Dict[str, Any]:
+    """Compute source→reference zone matching using the same Sinkhorn logic as the engine."""
+    try:
+        if not source_path or not os.path.isfile(source_path):
+            return _make_error_response(
+                message=f"Source image file not found: {source_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not reference_path or not os.path.isfile(reference_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {reference_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        from PIL import Image
+
+        src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
+        ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
+        match = match_zones(analyze_zones(src, zone_count), analyze_zones(ref, zone_count))
+        return {
+            "status": "success",
+            "matching": {
+                str(src_id): {
+                    str(ref_id): float(weight)
+                    for ref_id, weight in targets.items()
+                }
+                for src_id, targets in match.items()
+            },
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def fit_zone_transfer_bridge(
+    source_path: str,
+    reference_path: str,
+    zone_count: int = DEFAULT_ZONE_COUNT,
+) -> Dict[str, Any]:
+    """Fit a zone-aware transfer model and expose the resulting correspondence summary."""
+    try:
+        if not source_path or not os.path.isfile(source_path):
+            return _make_error_response(
+                message=f"Source image file not found: {source_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not reference_path or not os.path.isfile(reference_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {reference_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        from PIL import Image
+
+        src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
+        ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
+        model = fit_zone_transfer(src, ref, zone_count=zone_count)
+        table = {
+            "source_zone_ids": [int(zone.id) for zone in model.source.zones],
+            "reference_zone_ids": [int(zone.id) for zone in model.reference.zones],
+            "analysis_id": model.analysis_id,
+            "method": model.method,
+            "correspondence": [
+                {
+                    "source_zone": int(link.source_zone),
+                    "targets": {str(ref_id): float(weight) for ref_id, weight in link.targets.items()},
+                    "strength": float(link.strength),
+                    "locked": bool(link.locked),
+                }
+                for link in model.table.links
+            ],
+        }
+        return {"status": "success", **table}
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def parse_recipe_bridge(recipe_text: str) -> Dict[str, Any]:
+    """Parse a recipe from free-form AI output or raw JSON and return a structured payload."""
+    try:
+        recipe = parse_recipe(recipe_text)
+        return {
+            "status": "success",
+            "analysis_id": recipe.analysis_id,
+            "mode": recipe.mode,
+            "zone_count": recipe.zone_count,
+            "recipe": recipe_to_dict(recipe),
+            "json": dump_recipe(recipe, pretty=False),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
+
+
+def write_ai_pack_bridge(
+    source_path: str,
+    reference_path: str,
+    output_dir: str,
+    pack_name: str = "demo",
+    zone_count: int = DEFAULT_ZONE_COUNT,
+) -> Dict[str, Any]:
+    """Build the lightweight AI analysis pack folder for a source/reference pair."""
+    try:
+        if not source_path or not os.path.isfile(source_path):
+            return _make_error_response(
+                message=f"Source image file not found: {source_path}",
+                error_code="SOURCE_NOT_FOUND",
+            )
+        if not reference_path or not os.path.isfile(reference_path):
+            return _make_error_response(
+                message=f"Reference image file not found: {reference_path}",
+                error_code="REFERENCE_NOT_FOUND",
+            )
+
+        from PIL import Image
+
+        src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
+        ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
+        model = fit_zone_transfer(src, ref, zone_count=zone_count)
+        folder = write_pack(output_dir, pack_name, src, ref, model, zone_count)
+        return {
+            "status": "success",
+            "pack_dir": str(folder),
+            "pack_name": pack_name,
+            "analysis_id": model.analysis_id,
+            "files": list(PACK_FILES),
+            "prompt": build_prompt(model),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _make_error_response(exc=exc)
 
 
 def generate_color_card(

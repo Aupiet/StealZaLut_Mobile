@@ -26,7 +26,6 @@ from stealzalut.core.lut_engine import (
 )
 from stealzalut.core.lightroom_color import apply_full_lightroom_color_pipeline
 from stealzalut.core.lightroom_models import LightroomDevelopSettings
-from stealzalut.core.lightroom_spatial import apply_full_lightroom_spatial_pipeline
 
 
 # ---------------------------------------------------------------------------
@@ -312,6 +311,10 @@ def apply_step3_color_grading(
 
         out = apply_full_lightroom_color_pipeline(out, lr_obj)
         if not is_lut_baking and out.ndim >= 2 and min(out.shape[:2]) >= 16:
+            from stealzalut.core.lightroom_spatial import (
+                apply_full_lightroom_spatial_pipeline,
+            )
+
             out = apply_full_lightroom_spatial_pipeline(out, lr_obj)
         return np.clip(out, 0.0, 1.0).astype(np.float32)
 

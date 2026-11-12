@@ -72,6 +72,7 @@ fun MainColorGradingScreen(
     val commonUndo = stringResource(R.string.common_undo)
     val snackbarHostState = remember { SnackbarHostState() }
     var showExitEditorConfirmDialog by remember { mutableStateOf(false) }
+    var showMaintenanceMonitor by remember { mutableStateOf(false) }
 
     // Intercept hardware/gesture Back to preserve unsaved drafts and prevent accidental exits
     val isEditorWithPhoto = uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null
@@ -361,6 +362,35 @@ fun MainColorGradingScreen(
                                 )
                             )
                         }
+                        if (uiState.settings.developerMode) {
+                            val label = stringResource(R.string.maintenance_nav)
+                            NavigationBarItem(
+                                selected = showMaintenanceMonitor,
+                                onClick = { showMaintenanceMonitor = true },
+                                icon = {
+                                    Icon(
+                                        imageVector = iconSet.statusHistogram,
+                                        contentDescription = label,
+                                        modifier = Modifier.size(AppDimens.IconMedium)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -404,5 +434,12 @@ fun MainColorGradingScreen(
                 )
             }
         }
+    }
+
+    if (showMaintenanceMonitor) {
+        MaintenanceMonitorScreen(
+            viewModel = viewModel,
+            onDismiss = { showMaintenanceMonitor = false }
+        )
     }
 }

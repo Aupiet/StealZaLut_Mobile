@@ -11,6 +11,7 @@ import zlib
 import numpy as np
 import pytest
 
+from stealzalut.core import raw_decoder as raw_decoder_module
 from stealzalut.core.raw_decoder import (
     TAG_AS_SHOT_NEUTRAL,
     TAG_BITS_PER_SAMPLE,
@@ -234,6 +235,30 @@ def test_uncompressed_dng_decoding() -> None:
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+
+def test_dng_preview_downsamples_before_demosaicing(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep Bayer preview processing bounded for high-resolution RAW images."""
+    dng_path = str(tmp_path / "large_preview.dng")
+    create_synthetic_dng_file(dng_path, width=400, height=300)
+
+    demosaic_shapes: list[tuple[int, int]] = []
+    original_demosaic = raw_decoder_module.demosaic_bayer_high_quality
+
+    def record_demosaic_shape(bayer: np.ndarray, pattern: list[int]) -> np.ndarray:
+        demosaic_shapes.append(bayer.shape)
+        return original_demosaic(bayer, pattern)
+
+    monkeypatch.setattr(
+        raw_decoder_module, "demosaic_bayer_high_quality", record_demosaic_shape
+    )
+    preview = decode_dng_image(dng_path, max_dim=40)
+
+    assert demosaic_shapes
+    assert max(demosaic_shapes[0]) <= 40
+    assert max(preview.shape[:2]) <= 40
 
 
 def test_deflate_compressed_dng_decoding() -> None:

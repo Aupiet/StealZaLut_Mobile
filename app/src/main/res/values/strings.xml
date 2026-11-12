@@ -8,6 +8,7 @@
     <string name="nav_palettes">Palettes</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_settings">Settings</string>
+    <string name="maintenance_nav">Monitor</string>
 
     <!-- Destination Subtitles -->
     <string name="dest_subtitle_studio">Color Grading &amp; 3D LUT Generation</string>
@@ -72,6 +73,11 @@
     <string name="studio_tab_grid">3D Grid</string>
     <string name="studio_tab_light">Light</string>
     <string name="studio_tab_color">Color</string>
+    <string name="studio_tab_advanced">Advanced</string>
+    <string name="studio_zones_title">Color zones</string>
+    <string name="studio_zones_description">Segment both images into color zones with deterministic Oklab k-means. The result is used to inspect and match the palette.</string>
+    <string name="studio_zones_analyze">Analyze zones</string>
+    <string name="studio_zones_reanalyze">Analyze again</string>
     <string name="param_luma_lock_title">Luminance Lock (Luma)</string>
     <string name="param_skin_prot_title">Skin Tone Protection</string>
     <string name="param_neutral_lock_title">Neutral Axis Lock</string>
@@ -214,6 +220,48 @@
     <string name="settings_developer_diagnostics_title">Recent local diagnostics</string>
     <string name="settings_developer_diagnostics_empty">No diagnostic events recorded this session.</string>
     <string name="settings_developer_diagnostics_entry">%1$s · %2$s</string>
+    <string name="maintenance_open">Maintenance &amp; monitoring</string>
+    <string name="maintenance_title">Maintenance &amp; diagnostics</string>
+    <string name="maintenance_subtitle">Device health, crash reports, and local logs</string>
+    <string name="maintenance_privacy_note">Diagnostic files remain on this device unless you explicitly share them.</string>
+    <string name="maintenance_refresh">Refresh</string>
+    <string name="maintenance_import">Import log / tombstone</string>
+    <string name="maintenance_share_summary">Share status summary</string>
+    <string name="maintenance_share_title">Share diagnostics</string>
+    <string name="maintenance_share">Share</string>
+    <string name="maintenance_clear_preview_cache">Clear preview cache</string>
+    <string name="maintenance_clear_cache_title">Clear preview cache?</string>
+    <string name="maintenance_clear_cache_message">Temporary previews will be removed. Crash reports and imported diagnostic files are kept.</string>
+    <string name="maintenance_cache_cleared">Preview cache cleared.</string>
+    <string name="maintenance_cache_clear_failed">Some preview files could not be removed.</string>
+    <string name="maintenance_health_title">Runtime and storage</string>
+    <string name="maintenance_app">Application</string>
+    <string name="maintenance_device">Device</string>
+    <string name="maintenance_android">Android</string>
+    <string name="maintenance_python">Python runtime</string>
+    <string name="maintenance_python_ready">Started</string>
+    <string name="maintenance_python_not_started">Not started</string>
+    <string name="maintenance_java_heap">Java heap (used / max)</string>
+    <string name="maintenance_native_heap">Native heap allocated</string>
+    <string name="maintenance_available_memory">Available device memory</string>
+    <string name="maintenance_cache">App cache</string>
+    <string name="maintenance_free_storage">Free app storage</string>
+    <string name="maintenance_unknown">Unknown</string>
+    <string name="maintenance_files_title">Diagnostic files (%1$d crash reports, %2$d imported)</string>
+    <string name="maintenance_native_crash_note">Native signals such as SIGSEGV may not appear in in-app crash reports. Import the full tombstone or logcat file here to inspect and share it.</string>
+    <string name="maintenance_files_empty">No crash reports or imported diagnostic files.</string>
+    <string name="maintenance_view">View</string>
+    <string name="maintenance_recent_events">Recent local events</string>
+    <string name="maintenance_events_empty">No recent events recorded in this session.</string>
+    <string name="maintenance_loading">Reading diagnostics…</string>
+    <string name="maintenance_import_success">Diagnostic file imported.</string>
+    <string name="maintenance_import_failed">Could not import that file.</string>
+    <string name="maintenance_read_failed">Could not read the selected file.</string>
+    <string name="maintenance_share_failed">Could not share diagnostics.</string>
+    <string name="maintenance_delete_success">Diagnostic file deleted.</string>
+    <string name="maintenance_delete_failed">Could not delete the file.</string>
+    <string name="maintenance_delete_title">Delete diagnostic file?</string>
+    <string name="maintenance_delete_message">Delete %1$s from this device?</string>
     <string name="settings_max_export_native">Original (Full Resolution)</string>
 
     <!-- Editor & UI Elements -->

@@ -22,7 +22,7 @@ The excerpt identifies a native NumPy frame, but does not establish whether the 
 | C1 | Mitigated; device validation pending | Project thumbnails now decode off the UI thread through a shared bounds-first loader capped at 600 px. Profile, preset, palette, and detail images use the same sampled loader. | WP4 |
 | C2 | Confirmed; mitigation added, device validation pending | `export_worker.py` previously loaded the full image and skipped pre-downscaling when `max_export_dim == 0`. Exports now estimate memory headroom, bound the size, pre-decode only when memory requires it, and notify the user. | WP4 |
 | C3 | Mitigated | `PythonRuntime.ensureStarted` serializes Chaquopy startup, and bridge calls await it before retrieving the Python instance. | WP3 |
-| C4 | Partial | Added a bounded, redacted local log buffer and next-launch crash-report writer/share prompt. Developer Mode now surfaces recent local diagnostics. Python-specific structured logging and release-device validation remain. | WP2 |
+| C4 | Improved; device validation pending | Added a bounded, redacted local event journal synced to private storage as events are logged and reloaded on the next launch, plus a next-launch crash-report prompt. The maintenance screen can inspect/share the journal and crash reports, import and inspect tombstones/logcat, review runtime memory/storage/Python status, share a local diagnostics snapshot, and clear preview cache. | WP2 |
 | C5 | Partial | Preview requests now use a conflated latest-request state and a shared single-thread dispatcher. Coroutine cancellation still cannot stop an already-running synchronous Chaquopy call; no unsafe timeout is claimed. | WP3 |
 | C6 | Corrected | Suspend repository and delegate paths use cancellation-preserving `suspendRunCatching`; safe launches log failures and emit localized diagnostics. | WP2 |
 | C7 | Corrected | Incoming image intents validate URI scheme and readability and report access failures instead of navigating with an invalid URI. | WP2 |
@@ -41,3 +41,5 @@ The excerpt identifies a native NumPy frame, but does not establish whether the 
 - CI now uses the configured JDK 25 daemon and builds/tests both Debug and Release.
 
 No device or emulator was available for reproducing the reported NumPy native crash or validating the large-image export path on the affected Redmi device.
+
+The maintenance screen explicitly notes that native signals such as `SIGSEGV` may not be captured by the in-process Java/Kotlin uncaught-exception handler. Application events are persisted locally as they are logged, so the recent event history remains available after a process crash. Users can import a tombstone or logcat file from Android's document picker; files remain local unless explicitly shared.

@@ -8,18 +8,29 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
@@ -108,6 +119,8 @@ fun ApplyThemeScreen(
 
         val contentModifier: Modifier = if (isStep3) Modifier.weight(1f).fillMaxWidth() else Modifier.fillMaxWidth()
 
+        ZoneInsightCard(uiState)
+
         // --- 2. Dynamic Step Content ---
         AnimatedContent(
             targetState = uiState.wizardStep,
@@ -167,6 +180,9 @@ fun ApplyThemeScreen(
                         onNeutralLockChange = { viewModel.setNeutralLock(it) },
                         selectedLutSize = uiState.lutSize,
                         onLutSizeSelected = { viewModel.setLutSize(it) },
+                        isAnalyzingZones = uiState.isAnalyzingZones,
+                        hasZoneAnalysis = uiState.zoneAnalysis != null && uiState.referenceZoneAnalysis != null,
+                        onAnalyzeZones = { viewModel.analyzeCurrentZones() },
                         isExportingCube = uiState.isExportingCube,
                         onExportCube = {
                             viewModel.exportAndShareCube(context)
@@ -202,9 +218,81 @@ fun ApplyThemeScreen(
                         onShareCube = {
                             viewModel.exportAndShareCube(context)
                         },
+                        onExportRecipe = { viewModel.exportCurrentZoneRecipe() },
+                        onExportAiPack = { viewModel.exportCurrentAiPack() },
                         onReset = { viewModel.resetWizard() }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ZoneInsightCard(uiState: com.stealzalut.mobile.ui.viewmodel.StealZaLutUiState) {
+    val hasZoneData = uiState.zoneAnalysis != null || uiState.referenceZoneAnalysis != null || uiState.zoneMatching != null || uiState.zoneTransfer != null
+    if (!hasZoneData) return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+        ),
+        border = BorderStroke(
+            AppDimens.BorderThin,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppDimens.SpacingMedium),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingExtraSmall)) {
+                Text(
+                    text = "Zone-aware analysis",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = buildString {
+                        if (uiState.zoneAnalysis != null) {
+                            append("source ${uiState.zoneAnalysis.zoneCount} zones")
+                        }
+                        if (uiState.referenceZoneAnalysis != null) {
+                            if (uiState.zoneAnalysis != null) append(" • ")
+                            append("reference ${uiState.referenceZoneAnalysis.zoneCount} zones")
+                        }
+                        if (uiState.zoneMatching != null) {
+                            if (isNotEmpty()) append(" • ")
+                            append("${uiState.zoneMatching.matching.size} matches")
+                        }
+                        if (uiState.zoneTransfer != null) {
+                            if (isNotEmpty()) append(" • ")
+                            append("${uiState.zoneTransfer.correspondence.size} links")
+                        }
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                border = BorderStroke(AppDimens.BorderThin, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+            ) {
+                Text(
+                    text = uiState.zoneTransfer?.method ?: "zones",
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingExtraSmall),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
             }
         }
     }

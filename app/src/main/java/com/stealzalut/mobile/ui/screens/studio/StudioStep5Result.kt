@@ -60,6 +60,8 @@ fun StudioStep5Result(
     onSaveStyleToProfile: () -> Unit,
     onExportCube: () -> Unit,
     onShareCube: () -> Unit,
+    onExportRecipe: (() -> Unit)? = null,
+    onExportAiPack: (() -> Unit)? = null,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -187,43 +189,76 @@ fun StudioStep5Result(
             )
         }
 
-        // --- 3. Row of 2 Secondary Action Buttons (Figma node 12:412) ---
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
         ) {
-            // Button 1: "Exporter .cube"
-            OutlinedButton(
-                onClick = onShareCube,
-                enabled = !isExportingImage && !isExportingCube,
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                border = BorderStroke(
-                    AppDimens.BorderThin,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isExportingCube) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(AppDimens.IconSmall),
-                        strokeWidth = AppDimens.BorderMedium,
-                        color = MaterialTheme.colorScheme.primary
+                OutlinedButton(
+                    onClick = onShareCube,
+                    enabled = !isExportingImage && !isExportingCube,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
-                } else {
+                ) {
+                    if (isExportingCube) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(AppDimens.IconSmall),
+                            strokeWidth = AppDimens.BorderMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = MaterialTheme.icons.actionShare,
+                            contentDescription = null,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                        Text(
+                            text = stringResource(R.string.wizard_step_5_btn_export_cube),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onSaveStyleToProfile,
+                    enabled = !isExportingImage && !isExportingCube,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
                     Icon(
-                        imageVector = MaterialTheme.icons.actionShare,
+                        imageVector = MaterialTheme.icons.actionSave,
                         contentDescription = null,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
                     Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                     Text(
-                        text = stringResource(R.string.wizard_step_5_btn_export_cube),
+                        text = stringResource(R.string.wizard_step_5_btn_save_theme),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -232,35 +267,70 @@ fun StudioStep5Result(
                 }
             }
 
-            // Button 2: "Enregistrer Preset"
-            OutlinedButton(
-                onClick = onSaveStyleToProfile,
-                enabled = !isExportingImage && !isExportingCube,
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                border = BorderStroke(
-                    AppDimens.BorderThin,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = MaterialTheme.icons.actionSave,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconSmall)
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                Text(
-                    text = stringResource(R.string.wizard_step_5_btn_save_theme),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                OutlinedButton(
+                    onClick = { onExportRecipe?.invoke() },
+                    enabled = !isExportingImage && !isExportingCube && onExportRecipe != null,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.actionSave,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                    Text(
+                        text = "Export .szl",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { onExportAiPack?.invoke() },
+                    enabled = !isExportingImage && !isExportingCube && onExportAiPack != null,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
+                    border = BorderStroke(
+                        AppDimens.BorderThin,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = MaterialTheme.icons.actionExport,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppDimens.IconSmall)
+                    )
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                    Text(
+                        text = "AI Pack",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
 

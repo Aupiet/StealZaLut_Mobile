@@ -27,7 +27,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy import ndimage
 
 
 # Standard TIFF / DNG Tag IDs
@@ -425,6 +424,8 @@ def demosaic_bayer_high_quality(
     Returns:
         3D float32 array (H, W, 3) in [0.0, 1.0].
     """
+    from scipy import ndimage
+
     h, w = bayer.shape
     rgb = np.zeros((h, w, 3), dtype=np.float32)
 
@@ -557,6 +558,33 @@ def apply_exif_orientation(
     return image
 
 
+def _downsample_bayer_for_preview(
+    bayer: NDArray[np.float32],
+    max_dim: int,
+) -> NDArray[np.float32]:
+    """Reduce a Bayer mosaic before demosaicing while preserving its 2x2 CFA."""
+    h, w = bayer.shape
+    scale = max(1, (max(h, w) + max_dim - 1) // max_dim)
+    if scale == 1:
+        return bayer
+
+    block_size = scale * 2
+    usable_h = (h // block_size) * block_size
+    usable_w = (w // block_size) * block_size
+    if usable_h < block_size or usable_w < block_size:
+        return bayer
+
+    output_h = usable_h // block_size
+    output_w = usable_w // block_size
+    blocks = bayer[:usable_h, :usable_w].reshape(
+        output_h, scale, 2, output_w, scale, 2
+    )
+    channel_means = blocks.mean(axis=(1, 4))
+    return channel_means.transpose(0, 2, 1, 3).reshape(
+        output_h * 2, output_w * 2
+    )
+
+
 def decode_dng_image(
     file_path: str,
     max_dim: Optional[int] = None,
@@ -575,6 +603,8 @@ def decode_dng_image(
     """
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"RAW/DNG file not found: {file_path}")
+
+    from scipy import ndimage
 
     meta, f = parse_dng_structure(file_path)
 
@@ -597,6 +627,9 @@ def decode_dng_image(
                 cw, ch = meta.crop_size
                 if oy + ch <= bayer_raw.shape[0] and ox + cw <= bayer_raw.shape[1]:
                     bayer_raw = bayer_raw[oy : oy + ch, ox : ox + cw]
+
+            if max_dim is not None and max_dim > 0:
+                bayer_raw = _downsample_bayer_for_preview(bayer_raw, max_dim)
 
             # Normalize black and white levels
             bl = meta.black_level[0] if meta.black_level else 0.0

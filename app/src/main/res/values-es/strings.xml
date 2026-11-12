@@ -8,6 +8,7 @@
     <string name="nav_palettes">Paletas</string>
     <string name="nav_profile">Perfil</string>
     <string name="nav_settings">Ajustes</string>
+    <string name="maintenance_nav">Monitoreo</string>
 
     <!-- Destination Subtitles -->
     <string name="dest_subtitle_studio">Transferencia de Color &amp; 3D LUT</string>
@@ -72,6 +73,11 @@
     <string name="studio_tab_grid">Cuadrícula 3D</string>
     <string name="studio_tab_light">Luz</string>
     <string name="studio_tab_color">Color</string>
+    <string name="studio_tab_advanced">Avanzado</string>
+    <string name="studio_zones_title">Zonas de color</string>
+    <string name="studio_zones_description">Segmenta ambas imágenes en zonas de color con k-means Oklab determinista para inspeccionar y combinar la paleta.</string>
+    <string name="studio_zones_analyze">Analizar zonas</string>
+    <string name="studio_zones_reanalyze">Analizar de nuevo</string>
     <string name="param_luma_lock_title">Bloqueo de Luminancia</string>
     <string name="param_skin_prot_title">Protección de Tonos de Piel</string>
     <string name="param_neutral_lock_title">Bloqueo de Eje Neutro</string>
@@ -214,6 +220,48 @@
     <string name="settings_developer_diagnostics_title">Diagnósticos locales recientes</string>
     <string name="settings_developer_diagnostics_empty">No se registraron eventos de diagnóstico en esta sesión.</string>
     <string name="settings_developer_diagnostics_entry">%1$s · %2$s</string>
+    <string name="maintenance_open">Mantenimiento y supervisión</string>
+    <string name="maintenance_title">Mantenimiento y diagnósticos</string>
+    <string name="maintenance_subtitle">Estado del dispositivo, informes de fallos y registros locales</string>
+    <string name="maintenance_privacy_note">Los archivos de diagnóstico permanecen en este dispositivo salvo que decidas compartirlos.</string>
+    <string name="maintenance_refresh">Actualizar</string>
+    <string name="maintenance_import">Importar registro / tombstone</string>
+    <string name="maintenance_share_summary">Compartir resumen de estado</string>
+    <string name="maintenance_share_title">Compartir diagnósticos</string>
+    <string name="maintenance_share">Compartir</string>
+    <string name="maintenance_clear_preview_cache">Borrar caché de vistas previas</string>
+    <string name="maintenance_clear_cache_title">¿Borrar la caché de vistas previas?</string>
+    <string name="maintenance_clear_cache_message">Se eliminarán las vistas previas temporales. Los informes de fallos y archivos importados se conservarán.</string>
+    <string name="maintenance_cache_cleared">Caché de vistas previas borrada.</string>
+    <string name="maintenance_cache_clear_failed">No se pudieron eliminar algunos archivos de vista previa.</string>
+    <string name="maintenance_health_title">Ejecución y almacenamiento</string>
+    <string name="maintenance_app">Aplicación</string>
+    <string name="maintenance_device">Dispositivo</string>
+    <string name="maintenance_android">Android</string>
+    <string name="maintenance_python">Entorno Python</string>
+    <string name="maintenance_python_ready">Iniciado</string>
+    <string name="maintenance_python_not_started">Sin iniciar</string>
+    <string name="maintenance_java_heap">Heap Java (usado / máximo)</string>
+    <string name="maintenance_native_heap">Heap nativo asignado</string>
+    <string name="maintenance_available_memory">Memoria disponible del dispositivo</string>
+    <string name="maintenance_cache">Caché de la aplicación</string>
+    <string name="maintenance_free_storage">Almacenamiento libre de la aplicación</string>
+    <string name="maintenance_unknown">Desconocido</string>
+    <string name="maintenance_files_title">Archivos de diagnóstico (%1$d informes, %2$d importados)</string>
+    <string name="maintenance_native_crash_note">Los fallos nativos como SIGSEGV quizá no aparezcan en los informes de la app. Importa el tombstone completo o el archivo logcat para verlo y compartirlo.</string>
+    <string name="maintenance_files_empty">No hay informes de fallos ni archivos de diagnóstico importados.</string>
+    <string name="maintenance_view">Ver</string>
+    <string name="maintenance_recent_events">Eventos locales recientes</string>
+    <string name="maintenance_events_empty">No hay eventos recientes en esta sesión.</string>
+    <string name="maintenance_loading">Leyendo diagnósticos…</string>
+    <string name="maintenance_import_success">Archivo de diagnóstico importado.</string>
+    <string name="maintenance_import_failed">No se pudo importar el archivo.</string>
+    <string name="maintenance_read_failed">No se pudo leer el archivo seleccionado.</string>
+    <string name="maintenance_share_failed">No se pudieron compartir los diagnósticos.</string>
+    <string name="maintenance_delete_success">Archivo de diagnóstico eliminado.</string>
+    <string name="maintenance_delete_failed">No se pudo eliminar el archivo.</string>
+    <string name="maintenance_delete_title">¿Eliminar archivo de diagnóstico?</string>
+    <string name="maintenance_delete_message">¿Eliminar %1$s de este dispositivo?</string>
     <string name="settings_max_export_native">Original (Resolución Completa)</string>
 
     <!-- Editor y Elementos UI -->

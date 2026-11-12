@@ -117,7 +117,7 @@ class GradingPipelineDelegate(
                         oldFile.delete()
                     }
 
-                    val thumbnail = withContext(Dispatchers.IO) {
+                    val thumbnail = withContext(ioDispatcher) {
                         decodeSampledBitmap(file.absolutePath, 1080)
                     }
                     stateFlow.update {

@@ -7,6 +7,8 @@ and chromatic analysis primitives.
 
 from __future__ import annotations
 
+from typing import Callable
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -99,6 +101,11 @@ def rgb_to_oklab(rgb: NDArray[np.float32]) -> NDArray[np.float32]:
     return oklab.astype(np.float32)
 
 
+def srgb_to_oklab(rgb: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Alias kept for compatibility with the desktop implementation."""
+    return rgb_to_oklab(rgb)
+
+
 def oklab_to_rgb(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
     """Convert OKLab array to clamped sRGB in [0.0, 1.0].
 
@@ -113,6 +120,38 @@ def oklab_to_rgb(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
     lin = lms @ _M_LMS_TO_SRGB.T
     rgb = linear_to_srgb(lin)
     return np.clip(rgb, 0.0, 1.0).astype(np.float32)
+
+
+def oklab_to_srgb(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Alias for the desktop module naming."""
+    return oklab_to_rgb(oklab)
+
+
+def oklab_to_oklch(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Convert OKLab to OKLCH: (L, C, h) with hue in degrees."""
+    lab = np.asarray(oklab, dtype=np.float32)
+    chroma = np.hypot(lab[..., 1], lab[..., 2])
+    hue = np.mod(np.degrees(np.arctan2(lab[..., 2], lab[..., 1])), 360.0)
+    return np.stack([lab[..., 0], chroma, hue], axis=-1).astype(np.float32)
+
+
+def oklch_to_oklab(oklch: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Convert OKLCH to OKLab."""
+    lch = np.asarray(oklch, dtype=np.float32)
+    hue = np.radians(lch[..., 2])
+    a = lch[..., 1] * np.cos(hue)
+    b = lch[..., 1] * np.sin(hue)
+    return np.stack([lch[..., 0], a, b], axis=-1).astype(np.float32)
+
+
+def linear_to_oklab(linear_rgb: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Convert linear RGB to OKLab."""
+    return srgb_to_oklab(linear_to_srgb(linear_rgb))
+
+
+def oklab_to_linear(oklab: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Convert OKLab to linear RGB."""
+    return srgb_to_linear(oklab_to_srgb(oklab))
 
 
 # ---------------------------------------------------------------------------
@@ -132,3 +171,57 @@ def smoothstep(
     diff = np.maximum(edge1 - edge0, 1e-6)
     t = np.clip((x - edge0) / diff, 0.0, 1.0)
     return (t * t * (3.0 - 2.0 * t)).astype(np.float32)
+
+
+def _in_gamut(linear_rgb: NDArray[np.float32]) -> NDArray[np.bool_]:
+    """Return True for linear RGB values that remain inside the sRGB gamut."""
+    lower = linear_rgb >= -1e-6
+    upper = linear_rgb <= 1.0 + 1e-6
+    return np.all(lower & upper, axis=-1)
+
+
+def gamut_compress(
+    lab: NDArray[np.float32],
+    iters: int = 12,
+    to_linear: Callable[[NDArray[np.float32]], NDArray[np.float32]] | None = None,
+) -> NDArray[np.float32]:
+    """Reduce Oklab chroma until the colour fits inside the sRGB gamut.
+
+    This is a light-weight, deterministic variant of the desktop gamut-mapping
+    approach: it preserves hue and lightness while scaling down the chroma on
+    out-of-gamut values using a binary search.
+    """
+    arr = np.asarray(lab, dtype=np.float32).copy()
+    if arr.size == 0:
+        return arr
+    if arr.ndim == 1:
+        arr = arr.reshape(1, 3)
+
+    arr[:, 0] = np.clip(arr[:, 0], 0.0, 1.0)
+
+    if to_linear is None:
+        def convert(x: NDArray[np.float32]) -> NDArray[np.float32]:
+            lms_cbrt = x.astype(np.float32) @ _M_OKLAB_TO_LMS.T
+            lms = lms_cbrt**3
+            return (lms @ _M_LMS_TO_SRGB.T).astype(np.float32)
+    else:
+        convert = to_linear
+
+    mask = ~_in_gamut(convert(arr))
+    if not np.any(mask):
+        return arr
+
+    lightness = arr[mask, :1].copy()
+    ab = arr[mask, 1:].copy()
+    lo = np.zeros(lightness.shape[0], dtype=np.float32)
+    hi = np.ones(lightness.shape[0], dtype=np.float32)
+
+    for _ in range(max(1, iters)):
+        mid = 0.5 * (lo + hi)
+        candidate = np.concatenate([lightness, ab * mid[:, None]], axis=1)
+        ok = _in_gamut(convert(candidate))
+        lo = np.where(ok, mid, lo)
+        hi = np.where(ok, hi, mid)
+
+    arr[mask, 1:] = ab * lo[:, None]
+    return arr.astype(np.float32)

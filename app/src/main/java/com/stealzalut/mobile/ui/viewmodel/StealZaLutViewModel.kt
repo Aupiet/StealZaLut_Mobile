@@ -5,6 +5,7 @@ import android.content.Context
 import java.io.File
 import android.content.Intent
 import android.graphics.Bitmap
+import org.json.JSONObject
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
@@ -23,13 +24,17 @@ import java.util.Locale
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
+import com.stealzalut.mobile.core.diagnostics.AppLog
+import com.stealzalut.mobile.core.diagnostics.LogLevel
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
+import com.stealzalut.mobile.data.model.AnalysisPackExport
 import com.stealzalut.mobile.data.model.AppSettings
 import com.stealzalut.mobile.data.model.ColorTransferMethod
 import com.stealzalut.mobile.data.model.ColorimetryPreset
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.LutSize
+import com.stealzalut.mobile.data.model.RecipePayload
 import com.stealzalut.mobile.data.model.SavedGradedImage
 import com.stealzalut.mobile.data.repository.PresetRepository
 import com.stealzalut.mobile.data.repository.SavedImageRepository
@@ -45,7 +50,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * StealZaLutViewModel: Single Source of Truth & UDF Façade.
@@ -294,6 +301,131 @@ class StealZaLutViewModel(
     fun clearEditorCustomLut() = editorSessionDelegate.clearEditorCustomLut()
     fun setEditorTab(tab: Int) = editorSessionDelegate.setEditorTab(tab)
 
+    fun analyzeCurrentZones() = viewModelScope.launch {
+        val sourcePath = uiState.value.sourcePath
+        val refPath = uiState.value.effectiveReferencePath
+
+        if (sourcePath == null || refPath == null) {
+            _uiState.update {
+                it.copy(
+                    zoneAnalysis = null,
+                    referenceZoneAnalysis = null,
+                    zoneMatching = null,
+                    zoneTransfer = null,
+                    isAnalyzingZones = false
+                )
+            }
+            return@launch
+        }
+
+        _uiState.update { it.copy(isAnalyzingZones = true, errorMessage = null) }
+        try {
+            val sourceAnalysis = bridgeRepository.analyzeZonePalette(sourcePath).getOrThrow()
+            val referenceAnalysis = bridgeRepository.analyzeZonePalette(refPath).getOrThrow()
+            val matching = bridgeRepository.matchZonePalette(sourcePath, refPath).getOrThrow()
+            val transfer = bridgeRepository.fitZoneTransfer(sourcePath, refPath).getOrThrow()
+            _uiState.update {
+                it.copy(
+                    zoneAnalysis = sourceAnalysis,
+                    referenceZoneAnalysis = referenceAnalysis,
+                    zoneMatching = matching,
+                    zoneTransfer = transfer
+                )
+            }
+        } catch (error: Exception) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = UiText.DynamicString(
+                        "Zone analysis failed: ${error.localizedMessage ?: error.message ?: "unknown error"}"
+                    )
+                )
+            }
+        } finally {
+            _uiState.update { it.copy(isAnalyzingZones = false) }
+        }
+    }
+
+    fun exportCurrentZoneRecipe() = viewModelScope.launch {
+        val sourcePath = uiState.value.sourcePath ?: return@launch
+        val refPath = uiState.value.effectiveReferencePath ?: return@launch
+
+        val current = uiState.value
+        val zoneCount = current.zoneAnalysis?.zoneCount ?: current.zoneTransfer?.correspondence?.size?.coerceAtLeast(2) ?: 4
+        val recipeMap = linkedMapOf<String, Any>(
+            "format" to "stealzalut.recipe",
+            "version" to 2,
+            "analysis_id" to (current.zoneTransfer?.analysisId ?: "mobile-${System.currentTimeMillis()}"),
+            "name" to "mobile-zone-${System.currentTimeMillis()}",
+            "description" to "Generated from ${File(sourcePath).nameWithoutExtension} to ${File(refPath).nameWithoutExtension}",
+            "mode" to "zones",
+            "zone_count" to zoneCount,
+            "global" to linkedMapOf<String, Any>(
+                "intensity" to current.intensity.toDouble(),
+                "preserve_luminance" to current.preserveLuminance.toDouble(),
+                "skin_protection" to current.skinProtection.toDouble(),
+                "smooth_sigma" to current.smoothSigma.toDouble(),
+                "zone_separation" to 1.0
+            ),
+            "links" to (current.zoneTransfer?.correspondence?.map { link ->
+                linkedMapOf<String, Any>(
+                    "source_zone" to link.sourceZone,
+                    "targets" to link.targets.mapKeys { it.key },
+                    "strength" to link.strength.toDouble(),
+                    "keep" to link.locked
+                )
+            } ?: emptyList<Any>())
+        )
+
+        val recipeJson = JSONObject(recipeMap).toString()
+        val result = bridgeRepository.parseRecipeBridge(recipeJson)
+        result.onSuccess { payload ->
+            val outputFile = File(getApplication<Application>().cacheDir, "zone_recipe_${System.currentTimeMillis()}.szl")
+            outputFile.writeText(payload.json)
+            _uiState.update {
+                it.copy(
+                    lastRecipePayload = payload,
+                    userMessage = UiText.DynamicString("Recipe exported: ${outputFile.name}")
+                )
+            }
+        }.onFailure { error ->
+            _uiState.update {
+                it.copy(
+                    errorMessage = UiText.DynamicString("Recipe export failed: ${error.message ?: "unknown error"}")
+                )
+            }
+        }
+    }
+
+    fun exportCurrentAiPack() = viewModelScope.launch {
+        val sourcePath = uiState.value.sourcePath ?: return@launch
+        val refPath = uiState.value.effectiveReferencePath ?: return@launch
+        val zoneCount = uiState.value.zoneAnalysis?.zoneCount ?: uiState.value.zoneTransfer?.correspondence?.size?.coerceAtLeast(2) ?: 4
+        val outputDir = File(getApplication<Application>().cacheDir, "zone_ai_pack_${System.currentTimeMillis()}")
+
+        val result = bridgeRepository.writeAiPack(
+            sourcePath = sourcePath,
+            referencePath = refPath,
+            outputDir = outputDir.absolutePath,
+            packName = "zone_ai_pack",
+            zoneCount = zoneCount
+        )
+
+        result.onSuccess { pack ->
+            _uiState.update {
+                it.copy(
+                    lastAiPackExport = pack,
+                    userMessage = UiText.DynamicString("AI pack exported: ${pack.packName}")
+                )
+            }
+        }.onFailure { error ->
+            _uiState.update {
+                it.copy(
+                    errorMessage = UiText.DynamicString("AI pack export failed: ${error.message ?: "unknown error"}")
+                )
+            }
+        }
+    }
+
     fun setStep2Intensity(v: Float) = editorSessionDelegate.setStep2Intensity(v)
     fun setStep2LumaLock(v: Float) = editorSessionDelegate.setStep2LumaLock(v)
     fun setStep2NeutralAxisLock(v: Float) = editorSessionDelegate.setStep2NeutralAxisLock(v)
@@ -409,6 +541,20 @@ class StealZaLutViewModel(
             bridgeRepository.lruCacheManager.clearAll()
             refreshCacheSize()
             _uiState.update { it.copy(userMessage = UiText.Resource(R.string.msg_cache_cleared)) }
+        }
+    }
+
+    suspend fun clearPreviewCache(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val cleared = bridgeRepository.lruCacheManager.clearAll()
+            refreshCacheSize()
+            if (!cleared) {
+                AppLog.log(LogLevel.WARN, "Maintenance", "Some preview cache files could not be deleted.")
+            }
+            cleared
+        } catch (error: Exception) {
+            AppLog.log(LogLevel.ERROR, "Maintenance", "Could not clear the preview cache.", error)
+            false
         }
     }
 

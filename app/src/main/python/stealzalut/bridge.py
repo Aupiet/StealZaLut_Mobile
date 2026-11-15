@@ -1123,7 +1123,7 @@ def get_zone_mask_bridge(
             dark = (img_arr * 0.25).astype(np.uint8)
             mean_rgb = np.clip(zone.mean[::-1] * 255, 0, 255).astype(np.uint8) if hasattr(zone, "mean") else np.array([128, 128, 128], dtype=np.uint8)
             # Zone mean is in Oklab; convert back to sRGB
-            from stealzalut.core.colorspace import oklab_to_srgb, gamut_compress
+            from stealzalut.core.color_space import oklab_to_srgb, gamut_compress
             mean_rgb_f = oklab_to_srgb(gamut_compress(zone.mean[None, :]))[0]
             mean_rgb_u8 = np.clip(mean_rgb_f * 255, 0, 255).astype(np.uint8)
             overlay = np.where(

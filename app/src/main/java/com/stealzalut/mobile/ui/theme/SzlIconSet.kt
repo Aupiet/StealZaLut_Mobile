@@ -5,12 +5,14 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Redo
+import androidx.compose.material.icons.automirrored.outlined.RotateRight
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.automirrored.rounded.Redo
+import androidx.compose.material.icons.automirrored.rounded.RotateRight
 import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.outlined.Add
@@ -160,6 +162,8 @@ interface SzlIconSet {
     val actionAutoEdit: ImageVector
     val actionReset: ImageVector
     val actionRefresh: ImageVector
+    val rotate: ImageVector get() = actionRotate
+    val actionRotate: ImageVector
     val menu: ImageVector get() = actionMenu
     val actionMenu: ImageVector
     val actionHelp: ImageVector
@@ -245,6 +249,7 @@ object RoundedSzlIconSet : SzlIconSet {
     override val actionAutoEdit: ImageVector = Icons.Rounded.AutoFixHigh
     override val actionReset: ImageVector = Icons.Rounded.RestartAlt
     override val actionRefresh: ImageVector = Icons.Rounded.Refresh
+    override val actionRotate: ImageVector = Icons.AutoMirrored.Rounded.RotateRight
     override val actionMenu: ImageVector = Icons.Rounded.MoreVert
     override val actionHelp: ImageVector = Icons.AutoMirrored.Rounded.HelpOutline
     override val actionBack: ImageVector = Icons.AutoMirrored.Rounded.ArrowBack
@@ -317,6 +322,7 @@ object OutlinedSzlIconSet : SzlIconSet {
     override val actionAutoEdit: ImageVector = Icons.Outlined.AutoFixHigh
     override val actionReset: ImageVector = Icons.Outlined.RestartAlt
     override val actionRefresh: ImageVector = Icons.Outlined.Refresh
+    override val actionRotate: ImageVector = Icons.AutoMirrored.Outlined.RotateRight
     override val actionMenu: ImageVector = Icons.Outlined.MoreVert
     override val actionHelp: ImageVector = Icons.AutoMirrored.Outlined.HelpOutline
     override val actionBack: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack

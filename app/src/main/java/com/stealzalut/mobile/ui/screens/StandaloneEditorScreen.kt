@@ -313,7 +313,7 @@ fun StandaloneEditorScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 260.dp, max = 360.dp),
+                                .heightIn(min = AppDimens.EditorSheetMinHeight, max = AppDimens.EditorSheetMaxHeight),
                             shape = RoundedCornerShape(
                                 topStart = AppDimens.CornerRadiusEditorSheet,
                                 topEnd = AppDimens.CornerRadiusEditorSheet

@@ -80,8 +80,8 @@ fun EditorToneCurvePanel(
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
-    val captureRadiusPx = with(density) { 32.dp.toPx() }
-    val offCanvasMarginPx = with(density) { 36.dp.toPx() }
+    val captureRadiusPx = with(density) { AppDimens.ToneCurveCaptureRadius.toPx() }
+    val offCanvasMarginPx = with(density) { AppDimens.ToneCurveOffCanvasMargin.toPx() }
 
     var curveSubMode by remember { mutableIntStateOf(0) } // 0 = Point Curve Canvas, 1 = Zonal Sliders
     var selectedChannel by remember { mutableIntStateOf(0) } // 0 = RGB, 1 = Red, 2 = Green, 3 = Blue

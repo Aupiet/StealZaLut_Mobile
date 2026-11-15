@@ -234,7 +234,7 @@ fun EditorEmptyState(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingMicro)
                         )
                     }
                 }
@@ -353,7 +353,7 @@ private fun ProjectItemCard(
             // Thumbnail Box
             Box(
                 modifier = Modifier
-                    .size(68.dp)
+                    .size(AppDimens.EmptyStateIconSize)
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
                     .background(MaterialTheme.szlColors.photoDarkroom),
                 contentAlignment = Alignment.Center
@@ -378,7 +378,7 @@ private fun ProjectItemCard(
             // Project Info Column
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro)
             ) {
                 Text(
                     text = project.name,
@@ -399,7 +399,7 @@ private fun ProjectItemCard(
             Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMicro)) {
                 IconButton(
                     onClick = onDuplicate,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(AppDimens.EmptyStateActionIconSize)
                 ) {
                     Icon(
                         imageVector = MaterialTheme.icons.actionDuplicate,
@@ -410,7 +410,7 @@ private fun ProjectItemCard(
                 }
                 IconButton(
                     onClick = onRename,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(AppDimens.EmptyStateActionIconSize)
                 ) {
                     Icon(
                         imageVector = MaterialTheme.icons.actionEdit,
@@ -421,7 +421,7 @@ private fun ProjectItemCard(
                 }
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(AppDimens.EmptyStateActionIconSize)
                 ) {
                     Icon(
                         imageVector = MaterialTheme.icons.actionDelete,

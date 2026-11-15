@@ -69,7 +69,9 @@ fun MethodSelector(
                 .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
                 .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
                 .clickable { onMethodSelected(recMethod) }
-                .semantics { contentDescription = "$recName, $recSubtitle" } // GUARD_ALLOW
+                .semantics {
+                    contentDescription = "$recName, $recSubtitle" // GUARD_ALLOW
+                }
         ) {
             Row(
                 modifier = Modifier
@@ -129,7 +131,9 @@ fun MethodSelector(
                         .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
                         .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
                         .clickable { onMethodSelected(method) }
-                        .semantics { contentDescription = "$name, $sub" } // GUARD_ALLOW
+                        .semantics {
+                            contentDescription = "$name, $sub" // GUARD_ALLOW
+                        }
                 ) {
                     Column(
                         modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingSmall),

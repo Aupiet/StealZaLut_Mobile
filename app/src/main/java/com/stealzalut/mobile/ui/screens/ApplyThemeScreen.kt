@@ -199,7 +199,6 @@ fun ApplyThemeScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .verticalScroll(rememberScrollState())
                                     .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical)
                             ) {
                                 StudioStep1Source(
@@ -207,7 +206,8 @@ fun ApplyThemeScreen(
                                     onImageSelected = { uri -> viewModel.setSourceImage(uri) },
                                     canProceed = uiState.canProceedToStep2,
                                     onReset = { viewModel.resetWizard() },
-                                    onNext = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) }
+                                    onNext = { viewModel.setWizardStep(AppConstants.STEP_2_STYLE) },
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
                         }
@@ -216,7 +216,6 @@ fun ApplyThemeScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .verticalScroll(rememberScrollState())
                                     .padding(horizontal = AppDimens.ScreenPaddingHorizontal, vertical = AppDimens.ScreenPaddingVertical)
                             ) {
                                 StudioStep2Style(
@@ -230,7 +229,8 @@ fun ApplyThemeScreen(
                                     onThemeSelected = { preset -> viewModel.selectThemeToApply(preset) },
                                     canProceed = uiState.canProceedToStep3,
                                     onBack = { viewModel.setWizardStep(AppConstants.STEP_1_SOURCE) },
-                                    onNext = { viewModel.setWizardStep(AppConstants.STEP_3_PARAMS) }
+                                    onNext = { viewModel.setWizardStep(AppConstants.STEP_3_PARAMS) },
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
                         }

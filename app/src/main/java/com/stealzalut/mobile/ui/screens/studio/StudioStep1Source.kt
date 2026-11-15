@@ -6,41 +6,56 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.stealzalut.mobile.R
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
-import com.stealzalut.mobile.ui.components.ImagePickerCard
+import com.stealzalut.mobile.ui.theme.icons
 
+/**
+ * Step 1: Source Image Selection (Prototype Mobile v2.3).
+ * Strictly 0-scroll on all screen sizes & aspect ratios:
+ * - Maximized flexible WYSIWYG card (weight = 1f).
+ * - Direct tap on card to select or change photo.
+ * - Single secondary action for RAW / DNG files.
+ * - Zero fake metadata or redundant buttons.
+ */
 @Composable
 fun StudioStep1Source(
     sourceBitmap: Bitmap?,
     onImageSelected: (Uri) -> Unit,
     canProceed: Boolean,
     onReset: () -> Unit = {},
-    onNext: () -> Unit,
+    onNext: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -56,122 +71,181 @@ fun StudioStep1Source(
     }
 
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
     ) {
-
-
-        ImagePickerCard(
-            title = if (sourceBitmap != null) stringResource(R.string.wizard_step_1_ready) else stringResource(R.string.wizard_step_1_title),
-            subtitle = if (sourceBitmap != null) stringResource(R.string.wizard_step_1_badge) else stringResource(R.string.wizard_step_1_empty),
-            badgeText = stringResource(R.string.wizard_step_1_badge),
-            bitmap = sourceBitmap,
-            onImageSelected = onImageSelected
-        )
-
-        OutlinedButton(
-            onClick = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
-        ) {
-            Icon(
-                imageVector = MaterialTheme.icons.actionImport,
-                contentDescription = null,
-                modifier = Modifier.size(AppDimens.IconNormal)
-            )
-            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-            Text(
-                text = stringResource(R.string.btn_open_raw_dng),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
         if (sourceBitmap != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+            // Maximized flexible WYSIWYG card (weight = 1f, strictly 0-scroll)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
+                    .clickable {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+                ),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                border = BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                )
             ) {
-                Surface(
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-                    border = BorderStroke(
-                        AppDimens.BorderThin,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppDimens.SpacingSmall),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
-                        horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                        verticalAlignment = Alignment.CenterVertically
+                    Image(
+                        bitmap = sourceBitmap.asImageBitmap(),
+                        contentDescription = stringResource(R.string.wizard_step_1_ready),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium)),
+                        contentScale = ContentScale.Fit
+                    )
+
+                    // Subtle bottom pill indicating tap to change
+                    Surface(
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        border = BorderStroke(
+                            AppDimens.BorderThin,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = AppDimens.SpacingSmall)
                     ) {
-                        Text(
-                            text = "ISO 100", // GUARD_ALLOW
-                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                        Row(
+                            modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingExtraSmall),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                        ) {
+                            Icon(
+                                imageVector = MaterialTheme.icons.actionRefresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(AppDimens.IconSmall),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.wizard_step_1_change),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Secondary option: Open RAW / DNG
+            OutlinedButton(
+                onClick = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+            ) {
+                Icon(
+                    imageVector = MaterialTheme.icons.actionImport,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Text(
+                    text = stringResource(R.string.btn_open_raw_dng),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        } else {
+            // Welcoming empty drop zone (weight = 1f, strictly 0-scroll)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(AppDimens.CornerRadiusLarge))
+                    .clickable {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+                ),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                border = BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppDimens.SpacingLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusLarge),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            modifier = Modifier.size(AppDimens.IconJumbo)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = MaterialTheme.icons.actionAddPhoto,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AppDimens.IconLarge),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
                         Text(
-                            text = "f/1.8", // GUARD_ALLOW
-                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            text = stringResource(R.string.wizard_step_1_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
                         )
+
                         Text(
-                            text = "1/250s", // GUARD_ALLOW
-                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = com.stealzalut.mobile.ui.theme.LocalFontSpec.current.mono),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            text = stringResource(R.string.wizard_step_1_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
             }
 
+            // Secondary option: Open RAW / DNG
             OutlinedButton(
-                onClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                },
+                onClick = { rawPickerLauncher.launch("*/*") }, // GUARD_ALLOW
                 modifier = Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
                 shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
             ) {
                 Icon(
-                    imageVector = MaterialTheme.icons.actionRefresh,
+                    imageVector = MaterialTheme.icons.actionImport,
                     contentDescription = null,
                     modifier = Modifier.size(AppDimens.IconNormal)
                 )
                 Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
                 Text(
-                    text = stringResource(R.string.wizard_step_1_change),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-        } else {
-            Button(
-                onClick = onNext,
-                enabled = canProceed,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
-            ) {
-                Text(
-                    text = stringResource(R.string.studio_btn_continue),
+                    text = stringResource(R.string.btn_open_raw_dng),
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                Icon(
-                    imageVector = MaterialTheme.icons.statusArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconNormal)
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

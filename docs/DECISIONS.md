@@ -90,14 +90,22 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ---
 
-## ADR-08 : Refonte du Flux Studio ↔ Éditeur & Clarification des Rôles (WYSIWYG)
+## ADR-09 : Refonte Ergonomique 0-Scroll du Studio & Épuration des Interfaces (Prototype v2.3)
 
 - **Statut :** [Acceptée]
-- **Contexte :** Le Studio contenait des doublons de retouche (bouton Auto-Edit aux étapes 1 et 3, panneau d'édition rétractable inline à l'étape 5) qui parasitaient l'étalonnage et risquaient de violer la règle d'or WYSIWYG si les ajustements d'exposition n'étaient pas répercutés dans la 3D LUT.
+- **Contexte :** Les étapes 1, 2, 3 et 5 du Studio présentaient des conteneurs d'image à hauteur non bornée ou sous `verticalScroll`, provoquant des débordements verticaux, forçant l'utilisateur à faire défiler l'écran pour accéder aux boutons d'actions ou coupant les onglets supérieurs. De plus, plusieurs interfaces contenaient des cartes de conseils, des métadonnées factices (EXIF simulés) ou des textes d'explication superflus nuisant à la lisibilité et à l'épuration visuelle.
 - **Décision :**
-  1. **Spécialisation nette :** Le Studio est dédié à 100 % au transfert colorimétrique par 3D LUT. L'éditeur autonome est dédié à la retouche photographique fine et aux finitions de style.
-  2. **Nettoyage complet :** Suppression de l'Auto-Edit des étapes 1 et 3 du Studio, suppression du panneau d'édition inline et des curseurs d'ajustement de l'étape 5. Suppression propre du code mort (`applyAutoEdit`, sliders inline, callbacks et chaînes associées).
-  3. **Studio Étape 3 :** Viewport d'aperçu compact épinglé en haut de l'écran avec comparaison rideau (`DoubleViewComparison` en mode `SPLIT_WIPE`), restant visible pendant le défilement de tous les curseurs de réglage. Préservation de l'ancien aperçu durant les calculs pour éliminer tout clignotement.
+  1. **Architecture 0-Scroll Intégrale :** Suppression définitive de tout `verticalScroll` englobant dans `ApplyThemeScreen` sur toutes les étapes du Studio (Étapes 1, 2, 3, 5).
+  2. **Dimensionnement Dynamique & Capping Viewport :**
+     - **Étape 1 :** Conteneur flexible `weight(1f)` avec affichage `ContentScale.Fit`, tap direct pour changer d'image, action secondaire RAW/DNG, suppression des faux EXIF et suppression du bouton dupliqué "Continuer".
+     - **Étape 2 :** Onglets compacts épinglés en haut, conteneur image flexible `weight(1f)`, ruban de 7 dominantes extrait compact (hauteur 28dp) sans texte superflu, liste de presets cinéma scrollable uniquement en interne (`LazyColumn`).
+     - **Étape 3 :** Viewport comparatif dynamique cappé à 60% (tiroir replié) et 48% (tiroir déplié) via `BoxWithConstraints`. Barre de catégories fixée au bas de l'écran sans espace vide. Suppression de toutes les cartes d'information/tips et puces de presets redondantes. Bouton "Analyser" avec barre de progression `LinearProgressIndicator`.
+     - **Étape 5 :** Conteneur d'image avant/après cappé à 50% de la hauteur de l'écran, suppression du scroll, actions directes d'export et d'édition visibles à 100%.
+  3. **Barre de Navigation Inférieure Unifiée (`StudioBottomBar`) :**
+     - Pinned en bas de chaque étape (Retour à gauche, Continuer/Rendu/Terminer à droite) garantissant un alignement vertical parfait et des libellés concis ne dépassant pas les boutons.
+  4. **Landing Hub & Écran d'Accueil Épuré :**
+     - Alignement sur les standards ergonomiques mobiles (Snapseed / Lightroom) : Hero card avec grand tap target immédiat pour importer une photo ou un fichier RAW/DNG, suppression des cartes de tutoriel ou de textes superflus.
+
   4. **Studio Étape 2 :** Affichage de miniatures asynchrones bornées (`StudioPresetCard`) pour les styles enregistrés, avec repli élégant sur les pastilles de couleurs.
   5. **Studio Étape 5 :** Ajout du bouton pro « Retoucher dans l'éditeur » qui exporte la 3D LUT calculée en cache (`.cube`), précharge l'éditeur avec la photo source et cette LUT en base (`editorCustomLutPath`), initialise tous les curseurs à 0 (neutres), et offre un affichage instantané à 0 délai de recalcul avec parité WYSIWYG prouvée ($\Delta \le 1$ niveau 8 bits, validé par `TestStudioToEditorRelayParity` et `GradingRelayTest`).
   6. **Bouton « Terminer » :** Renommage du bouton de réinitialisation en « Terminer » avec dialogue de confirmation en cas de modifications non sauvegardées et vidage des caches Python via `clear_caches()`.
@@ -312,4 +320,34 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
      - 100% des chaînes (titres, résumés, descriptions détaillées, noms de paramètres et descriptions) traduites et synchronisées dans `values/strings.xml`, `values-fr/strings.xml` et `values-es/strings.xml`.
   5. **Conformité Design System :**
      - Zéro couleur, dimension ou icône en dur ; conformité totale vérifiée par `DesignSystemGuardTest`.
+
+---
+
+## ADR-19 : Rework Modulaire des Réglages (Sub-screens Dédiés) & Réplication Graphique des Thèmes
+
+- **Statut :** [Acceptée]
+- **Date :** 15 novembre 2026
+- **Contexte :**
+  1. L'ancien écran `SettingsScreen.kt` était une vue monolithique scrollable regroupant confusément tous les paramètres techniques (apparence, résolutions, moteur colorimétrique, maintenance, langue) sans hiérarchie distincte.
+  2. Les sélecteurs de thèmes étaient de simples puces/boutons radio textuels ne donnant aucun aperçu réel du rendu visuel de chaque thème (`AmberNoir`, `CyanStudio`, `OledBlack`, `Daylight`, `SystemDefault`).
+  3. L'ancien fichier comportait 12 violations de garde du design system (dp en dur).
+- **Décision :**
+  1. **Décomposition en Sous-Pages Dédiées :**
+     - Hub principal (`SettingsScreen.kt`) présentant 4 cartes thématiques (`SettingsHubNavCard`) avec icône, titre et sous-titre dynamique résumant la configuration active (ex: "AmberNoir • Rounded", "4K UHD • JPEG 95%").
+     - 4 sous-écrans spécialisés isolés sous `ui/screens/settings/` :
+       - `SettingsAppearanceSubScreen` : Choix du thème et jeu d'icônes.
+       - `SettingsExportSubScreen` : Résolution d'export photo, résolution proxy d'analyse, format (JPEG/PNG) et curseur de qualité.
+       - `SettingsEngineSubScreen` : Algorithme de transfert colorimétrique par défaut et taille de grille LUT 3D (.cube).
+       - `SettingsStorageSubScreen` : Sélection multilingue (FR, EN, ES), purge du cache avec dialogue de confirmation, accès au moniteur système et mode développeur.
+  2. **Navigation Hiérarchique & BackHandler Fluidifié :**
+     - Navigation interne animée (`AnimatedContent` avec transition en fondu) pilotée par `SettingsSubPage`.
+     - Intégration d'un `BackHandler` local activé uniquement en sous-page (`currentSubPage != SettingsSubPage.MAIN`) pour revenir au hub sans quitter les réglages.
+  3. **Réplication Graphique des Thèmes (`ThemeMiniatureMockup`) :**
+     - Chaque carte de thème affiche un mockup miniature d'écran de smartphone rendu dynamiquement avec les couleurs exactes du thème (`ThemeSpec.colorScheme` et `ThemeSpec.szlColors`).
+     - Le mockup reproduit la TopBar, l'affichage photo avec rideau comparatif Avant / Après, et la barre d'onglets inférieure.
+     - 4 pastilles d'échantillons de couleur sous le mockup affichent les teintes fondamentales du thème (Fond, Surface, Accent primaire, Rôle imagerie).
+  4. **Conformité Totale au Design System :**
+     - Zéro couleur en dur, zéro dimension en dur hors `AppDimens`, utilisation exclusive des tokens sémantiques.
+     - Réduction du nombre total de violations de garde du projet de 49 à 37 (-12 violations).
+
 

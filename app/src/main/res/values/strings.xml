@@ -74,6 +74,7 @@
     <string name="wizard_step_2_tab_saved">Cinema Palettes</string>
     <string name="wizard_step_2_ref_empty">Drop your reference photo B</string>
     <string name="wizard_step_2_ref_badge">Style B</string>
+    <string name="wizard_step_2_change">Change reference photo</string>
     <string name="wizard_step_2_no_saved">No saved presets yet. Upload reference photo B directly or extract a palette.</string>
     <string name="wizard_step_2_btn_back">Back</string>
     <string name="wizard_step_2_btn_next">Continue to Parameters (3/5) →</string>
@@ -212,6 +213,8 @@
     <!-- Common UI Labels -->
     <string name="common_save">Save</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_back">Back</string>
+    <string name="common_ok">OK</string>
     <string name="share_cube_title">Share 3D LUT (.cube)</string>
     <string name="common_delete">Delete</string>
 

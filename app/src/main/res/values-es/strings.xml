@@ -74,6 +74,7 @@
     <string name="wizard_step_2_tab_saved">Paletas de Cine</string>
     <string name="wizard_step_2_ref_empty">Suelta tu foto de referencia B</string>
     <string name="wizard_step_2_ref_badge">Estilo B</string>
+    <string name="wizard_step_2_change">Cambiar foto de referencia</string>
     <string name="wizard_step_2_no_saved">Sin presets guardados aún. Sube directamente una foto de referencia B o extrae una paleta.</string>
     <string name="wizard_step_2_btn_back">Atrás</string>
     <string name="wizard_step_2_btn_next">Continuar a Parámetros (3/5) →</string>
@@ -200,6 +201,8 @@
     <!-- Common UI Labels -->
     <string name="common_save">Guardar</string>
     <string name="common_cancel">Cancelar</string>
+    <string name="common_back">Atrás</string>
+    <string name="common_ok">Aceptar</string>
     <string name="share_cube_title">Compartir LUT (.cube)</string>
     <string name="common_delete">Eliminar</string>
 

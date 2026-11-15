@@ -111,3 +111,19 @@ La voie la plus prudente pour le portage desktop → mobile est la suivante :
 5. N’ajouter aucune dépendance supplémentaire avant validation de compatibilité Android/Chaquopy/arm64.
 
 Le rapport est prêt pour validation. À partir de ce point, la suite doit être validée par un GO explicite avant la phase de codage.
+
+---
+
+## 7. Bilan d'Implémentation & Parité Atteinte (Phase Terminée)
+
+- **Parité Backend Python & Chaquopy :**
+  - Implémentation complète de `stealzalut/core/zone_transfer.py` et `correspondence.py` avec les 7 zones de luminance (`deep_shadows` à `whites`) et 8 familles de teintes OKLCh.
+  - Bridge Python (`stealzalut/bridge.py`) exposant l'analyse complète des zones, le recalcul des correspondances avec overrides utilisateur et la génération des masques de zones en mode Noir & Blanc et en mode Couleur (isolation sur fond noir).
+- **Interface Compose & Graphique de Correspondances (`ZonePaletteVisualization.kt`) :**
+  - Graphe tactile à 2 colonnes avec courbes de Bézier cubiques (`Path.cubicTo`), drag & rewire, et affichage direct des noms de zones et pourcentages de pixels.
+  - Inspecteur de zones avec bandeau tactile de 7 cartes, bascule de mode de masque (couleur isolée vs N&B), et curseurs d'override d'intensité, teinte et luminance.
+  - Affichage direct du masque de zone sur le viewport principal de l'application en remplacement de l'aperçu standard.
+- **Ergonomie 0-Scroll & No-Clutter :**
+  - Suppression de tout défilement global vertical inutile sur les étapes 1, 2, 3 et 5.
+  - Viewports dynamiques cappés à 48-60% de l'écran avec adaptation fluide.
+  - Pinned Navigation Bar (`StudioBottomBar`) unifiée sur toutes les étapes.

@@ -74,6 +74,7 @@
     <string name="wizard_step_2_tab_saved">Nuanciers Cinéma</string>
     <string name="wizard_step_2_ref_empty">Déposez votre photo de référence B</string>
     <string name="wizard_step_2_ref_badge">Style B</string>
+    <string name="wizard_step_2_change">Changer de référence</string>
     <string name="wizard_step_2_no_saved">Aucun preset sauvegardé pour l\'instant. Importez directement une photo de référence B ou extrayez une palette.</string>
     <string name="wizard_step_2_btn_back">Retour</string>
     <string name="wizard_step_2_btn_next">Continuer vers Paramètres (3/5) →</string>
@@ -212,6 +213,8 @@
     <!-- Common UI Labels -->
     <string name="common_save">Enregistrer</string>
     <string name="common_cancel">Annuler</string>
+    <string name="common_back">Retour</string>
+    <string name="common_ok">OK</string>
     <string name="share_cube_title">Partager la LUT (.cube)</string>
     <string name="common_delete">Supprimer</string>
 

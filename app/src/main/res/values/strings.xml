@@ -32,6 +32,9 @@
     <string name="method_reinhard_name">Perceptual CIE LAB</string>
     <string name="method_reinhard_sub">Reinhard Statistical Moments</string>
     <string name="method_reinhard_desc">Mean and standard deviation transfer in perceptual CIE LAB color space.</string>
+    <string name="method_ambiance_name">Atmospheric Ambiance</string>
+    <string name="method_ambiance_sub">Tone-Dependent Color Cast</string>
+    <string name="method_ambiance_desc">Tone-dependent tint curve in Oklab: transfers mood while preserving vivid sources and contrast.</string>
 
     <!-- Lut Sizes (Enums) -->
     <string name="lut_size_17_label">17x17x17 Fast</string>

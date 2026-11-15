@@ -280,6 +280,70 @@ def _apply_simple_box_blur(
     return out
 
 
+def apply_step3_spatial_effects(
+    rgb: NDArray[np.float32],
+    params: Step3Params,
+    lr_settings: Optional[Union[LightroomDevelopSettings, Dict[str, Any]]] = None,
+) -> NDArray[np.float32]:
+    """Execute Stage 3 spatial operations only, avoiding double-application of baked color.
+
+    Args:
+        rgb: Float32 image array in [0.0, 1.0].
+        params: Active Step3Params configuration.
+        lr_settings: Optional full Adobe Lightroom Classic develop settings.
+
+    Returns:
+        Spatially enhanced float32 array in [0.0, 1.0].
+    """
+    out = np.clip(rgb.astype(np.float32), 0.0, 1.0)
+    if lr_settings is not None:
+        if isinstance(lr_settings, dict):
+            lr_obj = LightroomDevelopSettings.from_dict(lr_settings)
+        else:
+            lr_obj = lr_settings
+
+        if out.ndim >= 2 and min(out.shape[:2]) >= 16:
+            from stealzalut.core.lightroom_spatial import (
+                apply_full_lightroom_spatial_pipeline,
+            )
+
+            out = apply_full_lightroom_spatial_pipeline(out, lr_obj)
+        return np.clip(out, 0.0, 1.0).astype(np.float32)
+
+    if out.ndim >= 2 and out.shape[0] >= 16 and out.shape[1] >= 16:
+        # Clarity: Local midtone contrast boost using unsharp high-pass
+        if params.clarity > 1e-4:
+            blur_clarity = _apply_simple_box_blur(
+                out, radius=max(2, min(out.shape[:2]) // 64)
+            )
+            high_pass = out - blur_clarity
+            lum = 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
+            midtone_weight = np.clip(1.0 - 4.0 * (lum - 0.5) ** 2, 0.0, 1.0)[
+                ..., np.newaxis
+            ]
+            out = np.clip(
+                out + params.clarity * 0.35 * high_pass * midtone_weight, 0.0, 1.0
+            )
+
+        # Sharpen: Unsharp masking
+        if params.sharpen > 1e-4:
+            blur_sharp = _apply_simple_box_blur(out, radius=1)
+            edge_delta = out - blur_sharp
+            out = np.clip(out + params.sharpen * 0.45 * edge_delta, 0.0, 1.0)
+
+        # Grain: Film grain simulation modulated by luminance
+        if params.grain > 1e-4:
+            lum = 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
+            grain_weight = np.clip(4.0 * lum * (1.0 - lum), 0.0, 1.0)[..., np.newaxis]
+            rng = np.random.RandomState(42)
+            noise = rng.normal(0.0, 0.08 * params.grain, size=out.shape).astype(
+                np.float32
+            )
+            out = np.clip(out + noise * grain_weight, 0.0, 1.0)
+
+    return np.clip(out, 0.0, 1.0).astype(np.float32)
+
+
 def apply_step3_color_grading(
     rgb: NDArray[np.float32],
     params: Step3Params,
@@ -391,43 +455,8 @@ def apply_step3_color_grading(
         out = np.clip(np.stack([out_r, out_g, out_b], axis=-1), 0.0, 1.0)
 
     # 7. 2D Spatial Effects (Bypassed during LUT Baking)
-    if (
-        not is_lut_baking
-        and out.ndim >= 2
-        and out.shape[0] >= 16
-        and out.shape[1] >= 16
-    ):
-        # Clarity: Local midtone contrast boost using unsharp high-pass
-        if params.clarity > 1e-4:
-            blur_clarity = _apply_simple_box_blur(
-                out, radius=max(2, min(out.shape[:2]) // 64)
-            )
-            high_pass = out - blur_clarity
-            # Weight towards midtones (bell curve centered at 0.5)
-            lum = 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
-            midtone_weight = np.clip(1.0 - 4.0 * (lum - 0.5) ** 2, 0.0, 1.0)[
-                ..., np.newaxis
-            ]
-            out = np.clip(
-                out + params.clarity * 0.35 * high_pass * midtone_weight, 0.0, 1.0
-            )
-
-        # Sharpen: Unsharp masking
-        if params.sharpen > 1e-4:
-            blur_sharp = _apply_simple_box_blur(out, radius=1)
-            edge_delta = out - blur_sharp
-            out = np.clip(out + params.sharpen * 0.45 * edge_delta, 0.0, 1.0)
-
-        # Grain: Film grain simulation modulated by luminance
-        if params.grain > 1e-4:
-            lum = 0.299 * out[..., 0] + 0.587 * out[..., 1] + 0.114 * out[..., 2]
-            # Grain is most apparent in midtones and suppressed in pure crushed blacks and clipped whites
-            grain_weight = np.clip(4.0 * lum * (1.0 - lum), 0.0, 1.0)[..., np.newaxis]
-            rng = np.random.RandomState(42)  # Deterministic seed for preview stability
-            noise = rng.normal(0.0, 0.08 * params.grain, size=out.shape).astype(
-                np.float32
-            )
-            out = np.clip(out + noise * grain_weight, 0.0, 1.0)
+    if not is_lut_baking:
+        out = apply_step3_spatial_effects(out, params=params)
 
     return np.clip(out, 0.0, 1.0).astype(np.float32)
 

@@ -35,6 +35,7 @@ from stealzalut.core.pipeline import (
     Step2Params,
     Step3Params,
     apply_step3_color_grading,
+    apply_step3_spatial_effects,
     bake_full_pipeline_lut,
 )
 from stealzalut.utils.image_io import (
@@ -243,13 +244,12 @@ def run_transfer_pipeline(
         transferred = apply_lut(src_work, baked_lut)
         del src_work, baked_lut
 
-        # 5. Apply 2D spatial effects if active
+        # 5. Apply 2D spatial effects if active (color is already baked into 3D LUT)
         if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             trans_f = to_float32(transferred)
-            trans_f = apply_step3_color_grading(
+            trans_f = apply_step3_spatial_effects(
                 trans_f,
                 params=step3,
-                is_lut_baking=False,
                 lr_settings=lr_settings,
             )
             transferred = to_uint8(trans_f)

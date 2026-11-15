@@ -24,11 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.RotateRight
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.RestartAlt
+import com.stealzalut.mobile.ui.theme.icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -627,8 +623,8 @@ fun EditorCropOverlay(
                     val y = down.position.y
                     fun dist(px: Float, py: Float) = hypot(x - px, y - py)
 
-                    val cornerRadius = with(density) { 52.dp.toPx() }
-                    val edgeRadius = with(density) { 42.dp.toPx() }
+                    val cornerRadius = with(density) { AppDimens.CropCornerRadius.toPx() }
+                    val edgeRadius = with(density) { AppDimens.CropEdgeRadius.toPx() }
 
                     val handle = when {
                         dist(leftPx, topPx) <= cornerRadius -> DragHandle.TOP_LEFT
@@ -850,7 +846,7 @@ fun EditorCropOverlay(
                     modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = MaterialTheme.icons.actionClose,
                         contentDescription = stringResource(R.string.crop_cancel),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(AppDimens.IconMedium)
@@ -862,14 +858,14 @@ fun EditorCropOverlay(
                 Surface(
                     shape = RoundedCornerShape(AppDimens.CornerRadiusPill),
                     color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.padding(horizontal = 2.dp)
+                    modifier = Modifier.padding(horizontal = AppDimens.SpacingMicro)
                 ) {
                     Text(
                         text = String.format(Locale.US, "%.1fx", topZoom),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingExtraSmall)
                     )
                 }
 
@@ -879,7 +875,7 @@ fun EditorCropOverlay(
                     modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.RotateRight,
+                        imageVector = MaterialTheme.icons.actionRotate,
                         contentDescription = stringResource(R.string.crop_rotate_90),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(AppDimens.IconMedium)
@@ -892,7 +888,7 @@ fun EditorCropOverlay(
                     modifier = Modifier.size(AppDimens.MinInteractiveTarget)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.RestartAlt,
+                        imageVector = MaterialTheme.icons.actionReset,
                         contentDescription = stringResource(R.string.crop_reset),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(AppDimens.IconMedium)
@@ -911,7 +907,7 @@ fun EditorCropOverlay(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Rounded.Check,
+                            imageVector = MaterialTheme.icons.statusCheck,
                             contentDescription = null,
                             modifier = Modifier.size(AppDimens.IconSmall)
                         )
@@ -965,7 +961,7 @@ fun EditorCropPanel(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusFull),
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
-                    .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
+                    .defaultMinSize(minWidth = AppDimens.CropButtonMinWidth, minHeight = AppDimens.MinInteractiveTarget)
                     .clickable {
                         onRatioChange(CropAspectRatio.ORIGINAL)
                         currentAngle = 0.0f
@@ -990,7 +986,7 @@ fun EditorCropPanel(
                 shape = RoundedCornerShape(AppDimens.CornerRadiusFull),
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
-                    .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
+                    .defaultMinSize(minWidth = AppDimens.CropButtonMinWidth, minHeight = AppDimens.MinInteractiveTarget)
                     .clickable {
                         onRotate90?.invoke()
                     }
@@ -1001,12 +997,12 @@ fun EditorCropPanel(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.RotateRight,
+                        imageVector = MaterialTheme.icons.actionRotate,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(AppDimens.IconSmall)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(AppDimens.SpacingExtraSmall))
                     Text(
                         text = "90°",
                         style = MaterialTheme.typography.labelMedium,
@@ -1023,7 +1019,7 @@ fun EditorCropPanel(
                     shape = RoundedCornerShape(AppDimens.CornerRadiusFull),
                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
-                        .defaultMinSize(minWidth = 58.dp, minHeight = AppDimens.MinInteractiveTarget)
+                        .defaultMinSize(minWidth = AppDimens.CropButtonMinWidth, minHeight = AppDimens.MinInteractiveTarget)
                         .clickable {
                             onRatioChange(ratio)
                             // Non-destructive adaptation around current framing center

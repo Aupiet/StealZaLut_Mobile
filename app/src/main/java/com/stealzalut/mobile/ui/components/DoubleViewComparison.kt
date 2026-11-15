@@ -306,20 +306,23 @@ fun DoubleViewComparison(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(24.dp)
+                            .height(AppDimens.DoubleViewDividerHeight)
                             .pointerInput(Unit) {
                                 detectVerticalDragGestures { change, dragAmount ->
                                     change.consume()
                                     val delta = with(density) { dragAmount.toDp() }
-                                    comparisonHeight = (comparisonHeight + delta).coerceIn(140.dp, 360.dp)
+                                    comparisonHeight = (comparisonHeight + delta).coerceIn(
+                                        AppDimens.DoubleViewMinResizeHeight,
+                                        AppDimens.DoubleViewMaxResizeHeight
+                                    )
                                 }
                             },
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .width(48.dp)
-                                .height(4.dp)
+                                .width(AppDimens.DoubleViewHandleWidth)
+                                .height(AppDimens.DoubleViewHandleHeight)
                                 .clip(RoundedCornerShape(AppDimens.CornerRadiusPill))
                                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                         )

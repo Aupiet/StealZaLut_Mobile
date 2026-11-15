@@ -90,21 +90,21 @@ fun StudioStep4Computing(
         ) {
             // Large Circular Progress Ring with Center Percentage (Figma node 12:351)
             Box(
-                modifier = Modifier.size(140.dp),
+                modifier = Modifier.size(AppDimens.ComputingIndicatorSize),
                 contentAlignment = Alignment.Center
             ) {
                 // Background Track
                 CircularProgressIndicator(
                     progress = { 1.0f },
-                    modifier = Modifier.size(140.dp),
-                    strokeWidth = 6.dp,
+                    modifier = Modifier.size(AppDimens.ComputingIndicatorSize),
+                    strokeWidth = AppDimens.ComputingStrokeWidth,
                     color = MaterialTheme.colorScheme.surfaceVariant
                 )
                 // Active Amber Arc
                 CircularProgressIndicator(
                     progress = { animatedProgress.coerceIn(0.1f, 0.98f) },
-                    modifier = Modifier.size(140.dp),
-                    strokeWidth = 6.dp,
+                    modifier = Modifier.size(AppDimens.ComputingIndicatorSize),
+                    strokeWidth = AppDimens.ComputingStrokeWidth,
                     color = MaterialTheme.colorScheme.primary
                 )
                 // Center Percentage in JetBrains Mono Bold (32sp)

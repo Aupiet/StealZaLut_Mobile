@@ -2,7 +2,7 @@
 
 ## Métriques Avant / Après
 - Violations garde : 37 → 0
-- Tests Pytest : 134 → 142 passés
+- Tests Pytest : 134 → 143 passés
 - Tests unitaires Kotlin : 117 → 120 passés
 - Latence preview perçue : 200 ms (debounce fixe) → < 1 ms (GPU) / 80-600 ms adaptatif (trailing)
 
@@ -16,3 +16,4 @@
 - [x] 6. Analyse comparative (`ambiance` transfer mood Oklab, presse-papier `EditorClipboardHolder`)
 - [x] 7. Nettoyage code mort (suppression doublon `colorspace.py`, imports `color_space.py`)
 - [x] 8. Documentation & ADRs (ADR-08 à ADR-23, arborescence §7, chiffres mesurés, untrack `.idea`)
+- [x] Hotfix bridge : assainissement des paramètres positionnels & lut_size (TypeError NoneType résolu)

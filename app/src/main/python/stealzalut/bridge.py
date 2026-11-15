@@ -127,9 +127,19 @@ def process_preview(
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
     develop_settings_json: Optional[str] = None,
+    zone_overrides_json: Optional[str] = None,
+    *args: Any,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """Generate a colour-transferred preview image using the exact 3D LUT."""
     try:
+        if zone_overrides_json is None:
+            for arg in args:
+                if isinstance(arg, str) and (arg.startswith("{") or arg == ""):
+                    zone_overrides_json = arg
+                    break
+            if zone_overrides_json is None and kwargs.get("zone_overrides_json"):
+                zone_overrides_json = kwargs.get("zone_overrides_json")
         if not src_path or not os.path.isfile(src_path):
             return _make_error_response(
                 message=f"Source image file not found: {src_path}",
@@ -176,6 +186,7 @@ def process_preview(
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
             lr_settings=develop_settings_json,
+            zone_overrides=zone_overrides_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))[
@@ -272,9 +283,19 @@ def export_cube_file(
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
     develop_settings_json: Optional[str] = None,
+    zone_overrides_json: Optional[str] = None,
+    *args: Any,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """Compute and export a 3-D LUT as an Adobe ``.cube`` file."""
     try:
+        if zone_overrides_json is None:
+            for arg in args:
+                if isinstance(arg, str) and (arg.startswith("{") or arg == ""):
+                    zone_overrides_json = arg
+                    break
+            if zone_overrides_json is None and kwargs.get("zone_overrides_json"):
+                zone_overrides_json = kwargs.get("zone_overrides_json")
         # Check source image path: if specified and invalid, return error
         if src_path and not os.path.isfile(src_path):
             return _make_error_response(
@@ -325,6 +346,7 @@ def export_cube_file(
             spatial_3d=spatial_3d,
             custom_lut_path=custom_lut_path,
             lr_settings=develop_settings_json,
+            zone_overrides=zone_overrides_json,
         )
         if res.get("status") == "success":
             path = res.get("cube_path") or res.get("lut_path")
@@ -374,9 +396,19 @@ def export_graded_image(
     custom_lut_path: Optional[str] = None,
     develop_settings_json: Optional[str] = None,
     pre_downscale: bool = False,
+    zone_overrides_json: Optional[str] = None,
+    *args: Any,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """Export the graded source image directly in high resolution."""
     try:
+        if zone_overrides_json is None:
+            for arg in args:
+                if isinstance(arg, str) and (arg.startswith("{") or arg == ""):
+                    zone_overrides_json = arg
+                    break
+            if zone_overrides_json is None and kwargs.get("zone_overrides_json"):
+                zone_overrides_json = kwargs.get("zone_overrides_json")
         if not src_path or not os.path.isfile(src_path):
             return _make_error_response(
                 message=f"Source image file not found: {src_path}",
@@ -422,6 +454,7 @@ def export_graded_image(
             custom_lut_path=custom_lut_path,
             lr_settings=develop_settings_json,
             pre_downscale=pre_downscale,
+            zone_overrides=zone_overrides_json,
         )
         if res.get("status") == "error" and "error_code" not in res:
             res["error_code"] = _make_error_response(message=res.get("message", ""))[
@@ -973,22 +1006,18 @@ def fit_zone_transfer_bridge(
         from PIL import Image
         from stealzalut.core.correspondence import retarget
 
-        src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
-        ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
-        model = fit_zone_transfer(src, ref, zone_count=zone_count)
-
-        # Apply user overrides to the automatic correspondence table
-        table = model.table
         user_overrides: Dict[str, int] = {}
         if user_overrides_json:
             try:
                 raw = json.loads(user_overrides_json)
                 user_overrides = {str(k): int(v) for k, v in raw.items()}
-                for src_zone_str, ref_zone_id in user_overrides.items():
-                    src_zone_id = int(src_zone_str)
-                    table = retarget(table, src_zone_id, ref_zone_id)
             except (json.JSONDecodeError, ValueError, KeyError):
                 pass  # Silently ignore malformed overrides; keep auto table
+
+        src = np.asarray(Image.open(source_path).convert("RGB"), dtype=np.uint8)
+        ref = np.asarray(Image.open(reference_path).convert("RGB"), dtype=np.uint8)
+        model = fit_zone_transfer(src, ref, zone_count=zone_count, user_overrides=user_overrides)
+        table = model.table
 
         def enrich_zone(zone_obj: Any, idx: int) -> Dict[str, Any]:
             name = ZONE_NAMES[idx] if idx < len(ZONE_NAMES) else f"zone_{idx}"

@@ -72,6 +72,7 @@ def run_export_pipeline(
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute the full WYSIWYG LUT-export pipeline.
 
@@ -129,6 +130,7 @@ def run_export_pipeline(
                 lut_size=lut_size,
                 preserve_luminance=eff_luma,
                 soft_clip=True,
+                zone_overrides=zone_overrides,
             )
         else:
             # Standalone photo editor mode (no reference image)
@@ -207,6 +209,7 @@ def run_image_export_pipeline(
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
     pre_downscale: bool = False,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute high-resolution image export with absolute WYSIWYG fidelity."""
     start: float = time.monotonic()
@@ -259,6 +262,7 @@ def run_image_export_pipeline(
                 lut_size=lut_size,
                 preserve_luminance=eff_luma,
                 soft_clip=True,
+                zone_overrides=zone_overrides,
             )
         else:
             raw_lut = generate_identity_lattice(lut_size)

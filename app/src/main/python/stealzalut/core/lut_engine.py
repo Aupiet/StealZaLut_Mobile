@@ -364,6 +364,7 @@ def generate_lut_from_pair(
     sample_size: int = 512,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = False,
+    zone_overrides: Optional[Dict[Union[str, int], int]] = None,
 ) -> NDArray[np.float32]:
     """Generate a 3-D colour LUT from a source and reference image pair.
 
@@ -400,6 +401,7 @@ def generate_lut_from_pair(
         method=method,
         preserve_luminance=preserve_luminance,
         soft_clip=soft_clip,
+        zone_overrides=zone_overrides,
     )
 
     # Reshape and apply light pre-smoothing to prevent any discrete stepping
@@ -415,6 +417,7 @@ def compute_lut(
     method: str = DEFAULT_METHOD,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = False,
+    zone_overrides: Optional[Dict[Union[str, int], int]] = None,
 ) -> NDArray[np.float32]:
     """Compute a raw 3-D colour LUT by transferring colour onto an identity lattice.
 
@@ -425,6 +428,7 @@ def compute_lut(
         method: Colour-transfer algorithm key.
         preserve_luminance: Luminance preservation weight in [0.0, 1.0].
         soft_clip: Whether to apply soft-knee roll-off.
+        zone_overrides: Optional custom source-to-reference zone mappings for zones method.
 
     Returns:
         Transformed raw LUT as a float32 array of shape
@@ -438,4 +442,5 @@ def compute_lut(
         sample_size=512,
         preserve_luminance=preserve_luminance,
         soft_clip=soft_clip,
+        zone_overrides=zone_overrides,
     )

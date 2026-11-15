@@ -223,6 +223,8 @@ class StealZaLutViewModel(
     fun setLutSize(size: LutSize) = gradingPipelineDelegate.setLutSize(size)
     fun runGradingFunnel() = gradingPipelineDelegate.runGradingFunnel()
     fun applyEditorAutoEdit() = editorSessionDelegate.applyAutoEdit()
+    fun copyEditorSettings() = editorSessionDelegate.copySettings()
+    fun pasteEditorSettings() = editorSessionDelegate.pasteSettings()
 
     fun saveGradedImageToGallery() = gradingPipelineDelegate.saveGradedImageToGallery { loadSavedImages() }
     fun exportCube(onReadyToSave: (String) -> Unit) = gradingPipelineDelegate.exportCube(onReadyToSave)

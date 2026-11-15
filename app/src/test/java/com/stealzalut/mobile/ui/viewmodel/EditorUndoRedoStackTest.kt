@@ -207,4 +207,23 @@ class EditorUndoRedoStackTest {
 
         mockFile.delete()
     }
+
+    @Test
+    fun `copy and paste settings transfers adjustments across states`() = runTest {
+        val testModel = stateFlow.value.editorLightroomParams.copy(
+            basic = stateFlow.value.editorLightroomParams.basic.copy(exposure = 1.75f, contrast = 25f)
+        )
+        stateFlow.value = stateFlow.value.copy(editorLightroomParams = testModel)
+        assertEquals(1.75f, stateFlow.value.editorLightroomParams.basic.exposure)
+
+        delegate.copySettings()
+        assertTrue(stateFlow.value.hasCopiedSettings)
+
+        delegate.resetAllEditorParams()
+        assertEquals(0f, stateFlow.value.editorLightroomParams.basic.exposure)
+
+        delegate.pasteSettings()
+        assertEquals(1.75f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(25f, stateFlow.value.editorLightroomParams.basic.contrast)
+    }
 }

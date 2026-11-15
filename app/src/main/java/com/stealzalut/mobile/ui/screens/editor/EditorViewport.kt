@@ -81,6 +81,9 @@ fun EditorViewport(
     onToggleHistogram: () -> Unit = {},
     isComputingAutoEdit: Boolean = false,
     onApplyAutoEdit: () -> Unit = {},
+    hasCopiedSettings: Boolean = false,
+    onCopySettings: () -> Unit = {},
+    onPasteSettings: () -> Unit = {},
     isGesturesEnabled: Boolean = true
 ) {
     var isHoldingCompare by remember { mutableStateOf(false) }
@@ -274,6 +277,34 @@ fun EditorViewport(
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(AppDimens.IconSmall)
                         )
+                    }
+
+                    // Copy Settings Button
+                    IconButton(
+                        onClick = onCopySettings,
+                        modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                    ) {
+                        Icon(
+                            imageVector = MaterialTheme.icons.actionDuplicate,
+                            contentDescription = stringResource(R.string.action_copy_settings),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(AppDimens.IconSmall)
+                        )
+                    }
+
+                    // Paste Settings Button
+                    if (hasCopiedSettings) {
+                        IconButton(
+                            onClick = onPasteSettings,
+                            modifier = Modifier.size(AppDimens.ViewportButtonSize)
+                        ) {
+                            Icon(
+                                imageVector = MaterialTheme.icons.actionImport,
+                                contentDescription = stringResource(R.string.action_paste_settings),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(AppDimens.IconSmall)
+                            )
+                        }
                     }
                 }
             }

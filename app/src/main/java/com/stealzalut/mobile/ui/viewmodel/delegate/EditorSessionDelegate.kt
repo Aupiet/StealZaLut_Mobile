@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.EditorClipboardHolder
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.core.diagnostics.launchSafely as launch
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
@@ -685,6 +686,29 @@ class EditorSessionDelegate(
                 }
             }
         }
+    }
+
+    fun copySettings() {
+        val current = stateFlow.value.editorLightroomParams
+        EditorClipboardHolder.copy(current)
+        stateFlow.update {
+            it.copy(
+                hasCopiedSettings = true,
+                userMessage = UiText.Resource(R.string.msg_settings_copied)
+            )
+        }
+    }
+
+    fun pasteSettings() {
+        val pasted = EditorClipboardHolder.paste() ?: return
+        pushUndoSnapshot()
+        stateFlow.update {
+            it.copy(
+                editorLightroomParams = pasted,
+                userMessage = UiText.Resource(R.string.msg_settings_pasted)
+            )
+        }
+        scheduleEditorPreviewUpdate()
     }
 
     fun resetEditingParameters() {

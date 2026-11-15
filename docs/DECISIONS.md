@@ -90,7 +90,7 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
 
 ---
 
-## ADR-09 : Refonte Ergonomique 0-Scroll du Studio & Épuration des Interfaces (Prototype v2.3)
+## ADR-08 : Refonte Ergonomique 0-Scroll du Studio & Épuration des Interfaces (Prototype v2.3)
 
 - **Statut :** [Acceptée]
 - **Contexte :** Les étapes 1, 2, 3 et 5 du Studio présentaient des conteneurs d'image à hauteur non bornée ou sous `verticalScroll`, provoquant des débordements verticaux, forçant l'utilisateur à faire défiler l'écran pour accéder aux boutons d'actions ou coupant les onglets supérieurs. De plus, plusieurs interfaces contenaient des cartes de conseils, des métadonnées factices (EXIF simulés) ou des textes d'explication superflus nuisant à la lisibilité et à l'épuration visuelle.
@@ -349,5 +349,65 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   4. **Conformité Totale au Design System :**
      - Zéro couleur en dur, zéro dimension en dur hors `AppDimens`, utilisation exclusive des tokens sémantiques.
      - Réduction du nombre total de violations de garde du projet de 49 à 37 (-12 violations).
+
+---
+
+## ADR-20 : Propagation des Overrides Utilisateur de Zones et Invalidation WYSIWYG
+
+- **Statut :** [Acceptée]
+- **Date :** 15 novembre 2026
+- **Contexte :**
+  Dans le Studio de gradation, les réaffectations manuelles de correspondances de zones (`zoneUserOverrides`) ne mettaient à jour que le résumé de l'UI (`fit_zone_transfer_bridge` calculait une table jetée) sans jamais alimenter le calcul réel de la LUT 3D (`compute_lut`). Le rendu final exporté ne reflétait donc pas les choix de l'utilisateur.
+- **Décision :**
+  1. Propagation du dictionnaire de correspondances (`zone_overrides`) à travers toute la chaîne : `process_preview`, `export_graded_image`, `export_cube`, `transfer_worker` et `export_worker`.
+  2. Intégration du hash MD5/SHA des overrides dans la clé de cache `_RAW_LUT_CACHE`, garantissant une invalidation instantanée lors de toute modification ou réinitialisation des liens.
+  3. Dans `zone_transfer.py`, application de `retarget()` puis `model.with_table()` avec régénération de la 3D LUT à partir du modèle réaffecté.
+  4. Les exports `.cube` et images HD partagent rigoureusement les mêmes overrides, assurant une conformité WYSIWYG absolue.
+
+---
+
+## ADR-21 : Moteur GPU AGSL Parallèle pour Courbes par Points 1D LUT et Point Color
+
+- **Statut :** [Acceptée]
+- **Date :** 15 novembre 2026
+- **Contexte :**
+  L'aperçu GPU temps réel (`GpuPreviewEngine.kt`) ne gérait en delta que la courbe paramétrique et les 8 bandes HSL. Les courbes par points (RGB, Rouge, Vert, Bleu) et l'outil Point Color n'avaient aucun retour temps réel, forçant l'utilisateur à attendre le rendu asynchrone Chaquopy.
+- **Décision :**
+  1. Intégration dans le shader AGSL (`GpuPreviewEngine.kt`) d'une évaluation par 1D LUT ($256\times 1$) interpolée via le même algorithme Fritsch-Carlson cubique monotone que le backend Python (`spline_interpolator.py`).
+  2. Prise en charge différentielle de l'outil Point Color (distance de teinte/saturation/luminance avec atténuation douce).
+  3. Synchronisation stricte des toggles d'activation/désactivation de modules (`isToneCurveEnabled`, `isColorMixerEnabled`) pour refléter instantanément l'état de contournement visuel sur GPU.
+  4. Maintien du repli transparent `ColorMatrix` pour les versions antérieures à Android 13 (API < 33).
+
+---
+
+## ADR-22 : Synchronisation Différentielle de Prévisualisation par Throttle Adaptatif
+
+- **Statut :** [Acceptée]
+- **Date :** 15 novembre 2026
+- **Contexte :**
+  L'utilisation d'un opérateur `.debounce(200L)` bloquait toute émission de prévisualisation pendant un geste tactile continu, tandis qu'une absence de corrélation temporelle pouvait entraîner des clignotements ou l'affichage de rendus obsolètes lors de manipulations rapides.
+- **Décision :**
+  1. Remplacement de `debounce` par un régulateur de flux adaptatif (`AdaptiveThrottleLatest`) :
+     - Concurrence bornée à 1 seul calcul Chaquopy en vol.
+     - Intervalle adaptatif dimensionné sur $2.5\times$ la durée réelle de calcul du dernier rendu (borné entre 80 ms et 600 ms).
+     - Conservation exclusive de la dernière demande émise et garantie d'un rendu final (trailing) au relâchement du toucher.
+  2. Attribution d'un identifiant de requête séquentiel (`requestId`) permettant d'ignorer immédiatement les résultats obsolètes arrivant de Chaquopy.
+  3. Compensation du delta Compose au retour du bitmap développé pour $P_k$ : $\Delta = P_n - P_k$ au lieu d'une remise à zéro prématurée, supprimant tout saut ou clignotement à l'écran.
+
+---
+
+## ADR-23 : Harmonisation Totale du Design System (0 Violations), Scalabilité Zéro-Scroll et Support Ambiance / Presse-Papier
+
+- **Statut :** [Acceptée]
+- **Date :** 15 novembre 2026
+- **Contexte :**
+  1. Le projet présentait 37 violations résiduelles du script de garde du Design System (dp en dur, icônes brutes, dimensions non sémantiques).
+  2. Les panneaux zéro-scroll de l'éditeur autonome présentaient des risques de débordement sur petits écrans, en mode paysage ou avec de grands facteurs d'échelle de police (fontScale 1.3–2.0).
+  3. Besoin d'un transfert d'ambiance globale (références à dominante unicolore) et d'un flux de copie/collage rapide des réglages entre photos.
+- **Décision :**
+  1. Remplacement de 100% des littéraux restants par les jetons sémantiques `AppDimens` et `SzlIconSet`. Total des violations de garde abaissé de 37 à exactement 0.
+  2. Sécurisation de la scalabilité zéro-scroll : conteneurs flexibles avec poids adaptatifs, scroll vertical de secours en cas d'écran contraint, et respect des cibles tactiles minimales $\ge 48\text{ dp}$ (WCAG AA).
+  3. Port du moteur de transfert `Ambiance` depuis le desktop (courbe de teinte Oklab par niveau de luminance, préservation des sources vives et du contraste).
+  4. Implémentation d'un presse-papier en mémoire (`EditorClipboardHolder`) permettant de copier et coller instantanément les réglages d'étalonnage d'une photo à l'autre.
 
 

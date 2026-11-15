@@ -79,6 +79,8 @@ def run_export_pipeline(
     Computes or retrieves cached raw LUT, bakes Stage 2 refinement and Stage 3
     colorimetric post-grading directly into the 3D grid, and writes an Adobe .cube file.
     """
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     start: float = time.monotonic()
 
     if isinstance(lr_settings, str) and lr_settings.strip():
@@ -212,6 +214,8 @@ def run_image_export_pipeline(
     zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute high-resolution image export with absolute WYSIWYG fidelity."""
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     start: float = time.monotonic()
 
     if isinstance(lr_settings, str) and lr_settings.strip():

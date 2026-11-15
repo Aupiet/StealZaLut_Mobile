@@ -250,6 +250,43 @@ def test_zone_transfer_and_mask_bridge():
         assert err_mask["error_code"] == "SOURCE_NOT_FOUND"
 
 
+def test_bridge_positional_param_sanitization():
+    """Verify that passing None or JSON strings in lut_size position (from Kotlin bridge) never causes TypeError."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src_path = os.path.join(tmp_dir, "source.jpg")
+        ref_path = os.path.join(tmp_dir, "ref.jpg")
+        out_prev = os.path.join(tmp_dir, "prev.jpg")
+        out_cube = os.path.join(tmp_dir, "test.cube")
+        _create_sample_image(src_path, color=(40, 100, 200))
+        _create_sample_image(ref_path, color=(220, 140, 50))
+
+        # 1. process_preview with None as 11th positional argument
+        r_prev_none = process_preview(
+            src_path, ref_path, "mkl", 1.0, out_prev, 1024, 0.5, 0.5, 0.0, 0.0, None
+        )
+        assert r_prev_none["status"] == "success"
+
+        # 2. process_preview with JSON string as 11th positional argument
+        r_prev_json = process_preview(
+            src_path, ref_path, "mkl", 1.0, out_prev, 1024, 0.5, 0.5, 0.0, 0.0, '{"1": 2}'
+        )
+        assert r_prev_json["status"] == "success"
+
+        # 3. export_cube_file with None in lut_size and temperature
+        r_cube_none = export_cube_file(
+            src_path, ref_path, out_cube, None, "mkl", 1.0, 0.5, 0.5, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None
+        )
+        assert r_cube_none["status"] == "success"
+
+        # 4. export_cube_file with JSON string in temperature position
+        r_cube_json = export_cube_file(
+            src_path, ref_path, out_cube, 17, "mkl", 1.0, 0.5, 0.5, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, '{"1": 2}'
+        )
+        assert r_cube_json["status"] == "success"
+
+
 if __name__ == "__main__":
     test_missing_files_error_codes()
     test_corrupted_file_handling()

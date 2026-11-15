@@ -44,6 +44,9 @@ def generate_identity_lattice(size: int = DEFAULT_LUT_SIZE) -> NDArray[np.float3
     Returns:
         Float32 array of shape ``(size ** 3, 3)`` with values in [0.0, 1.0].
     """
+    if not isinstance(size, int) or isinstance(size, bool) or size is None or size <= 0:
+        size = DEFAULT_LUT_SIZE
+
     axis: NDArray[np.float32] = np.linspace(0.0, 1.0, size, dtype=np.float32)
 
     # Build meshgrid with B as slowest (outermost) and R as fastest (innermost).
@@ -65,6 +68,9 @@ def generate_identity_grid(size: int = DEFAULT_LUT_SIZE) -> NDArray[np.float32]:
     Returns:
         Float32 array of shape ``(size, size, size, 3)`` in [0.0, 1.0].
     """
+    if not isinstance(size, int) or isinstance(size, bool) or size is None or size <= 0:
+        size = DEFAULT_LUT_SIZE
+
     axis: NDArray[np.float32] = np.linspace(0.0, 1.0, size, dtype=np.float32)
     b, g, r = np.meshgrid(axis, axis, axis, indexing="ij")
     return np.stack([r, g, b], axis=-1)
@@ -371,6 +377,9 @@ def generate_lut_from_pair(
     Sample size defaults to 512x512 with LANCZOS downsampling to preserve
     small bright lights (neon signs, red beacons, windows) without dynamic compression.
     """
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
+
     if isinstance(source, np.ndarray):
         pil_src = Image.fromarray(source)
     else:

@@ -71,6 +71,8 @@ def get_or_compute_raw_lut(
     zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> NDArray[np.float32]:
     """Retrieve raw 3D LUT from cache or compute and cache it."""
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     abs_src = os.path.abspath(src_path) if src_path else ""
     abs_ref = os.path.abspath(ref_path) if ref_path else ""
 
@@ -198,6 +200,8 @@ def run_transfer_pipeline(
     zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute the unified WYSIWYG colour-transfer and editing pipeline."""
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     start: float = time.monotonic()
 
     if isinstance(lr_settings, str) and lr_settings.strip():

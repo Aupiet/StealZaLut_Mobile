@@ -133,6 +133,13 @@ def process_preview(
 ) -> Dict[str, Any]:
     """Generate a colour-transferred preview image using the exact 3D LUT."""
     try:
+        if isinstance(lut_size, str):
+            if zone_overrides_json is None and (lut_size.startswith("{") or lut_size.strip() == ""):
+                zone_overrides_json = lut_size
+            lut_size = DEFAULT_LUT_SIZE
+        elif lut_size is None or not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size <= 0:
+            lut_size = DEFAULT_LUT_SIZE
+
         if zone_overrides_json is None:
             for arg in args:
                 if isinstance(arg, str) and (arg.startswith("{") or arg == ""):
@@ -289,6 +296,15 @@ def export_cube_file(
 ) -> Dict[str, Any]:
     """Compute and export a 3-D LUT as an Adobe ``.cube`` file."""
     try:
+        if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+            lut_size = DEFAULT_LUT_SIZE
+        if isinstance(temperature, str):
+            if zone_overrides_json is None and (temperature.startswith("{") or temperature.strip() == ""):
+                zone_overrides_json = temperature
+            temperature = 0.0
+        elif temperature is None:
+            temperature = 0.0
+
         if zone_overrides_json is None:
             for arg in args:
                 if isinstance(arg, str) and (arg.startswith("{") or arg == ""):
@@ -402,6 +418,18 @@ def export_graded_image(
 ) -> Dict[str, Any]:
     """Export the graded source image directly in high resolution."""
     try:
+        if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+            lut_size = DEFAULT_LUT_SIZE
+        if isinstance(develop_settings_json, bool):
+            pre_downscale = develop_settings_json
+            develop_settings_json = None
+        if isinstance(pre_downscale, str):
+            if zone_overrides_json is None and (pre_downscale.startswith("{") or pre_downscale.strip() == ""):
+                zone_overrides_json = pre_downscale
+            pre_downscale = False
+        elif pre_downscale is None:
+            pre_downscale = False
+
         if zone_overrides_json is None:
             for arg in args:
                 if isinstance(arg, str) and (arg.startswith("{") or arg == ""):

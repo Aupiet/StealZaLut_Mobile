@@ -537,11 +537,15 @@ class OklabTransferModel(TransferModel):
     def method_name(self) -> str:
         return self.method
 
-    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
-        lab = rgb_to_oklab(colors)
+    def apply_lab(self, lab: NDArray[np.float64]) -> NDArray[np.float64]:
         out = np.empty_like(lab)
         out[:, 0] = self.ref_mean[0] + self.lightness_scale * (lab[:, 0] - self.src_mean[0])
         out[:, 1:] = self.ref_mean[1:] + (lab[:, 1:] - self.src_mean[1:]) @ self.chroma_matrix.T
+        return out
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        lab = rgb_to_oklab(colors)
+        out = self.apply_lab(lab)
         return np.clip(oklab_to_rgb(gamut_compress(out)), 0.0, 1.0)
 
 
@@ -587,6 +591,10 @@ def fit_transfer(
         from stealzalut.core.zone_transfer import fit_zone_transfer
 
         return fit_zone_transfer(source, reference, user_overrides=zone_overrides)
+    if chosen == "ambiance":
+        from stealzalut.core.ambiance import fit_ambiance
+
+        return fit_ambiance(source, reference)
     if chosen in ("mkl", "mvgd", "default"):
         s_flat = source.reshape(-1, 3).astype(np.float64) / 255.0
         r_flat = reference.reshape(-1, 3).astype(np.float64) / 255.0

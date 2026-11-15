@@ -41,6 +41,12 @@ enum class ColorTransferMethod(
         displayNameRes = R.string.method_reinhard_name,
         technicalSubtitleRes = R.string.method_reinhard_sub,
         descriptionRes = R.string.method_reinhard_desc
+    ),
+    AMBIANCE(
+        key = "ambiance",
+        displayNameRes = R.string.method_ambiance_name,
+        technicalSubtitleRes = R.string.method_ambiance_sub,
+        descriptionRes = R.string.method_ambiance_desc
     );
 
     companion object {

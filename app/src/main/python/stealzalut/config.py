@@ -16,6 +16,7 @@ SUPPORTED_METHODS: Dict[str, str] = {
     "reinhard": "Reinhard (LAB stats)",
     "oklab": "Oklab perceptual transfer",
     "zones": "Zone-based correspondence transfer",
+    "ambiance": "Ambiance (tone-dependent tint transfer)",
 }
 
 DEFAULT_METHOD: str = "hm-mkl-hm"

@@ -39,6 +39,7 @@ fun StudioStep1Source(
     sourceBitmap: Bitmap?,
     onImageSelected: (Uri) -> Unit,
     canProceed: Boolean,
+    onReset: () -> Unit = {},
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -150,31 +151,29 @@ fun StudioStep1Source(
                     style = MaterialTheme.typography.labelMedium
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
-
-        Button(
-            onClick = onNext,
-            enabled = canProceed,
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-            shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
-        ) {
-            Text(
-                text = stringResource(R.string.wizard_step_1_btn_next),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-            Icon(
-                imageVector = MaterialTheme.icons.statusArrowForward,
-                contentDescription = null,
-                modifier = Modifier.size(AppDimens.IconNormal)
-            )
+        } else {
+            Button(
+                onClick = onNext,
+                enabled = canProceed,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
+            ) {
+                Text(
+                    text = stringResource(R.string.studio_btn_continue),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                Icon(
+                    imageVector = MaterialTheme.icons.statusArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(AppDimens.IconNormal)
+                )
+            }
         }
     }
 }

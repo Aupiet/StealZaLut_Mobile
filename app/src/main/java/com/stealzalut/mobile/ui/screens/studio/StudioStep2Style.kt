@@ -55,8 +55,8 @@ fun StudioStep2Style(
     selectedTheme: ColorimetryPreset?,
     onThemeSelected: (ColorimetryPreset) -> Unit,
     canProceed: Boolean,
-    onBack: () -> Unit,
-    onNext: () -> Unit,
+    onBack: () -> Unit = {},
+    onNext: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -151,55 +151,6 @@ fun StudioStep2Style(
                         )
                     }
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(AppDimens.SpacingMedium))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
-        ) {
-            OutlinedButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
-            ) {
-                Icon(
-                    imageVector = MaterialTheme.icons.statusArrowBack,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconNormal)
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                Text(
-                    text = stringResource(R.string.wizard_step_2_btn_back),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            Button(
-                onClick = onNext,
-                enabled = canProceed,
-                modifier = Modifier
-                    .weight(1.3f)
-                    .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                shape = RoundedCornerShape(AppDimens.CornerRadiusCard)
-            ) {
-                Text(
-                    text = stringResource(R.string.wizard_step_2_btn_next),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                Icon(
-                    imageVector = MaterialTheme.icons.statusArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconNormal)
-                )
             }
         }
     }

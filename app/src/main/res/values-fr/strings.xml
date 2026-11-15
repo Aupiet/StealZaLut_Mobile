@@ -42,12 +42,30 @@
     <string name="lut_size_65_nodes">262 144 nœuds</string>
 
     <!-- Studio Funnel Stepper -->
+    <string name="studio_btn_back">Retour</string>
+    <string name="studio_btn_continue">Continuer</string>
+    <string name="studio_btn_render">Rendu</string>
+    <string name="studio_btn_finish">Terminer</string>
+
+    <!-- Studio Landing Menu & Exit Dialog (Prototype v2.2) -->
+    <string name="studio_landing_title">Studio Colorimétrique</string>
+    <string name="studio_landing_subtitle">Transférez la signature chromatique et l\'ambiance visuelle d\'un film ou d\'une photo de référence sur votre cliché.</string>
+    <string name="studio_landing_btn_new">Démarrer un transfert</string>
+    <string name="studio_landing_workflow_title">Les 4 étapes du transfert</string>
+    <string name="studio_landing_step1_desc">1. Photo source</string>
+    <string name="studio_landing_step2_desc">2. Style de référence</string>
+    <string name="studio_landing_step3_desc">3. Ajustements &amp; Zones</string>
+    <string name="studio_landing_step4_desc">4. Rendu 3D LUT</string>
+    <string name="studio_exit_dialog_title">Quitter le Studio ?</string>
+    <string name="studio_exit_dialog_msg">Voulez-vous vraiment quitter le Studio ? Vos réglages en cours seront perdus.</string>
+    <string name="studio_exit_dialog_confirm">Quitter</string>
     <string name="wizard_step_1_title">Studio Colorimétrique</string>
     <string name="wizard_step_1_subtitle">Transférez la signature chromatique d\'un film</string>
     <string name="wizard_step_1_empty">Déposez votre photo source A</string>
     <string name="wizard_step_1_badge">Source A</string>
     <string name="wizard_step_1_change">Changer de photo source</string>
     <string name="wizard_step_1_ready">Photo source prête</string>
+    <string name="wizard_step_1_btn_reset">Changer / Réinitialiser</string>
     <string name="wizard_step_1_btn_next">Continuer vers Référence (2/5) →</string>
 
     <string name="wizard_step_2_title">Sélection Référence</string>
@@ -76,12 +94,26 @@
     <string name="studio_tab_advanced">Avancé</string>
     <string name="studio_zones_title">Zones de couleur</string>
     <string name="studio_zones_description">Segmente les deux images en zones de couleur avec un k-means Oklab déterministe pour inspecter et faire correspondre la palette.</string>
-    <string name="studio_zones_analyze">Analyser les zones</string>
-    <string name="studio_zones_reanalyze">Analyser à nouveau</string>
+    <string name="studio_zones_analyze">Analyser</string>
+    <string name="studio_zones_reanalyze">Analyser</string>
+    <string name="studio_zones_analyzing">Analyse des zones de couleur en cours…</string>
+    <string name="studio_step_3_lut_params_title">Paramètres de la LUT</string>
+    <string name="studio_zones_generating_mask">Génération du masque de zone…</string>
     <string name="param_luma_lock_title">Verrouillage de la Luminance</string>
     <string name="param_skin_prot_title">Protection des Tons Chairs</string>
     <string name="param_neutral_lock_title">Verrouillage de l\'Axe Neutre</string>
     <string name="param_smooth_title">Lissage Spatial 3D</string>
+    <string name="studio_quick_chip_subtle">25% Subtil</string>
+    <string name="studio_quick_chip_balanced">50% Équilibré</string>
+    <string name="studio_quick_chip_punchy">75% Prononcé</string>
+    <string name="studio_quick_chip_full">100% Complet</string>
+    <string name="studio_guide_light_title">Contrôle Tonal &amp; Exposition</string>
+    <string name="studio_guide_light_desc">Ajustez la force du transfert et préservez la luminance native de la source pour éviter la sous-exposition.</string>
+    <string name="studio_guide_color_title">Harmonie Chromatique</string>
+    <string name="studio_guide_color_desc">Préserve les teintes chair et verrouille les blancs/gris neutres. Le lissage spatial élimine le banding.</string>
+    <string name="studio_lut_17_desc">4 913 nœuds • Export mobile ultra-léger (~50 Ko) optimisé pour les réseaux sociaux et aperçus rapides.</string>
+    <string name="studio_lut_33_desc">35 937 nœuds • Format standard industrie (DaVinci Resolve, Premiere Pro). Équilibre optimal précision/poids.</string>
+    <string name="studio_lut_64_desc">262 144 nœuds • Grade master cinéma très haute fidélité. Dégradés continus sans banding même sur écrans HDR.</string>
 
     <string name="wizard_step_4_title">Génération en cours</string>
     <string name="wizard_step_4_subtitle">Calcul colorimétrique haute fidélité 64-bit</string>
@@ -92,6 +124,7 @@
     <string name="wizard_step_5_title">Chef-d\'œuvre Colorimétrique</string>
     <string name="wizard_step_5_subtitle">Signature Blade Runner 2049 appliquée</string>
     <string name="wizard_step_5_btn_save_gallery">Enregistrer la photo dans la Galerie</string>
+    <string name="wizard_step_5_btn_back">Modifier les réglages (3/5)</string>
     <string name="wizard_step_5_btn_save_theme">Sauvegarder le Style en Preset</string>
     <string name="wizard_step_5_btn_export_cube">Partager la 3D LUT (.CUBE)</string>
 
@@ -725,8 +758,15 @@
     <string name="zone_reset_correspondences">Réinitialiser (Auto)</string>
     <string name="zone_inspector_select_zone">Sélectionner une zone</string>
     <string name="zone_inspector_mask_preview">Masque de Zone</string>
-    <string name="zone_mask_mode_color">Basculer en Couleur</string>
+    <string name="zone_mask_mode_color">Basculer en Couleur (Isolation)</string>
     <string name="zone_mask_mode_bw">Basculer en N&amp;B</string>
+    <string name="zone_mask_active_label">Affichage du masque de zone sur l\'image</string>
+    <string name="zone_mask_toggle_btn">Afficher/masquer le masque</string>
+    <string name="studio_session_saved">Session Studio sauvegardée</string>
+    <string name="studio_session_restored">Session Studio restaurée</string>
+    <string name="studio_menu_save_session">Sauvegarder la session</string>
+    <string name="studio_menu_restore_session">Restaurer la session</string>
+    <string name="studio_menu_reset">Réinitialiser les paramètres</string>
     <string name="zone_inspector_zone_title">Zone — %1$d%% des pixels</string>
     <string name="zone_inspector_strength">Force du transfert : %1$d%%</string>
     <string name="zone_inspector_hint">Appuyez sur une zone ci-dessus pour l\'inspecter.</string>

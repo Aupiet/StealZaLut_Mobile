@@ -5,6 +5,8 @@ import com.stealzalut.mobile.core.storage.AtomicJsonFile
 import com.stealzalut.mobile.data.model.CropRegion
 import com.stealzalut.mobile.data.model.EditorParamsSnapshot
 import com.stealzalut.mobile.data.model.EditorProject
+import com.stealzalut.mobile.data.model.StudioSession
+import com.stealzalut.mobile.data.model.StudioSessionSnapshot
 import com.stealzalut.mobile.data.model.LightroomDeserializer
 import com.stealzalut.mobile.data.model.LightroomSerializer
 import kotlinx.coroutines.Dispatchers
@@ -291,5 +293,84 @@ class ProjectRepository(private val context: Context) {
             width = width,
             height = height
         )
+    }
+
+    /**
+     * Persists the current studio session to disk.
+     */
+    suspend fun saveStudioSession(session: StudioSession): Unit = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val file = File(context.filesDir, "studio_session.json")
+            val obj = JSONObject().apply {
+                put("id", session.id)
+                put("name", session.name)
+                put("updatedAt", session.updatedAt)
+                put("sourcePath", session.sourcePath ?: JSONObject.NULL)
+                put("referencePath", session.referencePath ?: JSONObject.NULL)
+                val snap = JSONObject().apply {
+                    put("method", session.snapshot.method)
+                    put("intensity", session.snapshot.intensity.toDouble())
+                    put("preserveLuminance", session.snapshot.preserveLuminance.toDouble())
+                    put("skinProtection", session.snapshot.skinProtection.toDouble())
+                    put("smoothSigma", session.snapshot.smoothSigma.toDouble())
+                    put("neutralLock", session.snapshot.neutralLock.toDouble())
+                    put("lutSize", session.snapshot.lutSize)
+                    val overridesObj = JSONObject()
+                    session.snapshot.userOverrides.forEach { (k, v) -> overridesObj.put(k, v) }
+                    put("userOverrides", overridesObj)
+                }
+                put("snapshot", snap)
+            }
+            AtomicJsonFile.writeText(file, obj.toString(2))
+        }
+    }
+
+    /**
+     * Loads the last saved studio session from disk, if any.
+     */
+    suspend fun loadStudioSession(): StudioSession? = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val file = File(context.filesDir, "studio_session.json")
+            if (!file.exists() || !file.isFile) return@withLock null
+            try {
+                val jsonString = AtomicJsonFile.readText(file) ?: return@withLock null
+                val obj = JSONObject(jsonString)
+                val id = obj.optString("id", UUID.randomUUID().toString())
+                val name = obj.optString("name", "Studio Session")
+                val updatedAt = obj.optLong("updatedAt", System.currentTimeMillis())
+                val sourcePath = if (obj.isNull("sourcePath")) null else obj.optString("sourcePath")
+                val referencePath = if (obj.isNull("referencePath")) null else obj.optString("referencePath")
+
+                val snapObj = obj.optJSONObject("snapshot")
+                val snapshot = if (snapObj != null) {
+                    val overridesMap = mutableMapOf<String, Int>()
+                    val overridesObj = snapObj.optJSONObject("userOverrides")
+                    overridesObj?.keys()?.forEach { k ->
+                        overridesMap[k] = overridesObj.getInt(k)
+                    }
+                    StudioSessionSnapshot(
+                        method = snapObj.optString("method", "HM_MKL_HM"),
+                        intensity = snapObj.optDouble("intensity", 1.0).toFloat(),
+                        preserveLuminance = snapObj.optDouble("preserveLuminance", 0.8).toFloat(),
+                        skinProtection = snapObj.optDouble("skinProtection", 0.8).toFloat(),
+                        smoothSigma = snapObj.optDouble("smoothSigma", 0.0).toFloat(),
+                        neutralLock = snapObj.optDouble("neutralLock", 0.5).toFloat(),
+                        lutSize = snapObj.optInt("lutSize", 33),
+                        userOverrides = overridesMap
+                    )
+                } else StudioSessionSnapshot()
+
+                StudioSession(
+                    id = id,
+                    name = name,
+                    updatedAt = updatedAt,
+                    sourcePath = sourcePath,
+                    referencePath = referencePath,
+                    snapshot = snapshot
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 }

@@ -3,12 +3,16 @@ package com.stealzalut.mobile.ui.screens.studio
 import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,8 +64,6 @@ fun StudioStep5Result(
     onSaveStyleToProfile: () -> Unit,
     onExportCube: () -> Unit,
     onShareCube: () -> Unit,
-    onExportRecipe: (() -> Unit)? = null,
-    onExportAiPack: (() -> Unit)? = null,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -101,22 +103,35 @@ fun StudioStep5Result(
         )
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
     ) {
-        // --- 1. Before / After Interactive Curtain Comparison (Figma node 12:400) ---
-        DoubleViewComparison(
-            sourceBitmap = sourceBitmap,
-            previewBitmap = previewBitmap,
-            intensity = intensity,
-            executionTimeMs = executionTimeMs,
-            modifier = Modifier.fillMaxWidth()
-        )
+        val totalHeight = maxHeight
+        val imageMaxHeight = totalHeight * 0.50f
 
-        Spacer(modifier = Modifier.height(AppDimens.SpacingSmall))
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+        ) {
+            // --- 1. Dynamic & Capped Viewport (Max 50% screen height - Zero scroll) ---
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .heightIn(max = imageMaxHeight),
+                contentAlignment = Alignment.Center
+            ) {
+                DoubleViewComparison(
+                    sourceBitmap = sourceBitmap,
+                    previewBitmap = previewBitmap,
+                    intensity = intensity,
+                    executionTimeMs = executionTimeMs,
+                    fillAvailableHeight = true,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-        // --- 2. Button 1: "Exporter la photo" (High priority action) ---
+            // --- 2. Button 1: "Exporter la photo" (High priority action) ---
         Button(
             onClick = onSaveGradedImage,
             enabled = !isExportingImage && !isExportingCube,
@@ -266,74 +281,7 @@ fun StudioStep5Result(
                     )
                 }
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    onClick = { onExportRecipe?.invoke() },
-                    enabled = !isExportingImage && !isExportingCube && onExportRecipe != null,
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                    border = BorderStroke(
-                        AppDimens.BorderThin,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = MaterialTheme.icons.actionSave,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconSmall)
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = "Export .szl",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = { onExportAiPack?.invoke() },
-                    enabled = !isExportingImage && !isExportingCube && onExportAiPack != null,
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = AppDimens.ButtonHeightStandard),
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusCard),
-                    border = BorderStroke(
-                        AppDimens.BorderThin,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = MaterialTheme.icons.actionExport,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppDimens.IconSmall)
-                    )
-                    Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                    Text(
-                        text = "AI Pack",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
         }
-
-        Spacer(modifier = Modifier.height(AppDimens.ListBottomPadding))
     }
+}
 }

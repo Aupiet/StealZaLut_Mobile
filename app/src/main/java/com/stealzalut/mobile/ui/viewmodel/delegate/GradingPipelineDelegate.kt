@@ -886,14 +886,15 @@ class GradingPipelineDelegate(
         }
     }
 
-    /** User tapped a zone card — load its mask in background. */
+    /** User tapped a zone card — load its mask in background, use "isolation" mode (pixels on black). */
     fun onZoneSelected(zoneIndex: Int) {
-        stateFlow.update { it.copy(selectedZoneIndex = zoneIndex, isGeneratingZoneMask = true) }
+        stateFlow.update { it.copy(selectedZoneIndex = zoneIndex, isGeneratingZoneMask = true, isZoneMaskActive = true) }
         val srcPath = stateFlow.value.sourcePath ?: run {
             stateFlow.update { it.copy(isGeneratingZoneMask = false) }
             return
         }
-        val mode = stateFlow.value.zoneMaskMode
+        // Always generate "isolation" mode: selected zone pixels on black background
+        val mode = "isolation"
         val zoneCount = stateFlow.value.zoneTransfer?.sourceZoneIds?.size ?: 8
         val outputPath = java.io.File(context.cacheDir, "zone_mask_${zoneIndex}_${mode}.png").absolutePath
 
@@ -916,9 +917,16 @@ class GradingPipelineDelegate(
         }
     }
 
-    /** Toggle the mask visualisation mode (B&W ↔ Color) and regenerate. */
+    /** Activate or deactivate zone mask overlay on main viewport. */
+    fun onSetZoneMaskActive(active: Boolean) {
+        stateFlow.update { it.copy(isZoneMaskActive = active) }
+        // If deactivating and no zone selected, also clear the path
+        if (!active) stateFlow.update { it.copy(zoneMaskPath = null, selectedZoneIndex = -1) }
+    }
+
+    /** Toggle the mask visualisation mode (B&W ↔ Isolation Color) and regenerate. */
     fun onToggleZoneMaskMode() {
-        val newMode = if (stateFlow.value.zoneMaskMode == "bw") "color" else "bw"
+        val newMode = if (stateFlow.value.zoneMaskMode == "bw") "isolation" else "bw"
         stateFlow.update { it.copy(zoneMaskMode = newMode, zoneMaskPath = null) }
         val idx = stateFlow.value.selectedZoneIndex
         if (idx >= 0) onZoneSelected(idx)
@@ -928,7 +936,7 @@ class GradingPipelineDelegate(
      * Post a debounced preview refresh after a zone table change.
      * Reuses the same debounce mechanism used for slider changes.
      */
-    private fun schedulePreviewRefresh() {
+    fun schedulePreviewRefresh() {
         val state = stateFlow.value
         val srcPath = state.sourcePath ?: return
         val refPath = state.effectiveReferencePath ?: return

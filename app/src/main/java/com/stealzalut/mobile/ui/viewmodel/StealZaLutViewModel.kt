@@ -41,6 +41,7 @@ import com.stealzalut.mobile.data.repository.SavedImageRepository
 import com.stealzalut.mobile.data.repository.ProjectRepository
 import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.repository.SettingsRepository
+import kotlinx.collections.immutable.toPersistentMap
 import com.stealzalut.mobile.ui.navigation.AppDestination
 import com.stealzalut.mobile.ui.viewmodel.delegate.EditorSessionDelegate
 import com.stealzalut.mobile.ui.viewmodel.delegate.GradingPipelineDelegate
@@ -235,6 +236,55 @@ class StealZaLutViewModel(
     fun onResetZoneCorrespondences() = gradingPipelineDelegate.onResetZoneCorrespondences()
     fun onZoneSelected(zoneIndex: Int) = gradingPipelineDelegate.onZoneSelected(zoneIndex)
     fun onToggleZoneMaskMode() = gradingPipelineDelegate.onToggleZoneMaskMode()
+    fun onSetZoneMaskActive(active: Boolean) = gradingPipelineDelegate.onSetZoneMaskActive(active)
+
+    fun saveStudioSession() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val session = com.stealzalut.mobile.data.model.StudioSession(
+                sourcePath = state.sourcePath,
+                referencePath = state.effectiveReferencePath,
+                snapshot = com.stealzalut.mobile.data.model.StudioSessionSnapshot(
+                    method = state.method.name,
+                    intensity = state.intensity,
+                    preserveLuminance = state.preserveLuminance,
+                    skinProtection = state.skinProtection,
+                    smoothSigma = state.smoothSigma,
+                    neutralLock = state.neutralLock,
+                    lutSize = state.lutSize.size,
+                    userOverrides = state.zoneUserOverrides
+                )
+            )
+            projectRepository.saveStudioSession(session)
+            _uiState.update { it.copy(userMessage = UiText.Resource(R.string.studio_session_saved)) }
+        }
+    }
+
+    fun restoreStudioSession() {
+        viewModelScope.launch {
+            val session = projectRepository.loadStudioSession() ?: return@launch
+            val methodEnum = try {
+                com.stealzalut.mobile.data.model.ColorTransferMethod.valueOf(session.snapshot.method)
+            } catch (_: Exception) {
+                com.stealzalut.mobile.data.model.ColorTransferMethod.HM_MKL_HM
+            }
+            val lutSizeEnum = com.stealzalut.mobile.data.model.LutSize.fromSize(session.snapshot.lutSize)
+            _uiState.update {
+                it.copy(
+                    method = methodEnum,
+                    intensity = session.snapshot.intensity,
+                    preserveLuminance = session.snapshot.preserveLuminance,
+                    skinProtection = session.snapshot.skinProtection,
+                    smoothSigma = session.snapshot.smoothSigma,
+                    neutralLock = session.snapshot.neutralLock,
+                    lutSize = lutSizeEnum,
+                    zoneUserOverrides = session.snapshot.userOverrides.toPersistentMap()
+                )
+            }
+            gradingPipelineDelegate.schedulePreviewRefresh()
+            _uiState.update { it.copy(userMessage = UiText.Resource(R.string.studio_session_restored)) }
+        }
+    }
 
     fun shareCube(context: Context, cubePath: String? = null) {
         val intent = createShareCubeIntent(cubePath)

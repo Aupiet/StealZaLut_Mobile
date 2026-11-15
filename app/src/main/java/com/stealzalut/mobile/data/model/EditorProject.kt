@@ -47,3 +47,31 @@ data class EditorProject(
     val width: Int = 0,
     val height: Int = 0
 )
+
+/**
+ * Snapshot of Studio Step 3 parameters and zone overrides persisted across app sessions.
+ */
+@Immutable
+data class StudioSessionSnapshot(
+    val method: String = "HM_MKL_HM",
+    val intensity: Float = 1.0f,
+    val preserveLuminance: Float = 0.8f,
+    val skinProtection: Float = 0.8f,
+    val smoothSigma: Float = 0.0f,
+    val neutralLock: Float = 0.5f,
+    val lutSize: Int = 33,
+    val userOverrides: Map<String, Int> = emptyMap()
+)
+
+/**
+ * Persisted Studio grading session.
+ */
+@Immutable
+data class StudioSession(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "Studio Session",
+    val updatedAt: Long = System.currentTimeMillis(),
+    val sourcePath: String? = null,
+    val referencePath: String? = null,
+    val snapshot: StudioSessionSnapshot = StudioSessionSnapshot()
+)

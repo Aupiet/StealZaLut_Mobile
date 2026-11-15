@@ -1111,12 +1111,14 @@ def get_zone_mask_bridge(
 
         zone = palette.zones[zone_index]
 
-        # Build a soft membership mask: 1.0 where label == zone.id, 0.0 elsewhere.
-        # (The desktop uses a Mahalanobis-based soft weight; for the mask view a
-        #  hard membership is sufficient and much faster on mobile.)
+        # Build a membership mask: 1.0 where label == zone.id, 0.0 elsewhere.
         mask_f = (labels == zone.id).astype(np.float32)  # shape (H, W) in [0,1]
 
-        if mode == "color":
+        if mode == "isolation":
+            # Isolation mode: original image pixels where mask active, pure black (0,0,0) elsewhere
+            isolated = (img_arr.astype(np.float32) * mask_f[:, :, None]).clip(0, 255).astype(np.uint8)
+            out_img = PILImage.fromarray(isolated, mode="RGB")
+        elif mode == "color":
             # Darken image to 25 % then overlay zone colour where mask is active
             dark = (img_arr * 0.25).astype(np.uint8)
             mean_rgb = np.clip(zone.mean[::-1] * 255, 0, 255).astype(np.uint8) if hasattr(zone, "mean") else np.array([128, 128, 128], dtype=np.uint8)
@@ -1136,7 +1138,7 @@ def get_zone_mask_bridge(
             out_img = PILImage.fromarray(mask_u8, mode="L")
 
         if not output_mask_path:
-            suffix = "_mask_color.png" if mode == "color" else "_mask_bw.png"
+            suffix = f"_mask_{mode}.png"
             fd, output_mask_path = tempfile.mkstemp(suffix=suffix, prefix=f"szl_zone{zone_index}")
             import os as _os
             _os.close(fd)

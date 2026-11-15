@@ -1,6 +1,6 @@
 package com.stealzalut.mobile.ui.screens.studio
 
-import android.graphics.BitmapFactory
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,14 +15,23 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,22 +44,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.AppDimens
+import com.stealzalut.mobile.data.model.ZoneDescriptor
 import com.stealzalut.mobile.data.model.ZoneInfo
 import com.stealzalut.mobile.data.model.ZoneLink
 import com.stealzalut.mobile.data.model.ZonePaletteAnalysis
@@ -58,12 +70,27 @@ import com.stealzalut.mobile.data.model.ZoneTransferSummary
 import com.stealzalut.mobile.ui.components.SzlBipolarSlider
 import com.stealzalut.mobile.ui.components.SzlSlider
 import com.stealzalut.mobile.ui.theme.SzlTheme
+import com.stealzalut.mobile.ui.theme.icons
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 private const val SPARSE_ALPHA = 0.35f
+
+private val DEFAULT_ZONE_NAMES = listOf(
+    "Deep Sh.", "Shadows", "Low Mids", "Midtones", "High Mids", "Highlights", "Whites"
+)
+
+private fun ZoneDescriptor.toZoneInfo(idx: Int): ZoneInfo = ZoneInfo(
+    id = id,
+    hex = hex,
+    area = area,
+    lRank = lRank,
+    meanOklab = mean,
+    name = DEFAULT_ZONE_NAMES.getOrElse(idx) { "Zone $idx" },
+    pixelPercentage = area * 100f
+)
 
 /**
  * Full "Zone Colours" feature widget — CorrespondenceView + ZoneInspector.
@@ -76,6 +103,8 @@ fun ZonePaletteVisualization(
     selectedZoneIndex: Int = -1,
     maskPath: String? = null,
     maskMode: String = "bw",
+    isAnalyzingZones: Boolean = false,
+    isGeneratingZoneMask: Boolean = false,
     onZoneCorrespondenceChanged: (srcIdx: Int, refIdx: Int) -> Unit = { _, _ -> },
     onResetCorrespondences: () -> Unit = {},
     onZoneSelected: (zoneIndex: Int) -> Unit = {},
@@ -83,10 +112,24 @@ fun ZonePaletteVisualization(
 ) {
     var activeTab by remember { mutableIntStateOf(0) }
 
+    val effectiveSourceZones = remember(zoneTransfer, source) {
+        if (zoneTransfer?.sourceZones?.isNotEmpty() == true) {
+            zoneTransfer.sourceZones
+        } else {
+            source?.zones?.mapIndexed { i, d -> d.toZoneInfo(i) } ?: emptyList()
+        }
+    }
+    val effectiveRefZones = remember(zoneTransfer, reference) {
+        if (zoneTransfer?.referenceZones?.isNotEmpty() == true) {
+            zoneTransfer.referenceZones
+        } else {
+            reference?.zones?.mapIndexed { i, d -> d.toZoneInfo(i) } ?: emptyList()
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        ScrollableTabRow(
-            selectedTabIndex = activeTab,
-            edgePadding = AppDimens.SpacingSpacious
+        TabRow(
+            selectedTabIndex = activeTab
         ) {
             Tab(
                 selected = activeTab == 0,
@@ -102,24 +145,63 @@ fun ZonePaletteVisualization(
 
         Spacer(Modifier.height(AppDimens.SpacingMedium))
 
-        when (activeTab) {
-            0 -> CorrespondenceGraphTab(
-                source = zoneTransfer?.sourceZones ?: emptyList(),
-                reference = zoneTransfer?.referenceZones ?: emptyList(),
-                correspondence = zoneTransfer?.correspondence ?: emptyList(),
-                userOverrides = zoneTransfer?.userOverrides ?: emptyMap(),
-                onLinkChanged = onZoneCorrespondenceChanged,
-                onReset = onResetCorrespondences
-            )
-            1 -> ZoneInspectorTab(
-                source = source,
-                zoneTransfer = zoneTransfer,
-                selectedZoneIndex = selectedZoneIndex,
-                maskPath = maskPath,
-                maskMode = maskMode,
-                onZoneSelected = onZoneSelected,
-                onToggleMaskMode = onToggleMaskMode
-            )
+        if (isAnalyzingZones) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AppDimens.ZonePlaceholderHeight),
+                shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM)
+                ),
+                border = BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppDimens.SpacingLarge),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(AppDimens.IconLarge),
+                        strokeWidth = AppDimens.BorderThick,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(AppDimens.SpacingMedium))
+                    Text(
+                        text = stringResource(R.string.studio_zones_analyzing),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            when (activeTab) {
+                0 -> CorrespondenceGraphTab(
+                    source = effectiveSourceZones,
+                    reference = effectiveRefZones,
+                    correspondence = zoneTransfer?.correspondence ?: emptyList(),
+                    userOverrides = zoneTransfer?.userOverrides ?: emptyMap(),
+                    onLinkChanged = onZoneCorrespondenceChanged,
+                    onReset = onResetCorrespondences
+                )
+                1 -> ZoneInspectorTab(
+                    zones = effectiveSourceZones,
+                    zoneTransfer = zoneTransfer,
+                    selectedZoneIndex = selectedZoneIndex,
+                    maskPath = maskPath,
+                    maskMode = maskMode,
+                    isGeneratingZoneMask = isGeneratingZoneMask,
+                    onZoneSelected = onZoneSelected,
+                    onToggleMaskMode = onToggleMaskMode
+                )
+            }
         }
     }
 }
@@ -155,7 +237,7 @@ private fun CorrespondenceGraphTab(
     val nodeWidthDp = AppDimens.ZoneNodeWidth
     val nodeHeightDp = AppDimens.ZoneNodeHeight
     val nodeRadiusDp = AppDimens.CornerRadiusMedium
-    val marginDp = AppDimens.SpacingSpacious
+    val marginDp = AppDimens.SpacingMedium
     val gapDp = AppDimens.SpacingSmall
     val minStrokeDp = AppDimens.ZoneCurveStrokeMin
     val maxStrokeDp = AppDimens.ZoneCurveStrokeMax
@@ -163,133 +245,203 @@ private fun CorrespondenceGraphTab(
     val borderMediumDp = AppDimens.BorderMedium
     val borderSelectedDp = AppDimens.ZoneBorderSelected
 
+    val density = LocalDensity.current
+    val nodeWidthPx = with(density) { nodeWidthDp.toPx() }
+    val nodeHeightPx = with(density) { nodeHeightDp.toPx() }
+    val marginPx = with(density) { marginDp.toPx() }
+    val gapPx = with(density) { gapDp.toPx() }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = AppDimens.ZoneGraphMinHeight)
+                .height(AppDimens.ZoneGraphMinHeight)
+                .clipToBounds()
                 .background(surfaceColor, RoundedCornerShape(AppDimens.CornerRadiusCard))
-                .padding(AppDimens.SpacingMedium)
+                .padding(AppDimens.SpacingSmall)
         ) {
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clipToBounds()
                     .pointerInput(source, reference, correspondence) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                val srcRects = computeNodeRects(
-                                    zones = source,
-                                    canvasWidth = size.width.toFloat(),
-                                    canvasHeight = size.height.toFloat(),
-                                    side = Side.SOURCE,
-                                    nodeWidthPx = nodeWidthDp.toPx(),
-                                    nodeHeightPx = nodeHeightDp.toPx(),
-                                    marginPx = marginDp.toPx(),
-                                    gapPx = gapDp.toPx()
-                                )
-                                dragSrcId = srcRects.entries.firstOrNull { (_, r) ->
-                                    offset.x >= r.left && offset.x <= r.right &&
-                                            offset.y >= r.top && offset.y <= r.bottom
-                                }?.key ?: -1
+                                val totalH = source.size * nodeHeightPx + (source.size - 1) * gapPx
+                                val startY = (size.height - totalH) / 2f
+                                if (offset.x in marginPx..(marginPx + nodeWidthPx)) {
+                                    val relY = offset.y - startY
+                                    val idx = (relY / (nodeHeightPx + gapPx)).toInt()
+                                    if (idx in source.indices) {
+                                        val nodeTop = startY + idx * (nodeHeightPx + gapPx)
+                                        if (offset.y in nodeTop..(nodeTop + nodeHeightPx)) {
+                                            dragSrcId = idx
+                                            dragPos = offset
+                                        }
+                                    }
+                                }
                             },
                             onDrag = { change, _ ->
                                 if (dragSrcId >= 0) dragPos = change.position
                             },
                             onDragEnd = {
                                 if (dragSrcId >= 0 && dragPos != null) {
-                                    val refRects = computeNodeRects(
-                                        zones = reference,
-                                        canvasWidth = size.width.toFloat(),
-                                        canvasHeight = size.height.toFloat(),
-                                        side = Side.REFERENCE,
-                                        nodeWidthPx = nodeWidthDp.toPx(),
-                                        nodeHeightPx = nodeHeightDp.toPx(),
-                                        marginPx = marginDp.toPx(),
-                                        gapPx = gapDp.toPx()
-                                    )
-                                    val hit = refRects.entries.firstOrNull { (_, r) ->
-                                        val p = dragPos
-                                        p != null && p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom
+                                    val dp = dragPos!!
+                                    val totalH = reference.size * nodeHeightPx + (reference.size - 1) * gapPx
+                                    val startY = (size.height - totalH) / 2f
+                                    val refLeft = size.width - marginPx - nodeWidthPx
+                                    if (dp.x in (refLeft - marginPx)..(size.width.toFloat())) {
+                                        val relY = dp.y - startY
+                                        val idx = (relY / (nodeHeightPx + gapPx)).toInt()
+                                        if (idx in reference.indices) {
+                                            onLinkChanged(dragSrcId, idx)
+                                        }
                                     }
-                                    if (hit != null) onLinkChanged(dragSrcId, hit.key)
                                 }
                                 dragSrcId = -1
                                 dragPos = null
                             },
-                            onDragCancel = { dragSrcId = -1; dragPos = null }
+                            onDragCancel = {
+                                dragSrcId = -1
+                                dragPos = null
+                            }
                         )
                     }
             ) {
-                val nodeWidthPx = nodeWidthDp.toPx()
-                val nodeHeightPx = nodeHeightDp.toPx()
-                val marginPx = marginDp.toPx()
-                val gapPx = gapDp.toPx()
-                val radiusPx = nodeRadiusDp.toPx()
+                val totalH = source.size * nodeHeightPx + (source.size - 1) * gapPx
+                val startY = (size.height - totalH) / 2f
 
-                val srcRects = computeNodeRects(source, size.width, size.height, Side.SOURCE, nodeWidthPx, nodeHeightPx, marginPx, gapPx)
-                val refRects = computeNodeRects(reference, size.width, size.height, Side.REFERENCE, nodeWidthPx, nodeHeightPx, marginPx, gapPx)
-
-                // ── Draw Bézier links ─────────────────────────────────────────
+                // Draw Bézier links
                 for (link in correspondence) {
-                    val srcRect = srcRects[link.sourceZone] ?: continue
-                    val primaryRefId = link.primaryTarget
-                    val refRect = refRects[primaryRefId] ?: continue
+                    val sIdx = link.sourceZone
+                    val rIdx = link.primaryTarget
+                    if (sIdx in source.indices && rIdx in reference.indices) {
+                        val startPt = Offset(marginPx + nodeWidthPx, startY + sIdx * (nodeHeightPx + gapPx) + nodeHeightPx / 2f)
+                        val endPt = Offset(size.width - marginPx - nodeWidthPx, startY + rIdx * (nodeHeightPx + gapPx) + nodeHeightPx / 2f)
 
-                    val isDiagonal = (link.sourceZone == primaryRefId)
-                    val isOverridden = link.isOverridden || link.origin == "user"
-                    val weight = link.similarity.coerceIn(0f, 1f)
-                    val strokePx = minStrokeDp.toPx() + (maxStrokeDp.toPx() - minStrokeDp.toPx()) * weight
-
-                    val curveColor = when {
-                        isOverridden || !isDiagonal -> colorCrossed
-                        else -> colorAuto
+                        val isDiagonal = (sIdx == rIdx)
+                        val isOverridden = link.isOverridden || link.origin == "user"
+                        val weight = link.similarity.coerceIn(0f, 1f)
+                        val strokePx = minStrokeDp.toPx() + (maxStrokeDp.toPx() - minStrokeDp.toPx()) * weight
+                        val curveColor = when {
+                            isOverridden || !isDiagonal -> colorCrossed
+                            else -> colorAuto
+                        }
+                        drawBezierLink(startPt, endPt, curveColor, strokePx, weight < 0.3f)
                     }
-
-                    drawBezierLink(
-                        start = Offset(srcRect.right, (srcRect.top + srcRect.bottom) / 2f),
-                        end = Offset(refRect.left, (refRect.top + refRect.bottom) / 2f),
-                        color = curveColor,
-                        strokePx = strokePx,
-                        dashed = weight < 0.3f
-                    )
                 }
 
-                // ── Draw active drag curve ────────────────────────────────────
+                // Draw active drag line
                 val dp = dragPos
-                if (dragSrcId >= 0 && dp != null) {
-                    val srcRect = srcRects[dragSrcId]
-                    if (srcRect != null) {
-                        drawBezierLink(
-                            start = Offset(srcRect.right, (srcRect.top + srcRect.bottom) / 2f),
-                            end = dp,
-                            color = colorDrag,
-                            strokePx = dragStrokeDp.toPx(),
-                            dashed = false
-                        )
+                if (dragSrcId in source.indices && dp != null) {
+                    val startPt = Offset(marginPx + nodeWidthPx, startY + dragSrcId * (nodeHeightPx + gapPx) + nodeHeightPx / 2f)
+                    drawBezierLink(startPt, dp, colorDrag, dragStrokeDp.toPx(), false)
+                }
+            }
+
+            // Left: Source nodes
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = marginDp),
+                verticalArrangement = Arrangement.spacedBy(gapDp)
+            ) {
+                source.forEachIndexed { idx, zone ->
+                    val zoneFill = zone.hex.toComposeColor(surfaceColor)
+                    val isSparse = zone.area < 0.01f
+                    val isDraggingThis = dragSrcId == idx
+                    val textColor = if (zone.hex.luminance() > 0.5f) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface
+
+                    Surface(
+                        shape = RoundedCornerShape(nodeRadiusDp),
+                        color = zoneFill.copy(alpha = if (isSparse) SPARSE_ALPHA else 1f),
+                        border = BorderStroke(
+                            if (isDraggingThis) borderSelectedDp else borderMediumDp,
+                            if (isDraggingThis) nodeSelected else nodeBorder.copy(alpha = if (isSparse) SPARSE_ALPHA else 0.8f)
+                        ),
+                        modifier = Modifier
+                            .width(nodeWidthDp)
+                            .height(nodeHeightDp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = AppDimens.SpacingSmall),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = DEFAULT_ZONE_NAMES.getOrElse(idx) { zone.name },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${(zone.area * 100f).toInt()}%", // GUARD_ALLOW
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = textColor,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
+            }
 
-                // ── Draw source nodes ─────────────────────────────────────────
-                for (zone in source) {
-                    val rect = srcRects[zone.id] ?: continue
+            // Right: Reference nodes
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = marginDp),
+                verticalArrangement = Arrangement.spacedBy(gapDp)
+            ) {
+                reference.forEachIndexed { idx, zone ->
                     val zoneFill = zone.hex.toComposeColor(surfaceColor)
-                    val alpha = if (zone.area < 0.01f) SPARSE_ALPHA else 1f
-                    val borderColor = if (zone.id == dragSrcId) nodeSelected else nodeBorder
-                    val borderStroke = if (zone.id == dragSrcId) borderSelectedDp.toPx() else borderMediumDp.toPx()
-                    drawZoneNode(rect, zoneFill, borderColor, borderStroke, radiusPx, alpha)
-                }
+                    val isSparse = zone.area < 0.01f
+                    val textColor = if (zone.hex.luminance() > 0.5f) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface
 
-                // ── Draw reference nodes ──────────────────────────────────────
-                for (zone in reference) {
-                    val rect = refRects[zone.id] ?: continue
-                    val zoneFill = zone.hex.toComposeColor(surfaceColor)
-                    val alpha = if (zone.area < 0.01f) SPARSE_ALPHA else 1f
-                    drawZoneNode(rect, zoneFill, nodeBorder, borderMediumDp.toPx(), radiusPx, alpha)
+                    Surface(
+                        shape = RoundedCornerShape(nodeRadiusDp),
+                        color = zoneFill.copy(alpha = if (isSparse) SPARSE_ALPHA else 1f),
+                        border = BorderStroke(
+                            borderMediumDp,
+                            nodeBorder.copy(alpha = if (isSparse) SPARSE_ALPHA else 0.8f)
+                        ),
+                        modifier = Modifier
+                            .width(nodeWidthDp)
+                            .height(nodeHeightDp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = AppDimens.SpacingSmall),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = DEFAULT_ZONE_NAMES.getOrElse(idx) { zone.name },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${(zone.area * 100f).toInt()}%", // GUARD_ALLOW
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = textColor,
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        Spacer(Modifier.height(AppDimens.SpacingMedium))
+        Spacer(Modifier.height(AppDimens.SpacingSmall))
 
         // Reset button
         if (userOverrides.isNotEmpty()) {
@@ -309,21 +461,21 @@ private fun CorrespondenceGraphTab(
 
 @Composable
 private fun ZoneInspectorTab(
-    source: ZonePaletteAnalysis?,
+    zones: List<ZoneInfo>,
     zoneTransfer: ZoneTransferSummary?,
     selectedZoneIndex: Int,
     maskPath: String?,
     maskMode: String,
+    isGeneratingZoneMask: Boolean = false,
     onZoneSelected: (Int) -> Unit,
     onToggleMaskMode: () -> Unit
 ) {
-    if (source == null) {
+    if (zones.isEmpty()) {
         ZonePlaceholder(stringResource(R.string.zone_placeholder_load))
         return
     }
 
-    val zones = source.zones
-    val activeLink = if (selectedZoneIndex >= 0 && zoneTransfer != null) {
+    val activeLink = if (selectedZoneIndex in zones.indices && zoneTransfer != null) {
         zoneTransfer.correspondence.getOrNull(selectedZoneIndex)
     } else null
 
@@ -334,13 +486,14 @@ private fun ZoneInspectorTab(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppDimens.SpacingSpacious),
+            .padding(horizontal = AppDimens.SpacingSmall),
         verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
     ) {
         // ── 7-card Zone Selection Band ────────────────────────────────────
         Text(
             stringResource(R.string.zone_inspector_select_zone),
             style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Row(
@@ -356,145 +509,155 @@ private fun ZoneInspectorTab(
                     MaterialTheme.colorScheme.onSurface
                 }
                 val pctText = "${(zone.area * 100f).toInt()}%"
+                val shortName = DEFAULT_ZONE_NAMES.getOrElse(index) { zone.name }
 
-                Box(
+                Surface(
+                    shape = RoundedCornerShape(AppDimens.CornerRadiusSmall),
+                    color = zoneFill,
+                    border = BorderStroke(
+                        width = if (isSelected) AppDimens.BorderThick else AppDimens.BorderThin,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    ),
                     modifier = Modifier
                         .weight(1f)
-                        .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
-                        .clip(RoundedCornerShape(AppDimens.CornerRadiusSmall))
-                        .background(zoneFill)
-                        .border(
-                            width = if (isSelected) AppDimens.BorderThick else AppDimens.BorderThin,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(AppDimens.CornerRadiusSmall)
-                        )
+                        .defaultMinSize(minHeight = AppDimens.ButtonHeightCompact)
                         .alpha(if (zone.area < 0.01f) SPARSE_ALPHA else 1f)
                         .clickable { onZoneSelected(index) }
-                        .padding(AppDimens.SpacingExtraSmall),
-                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = pctText, // GUARD_ALLOW
-                        style = MaterialTheme.typography.labelSmall,
-                        color = textColor,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = AppDimens.SpacingMicro, horizontal = AppDimens.SpacingExtraSmall),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = shortName,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = textColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
+                        )
+                        Text(
+                            text = pctText, // GUARD_ALLOW
+                            style = MaterialTheme.typography.labelSmall,
+                            color = textColor,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
 
-        // ── Soft Weight Mask Preview (B&W or Color Heatmap) ───────────────
-        if (selectedZoneIndex >= 0 && maskPath != null) {
-            Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
-                Text(
-                    stringResource(R.string.zone_inspector_mask_preview),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Box(
+        // ── Selected Zone Details & Controls ──────────────────────────────
+        if (selectedZoneIndex in zones.indices) {
+            val selectedZone = zones[selectedZoneIndex]
+            val pctText = "${(selectedZone.area * 100f).toInt()}%"
+
+            Surface(
+                shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
+                border = BorderStroke(
+                    AppDimens.BorderThin,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(AppDimens.ZoneMaskPreviewHeight)
-                        .clip(RoundedCornerShape(AppDimens.CornerRadiusCard))
-                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(AppDimens.SpacingMedium),
+                    verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
                 ) {
-                    val bitmap = remember(maskPath) {
-                        try { BitmapFactory.decodeFile(maskPath) } catch (_: Exception) { null }
-                    }
-                    if (bitmap != null) {
-                        androidx.compose.foundation.Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = stringResource(R.string.zone_inspector_mask_preview),
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
-                    FilledTonalButton(onClick = onToggleMaskMode) {
-                        Text(
-                            if (maskMode == "bw")
-                                stringResource(R.string.zone_mask_mode_color)
-                            else
-                                stringResource(R.string.zone_mask_mode_bw)
-                        )
-                    }
-                }
-            }
-        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(AppDimens.IconNormal)
+                                    .clip(CircleShape)
+                                    .background(selectedZone.hex.toComposeColor(MaterialTheme.colorScheme.primary))
+                                    .border(AppDimens.BorderThin, MaterialTheme.colorScheme.outline, CircleShape)
+                            )
+                            Text(
+                                text = "${DEFAULT_ZONE_NAMES.getOrElse(selectedZoneIndex) { "Zone" }} ($pctText)", // GUARD_ALLOW
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
 
-        // ── Transformation Description & Sliders per Zone ─────────────────
-        if (activeLink != null) {
-            val selectedZone = zones.getOrNull(selectedZoneIndex)
-            if (selectedZone != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)) {
-                    Text(
-                        stringResource(
-                            R.string.zone_inspector_zone_title,
-                            (selectedZone.area * 100f).toInt()
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    val changeText = activeLink.describeChange.ifEmpty {
-                        when (activeLink.origin) {
-                            "user" -> stringResource(R.string.zone_link_origin_user)
-                            "ai"   -> stringResource(R.string.zone_link_origin_ai)
-                            else   -> stringResource(R.string.zone_link_origin_auto)
+                        OutlinedButton(
+                            onClick = onToggleMaskMode,
+                            modifier = Modifier.defaultMinSize(minHeight = AppDimens.ButtonHeightCompact),
+                            shape = RoundedCornerShape(AppDimens.CornerRadiusPill)
+                        ) {
+                            Icon(
+                                imageVector = MaterialTheme.icons.actionVisibilityOn,
+                                contentDescription = null,
+                                modifier = Modifier.size(AppDimens.IconSmall)
+                            )
+                            Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
+                            Text(
+                                text = if (maskMode == "bw") "Masque N&B" else "Masque Couleur", // GUARD_ALLOW
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
+
+                    val changeText = activeLink?.describeChange?.ifEmpty { null }
+                        ?: selectedZone.describeZone.ifEmpty { null }
+                        ?: "${DEFAULT_ZONE_NAMES.getOrElse(selectedZoneIndex) { "Zone" }} · Teinte et luminance analysées" // GUARD_ALLOW
 
                     Text(
                         text = changeText, // GUARD_ALLOW
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
-                    if (activeLink.isOverridden) {
-                        Text(
-                            stringResource(R.string.zone_link_overridden),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SzlTheme.colors.warning
-                        )
-                    }
-
-                    // Sliders for targeted zone overrides
-                    SzlSlider(
-                        title = stringResource(R.string.zone_slider_strength_title),
-                        value = zoneStrength,
-                        onValueChange = { zoneStrength = it },
-                        min = 0f,
-                        max = 1f,
-                        defaultValue = 1f
-                    )
-
-                    SzlSlider(
-                        title = stringResource(R.string.zone_slider_chroma_title),
-                        value = zoneChroma,
-                        onValueChange = { zoneChroma = it },
-                        min = 0f,
-                        max = 1f,
-                        defaultValue = 1f
-                    )
-
-                    SzlBipolarSlider(
-                        title = stringResource(R.string.zone_slider_luma_title),
-                        value = zoneLumaShift,
-                        onValueChange = { zoneLumaShift = it },
-                        min = -1f,
-                        max = 1f,
-                        defaultValue = 0f
-                    )
                 }
             }
-        }
 
-        if (selectedZoneIndex < 0) {
+            // Zone override sliders
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.SpacingMedium)
+            ) {
+                SzlSlider(
+                    title = stringResource(R.string.zone_slider_strength_title),
+                    value = zoneStrength,
+                    onValueChange = { zoneStrength = it },
+                    min = 0f,
+                    max = 1f,
+                    defaultValue = 1f
+                )
+                SzlSlider(
+                    title = stringResource(R.string.zone_slider_chroma_title),
+                    value = zoneChroma,
+                    onValueChange = { zoneChroma = it },
+                    min = 0f,
+                    max = 1f,
+                    defaultValue = 1f
+                )
+                SzlBipolarSlider(
+                    title = stringResource(R.string.zone_slider_luma_title),
+                    value = zoneLumaShift,
+                    onValueChange = { zoneLumaShift = it },
+                    min = -1f,
+                    max = 1f,
+                    defaultValue = 0f
+                )
+            }
+        } else {
             Text(
-                stringResource(R.string.zone_inspector_hint),
+                text = stringResource(R.string.zone_inspector_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )

@@ -42,12 +42,30 @@
     <string name="lut_size_65_nodes">262,144 nodes</string>
 
     <!-- Studio Funnel Stepper -->
+    <string name="studio_btn_back">Back</string>
+    <string name="studio_btn_continue">Continue</string>
+    <string name="studio_btn_render">Render</string>
+    <string name="studio_btn_finish">Finish</string>
+
+    <!-- Studio Landing Menu & Exit Dialog (Prototype v2.2) -->
+    <string name="studio_landing_title">Colorimetric Studio</string>
+    <string name="studio_landing_subtitle">Transfer the chromatic signature of a reference photo or cinema film to your shot.</string>
+    <string name="studio_landing_btn_new">Start a Transfer</string>
+    <string name="studio_landing_workflow_title">Color Transfer Workflow</string>
+    <string name="studio_landing_step1_desc">1. Source Photo</string>
+    <string name="studio_landing_step2_desc">2. Reference Style</string>
+    <string name="studio_landing_step3_desc">3. Adjustments &amp; Zones</string>
+    <string name="studio_landing_step4_desc">4. 3D LUT Render</string>
+    <string name="studio_exit_dialog_title">Exit Studio?</string>
+    <string name="studio_exit_dialog_msg">Are you sure you want to exit the Studio? Your current adjustments will be lost.</string>
+    <string name="studio_exit_dialog_confirm">Exit</string>
     <string name="wizard_step_1_title">Colorimetric Studio</string>
     <string name="wizard_step_1_subtitle">Transfer the chromatic signature of a film</string>
     <string name="wizard_step_1_empty">Drop your source photo A</string>
     <string name="wizard_step_1_badge">Source A</string>
     <string name="wizard_step_1_change">Change source photo</string>
     <string name="wizard_step_1_ready">Source photo ready</string>
+    <string name="wizard_step_1_btn_reset">Reset photo</string>
     <string name="wizard_step_1_btn_next">Continue to Reference (2/5) →</string>
 
     <string name="wizard_step_2_title">Reference Selection</string>
@@ -76,12 +94,26 @@
     <string name="studio_tab_advanced">Advanced</string>
     <string name="studio_zones_title">Color zones</string>
     <string name="studio_zones_description">Segment both images into color zones with deterministic Oklab k-means. The result is used to inspect and match the palette.</string>
-    <string name="studio_zones_analyze">Analyze zones</string>
-    <string name="studio_zones_reanalyze">Analyze again</string>
+    <string name="studio_zones_analyze">Analyze</string>
+    <string name="studio_zones_reanalyze">Analyze</string>
+    <string name="studio_zones_analyzing">Analyzing color zones…</string>
+    <string name="studio_step_3_lut_params_title">LUT Parameters</string>
+    <string name="studio_zones_generating_mask">Generating zone mask…</string>
     <string name="param_luma_lock_title">Luminance Lock (Luma)</string>
     <string name="param_skin_prot_title">Skin Tone Protection</string>
     <string name="param_neutral_lock_title">Neutral Axis Lock</string>
     <string name="param_smooth_title">3D Spatial Smoothing</string>
+    <string name="studio_quick_chip_subtle">25% Subtle</string>
+    <string name="studio_quick_chip_balanced">50% Balanced</string>
+    <string name="studio_quick_chip_punchy">75% Punchy</string>
+    <string name="studio_quick_chip_full">100% Full</string>
+    <string name="studio_guide_light_title">Tonal &amp; Exposure Control</string>
+    <string name="studio_guide_light_desc">Adjust transfer strength and preserve native source luminance to prevent underexposure.</string>
+    <string name="studio_guide_color_title">Chromatic Harmony</string>
+    <string name="studio_guide_color_desc">Preserve natural skin tones and lock neutral whites/grays. 3D spatial smoothing eliminates gradient banding.</string>
+    <string name="studio_lut_17_desc">4,913 nodes • Ultra-light mobile export (~50 KB) optimized for social media and fast previews.</string>
+    <string name="studio_lut_33_desc">35,937 nodes • Recommended industry standard (DaVinci Resolve, Premiere Pro). Optimal quality/size balance.</string>
+    <string name="studio_lut_64_desc">262,144 nodes • Cinema master precision. Continuous gradients without banding even on 10-bit HDR displays.</string>
 
     <string name="wizard_step_4_title">Generation in Progress</string>
     <string name="wizard_step_4_subtitle">High-fidelity 64-bit colorimetric computation</string>
@@ -92,6 +124,7 @@
     <string name="wizard_step_5_title">Colorimetric Masterpiece</string>
     <string name="wizard_step_5_subtitle">Blade Runner 2049 signature applied</string>
     <string name="wizard_step_5_btn_save_gallery">Save Photo to Gallery</string>
+    <string name="wizard_step_5_btn_back">Modify parameters (3/5)</string>
     <string name="wizard_step_5_btn_save_theme">Save Style as Preset</string>
     <string name="wizard_step_5_btn_export_cube">Share 3D LUT (.CUBE)</string>
 
@@ -725,8 +758,15 @@
     <string name="zone_reset_correspondences">Reset to Auto</string>
     <string name="zone_inspector_select_zone">Select a zone</string>
     <string name="zone_inspector_mask_preview">Zone Mask</string>
-    <string name="zone_mask_mode_color">Switch to Color</string>
+    <string name="zone_mask_mode_color">Switch to Color (Isolation)</string>
     <string name="zone_mask_mode_bw">Switch to B&amp;W</string>
+    <string name="zone_mask_active_label">Displaying zone mask on main image</string>
+    <string name="zone_mask_toggle_btn">Toggle mask on image</string>
+    <string name="studio_session_saved">Studio session saved</string>
+    <string name="studio_session_restored">Studio session restored</string>
+    <string name="studio_menu_save_session">Save session</string>
+    <string name="studio_menu_restore_session">Restore session</string>
+    <string name="studio_menu_reset">Reset parameters</string>
     <string name="zone_inspector_zone_title">Zone — %1$d%% of pixels</string>
     <string name="zone_inspector_strength">Transfer strength: %1$d%%</string>
     <string name="zone_inspector_hint">Tap a zone card above to inspect it.</string>

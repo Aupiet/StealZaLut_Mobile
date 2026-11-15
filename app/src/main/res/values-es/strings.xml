@@ -42,12 +42,30 @@
     <string name="lut_size_65_nodes">262 144 nodos</string>
 
     <!-- Studio Funnel Stepper -->
+    <string name="studio_btn_back">Volver</string>
+    <string name="studio_btn_continue">Continuar</string>
+    <string name="studio_btn_render">Render</string>
+    <string name="studio_btn_finish">Finalizar</string>
+
+    <!-- Studio Landing Menu & Exit Dialog (Prototype v2.2) -->
+    <string name="studio_landing_title">Estudio Colorimétrico</string>
+    <string name="studio_landing_subtitle">Transfiere la firma cromática y el ambiente visual de una película o foto de referencia a tu toma.</string>
+    <string name="studio_landing_btn_new">Iniciar transferencia</string>
+    <string name="studio_landing_workflow_title">Las 4 etapas de transferencia</string>
+    <string name="studio_landing_step1_desc">1. Foto de origen</string>
+    <string name="studio_landing_step2_desc">2. Estilo de referencia</string>
+    <string name="studio_landing_step3_desc">3. Ajustes y Zonas</string>
+    <string name="studio_landing_step4_desc">4. Render 3D LUT</string>
+    <string name="studio_exit_dialog_title">¿Salir del Estudio?</string>
+    <string name="studio_exit_dialog_msg">¿Seguro que quieres salir del Estudio? Se perderán los ajustes actuales.</string>
+    <string name="studio_exit_dialog_confirm">Salir</string>
     <string name="wizard_step_1_title">Estudio Colorimétrico</string>
     <string name="wizard_step_1_subtitle">Transfiere la firma cromática de una película</string>
     <string name="wizard_step_1_empty">Suelta tu foto origen A</string>
     <string name="wizard_step_1_badge">Fuente A</string>
     <string name="wizard_step_1_change">Cambiar foto de origen</string>
     <string name="wizard_step_1_ready">Foto de origen lista</string>
+    <string name="wizard_step_1_btn_reset">Reiniciar foto</string>
     <string name="wizard_step_1_btn_next">Continuar a Referencia (2/5) →</string>
 
     <string name="wizard_step_2_title">Selección de Referencia</string>
@@ -78,6 +96,8 @@
     <string name="studio_zones_description">Segmenta ambas imágenes en zonas de color con k-means Oklab determinista para inspeccionar y combinar la paleta.</string>
     <string name="studio_zones_analyze">Analizar zonas</string>
     <string name="studio_zones_reanalyze">Analizar de nuevo</string>
+    <string name="studio_zones_analyzing">Analizando zonas de color…</string>
+    <string name="studio_zones_generating_mask">Generando máscara de zona…</string>
     <string name="param_luma_lock_title">Bloqueo de Luminancia</string>
     <string name="param_skin_prot_title">Protección de Tonos de Piel</string>
     <string name="param_neutral_lock_title">Bloqueo de Eje Neutro</string>
@@ -92,6 +112,7 @@
     <string name="wizard_step_5_title">Obra Maestra Colorimétrica</string>
     <string name="wizard_step_5_subtitle">Firma Blade Runner 2049 aplicada</string>
     <string name="wizard_step_5_btn_save_gallery">Guardar Foto en la Galería</string>
+    <string name="wizard_step_5_btn_back">Modificar ajustes (3/5)</string>
     <string name="wizard_step_5_btn_save_theme">Guardar Estilo como Preset</string>
     <string name="wizard_step_5_btn_export_cube">Compartir 3D LUT (.CUBE)</string>
 
@@ -725,8 +746,15 @@
     <string name="zone_reset_correspondences">Restablecer (Auto)</string>
     <string name="zone_inspector_select_zone">Seleccionar una zona</string>
     <string name="zone_inspector_mask_preview">Máscara de Zona</string>
-    <string name="zone_mask_mode_color">Cambiar a Color</string>
+    <string name="zone_mask_mode_color">Cambiar a Color (Aislamiento)</string>
     <string name="zone_mask_mode_bw">Cambiar a B&amp;N</string>
+    <string name="zone_mask_active_label">Mostrando máscara de zona en la imagen</string>
+    <string name="zone_mask_toggle_btn">Mostrar/ocultar máscara</string>
+    <string name="studio_session_saved">Sesión de Studio guardada</string>
+    <string name="studio_session_restored">Sesión de Studio restaurada</string>
+    <string name="studio_menu_save_session">Guardar sesión</string>
+    <string name="studio_menu_restore_session">Restaurar sesión</string>
+    <string name="studio_menu_reset">Restablecer parámetros</string>
     <string name="zone_inspector_zone_title">Zona — %1$d%% de píxeles</string>
     <string name="zone_inspector_strength">Intensidad de transferencia: %1$d%%</string>
     <string name="zone_inspector_hint">Toca una tarjeta de zona para inspeccionarla.</string>

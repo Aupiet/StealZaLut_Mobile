@@ -67,7 +67,11 @@ object AppDimens {
     // --- Component Heights & Sizes ---
     val ImagePickerHeight: Dp = 160.dp
     val ImagePickerCollapsedHeight: Dp = 120.dp
-    val DoubleViewHeight: Dp = 260.dp
+    val ImagePickerMinHeight: Dp = 140.dp
+    val ImagePickerMaxHeight: Dp = 240.dp
+    val DoubleViewHeight: Dp = 240.dp
+    val DoubleViewMinHeight: Dp = 160.dp
+    val DoubleViewMaxHeight: Dp = 250.dp
     val SwatchSize: Dp = 28.dp
     val CurtainHandleSize: Dp = 36.dp
     val AvatarSize: Dp = 52.dp
@@ -115,12 +119,13 @@ object AppDimens {
 
     // --- Zone Correspondence Graph ---
     /** Width of one zone swatch node in the correspondence canvas. */
-    val ZoneNodeWidth: Dp = 100.dp
+    val ZoneNodeWidth: Dp = 96.dp
     /** Height of one zone swatch node in the correspondence canvas. */
     val ZoneNodeHeight: Dp = 32.dp
-    val ZoneGraphMinHeight: Dp = 220.dp
+    val ZoneGraphMinHeight: Dp = 280.dp
     val ZoneMaskPreviewHeight: Dp = 160.dp
     val ZonePlaceholderHeight: Dp = 120.dp
+    val StudioDrawerHeight: Dp = 290.dp
     val ZoneBorderSelected: Dp = 2.5.dp
     val ZoneCurveStrokeMin: Dp = 1.5.dp
     val ZoneCurveStrokeMax: Dp = 4.dp

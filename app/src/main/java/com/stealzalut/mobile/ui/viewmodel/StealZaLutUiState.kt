@@ -204,9 +204,11 @@ data class StealZaLutUiState(
     val zoneUserOverrides: kotlinx.collections.immutable.ImmutableMap<String, Int> = kotlinx.collections.immutable.persistentMapOf(),
     /** File path of the last generated zone mask PNG, null if not yet generated. */
     val zoneMaskPath: String? = null,
-    /** Mask visualisation mode — "bw" or "color". */
+    /** Mask visualisation mode — "bw", "color", or "isolation" (pixels in zone on black). */
     val zoneMaskMode: String = "bw",
     val isGeneratingZoneMask: Boolean = false,
+    /** When true, the zone mask bitmap is shown full-size on the main viewport instead of the normal preview. */
+    val isZoneMaskActive: Boolean = false,
 
     // ========================================================================
     // 3. PROFIL & BIBLIOTHÈQUE

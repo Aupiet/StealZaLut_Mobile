@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -101,10 +103,21 @@ fun ImagePickerCard(
 
             Spacer(modifier = Modifier.height(AppDimens.SpacingMedium))
 
-            Box(
-                modifier = Modifier
+            val containerModifier = if (bitmap != null) {
+                val rawRatio = bitmap.width.toFloat() / bitmap.height.toFloat().coerceAtLeast(1f)
+                val boundedRatio = rawRatio.coerceIn(0.65f, 2.35f)
+                Modifier
                     .fillMaxWidth()
-                    .height(if (bitmap != null) previewHeight else AppDimens.ImagePickerHeight)
+                    .aspectRatio(boundedRatio)
+                    .heightIn(min = AppDimens.ImagePickerMinHeight, max = AppDimens.ImagePickerMaxHeight)
+            } else {
+                Modifier
+                    .fillMaxWidth()
+                    .height(previewHeight)
+            }
+
+            Box(
+                modifier = containerModifier
                     .clip(RoundedCornerShape(AppDimens.CornerRadiusCard))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
@@ -119,7 +132,7 @@ fun ImagePickerCard(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = title,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Fit
                     )
 
                 } else {

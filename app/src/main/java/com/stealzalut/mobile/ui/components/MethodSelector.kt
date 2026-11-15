@@ -154,32 +154,5 @@ fun MethodSelector(
                 }
             }
         }
-
-        // --- Bottom: Short description of selected method ---
-        Surface(
-            shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConstants.OPACITY_CONTAINER_MEDIUM),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = AppDimens.SpacingNormal, vertical = AppDimens.SpacingSmall),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = MaterialTheme.icons.statusInfo,
-                    contentDescription = null,
-                    modifier = Modifier.size(AppDimens.IconSmall),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(AppDimens.SpacingSmall))
-                Text(
-                    text = stringResource(selectedMethod.descriptionRes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
     }
 }

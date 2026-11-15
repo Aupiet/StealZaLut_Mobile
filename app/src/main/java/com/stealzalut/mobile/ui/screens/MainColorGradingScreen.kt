@@ -72,14 +72,16 @@ fun MainColorGradingScreen(
     val commonUndo = stringResource(R.string.common_undo)
     val snackbarHostState = remember { SnackbarHostState() }
     var showExitEditorConfirmDialog by remember { mutableStateOf(false) }
+    var showExitStudioConfirmDialog by remember { mutableStateOf(false) }
     var showMaintenanceMonitor by remember { mutableStateOf(false) }
 
     // Intercept hardware/gesture Back to preserve unsaved drafts and prevent accidental exits
     val isEditorWithPhoto = uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null
+    val isStudioWithPhoto = uiState.currentDestination == AppDestination.STUDIO && uiState.sourceBitmap != null
     val isStudioWizardOngoing = uiState.currentDestination == AppDestination.STUDIO && uiState.wizardStep > 1
     val isNotStudio = uiState.currentDestination != AppDestination.STUDIO
 
-    BackHandler(enabled = isEditorWithPhoto || isStudioWizardOngoing || isNotStudio) {
+    BackHandler(enabled = isEditorWithPhoto || isStudioWithPhoto || isNotStudio) {
         when {
             isEditorWithPhoto -> {
                 showExitEditorConfirmDialog = true
@@ -88,7 +90,14 @@ fun MainColorGradingScreen(
                 viewModel.navigateBackFromGuide()
             }
             isStudioWizardOngoing -> {
-                viewModel.setWizardStep(uiState.wizardStep - 1)
+                if (uiState.wizardStep == com.stealzalut.mobile.core.AppConstants.STEP_5_RESULT) {
+                    viewModel.setWizardStep(com.stealzalut.mobile.core.AppConstants.STEP_3_PARAMS)
+                } else {
+                    viewModel.setWizardStep(uiState.wizardStep - 1)
+                }
+            }
+            isStudioWithPhoto -> {
+                showExitStudioConfirmDialog = true
             }
             isNotStudio -> {
                 viewModel.navigateTo(AppDestination.STUDIO)
@@ -152,6 +161,45 @@ fun MainColorGradingScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
+                }
+            }
+        )
+    }
+
+    if (showExitStudioConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitStudioConfirmDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.studio_exit_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.studio_exit_dialog_msg),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitStudioConfirmDialog = false
+                        viewModel.resetWizard()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.studio_exit_dialog_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitStudioConfirmDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -319,7 +367,11 @@ fun MainColorGradingScreen(
             }
         },
         bottomBar = {
-            if (!(uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null) && uiState.currentDestination != AppDestination.GUIDE) {
+            val isEditorActive = uiState.currentDestination == AppDestination.EDITOR && uiState.editorSourceBitmap != null
+            val isStudioActive = uiState.currentDestination == AppDestination.STUDIO && uiState.sourceBitmap != null
+            val shouldHideBottomBar = isEditorActive || isStudioActive || uiState.currentDestination == AppDestination.GUIDE
+
+            if (!shouldHideBottomBar) {
                 androidx.compose.foundation.layout.Column {
                     androidx.compose.material3.HorizontalDivider(
                         thickness = AppDimens.DividerThickness,

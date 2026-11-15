@@ -165,6 +165,7 @@ data class StealZaLutUiState(
     val editorLightroomParams: LightroomDevelopModel = LightroomDevelopModel(),
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
+    val hasCopiedSettings: Boolean = false,
     val editorCropRegion: CropRegion = CropRegion(),
     val editorProjects: ImmutableList<EditorProject> = persistentListOf(),
     val currentProjectId: String? = null,

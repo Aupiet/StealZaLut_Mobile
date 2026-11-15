@@ -408,3 +408,57 @@ class TestLightroomPanelsPipeline:
         assert np.max(baked) <= 1.0
         assert not np.isnan(baked).any()
         assert not np.isinf(baked).any()
+
+    def test_no_double_color_pipeline_application(self) -> None:
+        """Verify that color pipeline is not double-applied after LUT application (WYSIWYG)."""
+        from stealzalut.core.lightroom_models import (
+            LightroomDevelopSettings,
+            BasicSettings,
+            ToneCurveSettings,
+            ColorMixerSettings,
+        )
+        from stealzalut.core.lightroom_color import apply_full_lightroom_color_pipeline
+        from stealzalut.core.lut_engine import apply_lut
+        from stealzalut.core.pipeline import (
+            bake_full_pipeline_lut,
+            apply_step3_spatial_effects,
+            apply_step3_color_grading,
+            Step2Params,
+            Step3Params,
+        )
+
+        np.random.seed(42)
+        # 32x32 test RGB image in [0.0, 1.0]
+        img = np.random.uniform(0.1, 0.9, (32, 32, 3)).astype(np.float32)
+
+        settings = LightroomDevelopSettings(
+            basic=BasicSettings(exposure=0.4, contrast=20.0, temp=15.0),
+            tone_curve=ToneCurveSettings(highlights=25.0, shadows=-20.0),
+            color_mixer=ColorMixerSettings(hue_red=15.0, sat_blue=-30.0, lum_green=20.0),
+        )
+
+        # Direct mathematical reference (1x color application)
+        direct_color = apply_full_lightroom_color_pipeline(img, settings)
+
+        # Pipeline with 3D LUT baking (size 33)
+        baked_lut = bake_full_pipeline_lut(
+            None, Step2Params(), Step3Params(), size=33, lr_settings=settings
+        )
+        lut_output = apply_lut(img, baked_lut)
+
+        # Spatial-only pass (correct behavior: no color re-application)
+        correct_output = apply_step3_spatial_effects(lut_output, Step3Params(), lr_settings=settings)
+
+        # Difference against reference in 8-bit levels
+        delta_correct = np.abs(correct_output * 255.0 - direct_color * 255.0)
+        mean_err = np.mean(delta_correct)
+        max_err = np.max(delta_correct)
+
+        # LUT interpolation error should be minimal (mean < 2.0 levels)
+        assert mean_err < 2.0, f"Mean error {mean_err:.2f} too large, expected single color application"
+        assert max_err < 5.0, f"Max error {max_err:.2f} too large"
+
+        # Demonstrate that old behavior (calling apply_step3_color_grading) doubled the color pass
+        double_applied = apply_step3_color_grading(lut_output, Step3Params(), is_lut_baking=False, lr_settings=settings)
+        delta_double = np.abs(double_applied * 255.0 - direct_color * 255.0)
+        assert np.mean(delta_double) > 10.0, "Double application should have caused large divergence (>10 levels)"

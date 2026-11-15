@@ -26,6 +26,7 @@ from stealzalut.core.pipeline import (
     Step2Params,
     Step3Params,
     apply_step3_color_grading,
+    apply_step3_spatial_effects,
     bake_full_pipeline_lut,
 )
 from stealzalut.utils.image_io import (
@@ -302,14 +303,14 @@ def run_image_export_pipeline(
         del src_work, baked_lut
 
         # 6. Apply 2D spatial effects (clarity, sharpen, grain, crop & straighten)
+        # Color grading is already baked in the 3D LUT (WYSIWYG guarantee)
         if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             from stealzalut.utils.image_io import to_float32, to_uint8
 
             graded_f = to_float32(graded)
-            graded_f = apply_step3_color_grading(
+            graded_f = apply_step3_spatial_effects(
                 graded_f,
                 params=step3,
-                is_lut_baking=False,
                 lr_settings=lr_settings,
             )
             graded = to_uint8(graded_f)

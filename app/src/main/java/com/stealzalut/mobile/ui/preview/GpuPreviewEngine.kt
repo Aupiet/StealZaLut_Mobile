@@ -1,7 +1,10 @@
 package com.stealzalut.mobile.ui.preview
 
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
+import android.graphics.Shader
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -9,14 +12,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asComposeRenderEffect
+import com.stealzalut.mobile.core.MonotoneCubicSpline
 import com.stealzalut.mobile.core.diagnostics.AppLog
 import com.stealzalut.mobile.core.diagnostics.LogLevel
+import com.stealzalut.mobile.data.model.ToneCurveModel
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Normalized parameter deltas between the live UI state and the last
@@ -46,6 +52,12 @@ data class GpuPreviewDeltas(
     val curveLights: Float = 0f,
     val curveDarks: Float = 0f,
     val curveShadows: Float = 0f,
+
+    // 2b. Point Tone Curves (1D LUT 256x1 evaluated via Fritsch-Carlson)
+    val hasPointCurve: Boolean = false,
+    val pointCurveLutR: FloatArray = FloatArray(256),
+    val pointCurveLutG: FloatArray = FloatArray(256),
+    val pointCurveLutB: FloatArray = FloatArray(256),
 
     // 3. Color Grading (3-Way Wheels + Global)
     val gradeShadowHue: Float = 0f,
@@ -89,11 +101,22 @@ data class GpuPreviewDeltas(
     val mixerSats: FloatArray = FloatArray(8),
     val mixerLums: FloatArray = FloatArray(8),
 
+    // 5b. Point Color
+    val pointColorActive: Boolean = false,
+    val pointColorTargetHsl: FloatArray = FloatArray(3),
+    val pointColorHueShift: Float = 0f,
+    val pointColorSatShift: Float = 0f,
+    val pointColorLumShift: Float = 0f,
+    val pointColorRange: Float = 50f,
+
     // 6. Effects
     val vignette: Float = 0f
 ) {
     val isZero: Boolean
         get() {
+            if (hasPointCurve || pointColorActive) {
+                return false
+            }
             if (abs(exposure) >= 1e-4f || abs(contrast) >= 1e-4f || abs(temp) >= 1e-4f || abs(tint) >= 1e-4f ||
                 abs(highlights) >= 1e-4f || abs(shadows) >= 1e-4f || abs(whites) >= 1e-4f || abs(blacks) >= 1e-4f ||
                 abs(vibrance) >= 1e-4f || abs(saturation) >= 1e-4f || abs(vignette) >= 1e-4f) {
@@ -129,7 +152,13 @@ data class GpuPreviewDeltas(
                 whites == other.whites && blacks == other.blacks && vibrance == other.vibrance &&
                 saturation == other.saturation && curveHighlights == other.curveHighlights &&
                 curveLights == other.curveLights && curveDarks == other.curveDarks &&
-                curveShadows == other.curveShadows && gradeShadowHue == other.gradeShadowHue &&
+                curveShadows == other.curveShadows && hasPointCurve == other.hasPointCurve &&
+                pointColorActive == other.pointColorActive &&
+                pointColorHueShift == other.pointColorHueShift &&
+                pointColorSatShift == other.pointColorSatShift &&
+                pointColorLumShift == other.pointColorLumShift &&
+                pointColorRange == other.pointColorRange &&
+                gradeShadowHue == other.gradeShadowHue &&
                 gradeShadowSat == other.gradeShadowSat && gradeShadowLum == other.gradeShadowLum &&
                 gradeMidtoneHue == other.gradeMidtoneHue && gradeMidtoneSat == other.gradeMidtoneSat &&
                 gradeMidtoneLum == other.gradeMidtoneLum && gradeHighlightHue == other.gradeHighlightHue &&
@@ -143,7 +172,11 @@ data class GpuPreviewDeltas(
                 vignette == other.vignette &&
                 mixerHues.contentEquals(other.mixerHues) &&
                 mixerSats.contentEquals(other.mixerSats) &&
-                mixerLums.contentEquals(other.mixerLums)
+                mixerLums.contentEquals(other.mixerLums) &&
+                pointColorTargetHsl.contentEquals(other.pointColorTargetHsl) &&
+                (!hasPointCurve || (pointCurveLutR.contentEquals(other.pointCurveLutR) &&
+                        pointCurveLutG.contentEquals(other.pointCurveLutG) &&
+                        pointCurveLutB.contentEquals(other.pointCurveLutB)))
     }
 
     override fun hashCode(): Int {
@@ -161,10 +194,17 @@ data class GpuPreviewDeltas(
         result = 31 * result + curveLights.hashCode()
         result = 31 * result + curveDarks.hashCode()
         result = 31 * result + curveShadows.hashCode()
+        result = 31 * result + hasPointCurve.hashCode()
+        result = 31 * result + pointColorActive.hashCode()
+        result = 31 * result + pointColorHueShift.hashCode()
+        result = 31 * result + pointColorSatShift.hashCode()
+        result = 31 * result + pointColorLumShift.hashCode()
+        result = 31 * result + pointColorRange.hashCode()
         result = 31 * result + vignette.hashCode()
         result = 31 * result + mixerHues.contentHashCode()
         result = 31 * result + mixerSats.contentHashCode()
         result = 31 * result + mixerLums.contentHashCode()
+        result = 31 * result + pointColorTargetHsl.contentHashCode()
         return result
     }
 }
@@ -209,6 +249,10 @@ object GpuPreviewEngine {
         uniform float uDeltaCurveDarks;
         uniform float uDeltaCurveShadows;
 
+        // 2b. Point Tone Curves (1D LUT 256x1 evaluated via Fritsch-Carlson)
+        uniform shader uPointCurveLut;
+        uniform float uHasPointCurve;
+
         // 3. Color Grading Differential Tint Vectors
         uniform float3 uDeltaGradeShadowVec;
         uniform float3 uDeltaGradeMidtoneVec;
@@ -228,6 +272,12 @@ object GpuPreviewEngine {
         uniform float uMixerHues[8];
         uniform float uMixerSats[8];
         uniform float uMixerLums[8];
+
+        // 5b. Point Color
+        uniform float uPointColorActive;
+        uniform float3 uPointColorTargetHsl;
+        uniform float3 uPointColorDeltas;
+        uniform float uPointColorRange;
 
         // 6. Effects
         uniform float uDeltaVignette;
@@ -408,9 +458,14 @@ object GpuPreviewEngine {
             }
 
             // ================================================================
-            // STAGE 3: PARAMETRIC TONE CURVES
+            // STAGE 3: TONE CURVES (Point Curve 1D LUT or Parametric)
             // ================================================================
-            if (abs(uDeltaCurveHighlights) > 0.0001 || abs(uDeltaCurveLights) > 0.0001 ||
+            if (uHasPointCurve > 0.5) {
+                float rLookup = float(uPointCurveLut.eval(float2(clamp(rgb.r, 0.0, 1.0) * 255.0 + 0.5, 0.5)).r);
+                float gLookup = float(uPointCurveLut.eval(float2(clamp(rgb.g, 0.0, 1.0) * 255.0 + 0.5, 0.5)).g);
+                float bLookup = float(uPointCurveLut.eval(float2(clamp(rgb.b, 0.0, 1.0) * 255.0 + 0.5, 0.5)).b);
+                rgb = clamp(float3(rLookup, gLookup, bLookup), 0.0, 1.0);
+            } else if (abs(uDeltaCurveHighlights) > 0.0001 || abs(uDeltaCurveLights) > 0.0001 ||
                 abs(uDeltaCurveDarks) > 0.0001 || abs(uDeltaCurveShadows) > 0.0001) {
                 float cLuma = 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
                 float d_shad = (uDeltaCurveShadows / 100.0) * 0.15;
@@ -428,31 +483,47 @@ object GpuPreviewEngine {
             }
 
             // ================================================================
-            // STAGE 4: COLOR MIXER (HSL 8 Channels)
+            // STAGE 4: COLOR MIXER (HSL 8 Channels & Point Color)
             // ================================================================
             float3 hsl = rgbToHsl(rgb);
-                        float total_dh = 0.0;
-            float total_ds = 0.0;
-            float total_dl = 0.0;
-            float total_w = 0.0;
+            if (uPointColorActive > 0.5) {
+                float dh = abs(hsl.x - uPointColorTargetHsl.x);
+                dh = min(dh, 360.0 - dh) / 180.0;
+                float ds = abs(hsl.y - uPointColorTargetHsl.y);
+                float dl = abs(hsl.z - uPointColorTargetHsl.z);
+                float dist = sqrt(1.5 * dh * dh + ds * ds + dl * dl);
 
-            for (int i = 0; i < 8; i++) {
-                if (abs(uMixerHues[i]) > 0.0001 || abs(uMixerSats[i]) > 0.0001 || abs(uMixerLums[i]) > 0.0001) {
-                    float diff = abs(hsl.x - getMixerCenter(i));
-                    diff = min(diff, 360.0 - diff);
-                    float weight = exp(-0.5 * pow(diff / 22.0, 2.0));
-                    total_dh += weight * (uMixerHues[i] / 100.0) * 30.0;
-                    total_ds += weight * (uMixerSats[i] / 100.0);
-                    total_dl += weight * (uMixerLums[i] / 100.0) * 0.4;
-                    total_w += weight;
-                }
-            }
-            if (total_w > 0.0001) {
-                float norm = max(total_w, 1.0);
-                hsl.x = mod(hsl.x + total_dh / norm, 360.0);
-                hsl.y = clamp(hsl.y + (total_ds / norm) * hsl.y, 0.0, 1.0);
-                hsl.z = clamp(hsl.z + (total_dl / norm) * hsl.z * (1.0 - hsl.z) * 2.0, 0.0, 1.0);
+                float radius = max(0.05, (uPointColorRange / 100.0) * 0.75);
+                float mask = 1.0 - smoothstep(0.0, radius, dist);
+
+                hsl.x = mod(hsl.x + mask * (uPointColorDeltas.x / 100.0) * 45.0, 360.0);
+                hsl.y = clamp(hsl.y + mask * (uPointColorDeltas.y / 100.0) * hsl.y, 0.0, 1.0);
+                hsl.z = clamp(hsl.z + mask * (uPointColorDeltas.z / 100.0) * 0.35, 0.0, 1.0);
                 rgb = hslToRgb(hsl);
+            } else {
+                float total_dh = 0.0;
+                float total_ds = 0.0;
+                float total_dl = 0.0;
+                float total_w = 0.0;
+
+                for (int i = 0; i < 8; i++) {
+                    if (abs(uMixerHues[i]) > 0.0001 || abs(uMixerSats[i]) > 0.0001 || abs(uMixerLums[i]) > 0.0001) {
+                        float diff = abs(hsl.x - getMixerCenter(i));
+                        diff = min(diff, 360.0 - diff);
+                        float weight = exp(-0.5 * pow(diff / 22.0, 2.0));
+                        total_dh += weight * (uMixerHues[i] / 100.0) * 30.0;
+                        total_ds += weight * (uMixerSats[i] / 100.0);
+                        total_dl += weight * (uMixerLums[i] / 100.0) * 0.4;
+                        total_w += weight;
+                    }
+                }
+                if (total_w > 0.0001) {
+                    float norm = max(total_w, 1.0);
+                    hsl.x = mod(hsl.x + total_dh / norm, 360.0);
+                    hsl.y = clamp(hsl.y + (total_ds / norm) * hsl.y, 0.0, 1.0);
+                    hsl.z = clamp(hsl.z + (total_dl / norm) * hsl.z * (1.0 - hsl.z) * 2.0, 0.0, 1.0);
+                    rgb = hslToRgb(hsl);
+                }
             }
 
             // ================================================================
@@ -510,6 +581,17 @@ object GpuPreviewEngine {
         shader.setFloatUniform("uDeltaCurveDarks", deltas.curveDarks)
         shader.setFloatUniform("uDeltaCurveShadows", deltas.curveShadows)
 
+        // 2b. Point Tone Curves
+        if (deltas.hasPointCurve) {
+            val lutBmp = createLutBitmap(deltas.pointCurveLutR, deltas.pointCurveLutG, deltas.pointCurveLutB)
+            val lutShader = BitmapShader(lutBmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+            shader.setInputShader("uPointCurveLut", lutShader)
+            shader.setFloatUniform("uHasPointCurve", 1f)
+        } else {
+            shader.setInputShader("uPointCurveLut", getIdentityLutShader())
+            shader.setFloatUniform("uHasPointCurve", 0f)
+        }
+
         // 3. Color Grading Vectors
         val vShadCurr = computeTintVector(deltas.gradeShadowHue, deltas.gradeShadowSat)
         val vShadComm = computeTintVector(deltas.commGradeShadowHue, deltas.commGradeShadowSat)
@@ -542,6 +624,22 @@ object GpuPreviewEngine {
         shader.setFloatUniform("uMixerHues", deltas.mixerHues)
         shader.setFloatUniform("uMixerSats", deltas.mixerSats)
         shader.setFloatUniform("uMixerLums", deltas.mixerLums)
+
+        // 5b. Point Color
+        shader.setFloatUniform("uPointColorActive", if (deltas.pointColorActive) 1f else 0f)
+        shader.setFloatUniform(
+            "uPointColorTargetHsl",
+            deltas.pointColorTargetHsl[0],
+            deltas.pointColorTargetHsl[1],
+            deltas.pointColorTargetHsl[2]
+        )
+        shader.setFloatUniform(
+            "uPointColorDeltas",
+            deltas.pointColorHueShift,
+            deltas.pointColorSatShift,
+            deltas.pointColorLumShift
+        )
+        shader.setFloatUniform("uPointColorRange", deltas.pointColorRange)
 
         // 6. Effects
         shader.setFloatUniform("uDeltaVignette", deltas.vignette)
@@ -578,6 +676,123 @@ object GpuPreviewEngine {
         m[3] /= r1Sum; m[4] /= r1Sum; m[5] /= r1Sum
         m[6] /= r2Sum; m[7] /= r2Sum; m[8] /= r2Sum
         return m
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private var cachedIdentityShader: BitmapShader? = null
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun getIdentityLutShader(): BitmapShader {
+        val existing = cachedIdentityShader
+        if (existing != null) return existing
+        val bmp = Bitmap.createBitmap(256, 1, Bitmap.Config.ARGB_8888)
+        val pixels = IntArray(256) { i ->
+            (0xFF shl 24) or (i shl 16) or (i shl 8) or i
+        }
+        bmp.setPixels(pixels, 0, 256, 0, 0, 256, 1)
+        val shader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        cachedIdentityShader = shader
+        return shader
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun createLutBitmap(r: FloatArray, g: FloatArray, b: FloatArray): Bitmap {
+        val bmp = Bitmap.createBitmap(256, 1, Bitmap.Config.ARGB_8888)
+        val pixels = IntArray(256)
+        for (i in 0 until 256) {
+            val red = (r[i].coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+            val green = (g[i].coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+            val blue = (b[i].coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+            pixels[i] = (0xFF shl 24) or (red shl 16) or (green shl 8) or blue
+        }
+        bmp.setPixels(pixels, 0, 256, 0, 0, 256, 1)
+        return bmp
+    }
+
+    /**
+     * Evaluates a 1D 256x1 RGB transfer LUT representing the delta between [currTone] and [commTone].
+     * Uses Fritsch-Carlson monotone cubic Hermite splines identical to Python [spline_interpolator.py].
+     * Returns null when neither state uses point curves or when curves are identical (identity).
+     */
+    fun computePointCurveLuts(
+        currTone: ToneCurveModel,
+        commTone: ToneCurveModel
+    ): Triple<FloatArray, FloatArray, FloatArray>? {
+        val isCurrPoint = currTone.mode == "point"
+        val isCommPoint = commTone.mode == "point"
+
+        if (!isCurrPoint && !isCommPoint) return null
+
+        if (currTone.rgbPoints == commTone.rgbPoints &&
+            currTone.redPoints == commTone.redPoints &&
+            currTone.greenPoints == commTone.greenPoints &&
+            currTone.bluePoints == commTone.bluePoints) {
+            return null
+        }
+
+        val lutR = FloatArray(256)
+        val lutG = FloatArray(256)
+        val lutB = FloatArray(256)
+
+        val cR = FloatArray(256)
+        val cG = FloatArray(256)
+        val cB = FloatArray(256)
+
+        if (isCommPoint) {
+            for (i in 0 until 256) {
+                val x = i / 255f
+                val xRgb = MonotoneCubicSpline.evaluate(commTone.rgbPoints, x)
+                cR[i] = MonotoneCubicSpline.evaluate(commTone.redPoints, xRgb)
+                cG[i] = MonotoneCubicSpline.evaluate(commTone.greenPoints, xRgb)
+                cB[i] = MonotoneCubicSpline.evaluate(commTone.bluePoints, xRgb)
+            }
+        } else {
+            for (i in 0 until 256) {
+                val x = i / 255f
+                cR[i] = x; cG[i] = x; cB[i] = x
+            }
+        }
+
+        fun invertMonotonic(cArr: FloatArray, y: Float): Float {
+            var low = 0
+            var high = 255
+            while (low <= high) {
+                val mid = (low + high) ushr 1
+                if (cArr[mid] < y) {
+                    low = mid + 1
+                } else {
+                    high = mid - 1
+                }
+            }
+            val k = (low - 1).coerceIn(0, 254)
+            val denom = cArr[k + 1] - cArr[k]
+            val frac = if (denom > 1e-6f) (y - cArr[k]) / denom else 0f
+            return ((k + frac) / 255f).coerceIn(0f, 1f)
+        }
+
+        for (i in 0 until 256) {
+            val y = i / 255f
+            val origXR = if (isCommPoint) invertMonotonic(cR, y) else y
+            val origXG = if (isCommPoint) invertMonotonic(cG, y) else y
+            val origXB = if (isCommPoint) invertMonotonic(cB, y) else y
+
+            if (isCurrPoint) {
+                val txRgbR = MonotoneCubicSpline.evaluate(currTone.rgbPoints, origXR)
+                lutR[i] = MonotoneCubicSpline.evaluate(currTone.redPoints, txRgbR)
+
+                val txRgbG = MonotoneCubicSpline.evaluate(currTone.rgbPoints, origXG)
+                lutG[i] = MonotoneCubicSpline.evaluate(currTone.greenPoints, txRgbG)
+
+                val txRgbB = MonotoneCubicSpline.evaluate(currTone.rgbPoints, origXB)
+                lutB[i] = MonotoneCubicSpline.evaluate(currTone.bluePoints, txRgbB)
+            } else {
+                lutR[i] = origXR
+                lutG[i] = origXG
+                lutB[i] = origXB
+            }
+        }
+
+        return Triple(lutR, lutG, lutB)
     }
 
     /**
@@ -724,8 +939,12 @@ object GpuPreviewEngine {
             b = (lum + (b - lum) * totalBoost).coerceIn(0f, 1f)
         }
 
-        // 7. Parametric Tone Curves
-        if (abs(deltas.curveHighlights) > 1e-4f || abs(deltas.curveLights) > 1e-4f ||
+        // 7. Tone Curves (Point Curve or Parametric)
+        if (deltas.hasPointCurve) {
+            r = sampleLut1D(deltas.pointCurveLutR, r)
+            g = sampleLut1D(deltas.pointCurveLutG, g)
+            b = sampleLut1D(deltas.pointCurveLutB, b)
+        } else if (abs(deltas.curveHighlights) > 1e-4f || abs(deltas.curveLights) > 1e-4f ||
             abs(deltas.curveDarks) > 1e-4f || abs(deltas.curveShadows) > 1e-4f) {
             val cLuma = 0.2126f * r + 0.7152f * g + 0.0722f * b
             val dShad = (deltas.curveShadows / 100f) * 0.15f
@@ -744,43 +963,68 @@ object GpuPreviewEngine {
             b = (b + curveDelta * 4f * b * (1f - b)).coerceIn(0f, 1f)
         }
 
-        // 7b. Color Mixer (8 Channels: Red, Orange, Yellow, Green, Aqua, Blue, Purple, Magenta)
-        var hasMixer = false
-        for (i in 0 until 8) {
-            if (abs(deltas.mixerHues[i]) > 1e-4f || abs(deltas.mixerSats[i]) > 1e-4f || abs(deltas.mixerLums[i]) > 1e-4f) {
-                hasMixer = true
-                break
-            }
-        }
-        if (hasMixer) {
+        // 7b. Color Mixer (8 Channels & Point Color)
+        if (deltas.pointColorActive) {
             val hsl = rgbToHsl(r, g, b)
-            val centers = floatArrayOf(0f, 30f, 60f, 120f, 180f, 240f, 280f, 320f)
-            var totalDh = 0f
-            var totalDs = 0f
-            var totalDl = 0f
-            var totalW = 0f
+            val th = deltas.pointColorTargetHsl[0]
+            val ts = deltas.pointColorTargetHsl[1]
+            val tl = deltas.pointColorTargetHsl[2]
 
+            var dh = abs(hsl[0] - th)
+            dh = min(dh, 360f - dh) / 180f
+            val ds = abs(hsl[1] - ts)
+            val dl = abs(hsl[2] - tl)
+            val dist = sqrt(1.5f * dh * dh + ds * ds + dl * dl)
+
+            val radius = max(0.05f, (deltas.pointColorRange / 100f) * 0.75f)
+            val mask = 1f - smoothstep(0f, radius, dist)
+
+            var newH = (hsl[0] + mask * (deltas.pointColorHueShift / 100f) * 45f) % 360f
+            if (newH < 0f) newH += 360f
+            val newS = (hsl[1] + mask * (deltas.pointColorSatShift / 100f) * hsl[1]).coerceIn(0f, 1f)
+            val newL = (hsl[2] + mask * (deltas.pointColorLumShift / 100f) * 0.35f).coerceIn(0f, 1f)
+            val newRgb = hslToRgb(newH, newS, newL)
+            r = newRgb[0]
+            g = newRgb[1]
+            b = newRgb[2]
+        } else {
+            var hasMixer = false
             for (i in 0 until 8) {
                 if (abs(deltas.mixerHues[i]) > 1e-4f || abs(deltas.mixerSats[i]) > 1e-4f || abs(deltas.mixerLums[i]) > 1e-4f) {
-                    var diff = abs(hsl[0] - centers[i])
-                    diff = min(diff, 360f - diff)
-                    val weight = exp(-0.5f * (diff / 22f).pow(2f))
-                    totalDh += weight * (deltas.mixerHues[i] / 100f) * 30f
-                    totalDs += weight * (deltas.mixerSats[i] / 100f)
-                    totalDl += weight * (deltas.mixerLums[i] / 100f) * 0.4f
-                    totalW += weight
+                    hasMixer = true
+                    break
                 }
             }
-            if (totalW > 1e-4f) {
-                val norm = max(totalW, 1f)
-                var newH = (hsl[0] + totalDh / norm) % 360f
-                if (newH < 0f) newH += 360f
-                val newS = (hsl[1] + (totalDs / norm) * hsl[1]).coerceIn(0f, 1f)
-                val newL = (hsl[2] + (totalDl / norm) * hsl[2] * (1f - hsl[2]) * 2f).coerceIn(0f, 1f)
-                val newRgb = hslToRgb(newH, newS, newL)
-                r = newRgb[0]
-                g = newRgb[1]
-                b = newRgb[2]
+            if (hasMixer) {
+                val hsl = rgbToHsl(r, g, b)
+                val centers = floatArrayOf(0f, 30f, 60f, 120f, 180f, 240f, 280f, 320f)
+                var totalDh = 0f
+                var totalDs = 0f
+                var totalDl = 0f
+                var totalW = 0f
+
+                for (i in 0 until 8) {
+                    if (abs(deltas.mixerHues[i]) > 1e-4f || abs(deltas.mixerSats[i]) > 1e-4f || abs(deltas.mixerLums[i]) > 1e-4f) {
+                        var diff = abs(hsl[0] - centers[i])
+                        diff = min(diff, 360f - diff)
+                        val weight = exp(-0.5f * (diff / 22f).pow(2f))
+                        totalDh += weight * (deltas.mixerHues[i] / 100f) * 30f
+                        totalDs += weight * (deltas.mixerSats[i] / 100f)
+                        totalDl += weight * (deltas.mixerLums[i] / 100f) * 0.4f
+                        totalW += weight
+                    }
+                }
+                if (totalW > 1e-4f) {
+                    val norm = max(totalW, 1f)
+                    var newH = (hsl[0] + totalDh / norm) % 360f
+                    if (newH < 0f) newH += 360f
+                    val newS = (hsl[1] + (totalDs / norm) * hsl[1]).coerceIn(0f, 1f)
+                    val newL = (hsl[2] + (totalDl / norm) * hsl[2] * (1f - hsl[2]) * 2f).coerceIn(0f, 1f)
+                    val newRgb = hslToRgb(newH, newS, newL)
+                    r = newRgb[0]
+                    g = newRgb[1]
+                    b = newRgb[2]
+                }
             }
         }
 
@@ -820,7 +1064,15 @@ object GpuPreviewEngine {
         return floatArrayOf(r, g, b)
     }
 
-    private fun rgbToHsl(r: Float, g: Float, b: Float): FloatArray {
+    private fun sampleLut1D(lut: FloatArray, value: Float): Float {
+        val clamped = value.coerceIn(0f, 1f)
+        val idx = clamped * 255f
+        val i = idx.toInt().coerceIn(0, 254)
+        val frac = idx - i
+        return ((1f - frac) * lut[i] + frac * lut[i + 1]).coerceIn(0f, 1f)
+    }
+
+    fun rgbToHsl(r: Float, g: Float, b: Float): FloatArray {
         val cmax = max(max(r, g), b)
         val cmin = min(min(r, g), b)
         val delta = cmax - cmin
@@ -842,7 +1094,7 @@ object GpuPreviewEngine {
         return floatArrayOf(hue, sat, lum)
     }
 
-    private fun hslToRgb(h: Float, s: Float, l: Float): FloatArray {
+    fun hslToRgb(h: Float, s: Float, l: Float): FloatArray {
         val c = (1f - abs(2f * l - 1f)) * s
         val hPrime = h / 60f
         val x = c * (1f - abs((hPrime % 2f) - 1f))

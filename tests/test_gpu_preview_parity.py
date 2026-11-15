@@ -10,6 +10,7 @@ from stealzalut.core.lightroom_color import (
     apply_calibration,
     apply_color_grading,
     apply_color_mixer,
+    apply_tone_curve,
     _rgb_to_hsl,
     _hsl_to_rgb,
 )
@@ -18,7 +19,9 @@ from stealzalut.core.lightroom_models import (
     CalibrationSettings,
     ColorGradingSettings,
     ColorMixerSettings,
+    ToneCurveSettings,
 )
+from stealzalut.core.spline_interpolator import evaluate_monotone_cubic_spline
 
 
 def simulate_agsl_shader(
@@ -38,6 +41,7 @@ def simulate_agsl_shader(
     curve_lights: float = 0.0,
     curve_darks: float = 0.0,
     curve_shadows: float = 0.0,
+    point_curve_lut: np.ndarray = None,
     # Color grading
     grade_shadow_hue: float = 0.0,
     grade_shadow_sat: float = 0.0,
@@ -73,6 +77,13 @@ def simulate_agsl_shader(
     mixer_hues: np.ndarray = None,
     mixer_sats: np.ndarray = None,
     mixer_lums: np.ndarray = None,
+    # Point color
+    point_color_active: bool = False,
+    point_color_target_hsl: tuple = (0.0, 0.0, 0.5),
+    point_color_hue_shift: float = 0.0,
+    point_color_sat_shift: float = 0.0,
+    point_color_lum_shift: float = 0.0,
+    point_color_range: float = 50.0,
     # Effects
     vignette: float = 0.0,
 ) -> np.ndarray:
@@ -199,9 +210,26 @@ def simulate_agsl_shader(
         out = np.clip(out, 0.0, 1.0)
 
     # -------------------------------------------------------------------------
-    # STAGE 3: PARAMETRIC TONE CURVES
+    # STAGE 3: TONE CURVES (1D LUT or Parametric)
     # -------------------------------------------------------------------------
-    if any(
+    if point_curve_lut is not None:
+        r_idx = np.clip(out[..., 0] * 255.0, 0.0, 255.0)
+        g_idx = np.clip(out[..., 1] * 255.0, 0.0, 255.0)
+        b_idx = np.clip(out[..., 2] * 255.0, 0.0, 255.0)
+
+        r_i0 = np.floor(r_idx).astype(int).clip(0, 254)
+        g_i0 = np.floor(g_idx).astype(int).clip(0, 254)
+        b_i0 = np.floor(b_idx).astype(int).clip(0, 254)
+
+        r_f = (r_idx - r_i0)[..., np.newaxis]
+        g_f = (g_idx - g_i0)[..., np.newaxis]
+        b_f = (b_idx - b_i0)[..., np.newaxis]
+
+        out[..., 0] = (1.0 - r_f[..., 0]) * point_curve_lut[r_i0, 0] + r_f[..., 0] * point_curve_lut[r_i0 + 1, 0]
+        out[..., 1] = (1.0 - g_f[..., 0]) * point_curve_lut[g_i0, 1] + g_f[..., 0] * point_curve_lut[g_i0 + 1, 1]
+        out[..., 2] = (1.0 - b_f[..., 0]) * point_curve_lut[b_i0, 2] + b_f[..., 0] * point_curve_lut[b_i0 + 1, 2]
+        out = np.clip(out, 0.0, 1.0)
+    elif any(
         abs(v) > 1e-4
         for v in [curve_highlights, curve_lights, curve_darks, curve_shadows]
     ):
@@ -228,9 +256,25 @@ def simulate_agsl_shader(
         out = np.clip(out + curveDelta * 4.0 * out * (1.0 - out), 0.0, 1.0)
 
     # -------------------------------------------------------------------------
-    # STAGE 4: COLOR MIXER (8 CHANNELS)
+    # STAGE 4: COLOR MIXER (8 CHANNELS & POINT COLOR)
     # -------------------------------------------------------------------------
-    if mixer_hues is not None or mixer_sats is not None or mixer_lums is not None:
+    if point_color_active:
+        h, sat, lum = _rgb_to_hsl(out)
+        th, ts, tl = point_color_target_hsl
+        dh = np.abs(h - th)
+        dh = np.minimum(dh, 360.0 - dh) / 180.0
+        ds = np.abs(sat - ts)
+        dl = np.abs(lum - tl)
+        dist = np.sqrt(1.5 * dh**2 + ds**2 + dl**2)
+
+        radius = max(0.05, (point_color_range / 100.0) * 0.75)
+        mask = 1.0 - smoothstep(0.0, radius, dist)
+
+        h = (h + mask * (point_color_hue_shift / 100.0) * 45.0) % 360.0
+        sat = np.clip(sat + mask * (point_color_sat_shift / 100.0) * sat, 0.0, 1.0)
+        lum = np.clip(lum + mask * (point_color_lum_shift / 100.0) * 0.35, 0.0, 1.0)
+        out = _hsl_to_rgb(h, sat, lum)
+    elif mixer_hues is not None or mixer_sats is not None or mixer_lums is not None:
         h, sat, lum = _rgb_to_hsl(out)
         centers = [0.0, 30.0, 60.0, 120.0, 180.0, 240.0, 280.0, 320.0]
         hues = mixer_hues if mixer_hues is not None else [0.0] * 8
@@ -483,6 +527,73 @@ def test_gpu_parity_color_mixer():
 
     max_diff_8bit = np.max(np.abs(gpu_out - py_out)) * 255.0
     assert max_diff_8bit < 0.1, f"Color mixer 8-bit discrepancy: {max_diff_8bit} levels"
+
+
+def test_gpu_parity_point_tone_curve():
+    """Verifies Fritsch-Carlson point tone curve 1D LUT parity against Python reference."""
+    rgb_pts = [(0.0, 0.0), (0.25, 0.20), (0.75, 0.85), (1.0, 1.0)]
+    red_pts = [(0.0, 0.0), (0.50, 0.60), (1.0, 1.0)]
+    settings = ToneCurveSettings(
+        mode="point",
+        rgb_points=rgb_pts,
+        red_points=red_pts,
+    )
+    py_out = apply_tone_curve(SYNTHETIC_PATCHES, settings)
+
+    # Evaluate 256x3 1D LUT identically to Kotlin GpuPreviewEngine.computePointCurveLuts
+    steps = 256
+    x_samples = np.linspace(0.0, 1.0, steps, dtype=np.float32)
+    lut = np.zeros((steps, 3), dtype=np.float32)
+
+    # RGB composite curve
+    x_rgb_pts = np.array([p[0] for p in rgb_pts], dtype=np.float32)
+    y_rgb_pts = np.array([p[1] for p in rgb_pts], dtype=np.float32)
+    x_rgb = evaluate_monotone_cubic_spline(x_rgb_pts, y_rgb_pts, x_samples)
+
+    # Red curve
+    x_r_pts = np.array([p[0] for p in red_pts], dtype=np.float32)
+    y_r_pts = np.array([p[1] for p in red_pts], dtype=np.float32)
+    lut[:, 0] = evaluate_monotone_cubic_spline(x_r_pts, y_r_pts, x_rgb)
+    lut[:, 1] = x_rgb
+    lut[:, 2] = x_rgb
+
+    gpu_out = simulate_agsl_shader(SYNTHETIC_PATCHES, point_curve_lut=lut)
+
+    max_diff_8bit = np.max(np.abs(gpu_out - py_out)) * 255.0
+    assert max_diff_8bit < 0.2, f"Point tone curve 8-bit discrepancy: {max_diff_8bit} levels"
+
+
+def test_gpu_parity_point_color():
+    """Verifies Point Color selective color adjustment parity against Python reference."""
+    settings = ColorMixerSettings(
+        mode="point_color",
+        point_active=True,
+        point_target_r=0.76,
+        point_target_g=0.33,
+        point_target_b=0.38,
+        point_hue_shift=20.0,
+        point_sat_shift=35.0,
+        point_lum_shift=-15.0,
+        point_range=60.0,
+    )
+    py_out = apply_color_mixer(SYNTHETIC_PATCHES, settings)
+
+    target_rgb = np.array([[0.76, 0.33, 0.38]], dtype=np.float32)
+    th, ts, tl = _rgb_to_hsl(target_rgb)
+    target_hsl = (float(th[0]), float(ts[0]), float(tl[0]))
+
+    gpu_out = simulate_agsl_shader(
+        SYNTHETIC_PATCHES,
+        point_color_active=True,
+        point_color_target_hsl=target_hsl,
+        point_color_hue_shift=20.0,
+        point_color_sat_shift=35.0,
+        point_color_lum_shift=-15.0,
+        point_color_range=60.0,
+    )
+
+    max_diff_8bit = np.max(np.abs(gpu_out - py_out)) * 255.0
+    assert max_diff_8bit < 0.1, f"Point Color 8-bit discrepancy: {max_diff_8bit} levels"
 
 
 def test_gpu_latency_benchmark():

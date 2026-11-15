@@ -47,7 +47,7 @@ from stealzalut.utils.image_io import (
 
 # In-memory LRU caches for ultra-responsive slider adjustments (<5ms)
 _RAW_LUT_CACHE: OrderedDict[
-    Tuple[str, str, str, int, float, bool], NDArray[np.float32]
+    Tuple[str, str, str, int, float, bool, str], NDArray[np.float32]
 ] = OrderedDict()
 _SRC_PROXY_CACHE: OrderedDict[Tuple[str, Optional[int]], NDArray[np.uint8]] = (
     OrderedDict()
@@ -67,10 +67,32 @@ def get_or_compute_raw_lut(
     lut_size: int = DEFAULT_LUT_SIZE,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = True,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> NDArray[np.float32]:
     """Retrieve raw 3D LUT from cache or compute and cache it."""
     abs_src = os.path.abspath(src_path) if src_path else ""
     abs_ref = os.path.abspath(ref_path) if ref_path else ""
+
+    parsed_overrides: Dict[str, int] = {}
+    overrides_hash = ""
+    if zone_overrides:
+        if isinstance(zone_overrides, str):
+            try:
+                import json
+
+                raw = json.loads(zone_overrides)
+                if isinstance(raw, dict):
+                    parsed_overrides = {str(k): int(v) for k, v in raw.items()}
+            except Exception:
+                parsed_overrides = {}
+        elif isinstance(zone_overrides, dict):
+            parsed_overrides = {str(k): int(v) for k, v in zone_overrides.items()}
+        if parsed_overrides:
+            import hashlib
+
+            norm = tuple(sorted((str(k), int(v)) for k, v in parsed_overrides.items()))
+            overrides_hash = hashlib.md5(str(norm).encode("utf-8")).hexdigest()
+
     cache_key = (
         abs_src,
         abs_ref,
@@ -78,6 +100,7 @@ def get_or_compute_raw_lut(
         lut_size,
         round(float(preserve_luminance), 4),
         soft_clip,
+        overrides_hash,
     )
 
     if cache_key in _RAW_LUT_CACHE:
@@ -103,6 +126,7 @@ def get_or_compute_raw_lut(
         method=method,
         preserve_luminance=preserve_luminance,
         soft_clip=soft_clip,
+        zone_overrides=parsed_overrides if parsed_overrides else None,
     )
     del src_proxy, ref_proxy
 
@@ -170,6 +194,7 @@ def run_transfer_pipeline(
     spatial_3d: Optional[float] = None,
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute the unified WYSIWYG colour-transfer and editing pipeline."""
     start: float = time.monotonic()
@@ -222,6 +247,7 @@ def run_transfer_pipeline(
                 lut_size=lut_size,
                 preserve_luminance=eff_luma,
                 soft_clip=True,
+                zone_overrides=zone_overrides,
             )
         else:
             raw_lut = generate_identity_lattice(lut_size)

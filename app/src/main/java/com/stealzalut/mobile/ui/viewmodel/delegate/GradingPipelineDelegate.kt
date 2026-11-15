@@ -49,7 +49,8 @@ private data class PreviewDebounceRequest(
     val preserveLuminance: Float,
     val skinProtection: Float,
     val smoothSigma: Float,
-    val neutralLock: Float
+    val neutralLock: Float,
+    val zoneOverrides: Map<String, Int>? = null
 )
 
 @OptIn(FlowPreview::class)
@@ -283,7 +284,8 @@ class GradingPipelineDelegate(
             preserveLuminance = current.preserveLuminance,
             skinProtection = current.skinProtection,
             smoothSigma = current.smoothSigma,
-            neutralLock = current.neutralLock
+            neutralLock = current.neutralLock,
+            zoneOverrides = current.zoneUserOverrides
         )
     }
 
@@ -299,7 +301,8 @@ class GradingPipelineDelegate(
                 preserveLuminance = req.preserveLuminance,
                 skinProtection = req.skinProtection,
                 smoothSigma = req.smoothSigma,
-                neutralLock = req.neutralLock
+                neutralLock = req.neutralLock,
+                zoneOverrides = req.zoneOverrides
             )
 
             when (result) {
@@ -356,7 +359,8 @@ class GradingPipelineDelegate(
                 preserveLuminance = current.preserveLuminance,
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
-                neutralLock = current.neutralLock
+                neutralLock = current.neutralLock,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             delay(AppConstants.COMPUTE_STAGE_DELAY_MS)
@@ -420,7 +424,8 @@ class GradingPipelineDelegate(
                 whites = 0f,
                 blacks = 0f,
                 vibrance = 0f,
-                saturation = 0f
+                saturation = 0f,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -513,7 +518,8 @@ class GradingPipelineDelegate(
                 whites = 0f,
                 blacks = 0f,
                 vibrance = 0f,
-                saturation = 0f
+                saturation = 0f,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -565,7 +571,8 @@ class GradingPipelineDelegate(
                 preserveLuminance = current.preserveLuminance,
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
-                neutralLock = current.neutralLock
+                neutralLock = current.neutralLock,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -948,7 +955,8 @@ class GradingPipelineDelegate(
             preserveLuminance = state.preserveLuminance,
             skinProtection = state.skinProtection,
             smoothSigma = state.smoothSigma,
-            neutralLock = state.neutralLock
+            neutralLock = state.neutralLock,
+            zoneOverrides = state.zoneUserOverrides
         )
     }
 }

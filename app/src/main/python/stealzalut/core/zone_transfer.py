@@ -218,6 +218,7 @@ def fit_zone_transfer(
     reference: NDArray[np.uint8],
     zone_count: int = DEFAULT_ZONE_COUNT,
     params: ZoneBakeParams | None = None,
+    user_overrides: Optional[Dict[Union[str, int], int]] = None,
 ) -> ZoneTransferModel:
     src_palette = analyze_zones(source, zone_count)
     ref_palette = analyze_zones(reference, zone_count)
@@ -234,7 +235,18 @@ def fit_zone_transfer(
         source_colours=colour_stats(source),
         reference_colours=colour_stats(reference),
     )
-    return model.with_table(harmonize_conflicts(model))
+    table = harmonize_conflicts(model)
+    model = model.with_table(table)
+    if user_overrides:
+        from stealzalut.core.correspondence import retarget
+
+        for src_z, ref_z in user_overrides.items():
+            try:
+                table = retarget(table, int(src_z), int(ref_z))
+            except (KeyError, ValueError):
+                pass
+        model = model.with_table(table)
+    return model
 
 
 def harmonize_conflicts(model: ZoneTransferModel, max_rounds: int = 4) -> CorrespondenceTable:

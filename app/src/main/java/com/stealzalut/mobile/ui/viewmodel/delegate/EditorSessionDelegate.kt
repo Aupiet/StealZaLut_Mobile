@@ -630,19 +630,14 @@ class EditorSessionDelegate(
 
     fun applyAutoEdit() {
         val current = stateFlow.value
-        val imagePath = current.editorPreviewPath ?: current.editorSourcePath ?: return
+        // Use editorSourcePath as the single ground truth image to prevent cascading re-analysis
+        val imagePath = current.editorSourcePath ?: current.editorPreviewPath ?: return
 
         scope.launch {
             stateFlow.update { it.copy(isComputingEdit = true, errorMessage = null) }
             val autoSettings = bridgeRepository.computeAutoSettings(imagePath)
             when (autoSettings) {
                 is AutoSettingsResult.Success -> {
-                    val expNorm = autoSettings.exposure.coerceIn(-2.0f, 2.0f)
-                    val contrastNorm = (autoSettings.contrast / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val highlightsNorm = (autoSettings.highlights / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
-
                     val currentLr = stateFlow.value.editorLightroomParams
                     val updatedBasic = currentLr.basic.copy(
                         exposure = autoSettings.exposure.coerceIn(-5.0f, 5.0f),
@@ -656,20 +651,22 @@ class EditorSessionDelegate(
                     )
                     val updatedLr = currentLr.copy(basic = updatedBasic, isBasicEnabled = true)
 
+                    // Idempotence: if already active with identical settings, do not push duplicate undo snapshot
+                    if (stateFlow.value.isAutoEditActive && stateFlow.value.editorLightroomParams == updatedLr) {
+                        stateFlow.update { it.copy(isComputingEdit = false) }
+                        return@launch
+                    }
+
                     pushUndoSnapshot()
                     stateFlow.update {
                         it.copy(
                             isComputingEdit = false,
                             isAutoEditActive = true,
+                            // editorLightroomParams.basic is the SINGLE source of truth (do not duplicate into legacy step3* fields)
                             editorLightroomParams = updatedLr,
-                            step3Exposure = expNorm,
-                            step3Contrast = contrastNorm,
-                            step3Highlights = highlightsNorm,
-                            step3Shadows = shadowsNorm,
-                            step3Vibrance = vibranceNorm,
                             userMessage = UiText.Resource(
                                 R.string.msg_auto_edit_applied,
-                                listOf(expNorm, contrastNorm * 100f, shadowsNorm * 100f)
+                                listOf(updatedBasic.exposure, updatedBasic.contrast, updatedBasic.shadows)
                             )
                         )
                     }

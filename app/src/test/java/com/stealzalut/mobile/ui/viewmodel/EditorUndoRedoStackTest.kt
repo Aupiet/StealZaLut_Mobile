@@ -207,4 +207,50 @@ class EditorUndoRedoStackTest {
 
         mockFile.delete()
     }
+
+    @Test
+    fun `applyAutoEdit is idempotent and only creates one undo snapshot without altering legacy step3 fields`() = runTest {
+        stateFlow.value = stateFlow.value.copy(
+            editorSourcePath = "/path/to/source.jpg",
+            editorPreviewPath = "/path/to/preview.jpg"
+        )
+        val mockSettings = com.stealzalut.mobile.data.model.AutoSettingsResult.Success(
+            exposure = 0.5f,
+            contrast = 20.0f,
+            highlights = -15.0f,
+            shadows = 25.0f,
+            whites = 10.0f,
+            blacks = -5.0f,
+            vibrance = 15.0f,
+            saturation = 5.0f,
+            executionTimeMs = 42.0
+        )
+        // Must be called with editorSourcePath ("/path/to/source.jpg"), NOT editorPreviewPath
+        coEvery { bridgeRepository.computeAutoSettings("/path/to/source.jpg") } returns mockSettings
+
+        // First application: auto(x)
+        delegate.applyAutoEdit()
+
+        assertEquals(0.5f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(20.0f, stateFlow.value.editorLightroomParams.basic.contrast)
+        assertTrue(stateFlow.value.isAutoEditActive)
+        // Legacy step3 fields must NOT be duplicated
+        assertEquals(0.0f, stateFlow.value.step3Exposure)
+        assertEquals(0.0f, stateFlow.value.step3Contrast)
+        assertTrue(delegate.canUndo())
+
+        val stateAfterFirstAuto = stateFlow.value.editorLightroomParams
+
+        // Second application: auto(auto(x))
+        delegate.applyAutoEdit()
+
+        // Parameters must remain identical: auto(auto(x)) == auto(x)
+        assertEquals(stateAfterFirstAuto, stateFlow.value.editorLightroomParams)
+
+        // Only ONE undo snapshot must exist: undoing must revert back to initial state immediately
+        delegate.undo()
+        assertEquals(0.0f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(0.0f, stateFlow.value.editorLightroomParams.basic.contrast)
+        assertFalse(delegate.canUndo(), "Only 1 undo snapshot should have been recorded")
+    }
 }

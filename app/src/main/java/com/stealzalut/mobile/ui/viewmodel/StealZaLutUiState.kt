@@ -18,6 +18,8 @@ import com.stealzalut.mobile.data.model.ToneCurveModel
 import com.stealzalut.mobile.data.model.EditPreset
 import com.stealzalut.mobile.data.model.EditorParamsSnapshot
 import com.stealzalut.mobile.ui.preview.GpuPreviewDeltas
+import com.stealzalut.mobile.ui.preview.GpuPreviewEngine
+import kotlin.math.abs
 import com.stealzalut.mobile.data.model.AnalysisPackExport
 import com.stealzalut.mobile.data.model.EditorProject
 import com.stealzalut.mobile.data.model.LightroomDevelopModel
@@ -306,6 +308,37 @@ data class StealZaLutUiState(
                 currMixer.lumMagenta - commMixer.lumMagenta
             )
 
+            // Point Tone Curve LUT
+            val pointLuts = GpuPreviewEngine.computePointCurveLuts(currTone, commTone)
+            val hasPointCurve = pointLuts != null
+            val lutR = pointLuts?.first ?: FloatArray(256)
+            val lutG = pointLuts?.second ?: FloatArray(256)
+            val lutB = pointLuts?.third ?: FloatArray(256)
+
+            // Point Color
+            val isCurrPointColor = currMixer.mode == "point_color" && currMixer.pointActive
+            val isCommPointColor = commMixer.mode == "point_color" && commMixer.pointActive
+            val hasPointColor = isCurrPointColor || isCommPointColor
+
+            val pointColorTargetR = if (isCurrPointColor) currMixer.pointTargetR else commMixer.pointTargetR
+            val pointColorTargetG = if (isCurrPointColor) currMixer.pointTargetG else commMixer.pointTargetG
+            val pointColorTargetB = if (isCurrPointColor) currMixer.pointTargetB else commMixer.pointTargetB
+            val targetHsl = GpuPreviewEngine.rgbToHsl(pointColorTargetR, pointColorTargetG, pointColorTargetB)
+
+            val pointColorHueShift = (if (isCurrPointColor) currMixer.pointHueShift else 0f) -
+                    (if (isCommPointColor) commMixer.pointHueShift else 0f)
+            val pointColorSatShift = (if (isCurrPointColor) currMixer.pointSatShift else 0f) -
+                    (if (isCommPointColor) commMixer.pointSatShift else 0f)
+            val pointColorLumShift = (if (isCurrPointColor) currMixer.pointLumShift else 0f) -
+                    (if (isCommPointColor) commMixer.pointLumShift else 0f)
+            val pointColorRange = if (isCurrPointColor) currMixer.pointRange else commMixer.pointRange
+
+            val pointColorActive = hasPointColor && (
+                abs(pointColorHueShift) > 1e-4f ||
+                abs(pointColorSatShift) > 1e-4f ||
+                abs(pointColorLumShift) > 1e-4f
+            )
+
             return GpuPreviewDeltas(
                 exposure = (currBasic.exposure + step3Exposure) - (commBasic.exposure + editorCommittedSnapshot.exposure),
                 contrast = (currBasic.contrast + step3Contrast) - (commBasic.contrast + editorCommittedSnapshot.contrast),
@@ -322,6 +355,11 @@ data class StealZaLutUiState(
                 curveLights = currTone.lights - commTone.lights,
                 curveDarks = currTone.darks - commTone.darks,
                 curveShadows = currTone.shadows - commTone.shadows,
+
+                hasPointCurve = hasPointCurve,
+                pointCurveLutR = lutR,
+                pointCurveLutG = lutG,
+                pointCurveLutB = lutB,
 
                 gradeShadowHue = currGrading.shadowHue,
                 gradeShadowSat = currGrading.shadowSat,
@@ -361,6 +399,13 @@ data class StealZaLutUiState(
                 mixerHues = mixerHues,
                 mixerSats = mixerSats,
                 mixerLums = mixerLums,
+
+                pointColorActive = pointColorActive,
+                pointColorTargetHsl = targetHsl,
+                pointColorHueShift = pointColorHueShift,
+                pointColorSatShift = pointColorSatShift,
+                pointColorLumShift = pointColorLumShift,
+                pointColorRange = pointColorRange,
 
                 vignette = currEffects.vignetteAmount - commEffects.vignetteAmount
             )

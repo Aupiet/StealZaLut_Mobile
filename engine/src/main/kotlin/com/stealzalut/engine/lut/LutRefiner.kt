@@ -134,7 +134,7 @@ object LutRefiner {
         return result
     }
 
-    private fun gaussianSmooth3D(grid: FloatArray, size: Int, sigma: Float): FloatArray {
+    fun gaussianSmooth3D(grid: FloatArray, size: Int, sigma: Float): FloatArray {
         val radius = max(1, ceil(2.0f * sigma).toInt())
         val kSize = 2 * radius + 1
         val kernel = FloatArray(kSize)

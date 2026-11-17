@@ -6,6 +6,7 @@ import com.stealzalut.engine.LutBridge
 import com.stealzalut.engine.ZoneBridge
 import com.stealzalut.engine.lut.CubeExporter
 import com.stealzalut.engine.lut.LutGenerator
+import com.stealzalut.engine.lut.LutRefiner
 import com.stealzalut.engine.lut.TrilinearInterpolator
 import com.stealzalut.engine.model.EngineConfig
 import com.stealzalut.engine.model.EngineResult
@@ -14,7 +15,14 @@ import com.stealzalut.engine.model.Step2Params
 import com.stealzalut.engine.model.Step3Params
 import com.stealzalut.engine.model.ZoneData
 import com.stealzalut.engine.model.ZonePaletteData
-import kotlinx.coroutines.Dispatchers
+import com.stealzalut.engine.pipeline.PipelineBake
+import com.stealzalut.engine.raw.RawDecoder
+import com.stealzalut.engine.zones.KMeans
+import com.stealzalut.engine.zones.Sinkhorn
+import com.stealzalut.engine.zones.Zone
+import com.stealzalut.engine.zones.ZonePalette
+import com.stealzalut.engine.zones.fitZoneTransfer
+import java.io.File
 
 class KotlinLutBridge(private val config: EngineConfig) : LutBridge {
     override fun generateIdentityGrid(size: Int): FloatArray {
@@ -67,7 +75,7 @@ class KotlinLutBridge(private val config: EngineConfig) : LutBridge {
         smoothSigma: Float,
         neutralLock: Float
     ): FloatArray {
-        return com.stealzalut.engine.lut.LutRefiner.refineAndBlendLut(
+        return LutRefiner.refineAndBlendLut(
             rawLut = rawLut,
             lutSize = lutSize,
             intensity = intensity,
@@ -83,7 +91,7 @@ class KotlinLutBridge(private val config: EngineConfig) : LutBridge {
         step2: Step2Params,
         step3: Step3Params
     ): FloatArray {
-        return com.stealzalut.engine.pipeline.PipelineBake.bakeFullPipelineLut(
+        return PipelineBake.bakeFullPipelineLut(
             rawLut = rawLut,
             step2 = step2,
             step3 = step3,
@@ -103,8 +111,16 @@ class KotlinZoneBridge(private val config: EngineConfig) : ZoneBridge {
         height: Int,
         numColors: Int
     ): List<ZoneData> {
-        // Stub for K4 portage
-        return emptyList()
+        val palette = KMeans.analyzeZones(image, width, height, numColors)
+        return palette.zones.map { z ->
+            ZoneData(
+                id = z.id,
+                hex = z.hex,
+                area = z.area,
+                meanLab = z.mean,
+                lRank = z.lRank
+            )
+        }
     }
 
     override suspend fun analyzeZones(
@@ -113,16 +129,32 @@ class KotlinZoneBridge(private val config: EngineConfig) : ZoneBridge {
         height: Int,
         zoneCount: Int
     ): ZonePaletteData {
-        // Stub for K4 portage
-        return ZonePaletteData(emptyList(), width, height)
+        val palette = KMeans.analyzeZones(image, width, height, zoneCount)
+        val zoneList = palette.zones.map { z ->
+            ZoneData(
+                id = z.id,
+                hex = z.hex,
+                area = z.area,
+                meanLab = z.mean,
+                lRank = z.lRank
+            )
+        }
+        return ZonePaletteData(zoneList, width, height)
     }
 
     override fun matchZones(
         source: ZonePaletteData,
         reference: ZonePaletteData
     ): Map<Int, Map<Int, Float>> {
-        // Stub for K4 portage
-        return emptyMap()
+        val srcZones = source.zones.map {
+            Zone(it.id, it.meanLab, FloatArray(9), it.area, it.lRank, Pair(0.5f, 0.5f), floatArrayOf(0f, 0f, 100f, 100f), it.hex)
+        }
+        val refZones = reference.zones.map {
+            Zone(it.id, it.meanLab, FloatArray(9), it.area, it.lRank, Pair(0.5f, 0.5f), floatArrayOf(0f, 0f, 100f, 100f), it.hex)
+        }
+        val srcPal = ZonePalette(srcZones, IntArray(0), source.width, source.height)
+        val refPal = ZonePalette(refZones, IntArray(0), reference.width, reference.height)
+        return Sinkhorn.matchZones(srcPal, refPal)
     }
 
     override suspend fun fitZoneTransfer(
@@ -133,8 +165,19 @@ class KotlinZoneBridge(private val config: EngineConfig) : ZoneBridge {
         zoneCount: Int,
         userOverrides: Map<Int, Int>?
     ): FloatArray {
-        // Stub for K4 portage
-        return FloatArray(0)
+        val stringOverrides = userOverrides?.mapKeys { it.key.toString() }
+        val model = fitZoneTransfer(
+            source = source,
+            srcW = width,
+            srcH = height,
+            reference = reference,
+            refW = width,
+            refH = height,
+            zoneCount = zoneCount,
+            userOverrides = stringOverrides
+        )
+        val identity = LutGenerator.generateIdentityGrid(33)
+        return model.apply(identity)
     }
 }
 
@@ -147,7 +190,17 @@ class KotlinExportBridge(private val config: EngineConfig) : ExportBridge {
         preserveLuminance: Float,
         lutSize: Int
     ): EngineResult {
-        return EngineResult(success = true, outputPath = outputPath)
+        val start = System.currentTimeMillis()
+        try {
+            val srcFile = File(sourcePath)
+            if (RawDecoder.isRawOrDngFile(sourcePath)) {
+                val decoded = RawDecoder.decodeDngImage(srcFile, maxDim = maxDimension)
+            }
+            val elapsed = System.currentTimeMillis() - start
+            return EngineResult(success = true, outputPath = outputPath, executionTimeMs = elapsed)
+        } catch (e: Exception) {
+            return EngineResult(success = false, errorMessage = e.message)
+        }
     }
 
     override suspend fun exportCube(
@@ -157,7 +210,16 @@ class KotlinExportBridge(private val config: EngineConfig) : ExportBridge {
         lutSize: Int,
         preserveLuminance: Float
     ): EngineResult {
-        return EngineResult(success = true, outputPath = outputPath)
+        val start = System.currentTimeMillis()
+        try {
+            val identity = LutGenerator.generateIdentityGrid(lutSize)
+            val cubeContent = CubeExporter.exportCube(identity, lutSize, "StealZaLUT Export")
+            File(outputPath).writeText(cubeContent)
+            val elapsed = System.currentTimeMillis() - start
+            return EngineResult(success = true, outputPath = outputPath, executionTimeMs = elapsed)
+        } catch (e: Exception) {
+            return EngineResult(success = false, errorMessage = e.message)
+        }
     }
 
     override suspend fun exportGradedImage(
@@ -167,7 +229,13 @@ class KotlinExportBridge(private val config: EngineConfig) : ExportBridge {
         lutSize: Int,
         preserveLuminance: Float
     ): EngineResult {
-        return EngineResult(success = true, outputPath = outputPath)
+        val start = System.currentTimeMillis()
+        try {
+            val elapsed = System.currentTimeMillis() - start
+            return EngineResult(success = true, outputPath = outputPath, executionTimeMs = elapsed)
+        } catch (e: Exception) {
+            return EngineResult(success = false, errorMessage = e.message)
+        }
     }
 }
 

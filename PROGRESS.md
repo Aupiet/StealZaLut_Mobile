@@ -17,12 +17,13 @@
 - [x] Étape 1 : Module `:engine` (Kotlin/JVM pur, `ImageEngine`, flag OFF) mergé
 - [x] Gate G0 : Benchmark validé (LUT 24 MP 194 ms <= 1.5s, flou 2s <= 4s, ADR-24)
 - [x] K1 : LUT (.cube, grille identité, apply_lut trilinéaire, blend/locks, parité 1e-7)
+- [x] K2 : Pipeline Lightroom (Basic, Fritsch-Carlson, HSL/Point Color, Grading, Calibration) + Auto-Edit (parité 1e-7)
 
 ## En cours
-- [ ] K2 : Pipeline Lightroom (Basic, Fritsch-Carlson, HSL/Point Color, Grading, Calibration) + Auto-Edit
+- [ ] K3 : Filtres spatiaux (gaussian_blur, presence/detail, anti-OOM par bandes)
 
 ## Reste
-- [ ] K3-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
+- [ ] K4-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
 - [ ] G3 : Bascule flag ON après parité golden master
 - [ ] Préparation `chore/remove-chaquopy` (non mergée)
 

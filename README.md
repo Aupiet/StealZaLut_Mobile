@@ -5,7 +5,7 @@
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20(Material%203)-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Python 3.10+ (Chaquopy)](https://img.shields.io/badge/Backend-Python%203.10%20%7C%20Chaquopy%2017.2.0-3776AB?logo=python&logoColor=white)](https://chaquo.com/chaquopy/)
 [![NumPy & SciPy](https://img.shields.io/badge/Math-NumPy%20%7C%20SciPy%20%7C%20Color--Matcher-013243?logo=scipy&logoColor=white)](https://scipy.org/)
-[![Tests: 113 Pytest + 87 Kotlin](https://img.shields.io/badge/Tests-113%20Pytest%20%2B%2087%20Kotlin-brightgreen.svg)](tests/)
+[![Tests: 142 Pytest + 120 Kotlin](https://img.shields.io/badge/Tests-142%20Pytest%20%2B%20120%20Kotlin-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Architecture: ARCHITECTURE.md](https://img.shields.io/badge/Doc-ARCHITECTURE.md-blue.svg)](ARCHITECTURE.md)
 
@@ -49,7 +49,7 @@ graph LR
 ```
 
 1. **Étape 1 : Pure Filter**
-   - Implémente les algorithmes de transfert optimal de distributions : `hm-mkl-hm`, `mkl`, `hm-mvgd-hm`, `mvgd`, `reinhard` (CIE $L^*a^*b^*$ D65) et `hm` (Histogram Matching 1D par canal).
+   - Implémente les algorithmes de transfert optimal de distributions : `hm-mkl-hm`, `mkl`, `hm-mvgd-hm`, `mvgd`, `reinhard` (CIE $L^*a^*b^*$ D65), `hm` (Histogram Matching 1D par canal), `zones` (segmentation K-means et correspondances interactives de zones avec réaffectation manuelle WYSIWYG) et `ambiance` (transfert de dominante chromatique et d'humeur tonale en Oklab).
    - Construit une table de correspondance 3D unifiée (`compute_lut` / `generate_lut_from_pair`) à partir d'échantillons conservant l'aspect ratio et les détails lumineux fins.
 2. **Étape 2 : Retravail du Filtre (Calibration)**
    - **Intensité globale** : Interpolation linéaire fluide entre l'image originale et le filtre pur.
@@ -68,14 +68,15 @@ graph LR
 ### 2.2 Relais Studio ↔ Éditeur & Spécialisation des Rôles (Règle WYSIWYG)
 
 Pour garantir une expérience professionnelle sans ambiguïté et un respect absolu de la règle d'or WYSIWYG :
-- **Studio (Étalonnage Pur)** : Se concentre à 100% sur le transfert colorimétrique par 3D LUT (`HM_MKL_HM`, `MKL`, `Reinhard`, `HM`). Les étapes 1 et 3 sont épurées de tout doublon d'édition. L'étape 3 propose une organisation sans défilement en 4 onglets optimisés (**Algorithme**, **Grille 3D LUT**, **Lumière** avec Verrouillage de Luminance, **Couleur** avec Protection des Tons Chairs, Axe Neutre et Lissage Spatial 3D). L'étape 5 intègre un bouton d'enregistrement direct de la photo étalonnée en galerie (`Enregistrer la photo dans la galerie`).
+- **Studio (Étalonnage Pur)** : Se concentre à 100% sur le transfert colorimétrique par 3D LUT (`HM_MKL_HM`, `MKL`, `Reinhard`, `HM`, `Zones` avec graphe de correspondances interactif `ZonePaletteVisualization`, et `Ambiance`). Les étapes 1 et 3 sont épurées de tout doublon d'édition. L'étape 3 propose une organisation sans défilement en 4 onglets optimisés (**Algorithme**, **Grille 3D LUT**, **Lumière** avec Verrouillage de Luminance, **Couleur** avec Protection des Tons Chairs, Axe Neutre et Lissage Spatial 3D). L'étape 5 intègre un bouton d'enregistrement direct de la photo étalonnée en galerie (`Enregistrer la photo dans la galerie`).
 - **Support Universel RAW & DNG** : Intégration d'un sélecteur dédié (« Ouvrir RAW / DNG ») via le sélecteur de fichiers système Android (SAF), décodage des aperçus EXIF intégrés et prise en charge des négatifs numériques DNG/RAW via le plugin TIFF de Pillow.
-- **Guide des Outils Interactif Étendu (15 Outils & Création de LUT)** :
-  - Intègre l'ensemble des fonctionnalités majeures de création de LUT par image de référence (Algorithmes de transfert MKL/HM/Reinhard/Cinématique, Masques & Protections OKLab, Résolution de grille 3D 17³/33³/64³, Exportation `.cube`).
+- **Guide des Outils Interactif Étendu (15 Outils Unifiés & Création de LUT)** :
+  - Intègre l'ensemble des fonctionnalités majeures de retouche et de création de LUT par image de référence (Recadrage, Courbes, Mixeur HSL, Étalonnage 3 Voies, Étalonnage Capteur, Netteté, Optique, Géométrie, Flou d'objectif, Effets & Grain, Algorithmes de transfert, Masques & Protections OKLab, Résolution de grille 3D 17³/33³/64³, Exportation `.cube`).
   - Démonstration interactive avant/après basée sur les photos d'exemple réelles (Photo de départ, Photo étalonnée, Palette de référence).
 - **Dialogue d'Exportation Haute Fidélité Réglable** : Choix direct dans la boîte de dialogue de la résolution cible (1080p FHD, 1440p QHD, 4K UHD, Natif), du format (JPEG, PNG) et de la qualité de compression avec estimation en temps réel du poids en Mo et des dimensions en pixels.
 - **Bouton « Retoucher dans l'éditeur » (Étape 5)** : Permet de basculer instantanément le résultat de l'étalonnage Studio vers l'éditeur autonome en exportant la 3D LUT en cache (`editorCustomLutPath`). L'éditeur s'ouvre avec la photo source, la LUT préchargée, tous les curseurs à zéro et un affichage instantané sans délai de recalcul (parité WYSIWYG prouvée avec $\Delta \le 1$ niveau 8 bits).
-- **Auto-Edit « LightCraft » dans l'Éditeur** : L'analyse optique logarithmique Rec. 2020 calibrée sur carte 18% est directement intégrée dans l'éditeur autonome, ajustant dynamiquement l'exposition, le contraste, les ombres, les hautes lumières et la vibrance.
+- **Auto-Edit « LightCraft » dans l'Éditeur** : L'analyse optique logarithmique Rec. 2020 calibrée sur carte 18% est directement intégrée dans l'éditeur autonome, ajustant dynamiquement l'exposition, le contraste, les ombres, les hautes lumières et la vibrance de manière idempotente ($auto(auto(x)) == auto(x)$).
+- **Presse-Papier Inter-Photos** : Copier et coller les réglages de développement complets d'une photo à l'autre via `EditorClipboardHolder` d'un simple geste tactile.
 
 ---
 
@@ -85,8 +86,8 @@ Un espace de création dédié accessible directement depuis la barre de navigat
 - **Retouche autonome** : Modifiez n'importe quelle photo de votre galerie sans nécessiter d'image de référence B.
 - **Importation de LUTs externes & Presets dynamiques** : Chargez n'importe quel fichier `.cube` tiers et appliquez-lui le pipeline complet (Retravail Étape 2 + Grading Étape 3) ou piochez dans vos presets personnalisés sans dépendance de styles en dur.
 - **Prévisualisation GPU Instantanée à 2 Étages (AGSL RuntimeShader & ColorMatrix)** :
-  - *Étage 1 (GPU / < 1 ms, 60–120 FPS)* : Rendu instantané sur 100% des outils (Exposition, Contraste, Balance des blancs, Courbes de tonalité, Mixeur HSL 8 bandes, Roues Color Grading 3 voies, Étalonnage capteur, Vignettage, Grain et Netteté). Le calcul opère par deltas relatifs ($\Delta = \text{actuel} - \text{Python}$), éliminant toute latence perçue au toucher.
-  - *Étage 2 (Fidélité maximale en arrière-plan)* : Déclenchement automatique de la passe complète Python Chaquopy dès le relâchement du geste ou après une inactivité de 200 ms, garantissant une parité visuelle absolue ($\Delta E \le 0.5$ niveau 8 bits).
+  - *Étage 1 (GPU / < 1 ms, 60–120 FPS)* : Rendu instantané sur 100% des outils (Exposition, Contraste, Balance des blancs, Courbes paramétriques et Courbes par points RGB/Rouge/Vert/Bleu via 1D LUT $256\times 1$, Mixeur HSL 8 bandes, Point Color, Roues Color Grading 3 voies, Étalonnage capteur, Vignettage, Grain et Netteté). Les toggles d'activation/désactivation de sections sont reflétés en temps réel. Le calcul opère par deltas relatifs ($\Delta = \text{actuel} - \text{Python}$).
+  - *Étage 2 (Fidélité maximale avec throttle adaptatif)* : Régulation intelligente du flux (`AdaptiveThrottleLatest`) calculant à un intervalle adaptatif $\approx 2.5\times$ la durée réelle du dernier rendu (borné entre 80 ms et 600 ms). 1 seul calcul Chaquopy en vol à la fois, conservation de la dernière demande et exécution finale garantie au relâchement. Les réponses obsolètes sont ignorées par `requestId` séquentiel et la synchronisation différentielle $\Delta = P_n - P_k$ supprime tout clignotement ou saut visuel.
 - **Physique de Recadrage & Redressement Fluide (`CropPhysics`)** :
   - *Verrouillage strict des ratios* : Libre, Original, Carré 1:1, Portrait 4:5, Photo 3:2, Cinéma 16:9 calculés sur les pixels physiques réels ($k = \frac{W_{\text{image}}}{H_{\text{image}} \cdot R_{\text{target}}}$).
   - *Ergonomie tactile pro* : 8 poignées (équerres L-brackets blanches de 3 dp avec ombre portée, encoches centrales) et zones de capture généreuses (44 dp).
@@ -205,7 +206,7 @@ pytest tests/ -q
 ```bash
 PYTHONPATH=app/src/main/python pytest tests/ -q
 ```
-> **Résultat attendu :** 113 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF, persistance presets v2 et parité GPU preview).
+> **Résultat attendu :** 142 tests passés avec succès (validation des conversions OKLab, transport optimal MKL/MVGD, algorithme de zones avec réaffectation et invalidation de cache, transfert ambiance, génération de LUTs, baking 3 étapes, format Adobe `.cube`, tiling mémoire anti-OOM, préservation EXIF, persistance presets v2 et parité GPU preview).
 
 ### Exécuter les tests unitaires Android (Kotlin JVM)
 **PowerShell (Windows) :**
@@ -216,7 +217,7 @@ PYTHONPATH=app/src/main/python pytest tests/ -q
 ```bash
 ./gradlew testDebugUnitTest
 ```
-> **Résultat attendu :** 85 tests unitaires JVM passés avec succès (garde du Design System, contrastes WCAG AA, relais Studio ↔ Éditeur, persistance JSON, exports SAF, physique de recadrage CropPhysics, interpolation Fritsch-Carlson, gestionnaire de projets, parité GPU preview, pile Undo/Redo et registre du guide). L'application comprend également 2 tests instrumentés (`androidTest`) pour un total de 87 tests Kotlin.
+> **Résultat attendu :** 120 tests unitaires JVM passés avec succès (garde du Design System sans violation, contrastes WCAG AA, relais Studio ↔ Éditeur, persistance JSON, exports SAF, physique de recadrage CropPhysics, interpolation Fritsch-Carlson, gestionnaire de projets, parité GPU preview AGSL pour courbes par points et point color, régulation adaptative AdaptiveThrottleLatest, copie/collage de réglages, pile Undo/Redo et registre du guide). L'application comprend également 2 tests instrumentés (`androidTest`) pour un total de 122 tests Kotlin.
 
 ### Lancer l'analyse statique Android Lint
 **PowerShell (Windows) :**
@@ -244,4 +245,4 @@ PYTHONPATH=app/src/main/python pytest tests/ -q
 Projet sous licence [MIT](LICENSE).
 Inspiré par le projet original [StealZaLUT Desktop](https://github.com/whoismathieu/stealzalut.git) par Mathieu.
 
-*Dernière mise à jour : 10 novembre 2026*
+*Dernière mise à jour : 15 novembre 2026*

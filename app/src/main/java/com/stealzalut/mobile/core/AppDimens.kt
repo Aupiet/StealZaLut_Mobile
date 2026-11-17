@@ -131,6 +131,27 @@ object AppDimens {
     val ZoneCurveStrokeMax: Dp = 4.dp
     val ZoneCurveDragStroke: Dp = 2.5.dp
 
+    // --- Editor & Panels Dimension Tokens ---
+    val EditorSheetMinHeight: Dp = 260.dp
+    val EditorSheetMaxHeight: Dp = 360.dp
+    val ColorWheelSize: Dp = 150.dp
+    val ColorWheelCanvasSize: Dp = 140.dp
+    val ColorWheelTabIconSize: Dp = 36.dp
+    val CropCornerRadius: Dp = 52.dp
+    val CropEdgeRadius: Dp = 42.dp
+    val CropButtonMinWidth: Dp = 58.dp
+    val EmptyStateIconSize: Dp = 68.dp
+    val EmptyStateActionIconSize: Dp = 36.dp
+    val ToneCurveCaptureRadius: Dp = 32.dp
+    val ToneCurveOffCanvasMargin: Dp = 36.dp
+    val ComputingIndicatorSize: Dp = 140.dp
+    val ComputingStrokeWidth: Dp = 6.dp
+    val DoubleViewDividerHeight: Dp = 24.dp
+    val DoubleViewMinResizeHeight: Dp = 140.dp
+    val DoubleViewMaxResizeHeight: Dp = 360.dp
+    val DoubleViewHandleWidth: Dp = 48.dp
+    val DoubleViewHandleHeight: Dp = 4.dp
+
     // --- Typography Scale Tokens ---
     val FontDisplayLarge: TextUnit = 32.sp
     val FontDisplayMedium: TextUnit = 28.sp

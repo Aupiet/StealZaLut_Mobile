@@ -260,6 +260,9 @@ fun StandaloneEditorScreen(
                         onToggleHistogram = { delegate.toggleHistogramExpanded() },
                         isComputingAutoEdit = uiState.isComputingEdit,
                         onApplyAutoEdit = { viewModel.applyEditorAutoEdit() },
+                        hasCopiedSettings = uiState.hasCopiedSettings,
+                        onCopySettings = { viewModel.copyEditorSettings() },
+                        onPasteSettings = { viewModel.pasteEditorSettings() },
                         gpuDeltas = uiState.editorGpuDeltas,
                         cropAngle = if (uiState.editorActiveTool == 0) uiState.editorCropRegion.angle else 0f,
                         isGesturesEnabled = uiState.editorActiveTool != 0,
@@ -313,7 +316,7 @@ fun StandaloneEditorScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 260.dp, max = 360.dp),
+                                .heightIn(min = AppDimens.EditorSheetMinHeight, max = AppDimens.EditorSheetMaxHeight),
                             shape = RoundedCornerShape(
                                 topStart = AppDimens.CornerRadiusEditorSheet,
                                 topEnd = AppDimens.CornerRadiusEditorSheet

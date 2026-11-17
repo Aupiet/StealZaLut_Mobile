@@ -207,4 +207,66 @@ class EditorUndoRedoStackTest {
 
         mockFile.delete()
     }
+
+    @Test
+    fun `applyAutoEdit is idempotent and only creates one undo snapshot without altering legacy step3 fields`() = runTest {
+        stateFlow.value = stateFlow.value.copy(
+            editorSourcePath = "/path/to/source.jpg",
+            editorPreviewPath = "/path/to/preview.jpg"
+        )
+        val mockSettings = com.stealzalut.mobile.data.model.AutoSettingsResult.Success(
+            exposure = 0.5f,
+            contrast = 20.0f,
+            highlights = -15.0f,
+            shadows = 25.0f,
+            whites = 10.0f,
+            blacks = -5.0f,
+            vibrance = 15.0f,
+            saturation = 5.0f,
+            executionTimeMs = 42.0
+        )
+        coEvery { bridgeRepository.computeAutoSettings("/path/to/source.jpg") } returns mockSettings
+
+        // First application: auto(x)
+        delegate.applyAutoEdit()
+
+        assertEquals(0.5f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(20.0f, stateFlow.value.editorLightroomParams.basic.contrast)
+        assertTrue(stateFlow.value.isAutoEditActive)
+        assertEquals(0.0f, stateFlow.value.step3Exposure)
+        assertEquals(0.0f, stateFlow.value.step3Contrast)
+        assertTrue(delegate.canUndo())
+
+        val stateAfterFirstAuto = stateFlow.value.editorLightroomParams
+
+        // Second application: auto(auto(x))
+        delegate.applyAutoEdit()
+
+        assertEquals(stateAfterFirstAuto, stateFlow.value.editorLightroomParams)
+
+        // Only ONE undo snapshot must exist: undoing must revert back to initial state immediately
+        delegate.undo()
+        assertEquals(0.0f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(0.0f, stateFlow.value.editorLightroomParams.basic.contrast)
+        assertFalse(delegate.canUndo(), "Only 1 undo snapshot should have been recorded")
+    }
+
+    @Test
+    fun `copy and paste settings transfers adjustments across states`() = runTest {
+        val testModel = stateFlow.value.editorLightroomParams.copy(
+            basic = stateFlow.value.editorLightroomParams.basic.copy(exposure = 1.75f, contrast = 25f)
+        )
+        stateFlow.value = stateFlow.value.copy(editorLightroomParams = testModel)
+        assertEquals(1.75f, stateFlow.value.editorLightroomParams.basic.exposure)
+
+        delegate.copySettings()
+        assertTrue(stateFlow.value.hasCopiedSettings)
+
+        delegate.resetAllEditorParams()
+        assertEquals(0f, stateFlow.value.editorLightroomParams.basic.exposure)
+
+        delegate.pasteSettings()
+        assertEquals(1.75f, stateFlow.value.editorLightroomParams.basic.exposure)
+        assertEquals(25f, stateFlow.value.editorLightroomParams.basic.contrast)
+    }
 }

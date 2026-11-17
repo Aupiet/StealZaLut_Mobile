@@ -278,6 +278,7 @@ def fit_and_apply_transfer(
     method: str = DEFAULT_METHOD,
     preserve_luminance: float = DEFAULT_PRESERVE_LUMINANCE,
     soft_clip: bool = False,
+    zone_overrides: Optional[Dict[Union[str, int], int]] = None,
 ) -> NDArray[np.float32]:
     """Unified solver fitting color transfer between *src* and *ref* and applying to *target*.
 
@@ -308,7 +309,7 @@ def fit_and_apply_transfer(
     meth = method.lower()
 
     if meth == "zones":
-        model = fit_transfer(src_img, ref_img, method="zones")
+        model = fit_transfer(src_img, ref_img, method="zones", zone_overrides=zone_overrides)
         result = model.apply(t_f.reshape(-1, 3)).reshape(t_f.shape)
 
     elif meth == "reinhard":
@@ -536,11 +537,15 @@ class OklabTransferModel(TransferModel):
     def method_name(self) -> str:
         return self.method
 
-    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
-        lab = rgb_to_oklab(colors)
+    def apply_lab(self, lab: NDArray[np.float64]) -> NDArray[np.float64]:
         out = np.empty_like(lab)
         out[:, 0] = self.ref_mean[0] + self.lightness_scale * (lab[:, 0] - self.src_mean[0])
         out[:, 1:] = self.ref_mean[1:] + (lab[:, 1:] - self.src_mean[1:]) @ self.chroma_matrix.T
+        return out
+
+    def apply(self, colors: NDArray[np.float64]) -> NDArray[np.float64]:
+        lab = rgb_to_oklab(colors)
+        out = self.apply_lab(lab)
         return np.clip(oklab_to_rgb(gamut_compress(out)), 0.0, 1.0)
 
 
@@ -576,6 +581,7 @@ def fit_transfer(
     source: NDArray[np.uint8],
     reference: NDArray[np.uint8],
     method: str = DEFAULT_METHOD,
+    zone_overrides: Optional[Dict[Union[str, int], int]] = None,
 ) -> TransferModel:
     """Fit a transfer model to *source* and *reference* images."""
     chosen = method.lower()
@@ -584,7 +590,11 @@ def fit_transfer(
     if chosen == "zones":
         from stealzalut.core.zone_transfer import fit_zone_transfer
 
-        return fit_zone_transfer(source, reference)
+        return fit_zone_transfer(source, reference, user_overrides=zone_overrides)
+    if chosen == "ambiance":
+        from stealzalut.core.ambiance import fit_ambiance
+
+        return fit_ambiance(source, reference)
     if chosen in ("mkl", "mvgd", "default"):
         s_flat = source.reshape(-1, 3).astype(np.float64) / 255.0
         r_flat = reference.reshape(-1, 3).astype(np.float64) / 255.0

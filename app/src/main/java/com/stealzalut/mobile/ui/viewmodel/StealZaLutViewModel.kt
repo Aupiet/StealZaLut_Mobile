@@ -223,6 +223,8 @@ class StealZaLutViewModel(
     fun setLutSize(size: LutSize) = gradingPipelineDelegate.setLutSize(size)
     fun runGradingFunnel() = gradingPipelineDelegate.runGradingFunnel()
     fun applyEditorAutoEdit() = editorSessionDelegate.applyAutoEdit()
+    fun copyEditorSettings() = editorSessionDelegate.copySettings()
+    fun pasteEditorSettings() = editorSessionDelegate.pasteSettings()
 
     fun saveGradedImageToGallery() = gradingPipelineDelegate.saveGradedImageToGallery { loadSavedImages() }
     fun exportCube(onReadyToSave: (String) -> Unit) = gradingPipelineDelegate.exportCube(onReadyToSave)
@@ -681,14 +683,23 @@ class StealZaLutViewModel(
 
             if (options.outWidth <= 0 || options.outHeight <= 0) {
                 val exif = try { ExifInterface(path) } catch (e: Throwable) { null }
-                val thumbBitmap = exif?.thumbnailBitmap
-                if (thumbBitmap != null) {
-                    return rotateBitmapIfRequired(thumbBitmap, path)
-                }
-                val thumbData = exif?.thumbnailBytes
-                if (thumbData != null) {
-                    val decoded = BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
-                    return if (decoded != null) rotateBitmapIfRequired(decoded, path) else null
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val thumbBitmap = exif?.thumbnailBitmap
+                    if (thumbBitmap != null) {
+                        return rotateBitmapIfRequired(thumbBitmap, path)
+                    }
+                    val thumbData = exif?.thumbnailBytes
+                    if (thumbData != null) {
+                        val decoded = BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
+                        return if (decoded != null) rotateBitmapIfRequired(decoded, path) else null
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val thumbData = exif?.thumbnail
+                    if (thumbData != null) {
+                        val decoded = BitmapFactory.decodeByteArray(thumbData, 0, thumbData.size)
+                        return if (decoded != null) rotateBitmapIfRequired(decoded, path) else null
+                    }
                 }
                 return null
             }

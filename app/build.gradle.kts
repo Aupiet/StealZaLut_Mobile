@@ -56,6 +56,10 @@ android {
             }
         }
     }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+    }
     buildFeatures {
         compose = true
     }
@@ -69,12 +73,12 @@ chaquopy {
             install("numpy")
             install("Pillow")
             install("scipy")
-            install("color-matcher")
         }
     }
 }
 
 dependencies {
+    implementation(project(":engine"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

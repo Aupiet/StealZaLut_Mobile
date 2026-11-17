@@ -32,6 +32,9 @@
     <string name="method_reinhard_name">Perceptual CIE LAB</string>
     <string name="method_reinhard_sub">Reinhard Statistical Moments</string>
     <string name="method_reinhard_desc">Mean and standard deviation transfer in perceptual CIE LAB color space.</string>
+    <string name="method_ambiance_name">Atmospheric Ambiance</string>
+    <string name="method_ambiance_sub">Tone-Dependent Color Cast</string>
+    <string name="method_ambiance_desc">Tone-dependent tint curve in Oklab: transfers mood while preserving vivid sources and contrast.</string>
 
     <!-- Lut Sizes (Enums) -->
     <string name="lut_size_17_label">17x17x17 Fast</string>
@@ -318,6 +321,10 @@
     <!-- Feedback Messages -->
     <string name="msg_preset_selected">Preset \'%1$s\' selected!</string>
     <string name="msg_auto_edit_applied">Auto-Edit applied: Exp %1$+.2f EV | Cont %2$+.0f%% | Shadows %3$+.0f%%</string>
+    <string name="msg_settings_copied">Settings copied to clipboard</string>
+    <string name="msg_settings_pasted">Settings pasted</string>
+    <string name="action_copy_settings">Copy Settings</string>
+    <string name="action_paste_settings">Paste Settings</string>
     <string name="msg_photo_saved">Photo saved to Gallery and Library!</string>
     <string name="msg_photo_hd_saved">HD photo saved to Android Gallery!</string>
     <string name="msg_export_reduced">Export reduced to %1$d px to protect available memory.</string>

@@ -69,7 +69,9 @@ fun MethodSelector(
                 .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
                 .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
                 .clickable { onMethodSelected(recMethod) }
-                .semantics { contentDescription = "$recName, $recSubtitle" } // GUARD_ALLOW
+                .semantics {
+                    contentDescription = "$recName, $recSubtitle" // GUARD_ALLOW
+                }
         ) {
             Row(
                 modifier = Modifier
@@ -106,50 +108,57 @@ fun MethodSelector(
             }
         }
 
-        // --- Row 2: MKL, HM, Reinhard pills ---
-        val otherMethods = listOf(ColorTransferMethod.MKL, ColorTransferMethod.HM, ColorTransferMethod.REINHARD)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
-        ) {
-            otherMethods.forEach { method ->
-                val isSelected = selectedMethod == method
-                val name = stringResource(method.displayNameRes)
-                val sub = stringResource(method.technicalSubtitleRes)
+        // --- Alternative methods in 2x2 grid ---
+        val rows = listOf(
+            listOf(ColorTransferMethod.MKL, ColorTransferMethod.HM),
+            listOf(ColorTransferMethod.REINHARD, ColorTransferMethod.AMBIANCE)
+        )
+        rows.forEach { rowMethods ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.SpacingSmall)
+            ) {
+                rowMethods.forEach { method ->
+                    val isSelected = selectedMethod == method
+                    val name = stringResource(method.displayNameRes)
+                    val sub = stringResource(method.technicalSubtitleRes)
 
-                Surface(
-                    shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                    border = BorderStroke(
-                        AppDimens.BorderThin,
-                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
-                        .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
-                        .clickable { onMethodSelected(method) }
-                        .semantics { contentDescription = "$name, $sub" } // GUARD_ALLOW
-                ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingSmall),
-                        verticalArrangement = Arrangement.Center
+                    Surface(
+                        shape = RoundedCornerShape(AppDimens.CornerRadiusMedium),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(
+                            AppDimens.BorderThin,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppConstants.OPACITY_BORDER_SUBTLE)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = AppDimens.MinInteractiveTarget)
+                            .clip(RoundedCornerShape(AppDimens.CornerRadiusMedium))
+                            .clickable { onMethodSelected(method) }
+                            .semantics {
+                                contentDescription = "$name, $sub" // GUARD_ALLOW
+                            }
                     ) {
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = sub,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Column(
+                            modifier = Modifier.padding(horizontal = AppDimens.SpacingSmall, vertical = AppDimens.SpacingSmall),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = sub,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }

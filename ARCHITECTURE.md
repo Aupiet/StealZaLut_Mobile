@@ -92,14 +92,16 @@ Le cœur du traitement est unifié entre l'image affichée à l'écran et la 3D 
 - Grâce à cette architecture, toute modification des 6 curseurs de l'Étape 2 ou des 11 curseurs de l'Étape 3 s'exécute en **moins de 5 ms** sur le lattice ou le proxy, garantissant une fluidité de 60 à 120 FPS sur smartphone.
 
 ### 2.2 Architecture de Prévisualisation GPU Hybride à 2 Étages (AGSL / ColorMatrix & Chaquopy)
-Pour concilier l'exigence de réactivité tactile absolue (60–120 FPS sans saccade) et la règle d'or WYSIWYG (ADR-08), l'application implémente un pipeline hybride différentiel à deux étages (`GpuPreviewEngine.kt`) :
+Pour concilier l'exigence de réactivité tactile absolue (60–120 FPS sans saccade) et la règle d'or WYSIWYG (ADR-08, ADR-21, ADR-22), l'application implémente un pipeline hybride différentiel à deux étages (`GpuPreviewEngine.kt`) :
 1. **Étage 1 (GPU / < 1 ms par trame) :**
    - Évaluation instantanée des ajustements sur GPU via AGSL `RuntimeShader` (`android.graphics.RuntimeShader`) sur Android 13+ (API 33+), avec repli matériel transparent sur `ColorFilter.colorMatrix` pour Android 7.0–12 (API 24–32).
-   - Couverture intégrale des 10 modules d'édition : Exposition (espace linéaire $2^{\Delta EV}$), balance des blancs vectorielle, contraste sigmoïdal $\tanh$, ombres/hautes lumières smoothstep, courbes de tonalité paramétriques, mixeur HSL 8 bandes (fenêtres gaussiennes $\sigma = 22^\circ$), roues 3-way color grading, étalonnage de profil capteur, vignettage radial, netteté et grain.
+   - Couverture intégrale des 15 modules d'édition : Exposition (espace linéaire $2^{\Delta EV}$), balance des blancs vectorielle, contraste sigmoïdal $\tanh$, ombres/hautes lumières smoothstep, courbes paramétriques et courbes par points (RGB, Rouge, Vert, Bleu) évaluées par LUT 1D $256\times 1$ via spline Fritsch-Carlson monotone (`MonotoneCubicSpline.kt`), mixeur HSL 8 bandes (fenêtres gaussiennes $\sigma = 22^\circ$), Point Color sélectif, roues 3-way color grading, étalonnage de profil capteur, vignettage radial, netteté et grain.
+   - Les toggles d'activation/désactivation de modules (`isToneCurveEnabled`, `isColorMixerEnabled`) sont reflétés instantanément dans le shader.
    - Les shaders opèrent sur des **deltas relatifs** ($\Delta = \text{valeur actuelle} - \text{valeur Python}$).
-2. **Étage 2 (Fidélité Maximale en Tâche de Fond) :**
-   - Déclenchement automatique de la passe de référence Python Chaquopy dès le relâchement du geste tactile ou après 200 ms d'inactivité.
-   - À réception du nouveau bitmap développé, le delta s'annule ($\Delta = 0$), le shader redevient une identité mathématique neutre : transition sans clignotement et parité $\Delta E \le 0.5$ niveau 8 bits.
+2. **Étage 2 (Fidélité Maximale avec Throttle Adaptatif) :**
+   - Régulation de flux par `AdaptiveThrottleLatest` : intervalle adaptatif calé sur $2.5\times$ la durée du dernier rendu (borné [80 ms, 600 ms]), max 1 requête en vol, trailing garanti au relâchement tactile.
+   - Filtrage des réponses obsolètes par `requestId` séquentiel pour éliminer les retours asynchrones hors délai.
+   - À réception du nouveau bitmap développé pour $P_k$, le delta Compose est calculé par $\Delta = P_n - P_k$ au lieu de retomber à zéro, supprimant tout clignotement ou saut visuel lors de gestes continus.
 
 ### 2.3 Moteur Géométrique de Recadrage & Redressement (`CropPhysics`)
 Le recadrage et le redressement d'horizon (`EditorCropOverlay.kt`) reposent sur un modèle géométrique pur conforme à la spécification Adobe Camera Raw (`crs:Crop*`) :
@@ -276,19 +278,28 @@ StealZaLut_Mobile/
 │       │   │   ├── config.py                Constantes système, algorithmes et seuils
 │       │   │   ├── bridge.py                Façade unique JNI/Chaquopy (status: success/error)
 │       │   │   ├── core/
+│       │   │   │   ├── ai_pack.py           Packs d'analyse IA et génération de prompts
+│       │   │   │   ├── ambiance.py          Transfert d'ambiance et teinte par niveau Oklab
 │       │   │   │   ├── auto_edit.py         Analyse optique Rec. 2020 LightCraft
 │       │   │   │   ├── color_card.py        Génération et détection mire ColorChecker
 │       │   │   │   ├── color_space.py       Espaces perceptuels OKLab, CIE LAB, smoothstep
-│       │   │   │   ├── color_transfer.py    Transferts optimaux (MKL, MVGD, Reinhard, HM)
+│       │   │   │   ├── color_transfer.py    Transferts optimaux (MKL, MVGD, Reinhard, HM, Ambiance)
+│       │   │   │   ├── correspondence.py    Calcul des flux de correspondances entre zones
 │       │   │   │   ├── lightroom_color.py   Moteur de virage partiel et balance des blancs
 │       │   │   │   ├── lightroom_models.py  Structures de données du moteur de développement
 │       │   │   │   ├── lightroom_spatial.py Traitements spatiaux (clarté, netteté, grain)
 │       │   │   │   ├── lut_engine.py        Lattice 3D, interpolation trilinéaire & chunking anti-OOM
 │       │   │   │   ├── lut_export.py        Exportation Adobe .cube 1.0 conforme
+│       │   │   │   ├── matching.py          Appariement optimal de zones colorimétriques
+│       │   │   │   ├── palette.py           Extraction K-means Oklab et calcul de centroïdes
 │       │   │   │   ├── pipeline.py          Moteur Étapes 2 & 3, Baking LUT et masques
 │       │   │   │   ├── preset_manager.py    Gestionnaire de presets v2, migration, duplication, export
+│       │   │   │   ├── raw_decoder.py       Décodage des fichiers négatifs bruts RAW et DNG
+│       │   │   │   ├── recipe.py            Sérialisation et parsing des recettes de gradation v2
+│       │   │   │   ├── regularize.py        Régularisation et contraintes de lissage
 │       │   │   │   ├── spatial_filters.py   Convolutions et filtres spatiaux optimisés
-│       │   │   │   └── spline_interpolator.py Interpolation par splines cubiques pour courbes
+│       │   │   │   ├── spline_interpolator.py Interpolation par splines cubiques pour courbes
+│       │   │   │   └── zone_transfer.py     Transfert par zones avec overrides utilisateur
 │       │   │   ├── utils/
 │       │   │   │   └── image_io.py          I/O Pillow, préservation EXIF et extraction de palettes
 │       │   │   └── workers/
@@ -298,8 +309,11 @@ StealZaLut_Mobile/
 │       │       ├── MainActivity.kt              Point d'entrée Android, gestion fenêtres et thèmes
 │       │       ├── StealZaLutApplication.kt     Initialisation application et Chaquopy
 │       │       ├── core/
+│       │       │   ├── AdaptiveThrottleLatest.kt Régulateur de flux adaptatif anti-clignotement
 │       │       │   ├── AppConstants.kt          Constantes logiques, seuils d'opacité, durées
 │       │       │   ├── AppDimens.kt             Jetons de dimensions, paddings et rayons
+│       │       │   ├── EditorClipboardHolder.kt Presse-papier d'édition en mémoire inter-photos
+│       │       │   ├── MonotoneCubicSpline.kt   Interpolation spline Hermite cubique Fritsch-Carlson
 │       │       │   └── UiText.kt                Encapsulation i18n des chaînes pour ViewModel
 │       │       ├── data/
 │       │       │   ├── bridge/
@@ -376,7 +390,8 @@ StealZaLut_Mobile/
 │       │           │       ├── StudioStep3Parameters.kt Étape 3 : Réglages colorimétriques
 │       │           │       ├── StudioStep4Computing.kt Étape 4 : Progression du calcul JNI
 │       │           │       ├── StudioStep5Result.kt Étape 5 : Rendu final et relais vers l'éditeur
-│       │           │       └── StudioStepper.kt     Indicateur horizontal d'étapes
+│       │           │       ├── StudioStepper.kt     Indicateur horizontal d'étapes
+│       │           │       └── ZonePaletteVisualization.kt Graphe interactif de correspondances de zones
 │       │           ├── theme/
 │       │           │   ├── Color.kt             Primitives de teintes de base
 │       │           │   ├── ColorCardReference.kt Références colorimétriques ColorChecker
@@ -398,6 +413,7 @@ StealZaLut_Mobile/
 │       │                   ├── PresetLibraryDelegate.kt   Gestion de la bibliothèque de presets
 │       │                   └── StudioFlowDelegate.kt      Flux du wizard Studio 5 étapes
 │       ├── test/java/com/stealzalut/mobile/
+│       │   ├── core/AdaptiveThrottleLatestTest.kt       Test régulateur de flux adaptatif
 │       │   ├── core/MonotoneCubicSplineTest.kt          Test interpolation Fritsch-Carlson
 │       │   ├── data/model/LightroomSerializerTest.kt     Test sérialisation des modèles de retouche
 │       │   ├── data/repository/PresetRepositoryTest.kt  Test persistance JSON des presets
@@ -408,9 +424,9 @@ StealZaLut_Mobile/
 │       │   ├── ui/preview/GpuPreviewParityTest.kt       Test parité mathématique GPU vs Python
 │       │   ├── ui/screens/editor/CropRegionTest.kt      Test physique de recadrage CropPhysics
 │       │   ├── ui/screens/editor/ToneCurveInteractionTest.kt Test interaction tactile courbe
-│       │   ├── ui/screens/guide/FeatureGuideRegistryTest.kt  Test intégrité du registre des 12 guides
+│       │   ├── ui/screens/guide/FeatureGuideRegistryTest.kt  Test intégrité du registre des 15 guides
 │       │   ├── ui/screens/guide/GuideImageProviderTest.kt    Test cache des effets de guide
-│       │   ├── ui/viewmodel/EditorUndoRedoStackTest.kt  Test pile Undo/Redo et coalescence
+│       │   ├── ui/viewmodel/EditorUndoRedoStackTest.kt  Test pile Undo/Redo, coalescence et copie/collage
 │       │   ├── ui/viewmodel/GradingRelayTest.kt         Test relais Studio ↔ Éditeur
 │       │   ├── ui/viewmodel/PresetExportTest.kt         Test export de presets
 │       │   ├── ui/viewmodel/SafExportIntegrationTest.kt Test flux d'exportation SAF
@@ -418,14 +434,19 @@ StealZaLut_Mobile/
 │       └── androidTest/java/com/stealzalut/mobile/
 │           ├── bridge/PythonBridgeIntegrationTest.kt    Test JNI Chaquopy sur appareil/émulateur
 │           └── ui/MainColorGradingScreenTest.kt         Test UI instrumenté navigation
-└── tests/                                       113 tests Pytest (100% verts)
+└── tests/                                       142 tests Pytest (100% verts)
     ├── conftest.py                              Fixtures Pytest partagées
+    ├── test_ambiance.py                         Tests transfert d'ambiance et teinte Oklab
     ├── test_auto_edit.py                        Tests analyse optique LightCraft
     ├── test_bridge.py                           Tests passerelle JNI bridge.py
     ├── test_colorset_worker.py                  Tests génération de palettes de référence
-    ├── test_color_transfer.py                   Tests transport optimal (MKL, MVGD, Reinhard, HM)
+    ├── test_color_transfer.py                   Tests transport optimal (MKL, MVGD, Reinhard, HM, Ambiance)
+    ├── test_crop_spatial.py                     Tests filtres spatiaux et recadrage
+    ├── test_gpu_preview_parity.py               Tests parité différentielle GPU shader vs Python
     ├── test_lut_engine.py                       Tests treillis 3D, interpolation et chunking
     ├── test_lut_export.py                       Tests conformité Adobe .cube et intégrité
     ├── test_pipeline.py                         Tests pipeline 3 étapes et masques OKLab
-    └── test_preset_manager.py                   Tests persistance v2, CRUD et migration presets
+    ├── test_preset_manager.py                   Tests persistance v2, CRUD et migration presets
+    ├── test_raw_decoder.py                      Tests négatifs numériques DNG et RAW
+    └── test_recipe_ai_pack.py                   Tests recettes v2 et prompt packs IA
 ```

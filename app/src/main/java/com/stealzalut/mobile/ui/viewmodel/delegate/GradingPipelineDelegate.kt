@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AdaptiveThrottleLatest
 import com.stealzalut.mobile.core.AppConstants
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.core.diagnostics.launchSafely as launch
@@ -49,7 +50,8 @@ private data class PreviewDebounceRequest(
     val preserveLuminance: Float,
     val skinProtection: Float,
     val smoothSigma: Float,
-    val neutralLock: Float
+    val neutralLock: Float,
+    val zoneOverrides: Map<String, Int>? = null
 )
 
 @OptIn(FlowPreview::class)
@@ -88,14 +90,23 @@ class GradingPipelineDelegate(
         }
     }
 
+    private val throttler = AdaptiveThrottleLatest<PreviewDebounceRequest>(
+        scope = scope,
+        minIntervalMs = 80L,
+        maxIntervalMs = 500L,
+        initialIntervalMs = 150L,
+        intervalMultiplier = 2.5
+    ) { req, reqId ->
+        computePythonPreview(req, reqId)
+    }
+
     init {
         scope.launch {
             previewDebounceFlow
                 .filterNotNull()
-                .debounce(200L)
                 .distinctUntilChanged()
                 .collect { req ->
-                    computePythonPreview(req)
+                    throttler.submit(req)
                 }
         }
     }
@@ -283,48 +294,54 @@ class GradingPipelineDelegate(
             preserveLuminance = current.preserveLuminance,
             skinProtection = current.skinProtection,
             smoothSigma = current.smoothSigma,
-            neutralLock = current.neutralLock
+            neutralLock = current.neutralLock,
+            zoneOverrides = current.zoneUserOverrides
         )
     }
 
-    private suspend fun computePythonPreview(req: PreviewDebounceRequest) {
-        activeGradingJob?.cancel()
-        activeGradingJob = scope.launch {
-            stateFlow.update { it.copy(isProcessingPreview = true, errorMessage = null) }
-            val result = bridgeRepository.generatePreview(
-                srcPath = req.srcPath,
-                refPath = req.refPath,
-                method = req.method,
-                intensity = req.intensity,
-                preserveLuminance = req.preserveLuminance,
-                skinProtection = req.skinProtection,
-                smoothSigma = req.smoothSigma,
-                neutralLock = req.neutralLock
-            )
+    private suspend fun computePythonPreview(req: PreviewDebounceRequest, reqId: Long): Long? {
+        stateFlow.update { it.copy(isProcessingPreview = true, errorMessage = null) }
+        val result = bridgeRepository.generatePreview(
+            srcPath = req.srcPath,
+            refPath = req.refPath,
+            method = req.method,
+            intensity = req.intensity,
+            preserveLuminance = req.preserveLuminance,
+            skinProtection = req.skinProtection,
+            smoothSigma = req.smoothSigma,
+            neutralLock = req.neutralLock,
+            zoneOverrides = req.zoneOverrides
+        )
 
-            when (result) {
-                is PreviewResult.Success -> {
-                    val rawTransferredBmp = withContext(Dispatchers.IO) {
-                        decodeSampledBitmap(result.previewPath, 1080)
-                    }
-                    stateFlow.update {
-                        it.copy(
-                            isProcessingPreview = false,
-                            previewPath = result.previewPath,
-                            basePreviewBitmap = rawTransferredBmp,
-                            previewExecutionTimeMs = result.executionTimeMs,
-                            isGradedImageSaved = false
-                        )
-                    }
+        // Drop stale results if a newer request already completed
+        if (reqId < throttler.latestCompletedRequestId) {
+            return null
+        }
+
+        when (result) {
+            is PreviewResult.Success -> {
+                val rawTransferredBmp = withContext(Dispatchers.IO) {
+                    decodeSampledBitmap(result.previewPath, 1080)
                 }
-                is PreviewResult.Error -> {
-                    stateFlow.update {
-                        it.copy(
-                            isProcessingPreview = false,
-                            errorMessage = result.error.uiText
-                        )
-                    }
+                stateFlow.update {
+                    it.copy(
+                        isProcessingPreview = false,
+                        previewPath = result.previewPath,
+                        basePreviewBitmap = rawTransferredBmp,
+                        previewExecutionTimeMs = result.executionTimeMs,
+                        isGradedImageSaved = false
+                    )
                 }
+                return result.executionTimeMs.toLong()
+            }
+            is PreviewResult.Error -> {
+                stateFlow.update {
+                    it.copy(
+                        isProcessingPreview = false,
+                        errorMessage = result.error.uiText
+                    )
+                }
+                return null
             }
         }
     }
@@ -356,7 +373,8 @@ class GradingPipelineDelegate(
                 preserveLuminance = current.preserveLuminance,
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
-                neutralLock = current.neutralLock
+                neutralLock = current.neutralLock,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             delay(AppConstants.COMPUTE_STAGE_DELAY_MS)
@@ -420,7 +438,8 @@ class GradingPipelineDelegate(
                 whites = 0f,
                 blacks = 0f,
                 vibrance = 0f,
-                saturation = 0f
+                saturation = 0f,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -513,7 +532,8 @@ class GradingPipelineDelegate(
                 whites = 0f,
                 blacks = 0f,
                 vibrance = 0f,
-                saturation = 0f
+                saturation = 0f,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -565,7 +585,8 @@ class GradingPipelineDelegate(
                 preserveLuminance = current.preserveLuminance,
                 skinProtection = current.skinProtection,
                 smoothSigma = current.smoothSigma,
-                neutralLock = current.neutralLock
+                neutralLock = current.neutralLock,
+                zoneOverrides = current.zoneUserOverrides
             )
 
             when (result) {
@@ -948,7 +969,8 @@ class GradingPipelineDelegate(
             preserveLuminance = state.preserveLuminance,
             skinProtection = state.skinProtection,
             smoothSigma = state.smoothSigma,
-            neutralLock = state.neutralLock
+            neutralLock = state.neutralLock,
+            zoneOverrides = state.zoneUserOverrides
         )
     }
 }

@@ -75,7 +75,7 @@ class GradingRelayTest {
         )
 
         coEvery {
-            bridgeRepository.exportCube(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            bridgeRepository.exportCube(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
         } returns CubeExportResult.Success(cubePath = cubePath, lutSize = 33, executionTimeMs = 15.0)
 
         delegate.openInEditorFromStudio()

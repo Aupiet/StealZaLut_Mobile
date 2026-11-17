@@ -1,0 +1,624 @@
+{
+  "version": "1.0",
+  "tolerances": {
+    "float": 0.0001,
+    "uint8": 1,
+    "raw_delta_e": 0.5,
+    "zone_cluster_ratio": 0.98,
+    "zone_delta_e": 1.0
+  },
+  "cases": [
+    {
+      "name": "k1_identity_17",
+      "kernel": "K1",
+      "description": "Identity LUT 17x17x17",
+      "tolerance_type": "float",
+      "files": [
+        "k1_identity_17.cube"
+      ],
+      "metrics": {
+        "size": 17,
+        "shape": [
+          17,
+          17,
+          17,
+          3
+        ],
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    {
+      "name": "k1_identity_33",
+      "kernel": "K1",
+      "description": "Identity LUT 33x33x33",
+      "tolerance_type": "float",
+      "files": [
+        "k1_identity_33.cube"
+      ],
+      "metrics": {
+        "size": 33,
+        "shape": [
+          33,
+          33,
+          33,
+          3
+        ],
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    {
+      "name": "k1_identity_65",
+      "kernel": "K1",
+      "description": "Identity LUT 65x65x65",
+      "tolerance_type": "float",
+      "files": [
+        "k1_identity_65.cube"
+      ],
+      "metrics": {
+        "size": 65,
+        "shape": [
+          65,
+          65,
+          65,
+          3
+        ],
+        "min": 0.0,
+        "max": 1.0
+      }
+    },
+    {
+      "name": "k1_apply_lut_256",
+      "kernel": "K1",
+      "description": "Trilinear LUT interpolation on 256x256 image",
+      "tolerance_type": "float",
+      "files": [
+        "k1_apply_lut_256.npz"
+      ],
+      "metrics": {
+        "shape": [
+          256,
+          256,
+          3
+        ],
+        "mean": 0.49168598651885986,
+        "std": 0.32419586181640625
+      }
+    },
+    {
+      "name": "k1_lut_locks",
+      "kernel": "K1",
+      "description": "LUT with skin protection, neutral lock, and smoothing",
+      "tolerance_type": "float",
+      "files": [
+        "k1_lut_locks.npz"
+      ],
+      "metrics": {
+        "shape": [
+          33,
+          33,
+          33,
+          3
+        ],
+        "mean": 0.49246275424957275,
+        "std": 0.33633777499198914
+      }
+    },
+    {
+      "name": "k1_extreme_lut",
+      "kernel": "K1",
+      "description": "Extreme inverted LUT on 256x256 image",
+      "tolerance_type": "float",
+      "files": [
+        "k1_extreme_lut.npz"
+      ],
+      "metrics": {
+        "mean": 0.5000146627426147,
+        "std": 0.26472222805023193
+      }
+    },
+    {
+      "name": "k1_apply_lut_12mp_probes",
+      "kernel": "K1",
+      "description": "12 MP (4000x3000) trilinear LUT probe coordinates",
+      "tolerance_type": "float",
+      "files": [
+        "k1_apply_lut_12mp_probes.npz"
+      ],
+      "metrics": {
+        "probe_count": 500,
+        "mean": 0.4965778887271881,
+        "std": 0.32861489057540894
+      }
+    },
+    {
+      "name": "k1_apply_lut_24mp_probes",
+      "kernel": "K1",
+      "description": "24 MP (6000x4000) trilinear LUT probe coordinates",
+      "tolerance_type": "float",
+      "files": [
+        "k1_apply_lut_24mp_probes.npz"
+      ],
+      "metrics": {
+        "probe_count": 1000,
+        "mean": 0.49993985891342163,
+        "std": 0.32537174224853516
+      }
+    },
+    {
+      "name": "k2_exposure_pos",
+      "kernel": "K2",
+      "description": "Exposure +2.0 EV",
+      "tolerance_type": "float",
+      "files": [
+        "k2_exposure_pos.npz"
+      ],
+      "metrics": {
+        "mean": 0.7651689648628235
+      }
+    },
+    {
+      "name": "k2_exposure_neg",
+      "kernel": "K2",
+      "description": "Exposure -2.0 EV",
+      "tolerance_type": "float",
+      "files": [
+        "k2_exposure_neg.npz"
+      ],
+      "metrics": {
+        "mean": 0.2572253942489624
+      }
+    },
+    {
+      "name": "k2_contrast",
+      "kernel": "K2",
+      "description": "Contrast +/- 50",
+      "tolerance_type": "float",
+      "files": [
+        "k2_contrast.npz"
+      ],
+      "metrics": {
+        "mean_pos": 0.4999319016933441
+      }
+    },
+    {
+      "name": "k2_white_balance",
+      "kernel": "K2",
+      "description": "White Balance Temp/Tint",
+      "tolerance_type": "float",
+      "files": [
+        "k2_white_balance.npz"
+      ],
+      "metrics": {
+        "mean": 0.4995284974575043
+      }
+    },
+    {
+      "name": "k2_tone_adjustments",
+      "kernel": "K2",
+      "description": "Highlights/Shadows/Whites/Blacks",
+      "tolerance_type": "float",
+      "files": [
+        "k2_tone_adjustments.npz"
+      ],
+      "metrics": {
+        "mean": 0.48656436800956726
+      }
+    },
+    {
+      "name": "k2_vibrance_sat",
+      "kernel": "K2",
+      "description": "Vibrance +40 / Saturation -30",
+      "tolerance_type": "float",
+      "files": [
+        "k2_vibrance_sat.npz"
+      ],
+      "metrics": {
+        "mean": 0.49992236495018005
+      }
+    },
+    {
+      "name": "k2_tone_curve_s",
+      "kernel": "K2",
+      "description": "Fritsch-Carlson S-Curve",
+      "tolerance_type": "float",
+      "files": [
+        "k2_tone_curve_s.npz"
+      ],
+      "metrics": {
+        "mean": 0.4999368190765381
+      }
+    },
+    {
+      "name": "k2_tone_curve_extreme",
+      "kernel": "K2",
+      "description": "Extreme lifted Tone Curve",
+      "tolerance_type": "float",
+      "files": [
+        "k2_tone_curve_extreme.npz"
+      ],
+      "metrics": {
+        "mean": 0.603120744228363
+      }
+    },
+    {
+      "name": "k2_hsl_mixer",
+      "kernel": "K2",
+      "description": "8-channel HSL color mixer",
+      "tolerance_type": "float",
+      "files": [
+        "k2_hsl_mixer.npz"
+      ],
+      "metrics": {
+        "mean": 0.4914650022983551
+      }
+    },
+    {
+      "name": "k2_color_grading",
+      "kernel": "K2",
+      "description": "3-way Color Grading wheels",
+      "tolerance_type": "float",
+      "files": [
+        "k2_color_grading.npz"
+      ],
+      "metrics": {
+        "mean": 0.4997621476650238
+      }
+    },
+    {
+      "name": "k2_calibration",
+      "kernel": "K2",
+      "description": "Camera Calibration primaries",
+      "tolerance_type": "float",
+      "files": [
+        "k2_calibration.npz"
+      ],
+      "metrics": {
+        "mean": 0.5000014305114746
+      }
+    },
+    {
+      "name": "k2_full_pipeline_baked_33",
+      "kernel": "K2",
+      "description": "Full pipeline baked into 33\u00b3 LUT",
+      "tolerance_type": "float",
+      "files": [
+        "k2_full_pipeline_baked_33.cube"
+      ],
+      "metrics": {
+        "mean": 0.5721146464347839,
+        "shape": [
+          35937,
+          3
+        ]
+      }
+    },
+    {
+      "name": "k2_auto_edit_dark",
+      "kernel": "K2",
+      "description": "Auto-Edit analysis & LUT on dark image",
+      "tolerance_type": "float",
+      "files": [
+        "k2_auto_edit_dark.json",
+        "k2_auto_edit_dark_lut.cube"
+      ],
+      "metrics": {
+        "exposure": 0.93
+      }
+    },
+    {
+      "name": "k2_auto_edit_bright",
+      "kernel": "K2",
+      "description": "Auto-Edit analysis & LUT on bright image",
+      "tolerance_type": "float",
+      "files": [
+        "k2_auto_edit_bright.json",
+        "k2_auto_edit_bright_lut.cube"
+      ],
+      "metrics": {
+        "exposure": -1.02
+      }
+    },
+    {
+      "name": "k3_gaussian_blur_sigma1",
+      "kernel": "K3",
+      "description": "Separable Gaussian blur sigma=1.0",
+      "tolerance_type": "float",
+      "files": [
+        "k3_gaussian_blur_sigma1.npz"
+      ],
+      "metrics": {
+        "mean": 0.5000504851341248
+      }
+    },
+    {
+      "name": "k3_gaussian_blur_sigma3",
+      "kernel": "K3",
+      "description": "Separable Gaussian blur sigma=3.0 on 512x512",
+      "tolerance_type": "float",
+      "files": [
+        "k3_gaussian_blur_sigma3.npz"
+      ],
+      "metrics": {
+        "mean": 0.5000131130218506
+      }
+    },
+    {
+      "name": "k3_gaussian_blur_24mp_patch",
+      "kernel": "K3",
+      "description": "Gaussian blur sigma=3.0 tile for 24 MP",
+      "tolerance_type": "float",
+      "files": [
+        "k3_gaussian_blur_24mp_patch.npz"
+      ],
+      "metrics": {
+        "mean": 0.4999983012676239
+      }
+    },
+    {
+      "name": "k3_spatial_clarity",
+      "kernel": "K3",
+      "description": "Spatial Presence clarity, texture, dehaze",
+      "tolerance_type": "float",
+      "files": [
+        "k3_spatial_clarity.npz"
+      ],
+      "metrics": {
+        "mean": 0.4788418710231781
+      }
+    },
+    {
+      "name": "k3_spatial_detail",
+      "kernel": "K3",
+      "description": "Spatial Detail sharpening & noise",
+      "tolerance_type": "float",
+      "files": [
+        "k3_spatial_detail.npz"
+      ],
+      "metrics": {
+        "mean": 0.5000495314598083
+      }
+    },
+    {
+      "name": "k4_transfer_reinhard",
+      "kernel": "K4",
+      "description": "Reinhard Lab color transfer",
+      "tolerance_type": "uint8",
+      "files": [
+        "k4_transfer_reinhard.npz"
+      ],
+      "metrics": {
+        "mean": 0.49994635581970215
+      }
+    },
+    {
+      "name": "k4_transfer_mkl",
+      "kernel": "K4",
+      "description": "MKL color transfer",
+      "tolerance_type": "uint8",
+      "files": [
+        "k4_transfer_mkl.npz"
+      ],
+      "metrics": {
+        "mean": 0.49991562962532043
+      }
+    },
+    {
+      "name": "k4_transfer_hm",
+      "kernel": "K4",
+      "description": "Histogram matching color transfer",
+      "tolerance_type": "uint8",
+      "files": [
+        "k4_transfer_hm.npz"
+      ],
+      "metrics": {
+        "mean": 0.4999361038208008
+      }
+    },
+    {
+      "name": "k4_transfer_mvgd",
+      "kernel": "K4",
+      "description": "MVGD color transfer",
+      "tolerance_type": "uint8",
+      "files": [
+        "k4_transfer_mvgd.npz"
+      ],
+      "metrics": {
+        "mean": 0.49991559982299805
+      }
+    },
+    {
+      "name": "k4_transfer_oklab",
+      "kernel": "K4",
+      "description": "Oklab color transfer",
+      "tolerance_type": "uint8",
+      "files": [
+        "k4_transfer_oklab.npz"
+      ],
+      "metrics": {
+        "mean": 0.49993789196014404
+      }
+    },
+    {
+      "name": "k4_palette_kmeans_5",
+      "kernel": "K4",
+      "description": "K-Means Oklab palette extraction (5 zones)",
+      "tolerance_type": "zone_kmeans",
+      "files": [
+        "k4_palette_kmeans_5.json"
+      ],
+      "metrics": {
+        "count": 5
+      }
+    },
+    {
+      "name": "k4_palette_kmeans_8",
+      "kernel": "K4",
+      "description": "K-Means Oklab palette extraction (8 zones)",
+      "tolerance_type": "zone_kmeans",
+      "files": [
+        "k4_palette_kmeans_8.json"
+      ],
+      "metrics": {
+        "count": 8
+      }
+    },
+    {
+      "name": "k4_sinkhorn_matching",
+      "kernel": "K4",
+      "description": "Sinkhorn log-domain optimal transport matching",
+      "tolerance_type": "float",
+      "files": [
+        "k4_sinkhorn_matching.json"
+      ],
+      "metrics": {
+        "num_sources": 5
+      }
+    },
+    {
+      "name": "k4_zone_transfer",
+      "kernel": "K4",
+      "description": "Zone transfer application on sample points",
+      "tolerance_type": "float",
+      "files": [
+        "k4_zone_transfer.npz"
+      ],
+      "metrics": {
+        "mean": 0.4780197739601135
+      }
+    },
+    {
+      "name": "k4_ambiance_lut",
+      "kernel": "K4",
+      "description": "Ambiance mood transfer 33\u00b3 LUT",
+      "tolerance_type": "float",
+      "files": [
+        "k4_ambiance_lut.cube"
+      ],
+      "metrics": {
+        "mean": 0.5000631809234619
+      }
+    },
+    {
+      "name": "k4_recipe",
+      "kernel": "K4",
+      "description": "Recipe JSON serialization format",
+      "tolerance_type": "float",
+      "files": [
+        "k4_recipe.json"
+      ],
+      "metrics": {
+        "analysis_id": "golden42"
+      }
+    },
+    {
+      "name": "k4_ai_pack",
+      "kernel": "K4",
+      "description": "AI Pack JSON container serialization",
+      "tolerance_type": "float",
+      "files": [
+        "k4_ai_pack.json"
+      ],
+      "metrics": {
+        "pack_files": [
+          "1_source.jpg",
+          "2_reference.jpg",
+          "3_source_zones.png",
+          "4_reference_zones.png",
+          "5_source_overview.png",
+          "6_reference_overview.png",
+          "analysis.json",
+          "PROMPT.md"
+        ]
+      }
+    },
+    {
+      "name": "k5_decoded_rggb",
+      "kernel": "K5",
+      "description": "DNG uncompressed RGGB demosaiced",
+      "tolerance_type": "raw_delta_e",
+      "files": [
+        "k5_test_rggb.dng",
+        "k5_decoded_rggb.npz"
+      ],
+      "metrics": {
+        "shape": [
+          48,
+          64,
+          3
+        ],
+        "mean": 0.4893108010292053
+      }
+    },
+    {
+      "name": "k5_decoded_bggr",
+      "kernel": "K5",
+      "description": "DNG uncompressed BGGR demosaiced",
+      "tolerance_type": "raw_delta_e",
+      "files": [
+        "k5_test_bggr.dng",
+        "k5_decoded_bggr.npz"
+      ],
+      "metrics": {
+        "shape": [
+          48,
+          64,
+          3
+        ],
+        "mean": 0.4893108010292053
+      }
+    },
+    {
+      "name": "k5_decoded_deflate",
+      "kernel": "K5",
+      "description": "DNG deflate-compressed demosaiced",
+      "tolerance_type": "raw_delta_e",
+      "files": [
+        "k5_test_deflate.dng",
+        "k5_decoded_deflate.npz"
+      ],
+      "metrics": {
+        "shape": [
+          48,
+          64,
+          3
+        ],
+        "mean": 0.4893108010292053
+      }
+    },
+    {
+      "name": "k5_decoded_orient6",
+      "kernel": "K5",
+      "description": "DNG EXIF orientation 6 handling",
+      "tolerance_type": "raw_delta_e",
+      "files": [
+        "k5_test_orient6.dng",
+        "k5_decoded_orient6.npz"
+      ],
+      "metrics": {
+        "shape": [
+          64,
+          48,
+          3
+        ]
+      }
+    },
+    {
+      "name": "k5_decoded_preview",
+      "kernel": "K5",
+      "description": "DNG preview fast downsampling before demosaicing",
+      "tolerance_type": "raw_delta_e",
+      "files": [
+        "k5_decoded_preview.npz"
+      ],
+      "metrics": {
+        "shape": [
+          24,
+          32,
+          3
+        ]
+      }
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import com.stealzalut.mobile.R
+import com.stealzalut.mobile.core.AdaptiveThrottleLatest
+import com.stealzalut.mobile.core.EditorClipboardHolder
 import com.stealzalut.mobile.core.UiText
 import com.stealzalut.mobile.core.diagnostics.launchSafely as launch
 import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
@@ -79,6 +81,31 @@ data class StandaloneEditorDebounceRequest(
             !grain.isApproximately(0.0f) ||
             lightroomParams != LightroomDevelopModel() ||
             cropRegion.hasCrop
+
+    fun toSnapshot(customLutName: String? = null): EditorParamsSnapshot =
+        EditorParamsSnapshot(
+            intensity = intensity,
+            lumaLock = lumaLock,
+            neutralAxisLock = neutralAxisLock,
+            skinToneLock = skinToneLock,
+            extremesRolloff = extremesRolloff,
+            spatial3d = spatial3d,
+            exposure = exposure,
+            contrast = contrast,
+            highlights = highlights,
+            shadows = shadows,
+            temperature = temperature,
+            tint = tint,
+            vibrance = vibrance,
+            saturation = saturation,
+            clarity = clarity,
+            sharpen = sharpen,
+            grain = grain,
+            customLutPath = customLutPath,
+            customLutName = customLutName,
+            lightroomParams = lightroomParams,
+            cropRegion = cropRegion
+        )
 }
 
 private fun Float.isApproximately(expected: Float): Boolean =
@@ -126,14 +153,23 @@ class EditorSessionDelegate(
 
     private var autoSaveJob: Job? = null
 
+    private val throttler = AdaptiveThrottleLatest<StandaloneEditorDebounceRequest>(
+        scope = scope,
+        minIntervalMs = 80L,
+        maxIntervalMs = 500L,
+        initialIntervalMs = 150L,
+        intervalMultiplier = 2.5
+    ) { req, reqId ->
+        computeStandaloneEditorPreview(req, reqId)
+    }
+
     init {
         loadProjects()
         scope.launch {
             editorDebounceFlow
-                .debounce(200L)
                 .distinctUntilChanged()
                 .collect { req ->
-                    computeStandaloneEditorPreview(req)
+                    throttler.submit(req)
                 }
         }
     }
@@ -295,6 +331,7 @@ class EditorSessionDelegate(
     fun endEditGesture() {
         gestureDebounceJob?.cancel()
         gestureDebounceJob = null
+        throttler.flush()
         val start = gestureStartSnapshot ?: return
         gestureStartSnapshot = null
         val current = currentSnapshot()
@@ -630,19 +667,14 @@ class EditorSessionDelegate(
 
     fun applyAutoEdit() {
         val current = stateFlow.value
-        val imagePath = current.editorPreviewPath ?: current.editorSourcePath ?: return
+        // Use editorSourcePath as the single ground truth image to prevent cascading re-analysis
+        val imagePath = current.editorSourcePath ?: current.editorPreviewPath ?: return
 
         scope.launch {
             stateFlow.update { it.copy(isComputingEdit = true, errorMessage = null) }
             val autoSettings = bridgeRepository.computeAutoSettings(imagePath)
             when (autoSettings) {
                 is AutoSettingsResult.Success -> {
-                    val expNorm = autoSettings.exposure.coerceIn(-2.0f, 2.0f)
-                    val contrastNorm = (autoSettings.contrast / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val highlightsNorm = (autoSettings.highlights / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val shadowsNorm = (autoSettings.shadows / 100.0f).coerceIn(-1.0f, 1.0f)
-                    val vibranceNorm = (autoSettings.vibrance / 100.0f).coerceIn(-1.0f, 1.0f)
-
                     val currentLr = stateFlow.value.editorLightroomParams
                     val updatedBasic = currentLr.basic.copy(
                         exposure = autoSettings.exposure.coerceIn(-5.0f, 5.0f),
@@ -656,20 +688,22 @@ class EditorSessionDelegate(
                     )
                     val updatedLr = currentLr.copy(basic = updatedBasic, isBasicEnabled = true)
 
+                    // Idempotence: if already active with identical settings, do not push duplicate undo snapshot
+                    if (stateFlow.value.isAutoEditActive && stateFlow.value.editorLightroomParams == updatedLr) {
+                        stateFlow.update { it.copy(isComputingEdit = false) }
+                        return@launch
+                    }
+
                     pushUndoSnapshot()
                     stateFlow.update {
                         it.copy(
                             isComputingEdit = false,
                             isAutoEditActive = true,
+                            // editorLightroomParams.basic is the SINGLE source of truth (do not duplicate into legacy step3* fields)
                             editorLightroomParams = updatedLr,
-                            step3Exposure = expNorm,
-                            step3Contrast = contrastNorm,
-                            step3Highlights = highlightsNorm,
-                            step3Shadows = shadowsNorm,
-                            step3Vibrance = vibranceNorm,
                             userMessage = UiText.Resource(
                                 R.string.msg_auto_edit_applied,
-                                listOf(expNorm, contrastNorm * 100f, shadowsNorm * 100f)
+                                listOf(updatedBasic.exposure, updatedBasic.contrast, updatedBasic.shadows)
                             )
                         )
                     }
@@ -685,6 +719,29 @@ class EditorSessionDelegate(
                 }
             }
         }
+    }
+
+    fun copySettings() {
+        val current = stateFlow.value.editorLightroomParams
+        EditorClipboardHolder.copy(current)
+        stateFlow.update {
+            it.copy(
+                hasCopiedSettings = true,
+                userMessage = UiText.Resource(R.string.msg_settings_copied)
+            )
+        }
+    }
+
+    fun pasteSettings() {
+        val pasted = EditorClipboardHolder.paste() ?: return
+        pushUndoSnapshot()
+        stateFlow.update {
+            it.copy(
+                editorLightroomParams = pasted,
+                userMessage = UiText.Resource(R.string.msg_settings_pasted)
+            )
+        }
+        scheduleEditorPreviewUpdate()
     }
 
     fun resetEditingParameters() {
@@ -778,71 +835,78 @@ class EditorSessionDelegate(
         editorDebounceFlow.tryEmit(req)
     }
 
-    private suspend fun computeStandaloneEditorPreview(req: StandaloneEditorDebounceRequest) {
-        activeStandaloneJob?.cancel()
+    private suspend fun computeStandaloneEditorPreview(req: StandaloneEditorDebounceRequest, reqId: Long): Long? {
         if (!req.requiresImageProcessing && stateFlow.value.editorSourceBitmap != null) {
             stateFlow.update {
                 it.copy(
                     editorPreviewBitmap = it.editorSourceBitmap,
                     editorPreviewPath = req.srcPath,
                     editorExecutionTimeMs = null,
-                    isEditorProcessing = false
+                    isEditorProcessing = false,
+                    editorCommittedSnapshot = req.toSnapshot(it.editorCustomLutName)
                 )
             }
-            return
+            return null
         }
-        activeStandaloneJob = scope.launch {
-            stateFlow.update { it.copy(isEditorProcessing = true) }
-            val res = bridgeRepository.generateEditorPreview(
-                srcPath = req.srcPath,
-                lutSize = stateFlow.value.lutSize,
-                intensity = req.intensity,
-                lumaLock = req.lumaLock,
-                neutralAxisLock = req.neutralAxisLock,
-                skinToneLock = req.skinToneLock,
-                extremesRolloff = req.extremesRolloff,
-                spatial3d = req.spatial3d,
-                exposure = req.exposure,
-                contrast = req.contrast,
-                highlights = req.highlights,
-                shadows = req.shadows,
-                temperature = req.temperature,
-                tint = req.tint,
-                vibrance = req.vibrance,
-                saturation = req.saturation,
-                clarity = req.clarity,
-                sharpen = req.sharpen,
-                grain = req.grain,
-                customLutPath = req.customLutPath,
-                lightroomParams = req.lightroomParams,
-                cropRegion = req.cropRegion
-            )
 
-            when (res) {
-                is PreviewResult.Success -> {
-                    val bitmap = withContext(Dispatchers.IO) {
-                        decodeSampledBitmap(res.previewPath, 1080)
-                    }
-                    stateFlow.update {
-                        it.copy(
-                            editorSourceBitmap = it.editorSourceBitmap ?: bitmap,
-                            editorPreviewBitmap = bitmap,
-                            editorPreviewPath = res.previewPath,
-                            editorExecutionTimeMs = res.executionTimeMs,
-                            isEditorProcessing = false,
-                            editorCommittedSnapshot = currentSnapshot()
-                        )
-                    }
-                    triggerAutoSave()
+        stateFlow.update { it.copy(isEditorProcessing = true) }
+        val res = bridgeRepository.generateEditorPreview(
+            srcPath = req.srcPath,
+            lutSize = stateFlow.value.lutSize,
+            intensity = req.intensity,
+            lumaLock = req.lumaLock,
+            neutralAxisLock = req.neutralAxisLock,
+            skinToneLock = req.skinToneLock,
+            extremesRolloff = req.extremesRolloff,
+            spatial3d = req.spatial3d,
+            exposure = req.exposure,
+            contrast = req.contrast,
+            highlights = req.highlights,
+            shadows = req.shadows,
+            temperature = req.temperature,
+            tint = req.tint,
+            vibrance = req.vibrance,
+            saturation = req.saturation,
+            clarity = req.clarity,
+            sharpen = req.sharpen,
+            grain = req.grain,
+            customLutPath = req.customLutPath,
+            lightroomParams = req.lightroomParams,
+            cropRegion = req.cropRegion
+        )
+
+        // Drop stale results if a newer request already completed
+        if (reqId < throttler.latestCompletedRequestId) {
+            return null
+        }
+
+        when (res) {
+            is PreviewResult.Success -> {
+                val bitmap = withContext(Dispatchers.IO) {
+                    decodeSampledBitmap(res.previewPath, 1080)
                 }
-                is PreviewResult.Error -> {
-                    stateFlow.update {
-                        it.copy(
-                            isEditorProcessing = false,
-                            errorMessage = if (res.customMessage != null) UiText.DynamicString(res.customMessage) else res.error.uiText
-                        )
-                    }
+                stateFlow.update {
+                    it.copy(
+                        editorSourceBitmap = it.editorSourceBitmap ?: bitmap,
+                        editorPreviewBitmap = bitmap,
+                        editorPreviewPath = res.previewPath,
+                        editorExecutionTimeMs = res.executionTimeMs,
+                        isEditorProcessing = false,
+                        // Delta GPU = P_n - P_k: setting committed snapshot to P_k ensures seamless GPU transition
+                        editorCommittedSnapshot = req.toSnapshot(it.editorCustomLutName)
+                    )
                 }
+                triggerAutoSave()
+                return (res.executionTimeMs).toLong()
+            }
+            is PreviewResult.Error -> {
+                stateFlow.update {
+                    it.copy(
+                        isEditorProcessing = false,
+                        errorMessage = if (res.customMessage != null) UiText.DynamicString(res.customMessage) else res.error.uiText
+                    )
+                }
+                return null
             }
         }
     }

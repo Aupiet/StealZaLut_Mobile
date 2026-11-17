@@ -1,0 +1,26 @@
+{
+  "format": "stealzalut.recipe",
+  "version": 2,
+  "analysis_id": "golden42",
+  "global": {
+    "mix": 0.85,
+    "zone_separation": 2.0
+  },
+  "mode": "zones",
+  "links": [
+    {
+      "source_zone": 1,
+      "targets": {
+        "2": 0.7,
+        "3": 0.3
+      },
+      "strength": 0.85,
+      "luminance_strength": 1.0,
+      "chroma_strength": 1.0
+    },
+    {
+      "source_zone": 3,
+      "keep": true
+    }
+  ]
+}

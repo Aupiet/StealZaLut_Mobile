@@ -154,13 +154,17 @@ class PythonBridgeRepository(private val context: Context) {
         preserveLuminance: Float = com.stealzalut.mobile.core.AppConstants.PRESERVE_LUMINANCE_DEFAULT,
         skinProtection: Float = com.stealzalut.mobile.core.AppConstants.SKIN_PROTECTION_DEFAULT,
         smoothSigma: Float = com.stealzalut.mobile.core.AppConstants.SMOOTH_SIGMA_DEFAULT,
-        neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT
+        neutralLock: Float = com.stealzalut.mobile.core.AppConstants.NEUTRAL_LOCK_DEFAULT,
+        zoneOverrides: Map<String, Int>? = null
     ): PreviewResult = withContext(pythonDispatcher) {
         suspendRunCatching {
             val py = PythonRuntime.ensureStarted(context)
             val bridge = py.getModule("stealzalut.bridge")
 
             val previewOutputFile = lruCacheManager.createPreviewFile("preview_")
+            val zoneOverridesJson = if (!zoneOverrides.isNullOrEmpty()) {
+                org.json.JSONObject(zoneOverrides).toString()
+            } else null
             val pyResult: PyObject = bridge.callAttr(
                 "process_preview",
                 srcPath,
@@ -172,7 +176,8 @@ class PythonBridgeRepository(private val context: Context) {
                 preserveLuminance.toDouble(),
                 skinProtection.toDouble(),
                 smoothSigma.toDouble(),
-                neutralLock.toDouble()
+                neutralLock.toDouble(),
+                zoneOverridesJson
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -213,7 +218,8 @@ class PythonBridgeRepository(private val context: Context) {
         whites: Float = 0.0f,
         blacks: Float = 0.0f,
         vibrance: Float = 0.0f,
-        saturation: Float = 0.0f
+        saturation: Float = 0.0f,
+        zoneOverrides: Map<String, Int>? = null
     ): CubeExportResult = withContext(pythonDispatcher) {
         suspendRunCatching {
             val py = PythonRuntime.ensureStarted(context)
@@ -225,6 +231,9 @@ class PythonBridgeRepository(private val context: Context) {
             val uniqueTag = java.util.UUID.randomUUID().toString().take(8)
             val cubeFile = File(outputDir, "StealZaLUT_${timestamp}_${uniqueTag}_${lutSize.size}.cube")
 
+            val zoneOverridesJson = if (!zoneOverrides.isNullOrEmpty()) {
+                org.json.JSONObject(zoneOverrides).toString()
+            } else null
             val pyResult: PyObject = bridge.callAttr(
                 "export_cube_file",
                 srcPath,
@@ -244,7 +253,8 @@ class PythonBridgeRepository(private val context: Context) {
                 whites.toDouble(),
                 blacks.toDouble(),
                 vibrance.toDouble(),
-                saturation.toDouble()
+                saturation.toDouble(),
+                zoneOverridesJson
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()
@@ -297,7 +307,8 @@ class PythonBridgeRepository(private val context: Context) {
         whites: Float = 0.0f,
         blacks: Float = 0.0f,
         vibrance: Float = 0.0f,
-        saturation: Float = 0.0f
+        saturation: Float = 0.0f,
+        zoneOverrides: Map<String, Int>? = null
     ): ImageExportResult = withContext(pythonDispatcher) {
         val memoryDecision = resolveExportMemory(srcPath, maxExportDim)
             ?: return@withContext ImageExportResult.Error(LutDomainError.OutOfMemoryError)
@@ -310,6 +321,9 @@ class PythonBridgeRepository(private val context: Context) {
             val timestamp = System.currentTimeMillis()
             val imageFile = File(outputDir, "StealZaLUT_Graded_${timestamp}.$ext")
 
+            val zoneOverridesJson = if (!zoneOverrides.isNullOrEmpty()) {
+                org.json.JSONObject(zoneOverrides).toString()
+            } else null
             val pyResult: PyObject = bridge.callAttr(
                 "export_graded_image",
                 srcPath,
@@ -344,7 +358,8 @@ class PythonBridgeRepository(private val context: Context) {
                 0.0,
                 null,
                 null,
-                memoryDecision.wasReducedForMemory
+                memoryDecision.wasReducedForMemory,
+                zoneOverridesJson
             )
 
             val status = pyResult.callAttr("get", "status")?.toString()

@@ -1,12 +1,12 @@
 *.iml
 .gradle
 /local.properties
-/.idea/*
-!/.idea/inspectionProfiles/
-!/.idea/inspectionProfiles/Project_Default.xml
+.idea/
 .DS_Store
 /build
 /app/build
+/engine/build
+build/
 /captures
 .externalNativeBuild
 .cxx

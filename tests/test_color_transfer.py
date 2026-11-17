@@ -379,3 +379,81 @@ class TestZonePortFoundations:
         assert model["status"] == "success"
         assert model["method"] == "zones"
         assert len(model["correspondence"]) >= 2
+
+    def test_zone_user_overrides_produce_different_lut_and_reset_restores_auto(self):
+        """User overrides alter zone transfer LUT; reset restores auto correspondence."""
+        from stealzalut.core.lut_engine import compute_lut
+
+        src = np.zeros((64, 64, 3), dtype=np.uint8)
+        src[:32, :32] = (25, 40, 80)
+        src[:32, 32:] = (130, 70, 40)
+        src[32:, :32] = (190, 180, 70)
+        src[32:, 32:] = (240, 245, 250)
+
+        ref = np.zeros((64, 64, 3), dtype=np.uint8)
+        ref[:32, :32] = (200, 30, 20)
+        ref[:32, 32:] = (30, 200, 40)
+        ref[32:, :32] = (40, 50, 210)
+        ref[32:, 32:] = (230, 220, 210)
+
+        lut_auto = compute_lut(src, ref, size=17, method="zones")
+        # Target zone 1 to reference zone 2 instead of default
+        lut_override = compute_lut(src, ref, size=17, method="zones", zone_overrides={"1": 2})
+
+        # Overridden LUT must differ from auto LUT
+        diff = np.max(np.abs(lut_auto - lut_override))
+        assert diff > 0.01, f"Expected override to alter LUT, got max diff {diff}"
+
+        # Resetting overrides restores auto LUT exactly
+        lut_reset = compute_lut(src, ref, size=17, method="zones", zone_overrides=None)
+        assert np.allclose(lut_auto, lut_reset, atol=1e-6)
+
+    def test_raw_lut_cache_keys_distinct_with_overrides(self, tmp_path):
+        """Cache keys include override hashes; cache separation between auto and overridden."""
+        from PIL import Image
+        from stealzalut.workers.transfer_worker import (
+            get_or_compute_raw_lut,
+            clear_lut_cache,
+            _RAW_LUT_CACHE,
+        )
+
+        src = np.zeros((64, 64, 3), dtype=np.uint8)
+        src[:32, :32] = (25, 40, 80)
+        src[:32, 32:] = (130, 70, 40)
+        src[32:, :32] = (190, 180, 70)
+        src[32:, 32:] = (240, 245, 250)
+
+        ref = np.zeros((64, 64, 3), dtype=np.uint8)
+        ref[:32, :32] = (200, 30, 20)
+        ref[:32, 32:] = (30, 200, 40)
+        ref[32:, :32] = (40, 50, 210)
+        ref[32:, 32:] = (230, 220, 210)
+
+        src_path = str(tmp_path / "cache_src.png")
+        ref_path = str(tmp_path / "cache_ref.png")
+        Image.fromarray(src).save(src_path)
+        Image.fromarray(ref).save(ref_path)
+
+        clear_lut_cache()
+
+        # 1. Compute auto LUT
+        lut1 = get_or_compute_raw_lut(src_path, ref_path, method="zones", lut_size=17, zone_overrides=None)
+        assert len(_RAW_LUT_CACHE) == 1
+        key_auto = list(_RAW_LUT_CACHE.keys())[0]
+        # Auto key has empty override hash
+        assert key_auto[-1] == ""
+
+        # 2. Compute overridden LUT
+        lut2 = get_or_compute_raw_lut(src_path, ref_path, method="zones", lut_size=17, zone_overrides='{"1": 2}')
+        assert len(_RAW_LUT_CACHE) == 2
+        key_override = list(_RAW_LUT_CACHE.keys())[1]
+        assert key_override[-1] != ""
+        assert key_override != key_auto
+
+        # LUTs must be different
+        assert not np.allclose(lut1, lut2, atol=1e-3)
+
+        # 3. Retrieve auto LUT again from cache
+        lut_cached = get_or_compute_raw_lut(src_path, ref_path, method="zones", lut_size=17, zone_overrides=None)
+        assert len(_RAW_LUT_CACHE) == 2
+        assert np.array_equal(lut1, lut_cached)

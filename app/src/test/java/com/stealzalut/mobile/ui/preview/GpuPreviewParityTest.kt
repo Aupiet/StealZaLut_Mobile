@@ -246,4 +246,98 @@ class GpuPreviewParityTest {
             "Best of three runs for 100k pixels took ${bestTimingMs}ms (expected < 250ms on CPU)"
         )
     }
+
+    @Test
+    fun `point tone curve 1D LUT evaluation shifts pixel values according to spline`() {
+        val currTone = com.stealzalut.mobile.data.model.ToneCurveModel(
+            mode = "point",
+            rgbPoints = listOf(0.0f to 0.0f, 0.5f to 0.7f, 1.0f to 1.0f)
+        )
+        val commTone = com.stealzalut.mobile.data.model.ToneCurveModel() // Identity
+
+        val luts = GpuPreviewEngine.computePointCurveLuts(currTone, commTone)
+        org.junit.jupiter.api.Assertions.assertNotNull(luts)
+
+        val deltas = GpuPreviewDeltas(
+            hasPointCurve = true,
+            pointCurveLutR = luts!!.first,
+            pointCurveLutG = luts.second,
+            pointCurveLutB = luts.third
+        )
+        assertFalse(deltas.isZero)
+
+        // Midtone neutral (0.5, 0.5, 0.5) should be boosted towards 0.7
+        val midtone = floatArrayOf(0.5f, 0.5f, 0.5f)
+        val evalMidtone = GpuPreviewEngine.evaluatePixel(midtone, deltas)
+        assertTrue(evalMidtone[0] > 0.65f, "Midtone R should be boosted above 0.65f, was ${evalMidtone[0]}")
+        assertTrue(evalMidtone[1] > 0.65f, "Midtone G should be boosted above 0.65f, was ${evalMidtone[1]}")
+        assertTrue(evalMidtone[2] > 0.65f, "Midtone B should be boosted above 0.65f, was ${evalMidtone[2]}")
+
+        // Pure black 0.0 and pure white 1.0 remain intact
+        val black = floatArrayOf(0f, 0f, 0f)
+        val evalBlack = GpuPreviewEngine.evaluatePixel(black, deltas)
+        assertEquals(0f, evalBlack[0], 1e-4f)
+
+        val white = floatArrayOf(1f, 1f, 1f)
+        val evalWhite = GpuPreviewEngine.evaluatePixel(white, deltas)
+        assertEquals(1f, evalWhite[0], 1e-4f)
+    }
+
+    @Test
+    fun `Point Color evaluation selectively alters target hue while preserving distant colors`() {
+        // Target red patch: 0.76, 0.33, 0.38
+        val targetHsl = GpuPreviewEngine.rgbToHsl(0.76f, 0.33f, 0.38f)
+
+        val pointColorDeltas = GpuPreviewDeltas(
+            pointColorActive = true,
+            pointColorTargetHsl = targetHsl,
+            pointColorHueShift = 25f,
+            pointColorSatShift = 30f,
+            pointColorLumShift = 0f,
+            pointColorRange = 50f
+        )
+        assertFalse(pointColorDeltas.isZero)
+
+        // Red patch (index 8: 0.76, 0.33, 0.38)
+        val redPatch = floatArrayOf(0.76f, 0.33f, 0.38f)
+        val evalRed = GpuPreviewEngine.evaluatePixel(redPatch, pointColorDeltas)
+        val origRedHsl = GpuPreviewEngine.rgbToHsl(redPatch[0], redPatch[1], redPatch[2])
+        val evalRedHsl = GpuPreviewEngine.rgbToHsl(evalRed[0], evalRed[1], evalRed[2])
+
+        assertTrue(evalRedHsl[1] > origRedHsl[1], "Target red saturation should increase")
+
+        // Blue patch (index 12: 0.18, 0.24, 0.57) should remain unchanged
+        val bluePatch = floatArrayOf(0.18f, 0.24f, 0.57f)
+        val evalBlue = GpuPreviewEngine.evaluatePixel(bluePatch, pointColorDeltas)
+        assertEquals(bluePatch[0], evalBlue[0], 0.01f)
+        assertEquals(bluePatch[1], evalBlue[1], 0.01f)
+        assertEquals(bluePatch[2], evalBlue[2], 0.01f)
+    }
+
+    @Test
+    fun `eye toggle off for tone curve inverts committed curve back to linear`() {
+        val committedPointCurve = com.stealzalut.mobile.data.model.ToneCurveModel(
+            mode = "point",
+            rgbPoints = listOf(0.0f to 0.0f, 0.5f to 0.7f, 1.0f to 1.0f)
+        )
+        // When toggle is disabled, currTone is default identity ToneCurveModel()
+        val disabledTone = com.stealzalut.mobile.data.model.ToneCurveModel()
+
+        val cancelingLuts = GpuPreviewEngine.computePointCurveLuts(disabledTone, committedPointCurve)
+        org.junit.jupiter.api.Assertions.assertNotNull(cancelingLuts)
+
+        val deltas = GpuPreviewDeltas(
+            hasPointCurve = true,
+            pointCurveLutR = cancelingLuts!!.first,
+            pointCurveLutG = cancelingLuts.second,
+            pointCurveLutB = cancelingLuts.third
+        )
+
+        // If the committed image had the boosted midtone (~0.7), the canceling LUT should restore it back to ~0.5
+        val boostedMidtone = floatArrayOf(0.7f, 0.7f, 0.7f)
+        val restoredMidtone = GpuPreviewEngine.evaluatePixel(boostedMidtone, deltas)
+        assertEquals(0.5f, restoredMidtone[0], 0.02f)
+        assertEquals(0.5f, restoredMidtone[1], 0.02f)
+        assertEquals(0.5f, restoredMidtone[2], 0.02f)
+    }
 }

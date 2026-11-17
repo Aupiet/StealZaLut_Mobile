@@ -26,6 +26,7 @@ from stealzalut.core.pipeline import (
     Step2Params,
     Step3Params,
     apply_step3_color_grading,
+    apply_step3_spatial_effects,
     bake_full_pipeline_lut,
 )
 from stealzalut.utils.image_io import (
@@ -71,12 +72,15 @@ def run_export_pipeline(
     grain: float = 0.0,
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute the full WYSIWYG LUT-export pipeline.
 
     Computes or retrieves cached raw LUT, bakes Stage 2 refinement and Stage 3
     colorimetric post-grading directly into the 3D grid, and writes an Adobe .cube file.
     """
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     start: float = time.monotonic()
 
     if isinstance(lr_settings, str) and lr_settings.strip():
@@ -128,6 +132,7 @@ def run_export_pipeline(
                 lut_size=lut_size,
                 preserve_luminance=eff_luma,
                 soft_clip=True,
+                zone_overrides=zone_overrides,
             )
         else:
             # Standalone photo editor mode (no reference image)
@@ -206,8 +211,11 @@ def run_image_export_pipeline(
     custom_lut_path: Optional[str] = None,
     lr_settings: Optional[Any] = None,
     pre_downscale: bool = False,
+    zone_overrides: Optional[Union[str, Dict[Union[str, int], int]]] = None,
 ) -> Dict[str, Any]:
     """Execute high-resolution image export with absolute WYSIWYG fidelity."""
+    if not isinstance(lut_size, int) or isinstance(lut_size, bool) or lut_size is None or lut_size <= 0:
+        lut_size = DEFAULT_LUT_SIZE
     start: float = time.monotonic()
 
     if isinstance(lr_settings, str) and lr_settings.strip():
@@ -258,6 +266,7 @@ def run_image_export_pipeline(
                 lut_size=lut_size,
                 preserve_luminance=eff_luma,
                 soft_clip=True,
+                zone_overrides=zone_overrides,
             )
         else:
             raw_lut = generate_identity_lattice(lut_size)
@@ -302,14 +311,14 @@ def run_image_export_pipeline(
         del src_work, baked_lut
 
         # 6. Apply 2D spatial effects (clarity, sharpen, grain, crop & straighten)
+        # Color grading is already baked in the 3D LUT (WYSIWYG guarantee)
         if lr_settings is not None or clarity > 1e-4 or sharpen > 1e-4 or grain > 1e-4:
             from stealzalut.utils.image_io import to_float32, to_uint8
 
             graded_f = to_float32(graded)
-            graded_f = apply_step3_color_grading(
+            graded_f = apply_step3_spatial_effects(
                 graded_f,
                 params=step3,
-                is_lut_baking=False,
                 lr_settings=lr_settings,
             )
             graded = to_uint8(graded_f)

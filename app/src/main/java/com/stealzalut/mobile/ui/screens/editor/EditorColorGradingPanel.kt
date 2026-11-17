@@ -187,10 +187,10 @@ fun EditorColorGradingPanel(
                         // Generous Interactive Chromatic Color Wheel
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(150.dp)
+                            modifier = Modifier.size(AppDimens.ColorWheelSize)
                         ) {
                             // Outer Halo Ring
-                            Canvas(modifier = Modifier.size(150.dp)) {
+                            Canvas(modifier = Modifier.size(AppDimens.ColorWheelSize)) {
                                 if (currentSat > 1f) {
                                     drawCircle(
                                         color = activeTintColor.copy(alpha = 0.25f),
@@ -202,7 +202,7 @@ fun EditorColorGradingPanel(
 
                             Canvas(
                                 modifier = Modifier
-                                    .size(140.dp)
+                                    .size(AppDimens.ColorWheelCanvasSize)
                                     .pointerInput(selectedTab) {
                                         detectTapGestures(
                                             onDoubleTap = {
@@ -317,7 +317,7 @@ fun EditorColorGradingPanel(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(AppDimens.ColorWheelTabIconSize)
                                         .clip(CircleShape)
                                         .background(activeTintColor)
                                         .border(AppDimens.BorderMedium, ColorCardReference.WhiteStep.copy(alpha = 0.6f), CircleShape)

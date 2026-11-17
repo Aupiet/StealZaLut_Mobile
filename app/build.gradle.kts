@@ -56,6 +56,10 @@ android {
             }
         }
     }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+    }
     buildFeatures {
         compose = true
     }

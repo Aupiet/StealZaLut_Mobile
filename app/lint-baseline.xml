@@ -1,0 +1,2003 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.5.0" type="baseline" client="gradle" dependencies="false" name="AGP (9.5.0)" variant="all" version="9.5.0">
+
+    <issue
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks reference invalid APIs; these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.lifecycle.lint.LifecycleRuntimeIssueRegistry`)&#xA;which contains some references to invalid API:&#xA;org.jetbrains.kotlin.asJava.elements.KtLightModifierList#getKotlinOrigin(): org.jetbrains.kotlin.psi.KtModifierList&#xA;(Referenced from androidx/lifecycle/lint/LifecycleWhenChecksKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`UnsafeLifecycleWhenUsage`,`RepeatOnLifecycleWrongUsage`&#xA;&#xA;To use this lint check, upgrade to a more recent version&#xA;of the library.">
+        <location
+            file="$GRADLE_USER_HOME/caches/9.6.0/transforms/a0d73de8df0e0b6aeda9e33f2fdfbffc/transformed/lifecycle-runtime-release/jars/lint.jar"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="            subtitle = &quot;$currentLangLabel • Cache: ${String.format(&quot;%.1f&quot;, cacheSizeMb)} Mo&quot;,"
+        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/SettingsScreen.kt"
+            line="285"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="ExifInterface"
+        message="Avoid using `android.media.ExifInterface`; use `androidx.exifinterface.media.ExifInterface` instead"
+        errorLine1="import android.media.ExifInterface"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="12"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="ExifInterface"
+        message="Avoid using `android.media.ExifInterface`; use `androidx.exifinterface.media.ExifInterface` instead"
+        errorLine1="            val exif = ExifInterface(path)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="632"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="ExifInterface"
+        message="Avoid using `android.media.ExifInterface`; use `androidx.exifinterface.media.ExifInterface` instead"
+        errorLine1="                val exif = try { ExifInterface(path) } catch (e: Throwable) { null }"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="685"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="OldTargetApi"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
+        errorLine1="        targetSdk = 34"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="16"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `allowNativeHeapPointerTagging` is only used in API level 30 and higher (current min is 24)"
+        errorLine1="        android:allowNativeHeapPointerTagging=&quot;false&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="11"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `memtagMode` is only used in API level 31 and higher (current min is 24)"
+        errorLine1="        android:memtagMode=&quot;off&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="12"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `localeConfig` is only used in API level 33 and higher (current min is 24)"
+        errorLine1="        android:localeConfig=&quot;@xml/locales_config&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="18"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="QueryPermissionsNeeded"
+        message="Consider adding a `&lt;queries>` declaration to your manifest when calling this method; see https://g.co/dev/packagevisibility for details"
+        errorLine1="            if (context.packageManager.queryIntentActivities(chooser, 0).isNotEmpty() ||"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="302"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="QueryPermissionsNeeded"
+        message="Consider adding a `&lt;queries>` declaration to your manifest when calling this method; see https://g.co/dev/packagevisibility for details"
+        errorLine1="                intent.resolveActivity(context.packageManager) != null) {"
+        errorLine2="                       ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="303"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="RedundantLabel"
+        message="Redundant label can be removed"
+        errorLine1="            android:label=&quot;@string/app_name&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="26"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of Gradle than 9.6.0 is available: 9.9.1"
+        errorLine1="distributionUrl=https\://services.gradle.org/distributions/gradle-9.6.0-bin.zip"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/wrapper/gradle-wrapper.properties"
+            line="5"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 9.5.0 is available: 9.5.1"
+        errorLine1="agp = &quot;9.5.0&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.10.1 is available: 1.19.1"
+        errorLine1="coreKtx = &quot;1.10.1&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="3"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.appcompat:appcompat than 1.7.0 is available: 1.8.0"
+        errorLine1="appcompat = &quot;1.7.0&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="4"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.ext:junit than 1.1.5 is available: 1.3.0"
+        errorLine1="junitVersion = &quot;1.1.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="6"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.espresso:espresso-core than 3.5.1 is available: 3.7.0"
+        errorLine1="espressoCore = &quot;3.5.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="12"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.6.1 is available: 2.11.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.6.1&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="13"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.6.1 is available: 2.11.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.6.1&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="13"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.8.0 is available: 1.13.0"
+        errorLine1="activityCompose = &quot;1.8.0&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="14"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2026.02.01 is available: 2026.09.00"
+        errorLine1="composeBom = &quot;2026.02.01&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="16"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.json:json than 20240303 is available: 20260814"
+        errorLine1="    testImplementation(&quot;org.json:json:20240303&quot;)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="101"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.junit.jupiter:junit-jupiter than 5.10.2 is available: 6.1.3"
+        errorLine1="junit5 = &quot;5.10.2&quot;"
+        errorLine2="         ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="7"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of io.mockk:mockk than 1.13.10 is available: 1.14.12"
+        errorLine1="mockk = &quot;1.13.10&quot;"
+        errorLine2="        ~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="8"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of app.cash.turbine:turbine than 1.2.0 is available: 1.2.1"
+        errorLine1="turbine = &quot;1.2.0&quot;"
+        errorLine2="          ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="9"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-test than 1.8.0 is available: 1.11.0"
+        errorLine1="coroutinesTest = &quot;1.8.0&quot;"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="10"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.jetbrains.kotlinx:kotlinx-collections-immutable than 0.3.8 is available: 0.5.2"
+        errorLine1="immutableCollections = &quot;0.3.8&quot;"
+        errorLine2="                       ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="11"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.jetbrains.kotlin.plugin.compose than 2.2.10 is available: 2.4.21"
+        errorLine1="kotlin = &quot;2.2.10&quot;"
+        errorLine2="         ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="15"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.junit.platform:junit-platform-launcher than 1.10.2 is available: 6.1.3"
+        errorLine1="junit-platform-launcher = { group = &quot;org.junit.platform&quot;, name = &quot;junit-platform-launcher&quot;, version = &quot;1.10.2&quot; }"
+        errorLine2="                                                                                                      ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/StealZaLut_Mobile/gradle/libs.versions.toml"
+            line="23"
+            column="103"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                            context.startActivity(Intent.createChooser(intent, context.getString(R.string.crash_report_share)))"
+        errorLine2="                                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/components/CrashReportPrompt.kt"
+            line="52"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    resolveString = { context.getString(it) }"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/guide/FeatureGuideScreen.kt"
+            line="92"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    feedback = context.getString(R.string.maintenance_import_success)"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="111"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    feedback = context.getString(R.string.maintenance_import_failed)"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="115"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                                feedback = context.getString(R.string.maintenance_share_failed)"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="181"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                                        feedback = context.getString(R.string.maintenance_share_failed)"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="191"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                                            feedback = context.getString(R.string.maintenance_read_failed)"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="272"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                                            feedback = context.getString(R.string.maintenance_share_failed)"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="282"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                            feedback = context.getString(R.string.maintenance_share_failed)"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="337"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                        feedback = context.getString("
+        errorLine2="                                   ^">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="366"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                        feedback = context.getString("
+        errorLine2="                                   ^">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="393"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/components/DoubleViewComparison.kt"
+            line="77"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorCropOverlay.kt"
+            line="529"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorCropOverlay.kt"
+            line="938"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorEmptyState.kt"
+            line="82"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorExportDialog.kt"
+            line="63"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorPresetsTab.kt"
+            line="48"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/components/ExportActionBar.kt"
+            line="49"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioLandingMenu.kt"
+            line="57"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioStep1Source.kt"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioStep2Style.kt"
+            line="76"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioStep3Parameters.kt"
+            line="124"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioStep5Result.kt"
+            line="68"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioTopBar.kt"
+            line="60"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/components/SzlAccordionSection.kt"
+            line="49"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="DiscouragedApi"
+        message="Fixed screen orientations will be ignored in most cases, starting from Android 16. Android is moving toward a model where apps are expected to adapt to various orientations, display sizes, and aspect ratios."
+        errorLine1="            android:screenOrientation=&quot;portrait&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="28"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_subtle`; missing conversion character in &apos;`% S`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_subtle&quot;>25% Subtil&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="110"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_subtle`; missing conversion character in &apos;`% S`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_subtle&quot;>25% Subtle&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_subtle`; missing conversion character in &apos;`% S`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_subtle&quot;>25% Subtle&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_balanced`; missing conversion character in &apos;`% B`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_balanced&quot;>50% Balanced&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_balanced`; missing conversion character in &apos;`% B`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_balanced&quot;>50% Balanced&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Incorrect formatting string `studio_quick_chip_full`; missing conversion character in &apos;`% C`&apos;?"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_full&quot;>100% Complet&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="113"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_step_3_lut_params_title&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_step_3_lut_params_title&quot;>LUT Parameters&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="104"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_quick_chip_subtle&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_subtle&quot;>25% Subtle&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_quick_chip_balanced&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_balanced&quot;>50% Balanced&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_quick_chip_punchy&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_punchy&quot;>75% Punchy&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="112"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_quick_chip_full&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_full&quot;>100% Full&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="113"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_guide_light_title&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_guide_light_title&quot;>Tonal &amp;amp; Exposure Control&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="114"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_guide_light_desc&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_guide_light_desc&quot;>Adjust transfer strength and preserve native source luminance to prevent underexposure.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="115"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_guide_color_title&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_guide_color_title&quot;>Chromatic Harmony&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="116"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_guide_color_desc&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_guide_color_desc&quot;>Preserve natural skin tones and lock neutral whites/grays. 3D spatial smoothing eliminates gradient banding.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="117"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_lut_17_desc&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_lut_17_desc&quot;>4,913 nodes • Ultra-light mobile export (~50 KB) optimized for social media and fast previews.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="118"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_lut_33_desc&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_lut_33_desc&quot;>35,937 nodes • Recommended industry standard (DaVinci Resolve, Premiere Pro). Optimal quality/size balance.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="119"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;studio_lut_64_desc&quot; is not translated in &quot;es&quot; (Spanish)"
+        errorLine1="    &lt;string name=&quot;studio_lut_64_desc&quot;>262,144 nodes • Cinema master precision. Continuous gradients without banding even on 10-bit HDR displays.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="120"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="Repeated word &quot;in&quot; in message: possible typo"
+        errorLine1="    &lt;string name=&quot;maintenance_native_crash_note&quot;>Native signals such as SIGSEGV may not appear in in-app crash reports. Import the full tombstone or logcat file here to inspect and share it.&lt;/string>"
+        errorLine2="                                                                                               ~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="290"
+            column="96"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;crash&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;maintenance_files_title&quot;>Diagnostic files (%1$d crash reports, %2$d imported)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="289"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `studio_quick_chip_balanced`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_balanced&quot;>50% Équilibré&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="111"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="ChromeOsAbiSupport"
+        message="Missing x86_64 ABI support for ChromeOS"
+        errorLine1="                abiFilters += listOf(&quot;arm64-v8a&quot;)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="35"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; `SDK_INT` is always >= 24"
+        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/delegate/GradingPipelineDelegate.kt"
+            line="740"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var lastTapTime by remember { mutableStateOf(0L) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/editor/EditorCropOverlay.kt"
+            line="552"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var refreshToken by remember { mutableStateOf(0) }"
+        errorLine2="                                   ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="93"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.guide_demo_style_transfer` appears to be unused">
+        <location
+            file="src/main/res/drawable-nodpi/guide_demo_style_transfer.jpg"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_landing_workflow_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_landing_workflow_title&quot;>Color Transfer Workflow&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="57"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_landing_step1_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_landing_step1_desc&quot;>1. Source Photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="58"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_landing_step2_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_landing_step2_desc&quot;>2. Reference Style&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_landing_step3_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_landing_step3_desc&quot;>3. Adjustments &amp;amp; Zones&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_landing_step4_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_landing_step4_desc&quot;>4. 3D LUT Render&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_1_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_1_subtitle&quot;>Transfer the chromatic signature of a film&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="66"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_1_badge` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_1_badge&quot;>Source A&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="68"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_1_btn_reset` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_1_btn_reset&quot;>Reset photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_1_btn_next` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_1_btn_next&quot;>Continue to Reference (2/5) →&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="72"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_2_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_2_subtitle&quot;>Choose an extracted cinema palette or your own photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_2_btn_back` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_2_btn_back&quot;>Back&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="82"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_2_btn_next` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_2_btn_next&quot;>Continue to Parameters (3/5) →&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="83"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_3_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_3_title&quot;>Transfer Adjustment&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_3_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_3_subtitle&quot;>Dosage and skin tones preservation&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="86"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_3_preview_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_3_preview_title&quot;>Live Preview (WYSIWYG)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="92"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_3_computing_badge` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_3_computing_badge&quot;>Rendering…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="93"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_zones_description` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_zones_description&quot;>Segment both images into color zones with deterministic Oklab k-means. The result is used to inspect and match the palette.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="100"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_zones_reanalyze` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_zones_reanalyze&quot;>Analyze&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="102"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_zones_generating_mask` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_zones_generating_mask&quot;>Generating zone mask…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_quick_chip_subtle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_subtle&quot;>25% Subtle&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_quick_chip_balanced` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_balanced&quot;>50% Balanced&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_quick_chip_punchy` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_punchy&quot;>75% Punchy&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="112"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_quick_chip_full` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_quick_chip_full&quot;>100% Full&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="113"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_guide_light_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_guide_light_title&quot;>Tonal &amp;amp; Exposure Control&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="114"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_guide_light_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_guide_light_desc&quot;>Adjust transfer strength and preserve native source luminance to prevent underexposure.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="115"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_guide_color_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_guide_color_title&quot;>Chromatic Harmony&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="116"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_guide_color_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_guide_color_desc&quot;>Preserve natural skin tones and lock neutral whites/grays. 3D spatial smoothing eliminates gradient banding.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="117"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_lut_17_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_lut_17_desc&quot;>4,913 nodes • Ultra-light mobile export (~50 KB) optimized for social media and fast previews.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="118"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_lut_33_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_lut_33_desc&quot;>35,937 nodes • Recommended industry standard (DaVinci Resolve, Premiere Pro). Optimal quality/size balance.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="119"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.studio_lut_64_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;studio_lut_64_desc&quot;>262,144 nodes • Cinema master precision. Continuous gradients without banding even on 10-bit HDR displays.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="120"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_4_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_subtitle&quot;>High-fidelity 64-bit colorimetric computation&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="123"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_5_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_5_title&quot;>Colorimetric Masterpiece&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="128"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_5_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_5_subtitle&quot;>Blade Runner 2049 signature applied&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="129"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.wizard_step_5_btn_back` appears to be unused"
+        errorLine1="    &lt;string name=&quot;wizard_step_5_btn_back&quot;>Modify parameters (3/5)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="131"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.comparison_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;comparison_title&quot;>Interactive Comparison&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="144"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_developer_diagnostics_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_developer_diagnostics_title&quot;>Recent local diagnostics&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="259"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_developer_diagnostics_empty` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_developer_diagnostics_empty&quot;>No diagnostic events recorded this session.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="260"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_developer_diagnostics_entry` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_developer_diagnostics_entry&quot;>%1$s · %2$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="261"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_widescreen` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_widescreen&quot;>16:9&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="520"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_zoom_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_zoom_title&quot;>Zoom Selection&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="525"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_pan_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_pan_title&quot;>Move Selection&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="526"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_center` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_center&quot;>Center&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="527"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_pan_up` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_pan_up&quot;>Up&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="528"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_pan_down` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_pan_down&quot;>Down&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="529"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_pan_left` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_pan_left&quot;>Left&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="530"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_pan_right` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_pan_right&quot;>Right&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="531"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_zoom_in` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_zoom_in&quot;>Zoom In&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="532"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_zoom_out` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_zoom_out&quot;>Zoom Out&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="533"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_reset_zoom` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_reset_zoom&quot;>1x&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="534"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.editor_empty_headline` appears to be unused"
+        errorLine1="    &lt;string name=&quot;editor_empty_headline&quot;>Sublime Your Photographs&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="574"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.editor_empty_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;editor_empty_subtitle&quot;>Develop your RAW or JPEG files with the power of analog emulation.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="575"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.editor_empty_btn` appears to be unused"
+        errorLine1="    &lt;string name=&quot;editor_empty_btn&quot;>Choose a Photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="576"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_demo_before` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_demo_before&quot;>BEFORE&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="625"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_demo_after` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_demo_after&quot;>AFTER&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="626"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_demo_toggle_photo` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_demo_toggle_photo&quot;>Real photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="730"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_demo_toggle_schematic` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_demo_toggle_schematic&quot;>Technical diagram&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="731"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_sample_depart_label` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_sample_depart_label&quot;>Starting photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="732"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.guide_sample_graded_label` appears to be unused"
+        errorLine1="    &lt;string name=&quot;guide_sample_graded_label&quot;>Graded photo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="733"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_inspector_mask_preview` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_inspector_mask_preview&quot;>Zone Mask&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="770"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_mask_mode_color` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_mask_mode_color&quot;>Switch to Color (Isolation)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="771"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_mask_mode_bw` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_mask_mode_bw&quot;>Switch to B&amp;amp;W&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="772"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_mask_active_label` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_mask_active_label&quot;>Displaying zone mask on main image&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="773"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_mask_toggle_btn` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_mask_toggle_btn&quot;>Toggle mask on image&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="774"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_inspector_zone_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_inspector_zone_title&quot;>Zone — %1$d%% of pixels&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="780"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_inspector_strength` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_inspector_strength&quot;>Transfer strength: %1$d%%&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="781"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_link_origin_auto` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_link_origin_auto&quot;>Link set automatically&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="783"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_link_origin_user` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_link_origin_user&quot;>Link set by user&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="784"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_link_origin_ai` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_link_origin_ai&quot;>Link set by AI&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="785"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.zone_link_overridden` appears to be unused"
+        errorLine1="    &lt;string name=&quot;zone_link_overridden&quot;>&amp;#9888; Manually overridden&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="786"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UsableSpace"
+        message="Consider also using `StorageManager#getAllocatableBytes` and `allocateBytes` which will consider clearable cached data"
+        errorLine1="        freeStorage = formatFileSize(context.filesDir.usableSpace),"
+        errorLine2="                                                      ~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/MaintenanceMonitorScreen.kt"
+            line="500"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Paso 1/3: Analizando distribuciones RGB...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="112"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_2&quot;>Paso 2/3: Calculando matriz de covarianza &amp;amp; alineación...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="113"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_3&quot;>Paso 3/3: Finalizando matriz de transferencia...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="114"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Étape 1/3 : Analyse des distributions chromatiques RGB...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="124"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Step 1/3: Analyzing RGB color distributions...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="124"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_2&quot;>Étape 2/3 : Calcul de la matrice de covariance &amp;amp; alignement...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="125"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_2&quot;>Step 2/3: Computing covariance matrix &amp;amp; spectral alignment...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="125"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_3&quot;>Étape 3/3 : Finalisation de la matrice de transfert...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="126"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_3&quot;>Step 3/3: Finalizing transfer matrix...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="126"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;guide_search_placeholder&quot;>Buscar una herramienta...&lt;/string>"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="603"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;guide_search_placeholder&quot;>Rechercher un outil...&lt;/string>"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="615"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;guide_search_placeholder&quot;>Search a tool...&lt;/string>"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="615"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_guide_card_subtitle&quot;>Explora las 12 herramientas pro: curvas, color grading, recorte, LUTs...&lt;/string>"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="617"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_guide_card_subtitle&quot;>Explorez les 12 outils pro : courbes, color grading, recadrage, LUTs...&lt;/string>"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="629"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_guide_card_subtitle&quot;>Explore all 12 pro editing tools: curves, color grading, crop, LUTs...&lt;/string>"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="629"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="TypographyFractions"
+        message="Use fraction character ⅓ (&amp;#8531;) instead of 1/3?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Paso 1/3: Analizando distribuciones RGB...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="112"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyFractions"
+        message="Use fraction character ⅓ (&amp;#8531;) instead of 1/3?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Étape 1/3 : Analyse des distributions chromatiques RGB...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="124"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="TypographyFractions"
+        message="Use fraction character ⅓ (&amp;#8531;) instead of 1/3?"
+        errorLine1="    &lt;string name=&quot;wizard_step_4_stage_1&quot;>Step 1/3: Analyzing RGB color distributions...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="124"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        val bmp = Bitmap.createBitmap(256, 1, Bitmap.Config.ARGB_8888)"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/preview/GpuPreviewEngine.kt"
+            line="688"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        val bmp = Bitmap.createBitmap(256, 1, Bitmap.Config.ARGB_8888)"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/preview/GpuPreviewEngine.kt"
+            line="700"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="                            Color(android.graphics.Color.parseColor(cleanHex))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/PalettesScreen.kt"
+            line="402"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Bitmap.scale` instead?"
+        errorLine1="                Bitmap.createScaledBitmap(bmp, (bmp.width * factor).toInt(), (bmp.height * factor).toInt(), true).also {"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/data/repository/PresetRepository.kt"
+            line="162"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="                            Color(android.graphics.Color.parseColor(cleanHex))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/ProfileScreen.kt"
+            line="381"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/data/repository/SettingsRepository.kt"
+            line="66"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            val uri = savedUriStr?.let { Uri.parse(it) } ?: Uri.fromFile(File(savedPath))"
+        errorLine2="                                         ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/viewmodel/StealZaLutViewModel.kt"
+            line="152"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="                            Color(android.graphics.Color.parseColor(cleanHex))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/StudioStep2Style.kt"
+            line="401"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Bitmap.get` instead?"
+        errorLine1="            val pixel = bitmap.getPixel(x, y)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/components/SzlRgbHistogram.kt"
+            line="246"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="    Color(android.graphics.Color.parseColor(this))"
+        errorLine2="          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/ZonePaletteVisualization.kt"
+            line="801"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="    val c = android.graphics.Color.parseColor(this)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stealzalut/mobile/ui/screens/studio/ZonePaletteVisualization.kt"
+            line="807"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseTomlInstead"
+        message="Use version catalog instead"
+        errorLine1="    testImplementation(&quot;org.json:json:20240303&quot;)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="101"
+            column="24"/>
+    </issue>
+
+</issues>

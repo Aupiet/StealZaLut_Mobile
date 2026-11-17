@@ -14,12 +14,12 @@
 - [x] Tag `pre-golden-master` & merge --no-ff de `test/golden-master` dans `review`
 - [x] QW-1 : Suppression dépendance morte `color-matcher` (-11.9 Mo APK) mergé
 - [x] QW-2 & QW-3 : Absence warm-up SciPy & preview plafonnée 1024 px validés
+- [x] Étape 1 : Module `:engine` (Kotlin/JVM pur, `ImageEngine`, flag OFF) mergé
 
 ## En cours
-- [ ] Étape 1 : Architecture `:engine` (Kotlin/JVM pur, plugin `kotlin("jvm")`, `ImageEngine`)
+- [ ] Gate G0 : Benchmark ART / JVM release (apply_lut + flou gaussien 24 MP)
 
 ## Reste
-- [ ] Gate G0 : Benchmark ART release (apply_lut + flou gaussien sur appareil réel)
 - [ ] K1-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
 - [ ] G3 : Bascule flag ON après parité golden master
 - [ ] Préparation `chore/remove-chaquopy` (non mergée)

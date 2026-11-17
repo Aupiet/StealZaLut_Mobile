@@ -20,12 +20,12 @@
 - [x] K2 : Pipeline Lightroom (Basic, Fritsch-Carlson, HSL/Point Color, Grading, Calibration) + Auto-Edit (parité 1e-7)
 - [x] K3 : Filtres spatiaux (gaussian_blur, presence/detail, anti-OOM par bandes, parité 1e-5)
 - [x] K4 : Color transfer (reinhard, hm, mkl, mvgd, oklab), K-Means déterministe, Sinkhorn, Zones (parité ok, maxDiff ≤ 1.7e-4)
+- [x] K5 : Décodeur RAW/DNG (TIFF/DNG IFD, Deflate, Malvar-He-Cutler, matrice couleur, parité maxDiff ≤ 1.2e-7)
 
 ## En cours
-- [ ] K5 : Décodeur RAW/DNG (TIFF/DNG IFD, Deflate, Malvar-He-Cutler, matrice couleur) sur `kt/k5-raw-dng`
+- [ ] G3 : Bascule flag ON (ENGINE=kotlin) après parité golden master complète
 
 ## Reste
-- [ ] G3 : Bascule flag ON après parité golden master
 - [ ] Préparation `chore/remove-chaquopy` (non mergée)
 
 ## Décisions

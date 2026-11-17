@@ -22,12 +22,13 @@
 - [x] K4 : Color transfer (reinhard, hm, mkl, mvgd, oklab), K-Means déterministe, Sinkhorn, Zones (parité ok, maxDiff ≤ 1.7e-4)
 - [x] K5 : Décodeur RAW/DNG (TIFF/DNG IFD, Deflate, Malvar-He-Cutler, matrice couleur, parité maxDiff ≤ 1.2e-7)
 - [x] G3 : Bascule flag ON (ENGINE=kotlin) validée par parité golden master 100%
+- [x] Préparation `chore/remove-chaquopy` (isolée, non mergée, APK 4.39 Mo)
 
 ## En cours
-- [ ] Préparation `chore/remove-chaquopy` (STRICTEMENT NON MERGÉE)
+- [ ] Rapport final de mission
 
 ## Reste
-- [ ] Rapport final de mission (≤ 15 lignes)
+- [ ] Clôture de la mission (Option C accomplie)
 
 ## Décisions
 - ADR-09b (Option C) : Moteur 100 % Kotlin JVM pur par bandes + AGSL GPU

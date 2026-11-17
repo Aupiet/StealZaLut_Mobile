@@ -67,9 +67,14 @@ class KotlinLutBridge(private val config: EngineConfig) : LutBridge {
         smoothSigma: Float,
         neutralLock: Float
     ): FloatArray {
-        // Will be completed with K1 refine_and_blend_lut
-        val result = rawLut.clone()
-        return result
+        return com.stealzalut.engine.lut.LutRefiner.refineAndBlendLut(
+            rawLut = rawLut,
+            lutSize = lutSize,
+            intensity = intensity,
+            skinProtection = skinProtection,
+            smoothSigma = smoothSigma,
+            neutralLock = neutralLock
+        )
     }
 
     override fun bakePipeline(

@@ -19,12 +19,12 @@
 - [x] K1 : LUT (.cube, grille identité, apply_lut trilinéaire, blend/locks, parité 1e-7)
 - [x] K2 : Pipeline Lightroom (Basic, Fritsch-Carlson, HSL/Point Color, Grading, Calibration) + Auto-Edit (parité 1e-7)
 - [x] K3 : Filtres spatiaux (gaussian_blur, presence/detail, anti-OOM par bandes, parité 1e-5)
+- [x] K4 : Color transfer (reinhard, hm, mkl, mvgd, oklab), K-Means déterministe, Sinkhorn, Zones (parité ok, maxDiff ≤ 1.7e-4)
 
 ## En cours
-- [ ] K4 : Color transfer (reinhard, hm, mkl, mvgd, oklab), K-Means déterministe, Sinkhorn, Zones
+- [ ] K5 : Décodeur RAW/DNG (TIFF/DNG IFD, Deflate, Malvar-He-Cutler, matrice couleur) sur `kt/k5-raw-dng`
 
 ## Reste
-- [ ] K5 Portage sur branche `kt/k5-raw-dng` vers `integration/kotlin-engine`
 - [ ] G3 : Bascule flag ON après parité golden master
 - [ ] Préparation `chore/remove-chaquopy` (non mergée)
 

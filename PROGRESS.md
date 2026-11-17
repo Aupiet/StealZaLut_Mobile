@@ -21,12 +21,13 @@
 - [x] K3 : Filtres spatiaux (gaussian_blur, presence/detail, anti-OOM par bandes, parité 1e-5)
 - [x] K4 : Color transfer (reinhard, hm, mkl, mvgd, oklab), K-Means déterministe, Sinkhorn, Zones (parité ok, maxDiff ≤ 1.7e-4)
 - [x] K5 : Décodeur RAW/DNG (TIFF/DNG IFD, Deflate, Malvar-He-Cutler, matrice couleur, parité maxDiff ≤ 1.2e-7)
+- [x] G3 : Bascule flag ON (ENGINE=kotlin) validée par parité golden master 100%
 
 ## En cours
-- [ ] G3 : Bascule flag ON (ENGINE=kotlin) après parité golden master complète
+- [ ] Préparation `chore/remove-chaquopy` (STRICTEMENT NON MERGÉE)
 
 ## Reste
-- [ ] Préparation `chore/remove-chaquopy` (non mergée)
+- [ ] Rapport final de mission (≤ 15 lignes)
 
 ## Décisions
 - ADR-09b (Option C) : Moteur 100 % Kotlin JVM pur par bandes + AGSL GPU

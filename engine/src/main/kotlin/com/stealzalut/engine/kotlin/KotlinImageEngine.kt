@@ -83,8 +83,12 @@ class KotlinLutBridge(private val config: EngineConfig) : LutBridge {
         step2: Step2Params,
         step3: Step3Params
     ): FloatArray {
-        // Will be completed with K1/K2 bake_full_pipeline_lut
-        return rawLut.clone()
+        return com.stealzalut.engine.pipeline.PipelineBake.bakeFullPipelineLut(
+            rawLut = rawLut,
+            step2 = step2,
+            step3 = step3,
+            lutSize = lutSize
+        )
     }
 
     override fun exportCube(lut: FloatArray, lutSize: Int, title: String): String {

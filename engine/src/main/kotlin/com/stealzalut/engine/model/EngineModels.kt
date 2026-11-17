@@ -88,7 +88,10 @@ data class BasicSettings(
     val temp: Float = 0.0f,
     val tint: Float = 0.0f,
     val vibrance: Float = 0.0f,
-    val saturation: Float = 0.0f
+    val saturation: Float = 0.0f,
+    val texture: Float = 0.0f,
+    val clarity: Float = 0.0f,
+    val dehaze: Float = 0.0f
 )
 
 data class Point2D(val x: Float, val y: Float)
@@ -169,4 +172,14 @@ data class CalibrationSettings(
     val greenSat: Float = 0.0f,
     val blueHue: Float = 0.0f,
     val blueSat: Float = 0.0f
+)
+
+data class DetailSettings(
+    val sharpenAmount: Float = 0.0f,
+    val sharpenRadius: Float = 1.0f,
+    val sharpenDetail: Float = 25.0f,
+    val sharpenMasking: Float = 0.0f,
+    val nrLuminance: Float = 0.0f,
+    val nrLumDetail: Float = 50.0f,
+    val nrColor: Float = 0.0f
 )

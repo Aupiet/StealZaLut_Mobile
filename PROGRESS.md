@@ -1,19 +1,29 @@
 # Suivi d'Avancement StealZaLUT Mobile
 
 ## Métriques Avant / Après
-- Violations garde : 37 → 0
-- Tests Pytest : 134 → 143 passés
-- Tests unitaires Kotlin : 117 → 120 passés
-- Latence preview perçue : 200 ms (debounce fixe) → < 1 ms (GPU) / 80-600 ms adaptatif (trailing)
+- Violations garde : 0 (baseline figée)
+- Tests Pytest : 143 → 159 passés (dont 16 suites / 44 cas golden master)
+- Tests unitaires Kotlin : 120 passés
+- APK Release arm64-v8a : 100.6 Mo (105 510 388 o)
+- Démarrage à froid Chaquopy : ~1500-2500 ms (0 device adb connecté)
 
-## Tâches Réalisées
-- [x] 3a. Fix double application post-LUT (`apply_step3_spatial_effects`)
-- [x] 1. Zones overrides (`zoneUserOverrides` propagé, hash cache `_RAW_LUT_CACHE`, `with_table`)
-- [x] 2. Courbe & HSL GPU (AGSL 1D LUT $256\times 1$ Fritsch-Carlson, Point Color, eye toggles)
-- [x] 3b-c. Auto-edit idempotence (`editorSourcePath`, suppression duplication `step3*`, 1 undo)
-- [x] 4. Synchro preview (`AdaptiveThrottleLatest`, `requestId` anti-obsolescence, delta $\Delta = P_n - P_k$)
-- [x] 5. Audit UI (tokens sémantiques, 0 violation garde, zero-scroll responsive)
-- [x] 6. Analyse comparative (`ambiance` transfer mood Oklab, presse-papier `EditorClipboardHolder`)
-- [x] 7. Nettoyage code mort (suppression doublon `colorspace.py`, imports `color_space.py`)
-- [x] 8. Documentation & ADRs (ADR-08 à ADR-23, arborescence §7, chiffres mesurés, untrack `.idea`)
-- [x] Hotfix bridge : assainissement des paramètres positionnels & lut_size (TypeError NoneType résolu)
+## Fait
+- [x] Tag `pre-kotlin-engine` posé sur `review`
+- [x] Baseline mesurée (APK 100.6 Mo, 0 violation, 159 tests py, 120 tests kt)
+- [x] Étape 0 : Golden master figé (44 cas K1-K5) sur `test/golden-master`
+- [x] Tag `pre-golden-master` & merge --no-ff de `test/golden-master` dans `review`
+
+## En cours
+- [ ] Étape 1 : Architecture `:engine` (Kotlin/JVM pur, plugin `kotlin("jvm")`, `ImageEngine`)
+- [ ] Quick Win 1 : Retrait dépendance morte `color-matcher`
+
+## Reste
+- [ ] Gate G0 : Benchmark ART release (apply_lut + flou gaussien sur appareil réel)
+- [ ] K1-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
+- [ ] G3 : Bascule flag ON après parité golden master
+- [ ] Préparation `chore/remove-chaquopy` (non mergée)
+
+## Décisions
+- ADR-09b (Option C) : Moteur 100 % Kotlin JVM pur par bandes + AGSL GPU
+- Baseline lint configurée via `app/lint-baseline.xml` pour garder AGP strict sur nouveaux codes
+- Golden master stocké sous `tests/golden/` avec tolérances (float ≤ 1e-4, uint8 ≤ 1, raw ΔE ≤ 0.5)

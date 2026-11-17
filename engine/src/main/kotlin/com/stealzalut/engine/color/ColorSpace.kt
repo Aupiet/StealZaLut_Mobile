@@ -1,9 +1,6 @@
 package com.stealzalut.engine.color
 
-import kotlin.math.cbrt
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
+import kotlin.math.*
 
 object ColorSpace {
 
@@ -66,6 +63,9 @@ object ColorSpace {
         out[outOffset + 2] = bOut
     }
 
+    fun srgbToOklab(r: Float, g: Float, b: Float, out: FloatArray, outOffset: Int = 0) =
+        rgbToOklab(r, g, b, out, outOffset)
+
     // M_OKLAB_TO_LMS: [ [1.0, +0.3963377774, +0.2158037573],
     //                   [1.0, -0.1055613458, -0.0638541728],
     //                   [1.0, -0.0894841775, -1.2914855480] ]
@@ -89,5 +89,73 @@ object ColorSpace {
         out[outOffset] = linearToSrgb(linR).coerceIn(0.0f, 1.0f)
         out[outOffset + 1] = linearToSrgb(linG).coerceIn(0.0f, 1.0f)
         out[outOffset + 2] = linearToSrgb(linB).coerceIn(0.0f, 1.0f)
+    }
+
+    fun oklabToSrgb(l: Float, a: Float, b: Float, out: FloatArray, outOffset: Int = 0) =
+        oklabToRgb(l, a, b, out, outOffset)
+
+    fun inGamut(lmsR: Float, lmsG: Float, lmsB: Float): Boolean {
+        val linR = +4.0767439362f * lmsR - 3.3077115913f * lmsG + 0.2309699294f * lmsB
+        val linG = -1.2684380046f * lmsR + 2.6097574011f * lmsG - 0.3413193965f * lmsB
+        val linB = -0.0041960863f * lmsR - 0.7034186147f * lmsG + 1.7076147010f * lmsB
+        return linR in -1e-6f..1.000001f && linG in -1e-6f..1.000001f && linB in -1e-6f..1.000001f
+    }
+
+    fun gamutCompress(lab: FloatArray, iters: Int = 12): FloatArray {
+        val n = lab.size / 3
+        for (i in 0 until n) {
+            val idx = i * 3
+            val l = lab[idx].coerceIn(0f, 1f)
+            val a = lab[idx + 1]
+            val b = lab[idx + 2]
+            lab[idx] = l
+
+            val lCbrt = l + 0.3963377774f * a + 0.2158037573f * b
+            val mCbrt = l - 0.1055613458f * a - 0.0638541728f * b
+            val sCbrt = l - 0.0894841775f * a - 1.2914855480f * b
+            val l0 = lCbrt * lCbrt * lCbrt
+            val m0 = mCbrt * mCbrt * mCbrt
+            val s0 = sCbrt * sCbrt * sCbrt
+
+            if (inGamut(l0, m0, s0)) continue
+
+            var lo = 0.0f
+            var hi = 1.0f
+            for (step in 0 until iters) {
+                val mid = 0.5f * (lo + hi)
+                val testA = a * mid
+                val testB = b * mid
+                val cL = l + 0.3963377774f * testA + 0.2158037573f * testB
+                val cM = l - 0.1055613458f * testA - 0.0638541728f * testB
+                val cS = l - 0.0894841775f * testA - 1.2914855480f * testB
+                val tL = cL * cL * cL
+                val tM = cM * cM * cM
+                val tS = cS * cS * cS
+                if (inGamut(tL, tM, tS)) {
+                    lo = mid
+                } else {
+                    hi = mid
+                }
+            }
+            lab[idx + 1] = a * lo
+            lab[idx + 2] = b * lo
+        }
+        return lab
+    }
+
+    fun oklabToOklch(l: Float, a: Float, b: Float, out: FloatArray, outOffset: Int = 0) {
+        val chroma = sqrt(a * a + b * b)
+        var hue = Math.toDegrees(atan2(b.toDouble(), a.toDouble())).toFloat()
+        if (hue < 0f) hue += 360f
+        out[outOffset] = l
+        out[outOffset + 1] = chroma
+        out[outOffset + 2] = hue
+    }
+
+    fun oklchToOklab(l: Float, c: Float, h: Float, out: FloatArray, outOffset: Int = 0) {
+        val rad = Math.toRadians(h.toDouble())
+        out[outOffset] = l
+        out[outOffset + 1] = (c * cos(rad)).toFloat()
+        out[outOffset + 2] = (c * sin(rad)).toFloat()
     }
 }

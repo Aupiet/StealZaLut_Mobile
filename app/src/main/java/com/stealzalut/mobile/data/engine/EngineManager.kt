@@ -10,7 +10,7 @@ import com.stealzalut.mobile.data.bridge.PythonBridgeRepository
 object EngineManager {
     private const val PREF_KEY_ENGINE = "KEY_STEALZALUT_ENGINE"
     private var activeType: EngineType = EngineType.fromString(
-        System.getProperty("ENGINE") ?: "python"
+        System.getProperty("ENGINE") ?: "kotlin"
     )
 
     fun init(context: Context) {

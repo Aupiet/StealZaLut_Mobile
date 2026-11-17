@@ -73,7 +73,6 @@ chaquopy {
             install("numpy")
             install("Pillow")
             install("scipy")
-            install("color-matcher")
         }
     }
 }

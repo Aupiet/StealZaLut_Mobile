@@ -15,12 +15,13 @@
 - [x] QW-1 : Suppression dépendance morte `color-matcher` (-11.9 Mo APK) mergé
 - [x] QW-2 & QW-3 : Absence warm-up SciPy & preview plafonnée 1024 px validés
 - [x] Étape 1 : Module `:engine` (Kotlin/JVM pur, `ImageEngine`, flag OFF) mergé
+- [x] Gate G0 : Benchmark validé (LUT 24 MP 194 ms <= 1.5s, flou 2s <= 4s, ADR-24)
 
 ## En cours
-- [ ] Gate G0 : Benchmark ART / JVM release (apply_lut + flou gaussien 24 MP)
+- [ ] K1 : LUT (.cube, grille identité, apply_lut trilinéaire, blend/locks)
 
 ## Reste
-- [ ] K1-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
+- [ ] K2-K5 Portage sur branches `kt/*` vers `integration/kotlin-engine`
 - [ ] G3 : Bascule flag ON après parité golden master
 - [ ] Préparation `chore/remove-chaquopy` (non mergée)
 

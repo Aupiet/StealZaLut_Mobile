@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "StealZaLut_Mobile"
 include(":app")
+include(":engine")
  

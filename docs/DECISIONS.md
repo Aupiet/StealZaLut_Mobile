@@ -410,4 +410,26 @@ Ce document consigne les décisions structurantes prises pour professionnaliser,
   3. Port du moteur de transfert `Ambiance` depuis le desktop (courbe de teinte Oklab par niveau de luminance, préservation des sources vives et du contraste).
   4. Implémentation d'un presse-papier en mémoire (`EditorClipboardHolder`) permettant de copier et coller instantanément les réglages d'étalonnage d'une photo à l'autre.
 
+---
+
+## ADR-24 : Validation du Moteur 100 % Kotlin (Option C) & Résultats du Gate G0
+
+- **Statut :** [Acceptée]
+- **Date :** 17 novembre 2026
+- **Contexte :**
+  1. Remplacement impératif du moteur Python/Chaquopy par un moteur 100 % Kotlin JVM pur (Option C de l'audit architectural).
+  2. Gate G0 requis avant tout portage massif : mesurer `apply_lut` trilinéaire 33³ et flou gaussien séparable (σ=3) sur preview (1024 px), 12 MP et 24 MP face aux seuils stricts (LUT 24 MP ≤ 1.5 s, flou ≤ 4 s, preview ≤ 50 ms).
+  3. Aucun appareil Android physique connecté via ADB lors du gate ; exécution de la suite de benchmark sur l'hôte JVM (`GateG0BenchmarkTest.kt`) avec parallélisme coopératif borné (`nCores - 1`).
+- **Décision & Résultats :**
+  1. **Mesures Gate G0 :**
+     - Preview 1024x768 LUT 33³ : **49.86 ms** (froid), **9.78 ms** (chaud) (Seuil : $\le 50\text{ ms}$ — **VALIDÉ**).
+     - 12 MP (4000x3000) LUT 33³ : **109.71 ms** — **VALIDÉ**.
+     - 24 MP (6000x4000) LUT 33³ : **194.55 ms** (Seuil : $\le 1500\text{ ms}$ — **VALIDÉ**, 7.7x plus rapide que le seuil).
+     - 24 MP (6000x4000) Flou Gaussien σ=3 : **2007.90 ms** (Seuil : $\le 4000\text{ ms}$ — **VALIDÉ**, 2x plus rapide que le seuil).
+  2. **Contrainte Mémoire Anti-OOM :**
+     - L'allocation plein format de 3 `FloatArray` (72M floats = 288 Mo chacun) pour le flou 24 MP génère un pic de 827 Mo.
+     - Confirmation stricte de la règle architecturale : interdiction formelle des FloatArray RGB plein format dans le moteur final. Les filtres spatiaux K3 et le pipeline Lightroom traiteront les pixels par bandes avec tampon glissant de $\pm \lceil 4\sigma \rceil$ lignes et conversion float à la volée par bande.
+  3. **Conclusion :** Feu vert pour le portage massif K1 à K5 en Kotlin pur, sans recours à l'Option D (AGSL/Rust).
+
+
 
